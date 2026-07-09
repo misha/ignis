@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Widgetbook",
+      "request": "launch",
+      "type": "dart",
+      "program": "example/lib/main.dart",
+      "flutterMode": "debug",
+    },
+    {
+      "name": "Golden",
+      "request": "launch",
+      "type": "dart",
+      "program": "${file}",
+      "toolArgs": [
+        "--update-goldens"
+      ],
+      "codeLens": {
+        "title": "Golden",
+        "path": "**/test/*golden_test.dart",
+        "for": [
+          "run-test",
+          "run-test-file",
+        ],
+      }
+    },
+  ]
+}

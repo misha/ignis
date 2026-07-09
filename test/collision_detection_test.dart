@@ -1,0 +1,447 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:ignis/ignis.dart';
+
+void main() {
+  late CollisionDetection arena;
+
+  setUp(() {
+    arena = CollisionDetection();
+  });
+
+  group('overlap detection', () {
+    test('does not fire onCollisionStart when x-intervals do not overlap', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(100, 0));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, isEmpty);
+    });
+
+    test('fires onCollisionStart on both colliders whose x- and y-intervals overlap', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+      final aStarted = <ColliderNode>[];
+      final bStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+      b.onCollisionStart(bStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, [b]);
+      expect(bStarted, [a]);
+    });
+
+    test('excludes a pair whose x-intervals overlap but y-intervals do not', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 100));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, isEmpty);
+    });
+
+    test('excludes a pair whose AABBs overlap but whose shapes do not', () {
+      final a = ColliderNode(shape: .circle, size: .all(8), position: .new(0, 0));
+      final b = ColliderNode(shape: .circle, size: .all(8), position: .new(7, 7));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      // a's AABB spans [-4, 4] on both axes, b's spans [3, 11], so they
+      // overlap in the corner - but the circles themselves, ~9.9 apart
+      // against a combined radius of 8, do not.
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, isEmpty);
+    });
+
+    test('short-circuits past a collider whose x-interval is far away', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+      final c = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(100, 0));
+      final aStarted = <ColliderNode>[];
+      final cStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+      c.onCollisionStart(cStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..add(c)
+        ..process();
+
+      expect(aStarted, [b]);
+      expect(cStarted, isEmpty);
+    });
+
+    test('fires onCollisionStart for every overlapping combination, however many colliders', () {
+      final a = ColliderNode(shape: .circle, size: .all(8), position: .new(0, 0));
+      final b = ColliderNode(shape: .circle, size: .all(8), position: .new(1, 0));
+      final c = ColliderNode(shape: .circle, size: .all(8), position: .new(2, 0));
+      final started = <ColliderNode>[];
+      a.onCollisionStart(started.add);
+      b.onCollisionStart(started.add);
+      c.onCollisionStart(started.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..add(c)
+        ..process();
+
+      // 3 overlapping pairs, 2 signal emissions each.
+      expect(started, hasLength(6));
+    });
+
+    test('does not re-fire onCollisionStart for a still-overlapping pair across ticks', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process()
+        ..process();
+
+      expect(aStarted, hasLength(1));
+    });
+
+    test('fires onCollisionEnd on both colliders when a pair stops overlapping', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+      Node(children: [a, b]).mount();
+      final aEnded = <ColliderNode>[];
+      final bEnded = <ColliderNode>[];
+      a.onCollisionEnd(aEnded.add);
+      b.onCollisionEnd(bEnded.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      a.position.mutate().x = 200;
+      arena.process();
+
+      expect(aEnded, [b]);
+      expect(bEnded, [a]);
+    });
+
+    test('does not fire onCollisionEnd for a pair that never overlapped', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(100, 0));
+      Node(children: [a, b]).mount();
+      final aEnded = <ColliderNode>[];
+      a.onCollisionEnd(aEnded.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process()
+        ..process();
+
+      expect(aEnded, isEmpty);
+    });
+
+    test('does not fire onCollisionEnd for a pair with a detached member', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+      final scene = Node(children: [a, b]).mount();
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      final bEnded = <ColliderNode>[];
+      b.onCollisionEnd(bEnded.add);
+
+      // a's pair with b drops out because a was unregistered (detached),
+      // not because it genuinely drifted apart. Detaching while mounted only
+      // queues the removal, so it needs an update to actually take effect.
+      a.detach();
+      scene.update(0);
+      arena.remove(a);
+      arena.process();
+
+      expect(bEnded, isEmpty);
+    });
+  });
+
+  group('pair identity', () {
+    test('does not re-fire onCollisionStart after a sweep-order swap', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      // a's x-min now exceeds b's, so the two swap places in sweep order,
+      // but they're still overlapping and must not be treated as a new pair.
+      a.position.mutate().x = 10;
+      arena.process();
+
+      expect(aStarted, hasLength(1));
+    });
+
+    test('re-fires onCollisionStart after a pair stops and resumes overlapping', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      a.position.mutate().x = 200;
+      arena.process();
+
+      a.position.mutate().x = 0;
+      arena.process();
+
+      expect(aStarted, hasLength(2));
+    });
+
+    test('does not treat a different pair sharing a reused key as a continuation', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      arena.remove(a);
+
+      // c reuses a's freed slot (the free list is LIFO) and occupies the
+      // same position, so the pair key it forms with b is identical to
+      // the one a and b used to share.
+      final c = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final cStarted = <ColliderNode>[];
+      c.onCollisionStart(cStarted.add);
+
+      arena
+        ..add(c)
+        ..process();
+
+      expect(cStarted, [b]);
+    });
+  });
+
+  group('add/remove', () {
+    test('omits a removed collider from further processing', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+      final bStarted = <ColliderNode>[];
+      b.onCollisionStart(bStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b);
+
+      arena.remove(a);
+      arena.process();
+
+      expect(bStarted, isEmpty);
+    });
+
+    test('asserts against adding an already-registered collider twice', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+
+      arena.add(a);
+
+      expect(() => arena.add(a), throwsAssertionError);
+    });
+
+    test('a collider added after an initial process participates in the very next process', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      arena
+        ..add(a)
+        ..process();
+
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+
+      arena
+        ..add(b)
+        ..process();
+
+      expect(aStarted, [b]);
+    });
+  });
+
+  group('anchor', () {
+    test('shifts a collider into overlap', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0), anchor: .center());
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(9, 0), anchor: .centerRight());
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      // a spans x[-5, 5]. b's centerRight anchor pulls its shape to
+      // x[-1, 9], which reaches a.
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, [b]);
+    });
+
+    test('shifts a collider out of overlap', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0), anchor: .center());
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(9, 0), anchor: .centerLeft());
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      // a spans x[-5, 5]. b's centerLeft anchor pushes its shape to
+      // x[9, 19], out of reach of a.
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, isEmpty);
+    });
+  });
+
+  group('layers and masks', () {
+    test('does not fire onCollisionStart on either side when neither mask matches the other layer', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0), layer: 1, mask: 2);
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0), layer: 4, mask: 8);
+      final aStarted = <ColliderNode>[];
+      final bStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+      b.onCollisionStart(bStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, isEmpty);
+      expect(bStarted, isEmpty);
+    });
+
+    test('fires onCollisionStart only on the side whose mask matches the other layer', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0), layer: 1, mask: 2);
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0), layer: 2, mask: 0);
+      final aStarted = <ColliderNode>[];
+      final bStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+      b.onCollisionStart(bStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, [b]);
+      expect(bStarted, isEmpty);
+    });
+
+    test('fires onCollisionEnd only on the side whose mask matches the other layer', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0), layer: 1, mask: 2);
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0), layer: 2, mask: 0);
+      Node(children: [a, b]).mount();
+      final aEnded = <ColliderNode>[];
+      final bEnded = <ColliderNode>[];
+      a.onCollisionEnd(aEnded.add);
+      b.onCollisionEnd(bEnded.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      a.position.mutate().x = 200;
+      arena.process();
+
+      expect(aEnded, [b]);
+      expect(bEnded, isEmpty);
+    });
+  });
+
+  group('shapes', () {
+    test('circle-circle hits', () {
+      final a = ColliderNode(shape: .circle, size: .all(8), position: .new(0, 0));
+      final b = ColliderNode(shape: .circle, size: .all(8), position: .new(2, 0));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, [b]);
+    });
+
+    test('rectangle-rectangle hits', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(10, 10), position: .new(6, 0));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, [b]);
+    });
+
+    test('circle-rectangle hits', () {
+      final a = ColliderNode(shape: .circle, size: .all(8), position: .new(0, 0));
+      final b = ColliderNode(shape: .rectangle, size: .new(6, 6), position: .new(2, 2));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, [b]);
+    });
+
+    test('rectangle-circle hits', () {
+      final a = ColliderNode(shape: .rectangle, size: .new(6, 6), position: .new(0, 0));
+      final b = ColliderNode(shape: .circle, size: .all(8), position: .new(2, 2));
+      final aStarted = <ColliderNode>[];
+      a.onCollisionStart(aStarted.add);
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(aStarted, [b]);
+    });
+  });
+}
