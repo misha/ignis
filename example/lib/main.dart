@@ -2,7 +2,7 @@ import 'package:auris/auris.dart';
 import 'package:flutter/material.dart';
 import 'package:widgetbook/widgetbook.dart';
 
-import 'stories/bouncing_balls.dart';
+import 'stories/bouncing_balls_demo_story.dart';
 import 'stories/snake_game_story.dart';
 
 void main() {
@@ -20,9 +20,15 @@ class ExampleWidgetbook extends StatelessWidget {
       appBuilder: (context, child) {
         return MaterialApp(
           theme: Theme.of(context),
-          home: Material(
-            child: SizedBox.expand(
-              child: FittedBox(child: child),
+          home: Scaffold(
+            body: SafeArea(
+              minimum: .all(10),
+              child: SizedBox.expand(
+                child: FittedBox(
+                  fit: .contain,
+                  child: child,
+                ),
+              ),
             ),
           ),
         );
@@ -36,7 +42,7 @@ class ExampleWidgetbook extends StatelessWidget {
               useCases: [
                 WidgetbookUseCase(
                   name: 'Default',
-                  builder: (context) => const BouncingBalls(),
+                  builder: (context) => const BouncingBallsDemoStory(),
                 ),
               ],
             ),

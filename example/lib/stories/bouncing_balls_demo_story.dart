@@ -1,47 +1,96 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ignis/ignis.dart';
 
-class BouncingBalls extends HookWidget {
-  const BouncingBalls();
+final _RNG = Random();
+
+//
+// Demo Parameters
+//
+
+const _BALL_SPEED = 200.0;
+const _BALL_SPAWN_INTERVAL = 0.002;
+
+//
+// Visual Parameters
+//
+
+const _BALL_RADIUS = 2.0;
+const _WALL_THICKNESS = 5.0;
+const _BOX_SIZE = 500.0;
+const _BOX_LEFT = -_BOX_SIZE / 2 - _WALL_THICKNESS;
+const _BOX_RIGHT = -_BOX_LEFT;
+const _BOX_TOP = -_BOX_SIZE / 2 - _WALL_THICKNESS;
+const _BOX_SPAN = _BOX_SIZE + _WALL_THICKNESS * 2;
+
+const _TEXT_COLOR = Colors.white;
+const _WALL_COLOR = Colors.white;
+const _BALL_COLOR = Colors.green;
+const _COLLIDING_BALL_COLOR = Colors.red;
+
+//
+// Collision Parameters
+//
+
+const _WALL_LAYER = 1 << 0;
+const _BALL_LAYER = 1 << 1;
+
+class BouncingBallsDemoStory extends HookWidget {
+  const BouncingBallsDemoStory();
 
   @override
   Widget build(context) {
-    final version = useState(0);
-    final paused = useState(true);
-    final demo = useMemoized(() => _DemoNode(), [version.value]);
-    final scene = useMemoized(() => demo.mount(), [demo]);
+    final version$ = useState(0);
+    final paused$ = useState(false);
+    final debug$ = useState(false);
 
-    return SizedBox.expand(
-      child: Stack(
+    final version = version$.value;
+    final node = useMemoized(() => _DemoNode(), [version]);
+    final paused = paused$.value;
+    final debug = debug$.value;
+
+    return Focus(
+      autofocus: true,
+      onKeyEvent: (node, event) {
+        if (event is! KeyDownEvent) {
+          return .ignored;
+        }
+
+        switch (event.logicalKey) {
+          case .space:
+            paused$.value = !paused;
+
+          case .keyR:
+            version$.value += 1;
+
+          case .keyQ:
+            debug$.value = !debug;
+
+          default:
+            return .ignored;
+        }
+
+        return .handled;
+      },
+      child: Column(
+        spacing: 10,
+        mainAxisAlignment: .center,
         children: [
-          Positioned.fill(
+          SizedBox.square(
+            dimension: 500,
             child: SceneWidget(
-              scene,
-              paused: paused.value,
+              node.mount(),
+              paused: paused,
+              debug: debug,
             ),
           ),
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: Column(
-              mainAxisSize: .min,
-              spacing: 8,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () => paused.value = !paused.value,
-                  icon: Icon(paused.value ? Icons.play_arrow : Icons.stop),
-                  label: Text(paused.value ? 'Start' : 'Stop'),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () => version.value += 1,
-                  icon: const Icon(Icons.refresh),
-                  label: Text('Reset'),
-                ),
-              ],
-            ),
+          Text(
+            'space=${paused ? 'resume' : 'pause'} | '
+            'q=${debug ? 'debug off' : 'debug on'} | '
+            'r=restart',
           ),
         ],
       ),
@@ -49,53 +98,47 @@ class BouncingBalls extends HookWidget {
   }
 }
 
-final rng = Random();
-
-const _BALL_RADIUS = 2.0;
-const _BALL_SPEED = 200.0;
-const _BALL_SPAWN_INTERVAL = 0.002;
-const _WALL_THICKNESS = 20.0;
-const _LABEL_MARGIN = 8.0;
-const _LABEL_HEIGHT = 14.0;
-const _BOX_SIZE = 500.0;
-const _BOX_LEFT = -_BOX_SIZE / 2 - _WALL_THICKNESS;
-const _BOX_TOP = -_BOX_SIZE / 2 - _LABEL_MARGIN - _WALL_THICKNESS;
-const _BOX_SPAN = _BOX_SIZE + _WALL_THICKNESS * 2;
-
-const _WALL_LAYER = 1 << 0;
-const _BALL_LAYER = 1 << 1;
-
 class _DemoNode extends TransformNode {
-  final fps = FpsNode();
-  final cd = CollisionDetectionNode();
-  final box = _BoxNode();
-  final spawner = TimerNode(
-    interval: _BALL_SPAWN_INTERVAL,
-    repeat: true,
-  );
-
-  final fpsLabel = TextNode(
-    position: .new(_BOX_LEFT, _BOX_TOP - _LABEL_HEIGHT),
-    anchor: .bottomLeft(),
-  );
-
-  final ballsLabel = TextNode(
-    position: .new(_BOX_LEFT, _BOX_TOP),
-    anchor: .bottomLeft(),
-  );
+  late final FpsNode fps;
+  late final TextNode ballsLabel;
+  late final TextNode fpsLabel;
+  late final CollisionDetectionNode cd;
+  late final TimerNode spawner;
 
   int balls = 0;
 
   _DemoNode() {
+    addAll([
+      fps = FpsNode(),
+      ballsLabel = TextNode(
+        position: .new(_BOX_LEFT + 2, _BOX_TOP),
+        anchor: .bottomLeft(),
+        style: const TextStyle(color: _TEXT_COLOR),
+        priority: 1,
+      ),
+      fpsLabel = TextNode(
+        position: .new(_BOX_RIGHT - 2, _BOX_TOP),
+        anchor: .bottomRight(),
+        style: const TextStyle(color: _TEXT_COLOR),
+        priority: 1,
+      ),
+      cd = CollisionDetectionNode(
+        children: [
+          _BoxNode(),
+        ],
+      ),
+      spawner = TimerNode(
+        interval: _BALL_SPAWN_INTERVAL,
+        repeat: true,
+      ),
+    ]);
+
     spawner.onTrigger(() {
-      final angle = rng.nextDouble() * 2 * pi;
+      final angle = _RNG.nextDouble() * 2 * pi;
       final velocity = Vector2(cos(angle), sin(angle)) * _BALL_SPEED;
       cd.add(_BallNode(velocity: velocity));
       balls += 1;
     });
-
-    cd.add(box);
-    addAll([fpsLabel, ballsLabel, fps, spawner, cd]);
   }
 
   @override
@@ -119,7 +162,7 @@ class _BoxNode extends ShapeNode {
         paint: Paint()
           ..style = .stroke
           ..strokeWidth = _WALL_THICKNESS
-          ..color = Colors.white,
+          ..color = _WALL_COLOR,
       ) {
     addAll([
       _WallNode(
@@ -175,7 +218,7 @@ class _BallNode extends ShapeNode {
          shape: .circle,
          size: .all(_BALL_RADIUS * 2),
          anchor: .center(),
-         paint: Paint()..color = Colors.green,
+         paint: Paint()..color = _BALL_COLOR,
        ) {
     add(
       ColliderNode(
@@ -198,14 +241,14 @@ class _BallNode extends ShapeNode {
 
             case ColliderNode(parent: _BallNode()):
               collisions += 1;
-              paint.color = Colors.red;
+              paint.color = _COLLIDING_BALL_COLOR;
           }
         })
         ..onCollisionEnd((other) {
           switch (other) {
             case ColliderNode(parent: _BallNode()):
               collisions -= 1;
-              if (collisions <= 0) paint.color = Colors.green;
+              if (collisions <= 0) paint.color = _BALL_COLOR;
           }
         }),
     );

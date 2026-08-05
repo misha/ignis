@@ -9,7 +9,7 @@ import '../games/snake.dart';
 // Game Parameters
 //
 
-const _GRID_SIZE = 10;
+const _GRID_SIZE = 12;
 const _SNAKE_SPEED = 4.0;
 const _FOOD_SPAWN_INTERVAL = 2.0;
 
@@ -58,14 +58,16 @@ class SnakeGameStory extends HookWidget {
     final debug$ = useState(false);
 
     final game = game$.value;
-    final root = useMemoized(() => _SnakeGameNode(game), [game]);
+    final node = useMemoized(() => _GameNode(game), [game]);
     final paused = paused$.value;
     final debug = debug$.value;
 
     return Focus(
       autofocus: true,
       onKeyEvent: (node, event) {
-        if (event is! KeyDownEvent) return .ignored;
+        if (event is! KeyDownEvent) {
+          return .ignored;
+        }
 
         switch (event.logicalKey) {
           case .space:
@@ -95,36 +97,31 @@ class SnakeGameStory extends HookWidget {
 
         return .handled;
       },
-      child: SafeArea(
-        minimum: const .all(10),
-        child: Column(
-          spacing: 10,
-          mainAxisAlignment: .center,
-          children: [
-            SizedBox.square(
-              dimension: 500,
-              child: SceneWidget(
-                root.mount(),
-                paused: paused,
-                debug: debug,
-              ),
+      child: Column(
+        spacing: 10,
+        mainAxisAlignment: .center,
+        children: [
+          SizedBox.square(
+            dimension: 500,
+            child: SceneWidget(
+              node.mount(),
+              paused: paused,
+              debug: debug,
             ),
-            Row(
-              mainAxisAlignment: .spaceBetween,
-              spacing: 10,
-              children: [
-                Text('wasd/arrows to move'),
-                Text('space=start/stop | q=debug | r=restart'),
-              ],
-            ),
-          ],
-        ),
+          ),
+          Text(
+            'wasd/arrows to move | '
+            'space=${paused ? 'resume' : 'pause'} | '
+            'q=${debug ? 'debug off' : 'debug on'} | '
+            'r=restart',
+          ),
+        ],
       ),
     );
   }
 }
 
-class _SnakeGameNode extends TransformNode {
+class _GameNode extends TransformNode {
   final SnakeGame game;
 
   late final TransformNode board;
@@ -132,7 +129,7 @@ class _SnakeGameNode extends TransformNode {
   late final TextNode fpsText;
   late final FpsNode fps;
 
-  _SnakeGameNode(this.game) {
+  _GameNode(this.game) {
     addAll([
       TransformNode(
         position: .all(-_BOARD_SIZE / 2),
