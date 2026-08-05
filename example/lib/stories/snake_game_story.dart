@@ -113,9 +113,8 @@ class SnakeGameStory extends HookWidget {
               mainAxisAlignment: .spaceBetween,
               spacing: 10,
               children: [
-                // TODO: Set up text styles for the whole widgetbook.
-                Text('wasd/arrows to move', style: .new(color: Colors.white)),
-                Text('space=start/stop | q=debug | r=restart', style: .new(color: Colors.white)),
+                Text('wasd/arrows to move'),
+                Text('space=start/stop | q=debug | r=restart'),
               ],
             ),
           ],

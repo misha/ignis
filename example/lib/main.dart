@@ -1,4 +1,5 @@
-import 'package:flutter/widgets.dart';
+import 'package:auris/auris.dart';
+import 'package:flutter/material.dart';
 import 'package:widgetbook/widgetbook.dart';
 
 import 'stories/bouncing_balls.dart';
@@ -14,6 +15,18 @@ class ExampleWidgetbook extends StatelessWidget {
   @override
   Widget build(context) {
     return Widgetbook.material(
+      lightTheme: AurisTheme.light(),
+      darkTheme: AurisTheme.dark(),
+      appBuilder: (context, child) {
+        return MaterialApp(
+          theme: Theme.of(context),
+          home: Material(
+            child: SizedBox.expand(
+              child: FittedBox(child: child),
+            ),
+          ),
+        );
+      },
       directories: [
         WidgetbookFolder(
           name: 'Demos',
