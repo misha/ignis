@@ -1,4 +1,4 @@
-package com.example.example
+package jp.misha.ignis
 
 import io.flutter.embedding.android.FlutterActivity
 
