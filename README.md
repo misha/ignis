@@ -13,6 +13,7 @@ What is this? See [Motivation](#motivation).
   - [Nodes](#concept-nodes)
   - [Scenes](#concept-scenes)
   - [Signals](#concept-signals)
+  - [Time](#concept-time)
   - [Math](#concept-math)
 - [Nodes](#nodes)
 - [Effects](#effects)
@@ -162,9 +163,32 @@ void useSignal0(Signal0 signal, void Function() handle) {
 
 > :warning: When using signals in nodes, prefer to listen to signals that belong to your children. By doing so, the signals will not leak when the node goes out of use. However, when watching global signals or signals belonging to parent and sibling nodes, remember to `unwatch` them or the signal will leak a reference to the watching node. In practice, `unwatch` is almost never required.
 
+### Concept: Time
+
+In Ignis, the unit of time is **seconds**.
+
+For example, nodes receive a tick each frame of the game loop, along with the amount of time that passed as `dt`:
+
+```dart
+void tick(double dt) {
+  // `dt` seconds elapsed this frame.
+  // This is usually quite small, e.g. 0.01666 at 60 FPS.
+}
+```
+
+All objects that accept an interval or duration are also expressed in seconds.
+
+```dart
+// Triggers after 200 milliseconds.
+final timer = TimerNode(interval: 0.2);
+
+// Progresses an effect over the course of 1.5 seconds.
+final controller = EffectController(duration: 1.5);
+```
+
 ### Concept: Math
 
-Math types such as `Vector2`, `Matrix3`, and `Aabb2` come from Ignis' companion [`ivector_math`](https://pub.dev/packages/ivector_math) package. `ivector_math` is a re-implementation of `vector_math` with additional semantics for controlled mutability. Although it is developed with Ignis in mind, `ivector_math` is otherwise generally applicable.
+Math types such as `Vector2`, `Matrix3`, and `Aabb2` come from Ignis' companion [`ivector_math`](https://pub.dev/packages/ivector_math) package. `ivector_math` is a re-implementation of `vector_math` with additional semantics for controlled mutability.
 
 Unlike `vector_math`, types in `ivector_math` are immutable by default. In order to modify one, call `mutate()` to obtain a scoped, mutable view for in-place updates.
 
@@ -173,9 +197,13 @@ final position = Vector2.zero();
 position.mutate().addScaled(velocity, dt);
 ```
 
+Although it was developed with Ignis in mind, `ivector_math` is otherwise generally applicable.
+
 > :warning: Ignis exports `ivector_math`; do not add it to your `dependencies`.
 
 ## Nodes
+
+Ignis comes with the following nodes.
 
 | Node                     | Purpose                                                                      | Signals                              |
 |--------------------------|------------------------------------------------------------------------------|--------------------------------------|
@@ -192,40 +220,69 @@ position.mutate().addScaled(velocity, dt);
 
 ## Effects
 
+`EffectNode`, called simply an *effect* in the documentation, is a node that tracks its `progress` from 0 (start) to 1 (finish).
+
+Ignis comes with the following effects.
+
 | Effect          | Purpose                                                       |
 |-----------------|---------------------------------------------------------------|
 | `MoveEffect`    | Mutates a `Vector2` towards a destination over time.          |
 | `OpacityEffect` | Given a `Paint`, mutates the color's alpha channel over time. |
 
+### Effect Controllers
+
+The progress over time of any particular effect is determined by its `EffectController`.
+
+> :fire: The concept of an *effect controller*, like many ideas in Ignis, comes directly from Flame. If you've used Flame's `EffectController` before, you should be quite comfortable!
+
+The code below creates a controller that waits 500 milliseconds, then advances `progress` linearly from 0 to 1 over the next 1500 milliseconds. The total duration of this effect is 2 seconds.
+
+```dart
+final controller = EffectController(
+  duration: 1.5,        // Duration is a required parameter.
+  curve: Curves.linear, // Linear is also the default.
+  startDelay: 0.5,      // Defaults to 0.
+);
+```
+
 ## Sprites
 
 `SpriteNode` draws frames from one or more `Spritesheet`s, optionally animating between them over time.
 
-The example below creates a spritesheet of 32x32 pixel tiles, animated at 12 frames per second (FPS).
-
-> :warning: `SpriteNode` can only play animations on the same row.
+The code below creates a sprite from a spritesheet of 32x32 pixel tiles, animated at 12 frames per second (FPS).
 
 ```dart
-final sheet = Spritesheet.asset('assets/ship.png', size: .all(32));
-final sprite = SpriteNode(sheet: sheet, fps: 12, loop: true);
+final sprite = SpriteNode(
+  sheet: Spritesheet.asset('assets/ship.png', size: .all(32)), 
+  fps: 12, 
+  loop: true,
+);
 ```
 
 Call `play` to begin animating from a specific row and column in the spritesheet.
 
 ```dart
-sprite.play(row: 1); // Animate the second row.
+// Animates the second row.
+sprite.play(row: 1);
 ```
+
+> :warning: `SpriteNode` can only play animations on the same row.
 
 It's also possible to combine multiple spritesheets via `SpriteNode.split`. This is particularly useful for swapping animation sets, like an idle sheet and a running sheet, while keeping assets modular.
 
 ```dart
-final idle = Spritesheet.asset('assets/player/idle.png', size: .all(32));
-final running = Spritesheet.asset('assets/player/running.png', size: .all(32));
-final sprite = SpriteNode.split(sheets: [idle, running], fps: 12);
-sprite.play(sheet: 1, row: 2); // Animate the third row of the running spritesheet.
-```
+final sprite = SpriteNode.split(
+  sheets: [
+    .asset('assets/player/idle.png', size: .all(32)),
+    .asset('assets/player/running.png', size: .all(32)), 
+  ], 
+  fps: 12,
+  loop: true,
+);
 
-Check out the code documentation for complete details on `SpriteNode` parameters and signals.
+// Animates the third row of the running spritesheet.
+sprite.play(sheet: 1, row: 2);
+```
 
 ## Collision Detection
 
@@ -297,7 +354,7 @@ preload.manifest(
   ])
 );
 
-// Returns a future indicates when the preload is done.
+// Returns a future that resolves when this preload is done.
 await preload.run();
 
 // Retrieve assets by looking into the cache.
