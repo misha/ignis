@@ -1,6 +1,6 @@
 name: ignis
 description: Flutter game engine.
-version: 1.0.0
+version: 0.0.1
 publish_to: none
 environment:
   sdk: ^3.12.0
