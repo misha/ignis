@@ -267,14 +267,12 @@ class _SegmentNode extends ShapeNode {
 
     game.onEvent((event) {
       switch (event) {
-        case SnakeMovedEvent(:final segment):
+        case SnakeMovedEvent(:final segment, :final from):
           if (segment.index == index) {
-            final destination = event.segment.tile.position;
-
             add(
               MoveEffect.by(
                 position: position,
-                offset: destination - position,
+                offset: segment.tile.position - from.position,
                 controller: EffectController(
                   duration: 1 / _SNAKE_SPEED,
                   cleanup: true,

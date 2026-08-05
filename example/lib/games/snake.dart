@@ -91,8 +91,9 @@ class SnakeGrewEvent extends SnakeGameEvent {
 
 class SnakeMovedEvent extends SnakeGameEvent {
   final Snake segment;
+  final Tile from;
 
-  const SnakeMovedEvent(this.segment);
+  const SnakeMovedEvent(this.segment, this.from);
 }
 
 class FoodSpawnedEvent extends SnakeGameEvent {
@@ -227,14 +228,19 @@ class SnakeGame {
     final newHead = head.tile + _direction.delta;
     _lastTail = _segments.last.tile;
 
+    final previousTiles = [
+      for (final segment in _segments) //
+        segment.tile,
+    ];
+
     for (var i = _segments.length - 1; i > 0; i -= 1) {
       _segments[i]._tile = _segments[i - 1].tile;
     }
 
     head._tile = newHead;
 
-    for (final segment in _segments) {
-      onEvent.emit(SnakeMovedEvent(segment));
+    for (var i = 0; i < _segments.length; i += 1) {
+      onEvent.emit(SnakeMovedEvent(_segments[i], previousTiles[i]));
     }
   }
 }
