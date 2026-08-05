@@ -9,6 +9,9 @@ class EffectNode extends Node {
   /// Drives this effect's timing and progress.
   final EffectController controller;
 
+  /// Whether to [detach] once finished. Defaults to false.
+  bool cleanup;
+
   /// Emitted once this effect starts progressing, before the first
   /// [onProgress] emission.
   final onStart = Signal0();
@@ -39,10 +42,11 @@ class EffectNode extends Node {
 
   EffectNode({
     required this.controller,
+    bool? cleanup,
     super.enabled,
     super.priority,
     super.children,
-  });
+  }) : cleanup = cleanup ?? false;
 
   /// Pauses this effect, so it stops progressing until [resume]d.
   void pause() => _paused = true;
@@ -84,7 +88,7 @@ class EffectNode extends Node {
       _finished = true;
       onFinish.emit();
 
-      if (controller.cleanup) {
+      if (cleanup) {
         detach();
       }
     }
@@ -102,9 +106,6 @@ class EffectController {
   /// How long to wait before starting the effect. Defaults to 0.
   final double startDelay;
 
-  /// Whether to detach the effect upon completion. Defaults to false.
-  final bool cleanup;
-
   double _elapsed = 0;
 
   /// Whether or not this effect has started.
@@ -117,7 +118,6 @@ class EffectController {
     required this.duration,
     this.curve = Curves.linear,
     this.startDelay = 0,
-    this.cleanup = false,
   }) : assert(duration > 0, 'Duration must be positive.'),
        assert(startDelay >= 0, 'Start delay cannot be negative.'),
        _elapsed = -startDelay;

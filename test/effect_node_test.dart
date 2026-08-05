@@ -72,7 +72,7 @@ void main() {
 
   test('detaches itself once complete when added as a child, when cleanup is true', () {
     final a = Node();
-    final effect = EffectNode(controller: EffectController(duration: 2, cleanup: true));
+    final effect = EffectNode(controller: EffectController(duration: 2), cleanup: true);
     a.add(effect);
     final scene = a.mount();
 

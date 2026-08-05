@@ -11,6 +11,7 @@ abstract class MoveEffect extends EffectNode {
     required Vector2 offset,
     required Vector2 position,
     required EffectController controller,
+    bool? cleanup,
   }) = _MoveByEffect;
 
   /// Moves [position] to [destination].
@@ -18,11 +19,13 @@ abstract class MoveEffect extends EffectNode {
     required Vector2 destination,
     required Vector2 position,
     required EffectController controller,
+    bool? cleanup,
   }) = _MoveToEffect;
 
   MoveEffect._({
     required this.position,
     required super.controller,
+    super.cleanup,
   });
 }
 
@@ -33,6 +36,7 @@ class _MoveByEffect extends MoveEffect {
     required Vector2 offset,
     required super.position,
     required super.controller,
+    super.cleanup,
   }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
@@ -49,6 +53,7 @@ class _MoveToEffect extends MoveEffect {
     required Vector2 destination,
     required super.position,
     required super.controller,
+    super.cleanup,
   }) : _destination = destination.clone(),
        super._() {
     onStart(() {

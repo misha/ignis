@@ -270,10 +270,8 @@ class _SegmentNode extends ShapeNode {
               MoveEffect.by(
                 position: position,
                 offset: segment.tile.position - from.position,
-                controller: EffectController(
-                  duration: 1 / _SNAKE_SPEED,
-                  cleanup: true,
-                ),
+                controller: .new(duration: 1 / _SNAKE_SPEED),
+                cleanup: true,
               ),
             );
           }

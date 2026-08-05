@@ -10,7 +10,8 @@ void main() {
       MoveEffect.by(
         offset: Vector2(20, -10),
         position: node.position,
-        controller: .new(duration: 1, cleanup: true),
+        controller: .new(duration: 1),
+        cleanup: true,
       ),
     );
 
