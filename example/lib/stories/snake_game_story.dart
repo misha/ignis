@@ -45,21 +45,21 @@ const _FOOD_LAYER = 1 << 1;
 const _WALL_LAYER = 1 << 2;
 
 //
-// Flutter
+// Story
 //
 
-class SnakeGameWidget extends HookWidget {
-  const SnakeGameWidget();
+class SnakeGameStory extends HookWidget {
+  const SnakeGameStory();
 
   @override
   Widget build(context) {
     final game$ = useState(_makeGame());
-    final running$ = useState(false);
+    final paused$ = useState(false);
     final debug$ = useState(false);
 
     final game = game$.value;
     final root = useMemoized(() => _SnakeGameNode(game), [game]);
-    final running = running$.value;
+    final paused = paused$.value;
     final debug = debug$.value;
 
     return Focus(
@@ -67,53 +67,56 @@ class SnakeGameWidget extends HookWidget {
       onKeyEvent: (node, event) {
         if (event is! KeyDownEvent) return .ignored;
 
-        final direction = switch (event.logicalKey) {
-          LogicalKeyboardKey.arrowUp || LogicalKeyboardKey.keyW => Direction.up,
-          LogicalKeyboardKey.arrowDown || LogicalKeyboardKey.keyS => Direction.down,
-          LogicalKeyboardKey.arrowLeft || LogicalKeyboardKey.keyA => Direction.left,
-          LogicalKeyboardKey.arrowRight || LogicalKeyboardKey.keyD => Direction.right,
-          _ => null,
-        };
+        switch (event.logicalKey) {
+          case .space:
+            paused$.value = !paused;
 
-        if (direction == null) return .ignored;
-        game.turn(direction);
+          case .keyR:
+            game$.value = _makeGame();
+
+          case .keyQ:
+            debug$.value = !debug;
+
+          case .arrowUp || .keyW:
+            game.turn(.up);
+
+          case .arrowDown || .keyS:
+            game.turn(.down);
+
+          case .arrowLeft || .keyA:
+            game.turn(.left);
+
+          case .arrowRight || .keyD:
+            game.turn(.right);
+
+          default:
+            return .ignored;
+        }
+
         return .handled;
       },
-      child: SizedBox.expand(
-        child: Stack(
+      child: SafeArea(
+        minimum: const .all(10),
+        child: Column(
+          spacing: 10,
+          mainAxisAlignment: .center,
           children: [
-            Positioned.fill(
+            SizedBox.square(
+              dimension: 500,
               child: SceneWidget(
                 root.mount(),
-                paused: !running,
+                paused: paused,
                 debug: debug,
               ),
             ),
-            Positioned(
-              right: 16,
-              bottom: 16,
-              child: Column(
-                mainAxisSize: .min,
-                crossAxisAlignment: .end,
-                spacing: 8,
-                children: [
-                  ElevatedButton.icon(
-                    label: Text(running ? 'Pause' : 'Resume'),
-                    icon: Icon(running ? Icons.stop : Icons.play_arrow),
-                    onPressed: () => running$.value = !running,
-                  ),
-                  ElevatedButton.icon(
-                    label: const Text('Reset'),
-                    icon: const Icon(Icons.refresh),
-                    onPressed: () => game$.value = _makeGame(),
-                  ),
-                  ElevatedButton.icon(
-                    label: Text(debug ? 'Debug Off' : 'Debug On'),
-                    icon: Icon(debug ? Icons.visibility : Icons.visibility_off),
-                    onPressed: () => debug$.value = !debug,
-                  ),
-                ],
-              ),
+            Row(
+              mainAxisAlignment: .spaceBetween,
+              spacing: 10,
+              children: [
+                // TODO: Set up text styles for the whole widgetbook.
+                Text('wasd/arrows to move', style: .new(color: Colors.white)),
+                Text('space=start/stop | q=debug | r=restart', style: .new(color: Colors.white)),
+              ],
             ),
           ],
         ),
@@ -121,10 +124,6 @@ class SnakeGameWidget extends HookWidget {
     );
   }
 }
-
-//
-// Ignis
-//
 
 class _SnakeGameNode extends TransformNode {
   final SnakeGame game;
