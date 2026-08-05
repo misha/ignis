@@ -12,6 +12,7 @@ class FpsNode extends Node {
 
   FpsNode({
     int? windowSize,
+    super.enabled,
     super.priority,
     super.children,
   }) : assert(windowSize == null || windowSize > 0),

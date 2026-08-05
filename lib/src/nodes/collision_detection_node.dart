@@ -10,6 +10,7 @@ class CollisionDetectionNode extends Node {
 
   CollisionDetectionNode({
     CollisionDetection? arena,
+    super.enabled,
     super.priority,
     super.children,
   }) : _arena = arena ?? CollisionDetection();

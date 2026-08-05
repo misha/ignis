@@ -42,13 +42,24 @@ import 'package:ignis/src/signal.dart';
 /// unintuitive, this queue allows the engine to mitigate modification
 /// during iteration, and improves performance by batching the changes.
 class Node {
-  /// Creates a node with the given [priority].
+  /// Whether this node updates and renders. Defaults to true.
+  bool enabled;
+
+  /// Creates a new node.
   ///
-  /// If [children] are provided, they are immediately added to this node.
+  /// [enabled] controls whether the node updates and renders.
+  /// Defaults to true.
+  ///
+  /// [priority] controls this node's order when updating and rendering.
+  /// Defaults to 0.
+  ///
+  /// If [children] are provided, they are immediately added to the node.
   Node({
+    bool? enabled,
     int? priority,
     Iterable<Node> children = const [],
-  }) : _priority = priority ?? 0 {
+  }) : _priority = priority ?? 0,
+       enabled = enabled ?? true {
     addAll(children);
   }
 
@@ -61,6 +72,7 @@ class Node {
   /// Updates this node and its children by [dt] seconds.
   @nonVirtual
   void update(double dt) {
+    if (!enabled) return;
     tick(dt);
 
     final children = _children;
@@ -78,7 +90,11 @@ class Node {
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
-      child.render(canvas);
+      // Rendering is recursive, so this is the only way to stop it.
+      // A disabled child must never have `render` called on it.
+      if (child.enabled) {
+        child.render(canvas);
+      }
     }
   }
 
@@ -92,7 +108,9 @@ class Node {
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
-      child.debugRender(canvas);
+      if (child.enabled) {
+        child.debugRender(canvas);
+      }
     }
   }
 
@@ -457,6 +475,7 @@ class Scene<T extends Node> {
     Canvas canvas, {
     bool debug = false,
   }) {
+    if (!node.enabled) return;
     node.render(canvas);
     if (debug) node.debugRender(canvas);
   }

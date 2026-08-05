@@ -39,6 +39,7 @@ class EffectNode extends Node {
 
   EffectNode({
     required this.controller,
+    super.enabled,
     super.priority,
     super.children,
   });

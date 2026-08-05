@@ -39,6 +39,7 @@ class ColliderNode extends TransformNode {
     super.angle,
     super.size,
     super.anchor,
+    super.enabled,
     super.priority,
     super.children,
   }) : layer = layer ?? -1,

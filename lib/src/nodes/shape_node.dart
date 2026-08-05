@@ -19,6 +19,7 @@ class ShapeNode extends TransformNode {
     super.angle,
     super.size,
     super.anchor,
+    super.enabled,
     super.priority,
     super.children,
   }) : paint = paint ?? Paint();

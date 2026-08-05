@@ -42,6 +42,7 @@ class TimerNode extends Node {
     bool? repeat,
     int? count,
     bool? cleanup,
+    super.enabled,
     super.priority,
     super.children,
   }) : assert(interval > 0, 'Interval must be positive.'),

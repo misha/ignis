@@ -32,6 +32,7 @@ class TransformNode extends Node {
     double? angle,
     Vector2? size,
     this.anchor,
+    super.enabled,
     super.priority,
     super.children,
   }) : position = position ?? .zero(),

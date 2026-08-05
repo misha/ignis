@@ -179,7 +179,7 @@ position.mutate().addScaled(velocity, dt);
 
 | Node                     | Purpose                                                                      | Signals                              |
 |--------------------------|------------------------------------------------------------------------------|--------------------------------------|
-| `Node`                   | Base node specifying `priority` and `children`.                              | `onMount`, `onUnmount`               |
+| `Node`                   | Base node specifying `enabled`, `priority`, and `children`.                  | `onMount`, `onUnmount`               |
 | `CollisionDetectionNode` | Holds a `CollisionDetection` arena.                                          | -                                    |
 | `ColliderNode`           | Registers its `Shape` with the nearest `CollisionDetectionNode`.             | `onCollisionStart`, `onCollisionEnd` |
 | `EffectNode`             | Base node for time-driven effects; see [Effects](#effects).                  | `onStart`, `onProgress`, `onFinish`  |

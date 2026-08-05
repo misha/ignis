@@ -23,6 +23,7 @@ class TextNode extends TransformNode {
     super.scale,
     super.angle,
     super.anchor,
+    super.enabled,
     super.priority,
     super.children,
   }) {

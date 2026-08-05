@@ -108,6 +108,41 @@ void main() {
     expect(log.renders, ['A', 'C', 'B', 'D']);
   });
 
+  test('a disabled root skips update and render for itself and its subtree', () {
+    final a = TestNode('A');
+    final b = TestNode('B');
+    a.add(b);
+    final scene = a.mount();
+    a.enabled = false;
+
+    a.update(1);
+    expect(a.updates, 0);
+    expect(b.updates, 0);
+
+    final recorder = PictureRecorder();
+    scene.render(Canvas(recorder));
+    expect(a.renders, 0);
+    expect(b.renders, 0);
+  });
+
+  test('a disabled child skips update and render for itself and its subtree, without affecting its siblings', () {
+    final a = TestNode('A');
+    final b = TestNode('B');
+    final c = TestNode('C');
+    a.add(b);
+    a.add(c);
+    a.mount();
+    b.enabled = false;
+
+    a.update(1);
+    expect(b.updates, 0);
+    expect(c.updates, 1);
+
+    _render(a);
+    expect(b.renders, 0);
+    expect(c.renders, 1);
+  });
+
   test('a child removed during an update still ticks that same pass, but is gone by the next flush', () {
     final log = TestLog();
     final a = TestNode('A', log);
