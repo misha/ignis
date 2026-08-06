@@ -211,7 +211,7 @@ Ignis comes with the following nodes.
 | `CollisionDetectionNode` | Holds a `CollisionDetection` arena.                                          | -                                    |
 | `ColliderNode`           | Registers its `Shape` with the nearest `CollisionDetectionNode`.             | `onCollisionStart`, `onCollisionEnd` |
 | `EffectNode`             | Base node for time-driven effects; see [Effects](#effects).                  | `onStart`, `onProgress`, `onFinish`  |
-| `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.                         | -                                    |
+| `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.                         | `onUpdate`                           |
 | `ShapeNode`              | Draws a `Shape` with `Paint`.                                                | -                                    |
 | `SpriteNode`             | Animates a `Spritesheet` with `Paint`; see [Sprites](#sprites).              | `onFrame`, `onLoop`, `onFinish`      |
 | `TextNode`               | Draws text with `TextPainter`.                                               | -                                    |

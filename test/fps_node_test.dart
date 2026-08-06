@@ -14,6 +14,20 @@ void main() {
     expect(node.fps, closeTo(4, 0.001));
   });
 
+  test('emits onUpdate only when the rounded FPS changes', () {
+    final node = FpsNode(windowSize: 1);
+    node.mount();
+
+    final updates = <int>[];
+    node.onUpdate((value) => updates.add(value));
+
+    node.update(0.1); // fps = 10
+    node.update(0.1); // fps = 10, unchanged
+    node.update(0.05); // fps = 20
+
+    expect(updates, [10, 20]);
+  });
+
   test('ignores invalid frame durations', () {
     final node = FpsNode();
     node.mount();

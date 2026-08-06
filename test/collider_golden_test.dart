@@ -18,7 +18,7 @@ void main() {
             paint: Paint()..color = RED.withValues(alpha: 0.5),
             size: Vector2(40, 40),
             anchor: .center(),
-            position: Vector2(-15, -15),
+            position: Vector2(25, 25),
             children: [
               ColliderNode(
                 shape: .circle,
@@ -32,7 +32,7 @@ void main() {
             paint: Paint()..color = BLUE.withValues(alpha: 0.5),
             size: Vector2(50, 50),
             anchor: .center(),
-            position: Vector2(15, 15),
+            position: Vector2(55, 55),
             children: [
               ColliderNode(
                 shape: .rectangle,

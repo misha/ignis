@@ -137,6 +137,7 @@ class SnakeGame {
   int _nextSegment = 0;
   final Random _rng;
 
+  int get score => segments.length * 10 - 30;
   bool get isGameOver => _gameOver;
 
   SnakeGame({

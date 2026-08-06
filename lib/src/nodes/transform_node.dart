@@ -21,6 +21,12 @@ class TransformNode extends Node {
   /// systems to work against. Defaults to (0, 0).
   final Vector2 size;
 
+  /// The `x` component of [size].
+  double get width => size.x;
+
+  /// The `y` component of [size].
+  double get height => size.y;
+
   /// Where [size] sits relative to [position]. Defaults to null.
   ///
   /// When null, the anchor is treated as `topLeft`.

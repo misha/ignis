@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ignis/ignis.dart';
 
 import '../games/snake.dart';
+import '../hooks.dart';
 
 //
 // Game Parameters
@@ -56,119 +58,137 @@ class SnakeGameStory extends HookWidget {
     final game$ = useState(_makeGame());
     final paused$ = useState(false);
     final debug$ = useState(false);
+    final fps$ = useState(0);
+    final status$ = useState('');
 
     final game = game$.value;
     final node = useMemoized(() => _GameNode(game), [game]);
     final paused = paused$.value;
     final debug = debug$.value;
+    final fps = fps$.value;
+    final status = status$.value;
 
-    return Focus(
-      autofocus: true,
-      onKeyEvent: (node, event) {
-        if (event is! KeyDownEvent) {
-          return .ignored;
-        }
+    useSignal1(node.fps.onUpdate, (value) {
+      fps$.value = value;
+    });
 
-        switch (event.logicalKey) {
-          case .space:
-            paused$.value = !paused;
+    useEffect(() {
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        status$.value = 'Score: 0';
+      });
+    }, [game]);
 
-          case .keyR:
-            game$.value = _makeGame();
+    useSignal1(node.game.onEvent, (event) {
+      switch (event) {
+        case SnakeGrewEvent():
+          status$.value = 'Score: ${game.score}';
 
-          case .keyQ:
-            debug$.value = !debug;
+        case GameOverEvent():
+          status$.value = 'Game over! Your score was ${game.score}.';
 
-          case .arrowUp || .keyW:
-            game.turn(.up);
+        default:
+      }
+    });
 
-          case .arrowDown || .keyS:
-            game.turn(.down);
-
-          case .arrowLeft || .keyA:
-            game.turn(.left);
-
-          case .arrowRight || .keyD:
-            game.turn(.right);
-
-          default:
+    return SizedBox(
+      width: _BOARD_SIZE,
+      child: Focus(
+        autofocus: true,
+        onKeyEvent: (node, event) {
+          if (event is! KeyDownEvent) {
             return .ignored;
-        }
+          }
 
-        return .handled;
-      },
-      child: Column(
-        spacing: 10,
-        mainAxisAlignment: .center,
-        children: [
-          SizedBox.square(
-            dimension: 500,
-            child: SceneWidget(
-              node.mount(),
-              paused: paused,
-              debug: debug,
+          switch (event.logicalKey) {
+            case .space:
+              paused$.value = !paused;
+
+            case .keyR:
+              game$.value = _makeGame();
+
+            case .keyQ:
+              debug$.value = !debug;
+
+            case .arrowUp || .keyW:
+              game.turn(.up);
+
+            case .arrowDown || .keyS:
+              game.turn(.down);
+
+            case .arrowLeft || .keyA:
+              game.turn(.left);
+
+            case .arrowRight || .keyD:
+              game.turn(.right);
+
+            default:
+              return .ignored;
+          }
+
+          return .handled;
+        },
+        child: Column(
+          spacing: 5,
+          mainAxisAlignment: .center,
+          children: [
+            Row(
+              mainAxisAlignment: .spaceBetween,
+              children: [
+                Text(status),
+                Text('$fps FPS'),
+              ],
             ),
-          ),
-          Text(
-            'wasd/arrows to move | '
-            'space=${paused ? 'resume' : 'pause'} | '
-            'q=${debug ? 'debug off' : 'debug on'} | '
-            'r=restart',
-          ),
-        ],
+            AspectRatio(
+              aspectRatio: 1,
+              child: SceneWidget(
+                node.mount(),
+                paused: paused,
+                debug: debug,
+              ),
+            ),
+            Text(
+              'wasd/arrows to move\n'
+              'space=${paused ? 'resume' : 'pause'} | '
+              'q=${debug ? 'debug off' : 'debug on'} | '
+              'r=restart',
+              textAlign: .center,
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _GameNode extends TransformNode {
+class _GameNode extends Node {
   final SnakeGame game;
 
-  late final TransformNode board;
-  late final TextNode scoreText;
-  late final TextNode fpsText;
+  late final CollisionDetectionNode board;
   late final FpsNode fps;
 
   _GameNode(this.game) {
     addAll([
-      TransformNode(
-        position: .all(-_BOARD_SIZE / 2),
+      board = CollisionDetectionNode(
         children: [
-          CollisionDetectionNode(
-            children: [
-              board = TransformNode(
-                children: [
-                  // Set up horizontal walls.
-                  for (final x in [0.0, _BOARD_SIZE]) //
-                    _WallNode(
-                      shape: .rectangle,
-                      size: .new(_WALL_THICKNESS, _BOARD_SIZE),
-                      position: .new(x, _BOARD_SIZE / 2),
-                    ),
+          // Set up horizontal walls.
+          for (final x in [0.0, _BOARD_SIZE]) //
+            _WallNode(
+              shape: .rectangle,
+              size: .new(_WALL_THICKNESS, _BOARD_SIZE),
+              position: .new(x, _BOARD_SIZE / 2),
+            ),
 
-                  // Set up vertical walls.
-                  for (final y in [0.0, _BOARD_SIZE]) //
-                    _WallNode(
-                      shape: .rectangle,
-                      size: .new(_BOARD_SIZE, _WALL_THICKNESS),
-                      position: .new(_BOARD_SIZE / 2, y),
-                    ),
+          // Set up vertical walls.
+          for (final y in [0.0, _BOARD_SIZE]) //
+            _WallNode(
+              shape: .rectangle,
+              size: .new(_BOARD_SIZE, _WALL_THICKNESS),
+              position: .new(_BOARD_SIZE / 2, y),
+            ),
 
-                  // Add the initial snake segments.
-                  for (final segment in game.segments) //
-                    _SegmentNode(game, segment),
-                ],
-              ),
-            ],
-          ),
-          scoreText = TextNode(
-            position: .new(0, -4),
-            anchor: .bottomLeft(),
-          ),
-          fpsText = TextNode(
-            position: .new(_BOARD_SIZE, -4),
-            anchor: .bottomRight(),
-          ),
+          // Add the initial snake segments.
+          for (final segment in game.segments) //
+            _SegmentNode(game, segment),
         ],
       ),
       fps = FpsNode(),
@@ -190,15 +210,6 @@ class _GameNode extends TransformNode {
   @override
   void tick(double dt) {
     game.update(dt);
-    final score = game.segments.length * 10 - 30;
-
-    if (game.isGameOver) {
-      scoreText.text = 'Game over! Your score was $score.';
-    } else {
-      scoreText.text = 'Score: $score';
-    }
-
-    fpsText.text = '${fps.fps.round()} FPS';
   }
 }
 

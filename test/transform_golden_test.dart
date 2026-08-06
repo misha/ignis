@@ -16,9 +16,9 @@ void main() {
       ShapeNode(
         shape: .rectangle,
         paint: Paint()..color = BLACK,
-        size: Vector2(20, 20),
+        size: .all(20),
         anchor: .center(),
-        position: Vector2(25, -15),
+        position: Vector2(25, 25),
       ),
     ),
   );
@@ -31,9 +31,10 @@ void main() {
       ShapeNode(
         shape: .rectangle,
         paint: Paint()..color = BLACK,
-        size: Vector2(20, 20),
+        size: .all(25),
         anchor: .center(),
         scale: Vector2(2, 1),
+        position: Vector2(50, 50),
       ),
     ),
   );
@@ -49,6 +50,7 @@ void main() {
         size: Vector2(30, 10),
         anchor: .center(),
         angle: math.pi / 4,
+        position: Vector2(50, 50),
       ),
     ),
   );
@@ -58,11 +60,16 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/transform_anchor_top_left.png',
-      ShapeNode(
-        shape: .rectangle,
-        paint: Paint()..color = BLACK,
-        size: Vector2(30, 30),
-        anchor: .topLeft(),
+      TransformNode(
+        position: Vector2(50, 50),
+        children: [
+          ShapeNode(
+            shape: .rectangle,
+            paint: Paint()..color = BLACK,
+            size: Vector2(30, 30),
+            anchor: .topLeft(),
+          ),
+        ],
       ),
     ),
   );
@@ -72,11 +79,16 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/transform_anchor_bottom_right.png',
-      ShapeNode(
-        shape: .rectangle,
-        paint: Paint()..color = BLACK,
-        size: Vector2(30, 30),
-        anchor: .bottomRight(),
+      TransformNode(
+        position: Vector2(50, 50),
+        children: [
+          ShapeNode(
+            shape: .rectangle,
+            paint: Paint()..color = BLACK,
+            size: Vector2(30, 30),
+            anchor: .bottomRight(),
+          ),
+        ],
       ),
     ),
   );

@@ -1,4 +1,5 @@
 import 'package:ignis/src/node.dart';
+import 'package:ignis/src/signal.dart';
 
 class FpsNode extends Node {
   /// The window size to use for FPS calculations. Defaults to 60.
@@ -7,8 +8,12 @@ class FpsNode extends Node {
   /// The current frames per second (FPS).
   double fps = 0;
 
+  /// Emits the latest rounded [fps] whenever it changes.
+  final onUpdate = Signal1<int>();
+
   final List<double> _window = [];
   double _sum = 0;
+  int _last = 0;
 
   FpsNode({
     int? windowSize,
@@ -31,5 +36,11 @@ class FpsNode extends Node {
 
     final fps = _window.length / _sum;
     this.fps = fps.isFinite ? fps : 0;
+    final rounded = this.fps.round();
+
+    if (rounded != _last) {
+      _last = rounded;
+      onUpdate.emit(rounded);
+    }
   }
 }

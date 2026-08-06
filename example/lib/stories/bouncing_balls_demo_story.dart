@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ignis/ignis.dart';
 
+import '../hooks.dart';
+
 final _RNG = Random();
 
 //
@@ -21,12 +23,9 @@ const _BALL_SPAWN_INTERVAL = 0.002;
 const _BALL_RADIUS = 2.0;
 const _WALL_THICKNESS = 5.0;
 const _BOX_SIZE = 500.0;
-const _BOX_LEFT = -_BOX_SIZE / 2 - _WALL_THICKNESS;
-const _BOX_RIGHT = -_BOX_LEFT;
-const _BOX_TOP = -_BOX_SIZE / 2 - _WALL_THICKNESS;
+const _BOX_CENTER = _BOX_SIZE / 2;
 const _BOX_SPAN = _BOX_SIZE + _WALL_THICKNESS * 2;
 
-const _TEXT_COLOR = Colors.white;
 const _WALL_COLOR = Colors.white;
 const _BALL_COLOR = Colors.green;
 const _COLLIDING_BALL_COLOR = Colors.red;
@@ -46,85 +45,93 @@ class BouncingBallsDemoStory extends HookWidget {
     final version$ = useState(0);
     final paused$ = useState(false);
     final debug$ = useState(false);
+    final fps$ = useState(0);
+    final balls$ = useState(0);
 
     final version = version$.value;
     final node = useMemoized(() => _DemoNode(), [version]);
     final paused = paused$.value;
     final debug = debug$.value;
+    final fps = fps$.value;
+    final balls = balls$.value;
 
-    return Focus(
-      autofocus: true,
-      onKeyEvent: (node, event) {
-        if (event is! KeyDownEvent) {
-          return .ignored;
-        }
+    useSignal1(node.fps.onUpdate, (value) => fps$.value = value);
+    useSignal1(node.onBalls, (value) => balls$.value = value);
 
-        switch (event.logicalKey) {
-          case .space:
-            paused$.value = !paused;
-
-          case .keyR:
-            version$.value += 1;
-
-          case .keyQ:
-            debug$.value = !debug;
-
-          default:
+    return SizedBox(
+      width: _BOX_SIZE,
+      child: Focus(
+        autofocus: true,
+        onKeyEvent: (node, event) {
+          if (event is! KeyDownEvent) {
             return .ignored;
-        }
+          }
 
-        return .handled;
-      },
-      child: Column(
-        spacing: 10,
-        mainAxisAlignment: .center,
-        children: [
-          SizedBox.square(
-            dimension: 500,
-            child: SceneWidget(
-              node.mount(),
-              paused: paused,
-              debug: debug,
+          switch (event.logicalKey) {
+            case .space:
+              paused$.value = !paused;
+
+            case .keyR:
+              version$.value += 1;
+
+            case .keyQ:
+              debug$.value = !debug;
+
+            default:
+              return .ignored;
+          }
+
+          return .handled;
+        },
+        child: Column(
+          spacing: 5,
+          mainAxisAlignment: .center,
+          children: [
+            Row(
+              mainAxisAlignment: .spaceBetween,
+              children: [
+                Text('$balls balls'),
+                Text('$fps FPS'),
+              ],
             ),
-          ),
-          Text(
-            'space=${paused ? 'resume' : 'pause'} | '
-            'q=${debug ? 'debug off' : 'debug on'} | '
-            'r=restart',
-          ),
-        ],
+            AspectRatio(
+              aspectRatio: 1,
+              child: SceneWidget(
+                node.mount(),
+                paused: paused,
+                debug: debug,
+              ),
+            ),
+            Text(
+              'space=${paused ? 'resume' : 'pause'} | '
+              'q=${debug ? 'debug off' : 'debug on'} | '
+              'r=restart',
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _DemoNode extends TransformNode {
+class _DemoNode extends Node {
   late final FpsNode fps;
-  late final TextNode ballsLabel;
-  late final TextNode fpsLabel;
   late final CollisionDetectionNode cd;
+  late final _BoxNode box;
   late final TimerNode spawner;
 
+  /// The number of balls in the demo.
   int balls = 0;
+
+  /// Emitted with the new ball count whenever a ball spawns.
+  final onBalls = Signal1<int>();
 
   _DemoNode() {
     addAll([
       fps = FpsNode(),
-      ballsLabel = TextNode(
-        position: .new(_BOX_LEFT + 2, _BOX_TOP),
-        anchor: .bottomLeft(),
-        style: const TextStyle(color: _TEXT_COLOR),
-        priority: 1,
-      ),
-      fpsLabel = TextNode(
-        position: .new(_BOX_RIGHT - 2, _BOX_TOP),
-        anchor: .bottomRight(),
-        style: const TextStyle(color: _TEXT_COLOR),
-        priority: 1,
-      ),
       cd = CollisionDetectionNode(
         children: [
-          _BoxNode(),
+          box = _BoxNode(),
         ],
       ),
       spawner = TimerNode(
@@ -136,15 +143,17 @@ class _DemoNode extends TransformNode {
     spawner.onTrigger(() {
       final angle = _RNG.nextDouble() * 2 * pi;
       final velocity = Vector2(cos(angle), sin(angle)) * _BALL_SPEED;
-      cd.add(_BallNode(velocity: velocity));
-      balls += 1;
-    });
-  }
 
-  @override
-  void tick(double dt) {
-    fpsLabel.text = '${fps.fps.round()} FPS';
-    ballsLabel.text = '$balls balls';
+      box.add(
+        _BallNode(
+          position: .all(_BOX_CENTER),
+          velocity: velocity,
+        ),
+      );
+
+      balls += 1;
+      onBalls.emit(balls);
+    });
   }
 }
 
@@ -158,7 +167,6 @@ class _BoxNode extends ShapeNode {
     : super(
         shape: .rectangle,
         size: .all(_BOX_SIZE),
-        anchor: .center(),
         paint: Paint()
           ..style = .stroke
           ..strokeWidth = _WALL_THICKNESS
@@ -169,25 +177,25 @@ class _BoxNode extends ShapeNode {
         axis: .y,
         shape: .rectangle,
         size: .new(_BOX_SPAN, _WALL_THICKNESS),
-        position: .new(0, -_BOX_SIZE / 2),
+        position: .new(_BOX_CENTER, 0),
       ),
       _WallNode(
         axis: .y,
         shape: .rectangle,
         size: .new(_BOX_SPAN, _WALL_THICKNESS),
-        position: .new(0, _BOX_SIZE / 2),
+        position: .new(_BOX_CENTER, _BOX_SIZE),
       ),
       _WallNode(
         axis: .x,
         shape: .rectangle,
         size: .new(_WALL_THICKNESS, _BOX_SPAN),
-        position: .new(-_BOX_SIZE / 2, 0),
+        position: .new(0, _BOX_CENTER),
       ),
       _WallNode(
         axis: .x,
         shape: .rectangle,
         size: .new(_WALL_THICKNESS, _BOX_SPAN),
-        position: .new(_BOX_SIZE / 2, 0),
+        position: .new(_BOX_SIZE, _BOX_CENTER),
       ),
     ]);
   }
@@ -214,6 +222,7 @@ class _BallNode extends ShapeNode {
 
   _BallNode({
     required this.velocity,
+    super.position,
   }) : super(
          shape: .circle,
          size: .all(_BALL_RADIUS * 2),

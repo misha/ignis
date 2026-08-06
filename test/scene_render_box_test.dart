@@ -18,17 +18,6 @@ void main() {
     expect(box.hitTestSelf(.zero), isTrue);
   });
 
-  testWidgets('renders the node translated by half the scene size', (tester) async {
-    final node = _TransformRecordingNode();
-    final scene = node.mount();
-    scene.resize(100, 80);
-
-    await tester.pumpWidget(RenderSceneWidget(scene: scene, addRepaintBoundary: true));
-    await tester.pump(const Duration(milliseconds: 16));
-
-    expect(node.translation, const Offset(50, 40));
-  });
-
   testWidgets('drives scene updates and paints every frame', (tester) async {
     final scene = makeScene();
 
@@ -132,15 +121,4 @@ void main() {
     expect(sceneA.node.updates, sceneAUpdatesAfterSwap); // No longer driven once detached.
     expect(sceneB.node.updates, greaterThanOrEqualTo(1));
   });
-}
-
-class _TransformRecordingNode extends Node {
-  late Offset translation;
-
-  @override
-  void render(Canvas canvas) {
-    final transform = canvas.getTransform();
-    translation = Offset(transform[12], transform[13]);
-    super.render(canvas);
-  }
 }

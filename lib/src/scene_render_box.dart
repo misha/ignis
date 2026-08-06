@@ -141,10 +141,8 @@ class SceneRenderBox extends RenderBox {
   @override
   void paint(PaintingContext context, Offset offset) {
     final canvas = context.canvas;
-    canvas.save();
     canvas.translate(offset.dx, offset.dy);
-    canvas.translate(scene.size.x / 2, scene.size.y / 2);
     scene.render(canvas, debug: _isDebug);
-    canvas.restore();
+    canvas.translate(-offset.dx, -offset.dy);
   }
 }

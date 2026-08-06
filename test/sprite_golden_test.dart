@@ -19,8 +19,10 @@ void main() {
       tester,
       'goldens/sprite_frame.png',
       SpriteNode(
-        sheet: .asset('test/assets/fire.png', size: Vector2(32, 48)),
-        anchor: .center(),
+        sheet: .asset(
+          'test/assets/fire.png',
+          size: Vector2(32, 48),
+        ),
       )..play(column: 4),
     ),
   );

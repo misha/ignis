@@ -7,7 +7,7 @@ import 'support/expect.dart';
 
 void main() {
   testWidgets(
-    'renders a red square centered on white',
+    'renders a red square',
     (tester) => expectGolden(
       tester,
       'goldens/shape_red_square.png',
@@ -16,12 +16,13 @@ void main() {
         paint: Paint()..color = RED,
         size: Vector2(50, 50),
         anchor: .center(),
+        position: Vector2(50, 50),
       ),
     ),
   );
 
   testWidgets(
-    'renders a blue circle centered on white',
+    'renders a blue circle',
     (tester) => expectGolden(
       tester,
       'goldens/shape_blue_circle.png',
@@ -30,6 +31,7 @@ void main() {
         paint: Paint()..color = BLUE,
         size: Vector2(50, 50),
         anchor: .center(),
+        position: Vector2(50, 50),
       ),
     ),
   );
