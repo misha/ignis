@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:widgetbook/widgetbook.dart';
 
 import 'stories/bouncing_balls_demo_story.dart';
+import 'stories/drag_and_drop_demo_story.dart';
 import 'stories/snake_game_story.dart';
 
 void main() {
@@ -43,6 +44,15 @@ class ExampleWidgetbook extends StatelessWidget {
                 WidgetbookUseCase(
                   name: 'Default',
                   builder: (context) => const BouncingBallsDemoStory(),
+                ),
+              ],
+            ),
+            WidgetbookComponent(
+              name: 'Drag and Drop',
+              useCases: [
+                WidgetbookUseCase(
+                  name: 'Default',
+                  builder: (context) => const DragAndDropDemoStory(),
                 ),
               ],
             ),

@@ -3,12 +3,12 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('moves its parent by an offset', () {
-    final node = TransformNode(position: Vector2(10, 20));
+    final node = TransformNode(position: .new(10, 20));
     final scene = node.mount();
 
     node.add(
       MoveEffect.by(
-        offset: Vector2(20, -10),
+        offset: .new(20, -10),
         position: node.position,
         controller: .new(duration: 1),
         cleanup: true,
@@ -26,12 +26,12 @@ void main() {
   });
 
   test('moves its parent to a destination', () {
-    final node = TransformNode(position: Vector2(10, 20));
+    final node = TransformNode(position: .new(10, 20));
     final scene = node.mount();
 
     node.add(
       MoveEffect.to(
-        destination: Vector2(30, 10),
+        destination: .new(30, 10),
         position: node.position,
         controller: .new(duration: 1),
       ),
@@ -50,14 +50,14 @@ void main() {
 
     node.add(
       MoveEffect.to(
-        destination: Vector2(20, 10),
+        destination: .new(20, 10),
         position: node.position,
         controller: .new(duration: 1, startDelay: 0.5),
       ),
     );
 
     scene.update(0.25);
-    node.position.mutate().setFrom(Vector2(10, 0));
+    node.position.mutate().setFrom(.new(10, 0));
     scene.update(0.75);
 
     expect(node.position, Vector2(15, 5));
@@ -69,7 +69,7 @@ void main() {
 
     node.add(
       MoveEffect.by(
-        offset: Vector2(10, 0),
+        offset: .new(10, 0),
         position: node.position,
         controller: .new(duration: 1),
       ),
@@ -77,7 +77,7 @@ void main() {
 
     node.add(
       MoveEffect.by(
-        offset: Vector2(0, 20),
+        offset: .new(0, 20),
         position: node.position,
         controller: .new(duration: 1),
       ),

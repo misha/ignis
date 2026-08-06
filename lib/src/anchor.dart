@@ -12,8 +12,7 @@ import 'package:ignis/src/math.dart';
 /// point of the node that is positioned at (100, 100), as a relative fraction
 /// of the size of the object.
 ///
-/// The "default" anchor in most cases is [topLeft]. Null anchor values are also
-/// interpreted as a [topLeft] anchor.
+/// The "default" anchor in most cases is [topLeft].
 ///
 /// The anchor is represented by a fraction of the size (in each axis), where 0
 /// in x-axis means left, 0 in y-axis means top, 1 in x-axis means right and 1

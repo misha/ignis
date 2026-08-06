@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:ignis/src/input_router.dart';
 import 'package:ignis/src/node.dart';
 import 'package:ignis/src/render_loop.dart';
 import 'package:ignis/src/scene_widget.dart';
@@ -51,20 +52,22 @@ class SceneRenderBox extends RenderBox {
   bool _isPaused;
   bool _isDebug;
   bool _isRepaintBoundary;
+  late InputRouter _inputRouter;
+
+  Scene get scene => _scene;
 
   SceneRenderBox(
     this._scene, {
     this._isPaused = false,
     this._isDebug = false,
     required this._isRepaintBoundary,
-  });
-
-  Scene get scene => _scene;
+  }) : _inputRouter = InputRouter(_scene);
 
   set scene(Scene value) {
     if (identical(_scene, value)) return;
     if (attached) _detachScene();
     _scene = value;
+    _inputRouter = InputRouter(_scene);
     if (attached) _attachScene();
   }
 
@@ -129,6 +132,7 @@ class SceneRenderBox extends RenderBox {
   }
 
   void _renderLoopCallback(double dt) {
+    // TODO: Probably one of these is extraneous.
     assert(attached);
     if (!attached) return;
     scene.update(dt);
@@ -139,8 +143,12 @@ class SceneRenderBox extends RenderBox {
   bool hitTestSelf(Offset position) => true;
 
   @override
+  void handleEvent(PointerEvent event, HitTestEntry entry) => _inputRouter.handle(event);
+
+  @override
   void paint(PaintingContext context, Offset offset) {
     final canvas = context.canvas;
+    // TODO: What's faster, manually un-translating or save/restore?
     canvas.translate(offset.dx, offset.dy);
     scene.render(canvas, debug: _isDebug);
     canvas.translate(-offset.dx, -offset.dy);

@@ -10,6 +10,7 @@ export 'src/intersection_system.dart';
 export 'src/math.dart';
 export 'src/node.dart' show Node, Scene, Mount;
 export 'src/nodes.dart';
+export 'src/pointer_info.dart';
 export 'src/preload.dart';
 export 'src/scene_widget.dart';
 export 'src/signal.dart';

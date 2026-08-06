@@ -18,7 +18,7 @@ void main() {
         paint: Paint()..color = BLACK,
         size: .all(20),
         anchor: .center(),
-        position: Vector2(25, 25),
+        position: .all(25),
       ),
     ),
   );
@@ -33,8 +33,8 @@ void main() {
         paint: Paint()..color = BLACK,
         size: .all(25),
         anchor: .center(),
-        scale: Vector2(2, 1),
-        position: Vector2(50, 50),
+        scale: .new(2, 1),
+        position: .all(50),
       ),
     ),
   );
@@ -47,10 +47,10 @@ void main() {
       ShapeNode(
         shape: .rectangle,
         paint: Paint()..color = BLACK,
-        size: Vector2(30, 10),
+        size: .new(30, 10),
         anchor: .center(),
         angle: math.pi / 4,
-        position: Vector2(50, 50),
+        position: .all(50),
       ),
     ),
   );
@@ -61,12 +61,12 @@ void main() {
       tester,
       'goldens/transform_anchor_top_left.png',
       TransformNode(
-        position: Vector2(50, 50),
+        position: .all(50),
         children: [
           ShapeNode(
             shape: .rectangle,
             paint: Paint()..color = BLACK,
-            size: Vector2(30, 30),
+            size: .all(30),
             anchor: .topLeft(),
           ),
         ],
@@ -80,12 +80,12 @@ void main() {
       tester,
       'goldens/transform_anchor_bottom_right.png',
       TransformNode(
-        position: Vector2(50, 50),
+        position: .all(50),
         children: [
           ShapeNode(
             shape: .rectangle,
             paint: Paint()..color = BLACK,
-            size: Vector2(30, 30),
+            size: .all(30),
             anchor: .bottomRight(),
           ),
         ],

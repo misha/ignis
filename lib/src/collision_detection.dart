@@ -1,3 +1,4 @@
+import 'package:ignis/src/bounds.dart';
 import 'package:ignis/src/intersection_system.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/collider_node.dart';
@@ -97,7 +98,14 @@ final class CollisionDetection {
       for (final collider in _colliders) {
         final slot = _mapping[collider]!;
         final bounds = _boundsIndex[slot]!;
-        _computeCollisionBounds(collider, bounds.mutate());
+
+        computeWorldBounds(
+          collider,
+          collider.shape,
+          bounds.mutate(),
+          collider.cd,
+        );
+
         _order.add(slot);
       }
 
@@ -108,7 +116,14 @@ final class CollisionDetection {
       for (final collider in _colliders) {
         final slot = _mapping[collider]!;
         final bounds = _boundsIndex[slot]!;
-        _computeCollisionBounds(collider, bounds.mutate());
+
+        computeWorldBounds(
+          collider,
+          collider.shape,
+          bounds.mutate(),
+          collider.cd,
+        );
+
         _resettle(slot);
       }
     }
@@ -231,37 +246,6 @@ final class CollisionDetection {
     _overlapping
       ..clear()
       ..addAll(current);
-  }
-
-  static final _CENTER_SCRATCH = Vector2.zero();
-  static final _HALF_EXTENTS_SCRATCH = Vector2.zero();
-
-  static void _computeCollisionBounds(ColliderNode node, MutableAabb2 bounds) {
-    // Start with the total transform between this node and the arena.
-    final transform = node.absoluteTransform(node.cd);
-    final width = node.shape.width(node.size);
-    final height = node.shape.height(node.size);
-    final anchor = node.anchor;
-
-    // Compute the shape's center, adjusted for absolute transform.
-    if (anchor != null) {
-      // Adjust for the anchor.
-      _CENTER_SCRATCH.mutate()
-        ..setValues(width * (0.5 - (anchor.x)), height * (0.5 - (anchor.y)))
-        ..transformWith(transform);
-    } else {
-      _CENTER_SCRATCH.mutate()
-        ..setValues(width, height)
-        ..transformWith(transform);
-    }
-
-    // Compute the shape's half-extents, adjusted for absolute rotation (*not* transform).
-    _HALF_EXTENTS_SCRATCH.mutate()
-      ..setValues(width / 2, height / 2)
-      ..absoluteRotate2With(transform);
-
-    // Write the results to the provided AABB.
-    bounds.setCenterAndHalfExtents(_CENTER_SCRATCH, _HALF_EXTENTS_SCRATCH);
   }
 
   // Limit is 53 bits for JavaScript compatibility, so keys split the space

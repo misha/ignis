@@ -21,7 +21,7 @@ void main() {
       SpriteNode(
         sheet: .asset(
           'test/assets/fire.png',
-          size: Vector2(32, 48),
+          size: .new(32, 48),
         ),
       )..play(column: 4),
     ),

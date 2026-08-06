@@ -3,6 +3,12 @@ import 'package:ignis/src/math.dart';
 abstract class IntersectionSystem {
   const IntersectionSystem();
 
+  /// Returns true if [point] lies within the rectangle described by [rect].
+  bool rectanglePoint(Aabb2 rect, Vector2 point);
+
+  /// Returns true if [point] lies within the circle described by [circle].
+  bool circlePoint(Aabb2 circle, Vector2 point);
+
   /// Returns true if the AABBs for two rectangles intersect.
   bool rectangleRectangle(Aabb2 a, Aabb2 b);
 
@@ -15,6 +21,19 @@ abstract class IntersectionSystem {
 
 final class StandardIntersectionSystem extends IntersectionSystem {
   const StandardIntersectionSystem();
+
+  @override
+  bool rectanglePoint(Aabb2 rect, Vector2 point) {
+    return rect.intersectsWithVector2(point);
+  }
+
+  @override
+  bool circlePoint(Aabb2 circle, Vector2 point) {
+    final dx = point.x - circle.centerX;
+    final dy = point.y - circle.centerY;
+    final radius = circle.width / 2;
+    return dx * dx + dy * dy <= radius * radius;
+  }
 
   @override
   bool rectangleRectangle(Aabb2 a, Aabb2 b) {

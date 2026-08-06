@@ -15,7 +15,7 @@ void main() {
         text: 'Ignis',
         style: const TextStyle(color: BLACK, fontSize: 24),
         anchor: .center(),
-        position: Vector2(50, 50),
+        position: .all(50),
       ),
     ),
   );

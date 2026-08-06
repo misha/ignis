@@ -24,7 +24,7 @@ scripts:
     $after: genhtml coverage/lcov.info -o coverage/html
   goldens: flutter test --update-goldens
   open-coverage: open coverage/html/index.html
-  test: flutter test -r expanded
+  test: flutter test
 flutter:
   assets:
     - test/assets/

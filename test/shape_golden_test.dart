@@ -14,9 +14,9 @@ void main() {
       ShapeNode(
         shape: .rectangle,
         paint: Paint()..color = RED,
-        size: Vector2(50, 50),
+        size: .all(50),
         anchor: .center(),
-        position: Vector2(50, 50),
+        position: .all(50),
       ),
     ),
   );
@@ -29,9 +29,9 @@ void main() {
       ShapeNode(
         shape: .circle,
         paint: Paint()..color = BLUE,
-        size: Vector2(50, 50),
+        size: .all(50),
         anchor: .center(),
-        position: Vector2(50, 50),
+        position: .all(50),
       ),
     ),
   );

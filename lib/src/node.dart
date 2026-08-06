@@ -257,7 +257,7 @@ class Node {
   // #region Mounting
 
   void _mount(Scene scene) {
-    // Assert null _scene?
+    // TODO: Assert null _scene?
     _scene = scene;
     onMount.emit();
     final children = _children;
@@ -270,7 +270,7 @@ class Node {
   }
 
   void _unmount() {
-    // Assert non-null _scene?
+    // TODO: Assert non-null _scene?
     final children = _children;
 
     if (children != null && children.isNotEmpty) {
@@ -360,6 +360,38 @@ class Node {
 
   /// Removes this node from its parent.
   bool detach() => parent?.remove(this) ?? false;
+
+  // #endregion
+
+  // #region Hit Testing
+
+  /// Finds the topmost enabled node in this subtree whose hit area contains
+  /// [point], per [containsPoint].
+  ///
+  /// Children are searched in reverse [priority] order before this node's
+  /// own hit area, mirroring reverse paint order.
+  @nonVirtual
+  Node? hitTest(Vector2 point) {
+    if (!enabled) return null;
+    final children = _children;
+
+    if (children != null && children.isNotEmpty) {
+      for (final child in children.reversed) {
+        final hit = child.hitTest(point);
+        if (hit != null) return hit;
+      }
+    }
+
+    if (containsPoint(point)) return this;
+    return null;
+  }
+
+  /// Whether this node's hit area contains [point].
+  ///
+  /// The default implementation always returns false, so plain nodes are
+  /// invisible to [hitTest]. Override to opt a node into hit-testing.
+  @visibleForOverriding
+  bool containsPoint(Vector2 point) => false;
 
   // #endregion
 }

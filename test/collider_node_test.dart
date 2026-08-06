@@ -6,7 +6,7 @@ void main() {
     final collider = ColliderNode(
       shape: .circle,
       size: .all(2),
-      position: .new(0, 0),
+      position: .zero(),
     );
 
     expect(() => collider.mount(), returnsNormally);
@@ -20,7 +20,7 @@ void main() {
     final a = ColliderNode(
       shape: .circle,
       size: .all(8),
-      position: .new(0, 0),
+      position: .zero(),
       layer: 1,
       mask: 1,
     );
@@ -41,7 +41,7 @@ void main() {
       ColliderNode(
         shape: .circle,
         size: .all(8),
-        position: .new(0, 0),
+        position: .zero(),
         layer: 1,
         mask: 1,
       ),
@@ -60,7 +60,7 @@ void main() {
     final a = ColliderNode(
       shape: .circle,
       size: .all(8),
-      position: .new(0, 0),
+      position: .zero(),
       layer: 1,
       mask: 1,
     );

@@ -44,8 +44,8 @@ void main() {
       final position = Vector2(10, 20);
       final result = Anchor.center().toOtherAnchorPosition(
         position,
-        Anchor.center(),
-        Vector2(100, 100),
+        .center(),
+        .all(100),
       );
 
       expect(identical(result, position), isTrue);
@@ -53,9 +53,9 @@ void main() {
 
     test('shifts the position by the anchor delta scaled by the size', () {
       final result = Anchor.topLeft().toOtherAnchorPosition(
-        Vector2(10, 20),
-        Anchor.bottomRight(),
-        Vector2(100, 50),
+        .new(10, 20),
+        .bottomRight(),
+        .new(100, 50),
       );
 
       expect(result, Vector2(110, 70));
@@ -64,9 +64,9 @@ void main() {
     test('writes into the given output vector, if provided', () {
       final out = Vector2.zero().mutate();
       final result = Anchor.topLeft().toOtherAnchorPosition(
-        Vector2(10, 20),
-        Anchor.center(),
-        Vector2(100, 50),
+        .new(10, 20),
+        .center(),
+        .new(100, 50),
         out,
       );
 
@@ -94,7 +94,7 @@ void main() {
 
     test('setFrom copies another anchor', () {
       final anchor = Anchor.topLeft();
-      anchor.mutate().setFrom(Anchor.bottomRight());
+      anchor.mutate().setFrom(.bottomRight());
 
       expect(anchor, Anchor.bottomRight());
     });

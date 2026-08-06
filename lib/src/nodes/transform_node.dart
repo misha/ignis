@@ -27,24 +27,23 @@ class TransformNode extends Node {
   /// The `y` component of [size].
   double get height => size.y;
 
-  /// Where [size] sits relative to [position]. Defaults to null.
-  ///
-  /// When null, the anchor is treated as `topLeft`.
-  Anchor? anchor;
+  /// Where [size] sits relative to [position]. Defaults to `topLeft`.
+  Anchor anchor;
 
   TransformNode({
     Vector2? position,
     Vector2? scale,
     double? angle,
     Vector2? size,
-    this.anchor,
+    Anchor? anchor,
     super.enabled,
     super.priority,
     super.children,
   }) : position = position ?? .zero(),
        scale = scale ?? .all(1),
        angle = angle ?? 0,
-       size = size ?? .zero();
+       size = size ?? .zero(),
+       anchor = anchor ?? .topLeft();
 
   final Matrix3 _lastLocalTransform = .identity();
 
@@ -120,18 +119,11 @@ class TransformNode extends Node {
   void render(Canvas canvas) {
     canvas.save();
     canvas.transform(renderTransform);
-    final anchor = this.anchor;
-
-    if (anchor == null) {
-      renderTransformed(canvas);
-    } else {
-      final offsetX = -anchor.x * size.x;
-      final offsetY = -anchor.y * size.y;
-      canvas.translate(offsetX, offsetY);
-      renderTransformed(canvas);
-      canvas.translate(-offsetX, -offsetY);
-    }
-
+    final offsetX = -anchor.x * size.x;
+    final offsetY = -anchor.y * size.y;
+    canvas.translate(offsetX, offsetY);
+    renderTransformed(canvas);
+    canvas.translate(-offsetX, -offsetY);
     super.render(canvas);
     canvas.restore();
   }
@@ -148,18 +140,11 @@ class TransformNode extends Node {
   void debugRender(Canvas canvas) {
     canvas.save();
     canvas.transform(_lastRenderTransform);
-    final anchor = this.anchor;
-
-    if (anchor == null) {
-      debugRenderTransformed(canvas);
-    } else {
-      final offsetX = -anchor.x * size.x;
-      final offsetY = -anchor.y * size.y;
-      canvas.translate(offsetX, offsetY);
-      debugRenderTransformed(canvas);
-      canvas.translate(-offsetX, -offsetY);
-    }
-
+    final offsetX = -anchor.x * size.x;
+    final offsetY = -anchor.y * size.y;
+    canvas.translate(offsetX, offsetY);
+    debugRenderTransformed(canvas);
+    canvas.translate(-offsetX, -offsetY);
     super.debugRender(canvas);
     canvas.restore();
   }
@@ -172,16 +157,9 @@ class TransformNode extends Node {
   /// alongside your own drawing.
   @visibleForOverriding
   void debugRenderTransformed(Canvas canvas) {
-    final anchor = this.anchor;
-
-    if (anchor == null) {
-      canvas.drawLine(const .new(-1, 0), const .new(1, 0), DEBUG_TRANSFORM_PAINT);
-      canvas.drawLine(const .new(0, -1), const .new(0, 1), DEBUG_TRANSFORM_PAINT);
-    } else {
-      final ax = anchor.x * size.x;
-      final ay = anchor.y * size.y;
-      canvas.drawLine(.new(ax - 1, ay), .new(ax + 1, ay), DEBUG_TRANSFORM_PAINT);
-      canvas.drawLine(.new(ax, ay - 1), .new(ax, ay + 1), DEBUG_TRANSFORM_PAINT);
-    }
+    final ax = anchor.x * size.x;
+    final ay = anchor.y * size.y;
+    canvas.drawLine(.new(ax - 1, ay), .new(ax + 1, ay), DEBUG_TRANSFORM_PAINT);
+    canvas.drawLine(.new(ax, ay - 1), .new(ax, ay + 1), DEBUG_TRANSFORM_PAINT);
   }
 }
