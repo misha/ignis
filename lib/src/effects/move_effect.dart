@@ -4,13 +4,14 @@ import 'package:ignis/src/nodes/transform_node.dart';
 
 /// An [EffectNode] that animates a [TransformNode]'s position over time.
 abstract class MoveEffect extends EffectNode {
-  /// The node whose position is mutated as this effect progresses.
-  ///
-  /// If left null, resolves to the closest [TransformNode] ancestor on
-  /// mount, and clears again on unmount.
-  TransformNode? target;
+  TransformNode? _target;
 
-  /// Moves [target] by [offset], relative to its position when the effect starts.
+  /// The node whose position is mutated by this effect.
+  TransformNode? get target => _target;
+
+  /// Moves [target] by [offset] relative to its position when the effect starts.
+  ///
+  /// If [target] is null, resolves to the closest [TransformNode].
   factory MoveEffect.by({
     TransformNode? target,
     required Vector2 offset,
@@ -19,6 +20,8 @@ abstract class MoveEffect extends EffectNode {
   }) = _MoveByEffect;
 
   /// Moves [target] to [destination].
+  ///
+  /// If [target] is null, resolves to the closest [TransformNode].
   factory MoveEffect.to({
     TransformNode? target,
     required Vector2 destination,
@@ -27,18 +30,18 @@ abstract class MoveEffect extends EffectNode {
   }) = _MoveToEffect;
 
   MoveEffect._({
-    this.target,
+    this._target,
     required super.controller,
     super.cleanup,
   }) {
-    if (target == null) {
+    if (_target == null) {
       onMount(() {
-        target = ancestors.whereType<TransformNode>().firstOrNull;
-        assert(target != null, 'MoveEffect requires a TransformNode target or ancestor.');
+        _target = ancestors.whereType<TransformNode>().firstOrNull;
+        assert(_target != null, 'MoveEffect requires a TransformNode target or ancestor.');
       });
 
       onUnmount(() {
-        target = null;
+        _target = null;
       });
     }
   }
@@ -55,7 +58,7 @@ class _MoveByEffect extends MoveEffect {
   }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
-      target!.position.mutate().addScaled(_offset, progress - previousProgress);
+      _target!.position.mutate().addScaled(_offset, progress - previousProgress);
     });
   }
 }
@@ -74,11 +77,11 @@ class _MoveToEffect extends MoveEffect {
     onStart(() {
       _offset.mutate()
         ..setFrom(_destination)
-        ..subtract(target!.position);
+        ..subtract(_target!.position);
     });
 
     onProgress((progress) {
-      target!.position.mutate().addScaled(_offset, progress - previousProgress);
+      _target!.position.mutate().addScaled(_offset, progress - previousProgress);
     });
   }
 }

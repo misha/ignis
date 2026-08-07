@@ -3,13 +3,14 @@ import 'package:ignis/src/nodes/transform_node.dart';
 
 /// An [EffectNode] that animates a [TransformNode]'s angle over time.
 abstract class RotateEffect extends EffectNode {
-  /// The node whose angle is mutated as this effect progresses.
-  ///
-  /// If left null, resolves to the closest [TransformNode] ancestor on
-  /// mount, and clears again on unmount.
-  TransformNode? target;
+  TransformNode? _target;
+
+  /// The node whose angle is mutated by this effect.
+  TransformNode? get target => _target;
 
   /// Rotates [target] by [angle], relative to its angle when the effect starts.
+  ///
+  /// If [target] is null, resolves to the closest [TransformNode].
   factory RotateEffect.by({
     TransformNode? target,
     required double angle,
@@ -18,6 +19,8 @@ abstract class RotateEffect extends EffectNode {
   }) = _RotateByEffect;
 
   /// Rotates [target] to [angle].
+  ///
+  /// If [target] is null, resolves to the closest [TransformNode].
   factory RotateEffect.to({
     TransformNode? target,
     required double angle,
@@ -26,18 +29,18 @@ abstract class RotateEffect extends EffectNode {
   }) = _RotateToEffect;
 
   RotateEffect._({
-    this.target,
+    this._target,
     required super.controller,
     super.cleanup,
   }) {
-    if (target == null) {
+    if (_target == null) {
       onMount(() {
-        target = ancestors.whereType<TransformNode>().firstOrNull;
-        assert(target != null, 'RotateEffect requires a TransformNode target or ancestor.');
+        _target = ancestors.whereType<TransformNode>().firstOrNull;
+        assert(_target != null, 'RotateEffect requires a TransformNode target or ancestor.');
       });
 
       onUnmount(() {
-        target = null;
+        _target = null;
       });
     }
   }
@@ -53,7 +56,7 @@ class _RotateByEffect extends RotateEffect {
     super.cleanup,
   }) : super._() {
     onProgress((progress) {
-      target!.angle += _angle * (progress - previousProgress);
+      _target!.angle += _angle * (progress - previousProgress);
     });
   }
 }
@@ -70,11 +73,11 @@ class _RotateToEffect extends RotateEffect {
   }) : _destination = angle,
        super._() {
     onStart(() {
-      _offset = _destination - target!.angle;
+      _offset = _destination - _target!.angle;
     });
 
     onProgress((progress) {
-      target!.angle += _offset * (progress - previousProgress);
+      _target!.angle += _offset * (progress - previousProgress);
     });
   }
 }
