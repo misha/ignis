@@ -37,7 +37,7 @@ abstract class MoveEffect extends EffectNode {
     if (_target == null) {
       onMount(() {
         _target = ancestors.whereType<TransformNode>().firstOrNull;
-        assert(_target != null, 'MoveEffect requires a TransformNode target or ancestor.');
+        assert(_target != null, 'Target must be set, or have a TransformNode ancestor.');
       });
 
       onUnmount(() {
