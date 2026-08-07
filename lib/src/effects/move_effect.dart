@@ -1,46 +1,61 @@
-import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/nodes/effect_node.dart';
+import 'package:ignis/src/nodes/transform_node.dart';
 
-/// An [EffectNode] that animates a [Vector2] position over time.
+/// An [EffectNode] that animates a [TransformNode]'s position over time.
 abstract class MoveEffect extends EffectNode {
-  /// The position mutated as this effect progresses.
-  final Vector2 position;
+  /// The node whose position is mutated as this effect progresses.
+  ///
+  /// If left null, resolves to the closest [TransformNode] ancestor on
+  /// mount, and clears again on unmount.
+  TransformNode? target;
 
-  /// Moves [position] by [offset], relative to its position when the effect starts.
+  /// Moves [target] by [offset], relative to its position when the effect starts.
   factory MoveEffect.by({
+    TransformNode? target,
     required Vector2 offset,
-    required Vector2 position,
     required EffectController controller,
     bool? cleanup,
   }) = _MoveByEffect;
 
-  /// Moves [position] to [destination].
+  /// Moves [target] to [destination].
   factory MoveEffect.to({
+    TransformNode? target,
     required Vector2 destination,
-    required Vector2 position,
     required EffectController controller,
     bool? cleanup,
   }) = _MoveToEffect;
 
   MoveEffect._({
-    required this.position,
+    this.target,
     required super.controller,
     super.cleanup,
-  });
+  }) {
+    if (target == null) {
+      onMount(() {
+        target = ancestors.whereType<TransformNode>().firstOrNull;
+        assert(target != null, 'MoveEffect requires a TransformNode target or ancestor.');
+      });
+
+      onUnmount(() {
+        target = null;
+      });
+    }
+  }
 }
 
 class _MoveByEffect extends MoveEffect {
   final Vector2 _offset;
 
   _MoveByEffect({
+    super.target,
     required Vector2 offset,
-    required super.position,
     required super.controller,
     super.cleanup,
   }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
-      position.mutate().addScaled(_offset, progress - previousProgress);
+      target!.position.mutate().addScaled(_offset, progress - previousProgress);
     });
   }
 }
@@ -50,8 +65,8 @@ class _MoveToEffect extends MoveEffect {
   final Vector2 _offset = .zero();
 
   _MoveToEffect({
+    super.target,
     required Vector2 destination,
-    required super.position,
     required super.controller,
     super.cleanup,
   }) : _destination = destination.clone(),
@@ -59,11 +74,11 @@ class _MoveToEffect extends MoveEffect {
     onStart(() {
       _offset.mutate()
         ..setFrom(_destination)
-        ..subtract(position);
+        ..subtract(target!.position);
     });
 
     onProgress((progress) {
-      position.mutate().addScaled(_offset, progress - previousProgress);
+      target!.position.mutate().addScaled(_offset, progress - previousProgress);
     });
   }
 }

@@ -279,7 +279,6 @@ class _SegmentNode extends ShapeNode {
           if (segment.index == index) {
             add(
               MoveEffect.by(
-                position: position,
                 offset: segment.tile.position - from.position,
                 controller: .new(duration: 1 / _SNAKE_SPEED),
                 cleanup: true,
