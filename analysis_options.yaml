@@ -31,5 +31,5 @@ linter:
     prefer_const_literals_to_create_immutables: false
     curly_braces_in_flow_control_structures: false
 formatter:
-  page_width: 120
+  page_width: 100
   trailing_commas: preserve

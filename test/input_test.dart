@@ -5,7 +5,7 @@ void main() {
   test('returns null when no InputNode contains the point', () {
     final root = Node(
       children: [
-        InputNode(
+        TapInput(
           shape: .rectangle,
           size: .all(10),
           position: .zero(),
@@ -21,7 +21,7 @@ void main() {
 
     final root = Node(
       children: [
-        a = InputNode(
+        a = TapInput(
           shape: .rectangle,
           size: .all(10),
           position: .zero(),
@@ -37,7 +37,7 @@ void main() {
 
     final root = Node(
       children: [
-        a = InputNode(
+        a = TapInput(
           shape: .circle,
           size: .all(10),
           position: .zero(),
@@ -55,7 +55,7 @@ void main() {
 
     final root = Node(
       children: [
-        a = InputNode(
+        a = TapInput(
           shape: .rectangle,
           size: .all(10),
           position: .zero(),
@@ -74,13 +74,13 @@ void main() {
 
     final root = Node(
       children: [
-        a = InputNode(
+        a = TapInput(
           shape: .rectangle,
           size: .all(10),
           position: .zero(),
           priority: 1,
         ),
-        InputNode(
+        TapInput(
           shape: .rectangle,
           size: .all(10),
           position: .zero(),
@@ -96,12 +96,12 @@ void main() {
 
     final root = Node(
       children: [
-        InputNode(
+        TapInput(
           shape: .rectangle,
           size: .all(10),
           position: .zero(),
           children: [
-            child = InputNode(
+            child = TapInput(
               shape: .rectangle,
               size: .all(10),
               position: .zero(),
@@ -118,7 +118,7 @@ void main() {
   test('skips a disabled InputNode', () {
     final root = Node(
       children: [
-        InputNode(
+        TapInput(
           shape: .rectangle,
           size: .all(10),
           position: .zero(),
@@ -136,7 +136,7 @@ void main() {
         Node(
           enabled: false,
           children: [
-            InputNode(
+            TapInput(
               shape: .rectangle,
               size: .all(10),
               position: .zero(),
@@ -156,7 +156,7 @@ void main() {
       children: [
         Node(
           children: [
-            a = InputNode(
+            a = TapInput(
               shape: .rectangle,
               size: .all(10),
               position: .zero(),

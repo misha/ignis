@@ -45,6 +45,12 @@ class TransformNode extends Node {
        size = size ?? .zero(),
        anchor = anchor ?? .topLeft();
 
+  /// The distance between this node's [position] and [other]'s.
+  double distance(TransformNode other) => position.distance(other.position);
+
+  /// The squared distance between this node's [position] and [other]'s.
+  double distance2(TransformNode other) => position.distance2(other.position);
+
   final Matrix3 _lastLocalTransform = .identity();
 
   /// This node's local transform.

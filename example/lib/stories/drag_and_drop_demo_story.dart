@@ -162,7 +162,6 @@ class _PieceNode extends ShapeNode {
   final onDropped = Signal1<_DropZoneNode?>();
 
   final Set<_DropZoneNode> _active = {};
-  final _grabOffset = Vector2.zero();
 
   _PieceNode({
     required super.position,
@@ -172,11 +171,11 @@ class _PieceNode extends ShapeNode {
          anchor: .center(),
          paint: Paint()..color = _PIECE_COLOR,
        ) {
-    late final InputNode input;
+    late final DragInput drags;
     late final ColliderNode collider;
 
     addAll([
-      input = InputNode(
+      drags = DragInput(
         shape: shape,
         size: size + .all(_PIECE_HIT_PADDING * 2),
         anchor: anchor,
@@ -190,40 +189,10 @@ class _PieceNode extends ShapeNode {
       ),
     ]);
 
-    input
-      ..onPointerDown((pointer) {
-        _grabOffset.mutate()
-          ..setFrom(position)
-          ..subtract(pointer.scene);
-      })
-      ..onPointerMove((pointer) {
-        position.mutate()
-          ..setFrom(pointer.scene)
-          ..add(_grabOffset);
-      })
-      ..onPointerUp((pointer) {
-        _DropZoneNode? zone;
-
-        if (_active.isNotEmpty) {
-          // TODO: Reconfigure the demo so this code actually runs.
-          double shortestDistance = double.negativeInfinity;
-
-          zone = _active.reduce((closest, candidate) {
-            final candidateDistance = position.distance2(candidate.position);
-
-            if (candidateDistance < shortestDistance) {
-              shortestDistance = candidateDistance;
-              return candidate;
-            } else {
-              return closest;
-            }
-          });
-
-          position.mutate().setFrom(zone.position);
-        }
-
-        onDropped.emit(zone);
-      });
+    drags
+      ..onDragUpdate((event) => position.mutate().add(event.delta))
+      ..onDragEnd((_) => drop())
+      ..onDragCancel(drop);
 
     collider
       ..onCollisionStart((other) {
@@ -244,5 +213,11 @@ class _PieceNode extends ShapeNode {
             target.setHighlighted(false);
         }
       });
+  }
+
+  void drop() {
+    final zone = _active.nearest(position);
+    if (zone != null) position.mutate().setFrom(zone.position);
+    onDropped.emit(zone);
   }
 }

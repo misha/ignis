@@ -52,7 +52,7 @@ class SceneRenderBox extends RenderBox {
   bool _isPaused;
   bool _isDebug;
   bool _isRepaintBoundary;
-  late InputRouter _inputRouter;
+  late final _inputRouter = InputRouter(this);
 
   Scene get scene => _scene;
 
@@ -61,13 +61,12 @@ class SceneRenderBox extends RenderBox {
     this._isPaused = false,
     this._isDebug = false,
     required this._isRepaintBoundary,
-  }) : _inputRouter = InputRouter(_scene);
+  });
 
   set scene(Scene value) {
     if (identical(_scene, value)) return;
     if (attached) _detachScene();
     _scene = value;
-    _inputRouter = InputRouter(_scene);
     if (attached) _attachScene();
   }
 
