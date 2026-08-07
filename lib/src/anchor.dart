@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:ignis/src/math.dart';
 
 /// Represents a relative position inside some 2D object with a rectangular
@@ -18,19 +16,20 @@ import 'package:ignis/src/math.dart';
 /// in x-axis means left, 0 in y-axis means top, 1 in x-axis means right and 1
 /// in y-axis means bottom.
 ///
+/// Just a [Vector2] under the hood, with named constructors for common
+/// positions.
+///
 /// Original concept and comments from Flame.
-class Anchor implements Mutable<MutableAnchor> {
-  final _storage = Float64List(2);
-
+extension type Anchor._(Vector2 value) implements Vector2 {
   /// The relative x position with respect to the object's width;
   /// 0 means totally to the left (beginning) and 1 means totally to the
   /// right (end).
-  double get x => _storage[0];
+  double get x => value.x;
 
   /// The relative y position with respect to the object's height;
   /// 0 means totally to the top (beginning) and 1 means totally to the
   /// bottom (end).
-  double get y => _storage[1];
+  double get y => value.y;
 
   /// Returns the anchor on the opposite side of this anchor.
   Anchor get opposite => Anchor(1 - x, 1 - y);
@@ -45,13 +44,10 @@ class Anchor implements Mutable<MutableAnchor> {
   factory Anchor.bottomCenter() => Anchor(0.5, 1.0);
   factory Anchor.bottomRight() => Anchor(1.0, 1.0);
 
-  Anchor(double x, double y) {
-    _storage[0] = x;
-    _storage[1] = y;
-  }
+  Anchor(double x, double y) : this._(Vector2(x, y));
 
-  /// Take your position [position] that is on this anchor and give back what
-  /// that position it would be on in the [other] anchor with a size of [size].
+  /// Takes a [position] that is on this anchor and give back what that
+  /// position would be on in the [other] anchor, given a size of [size].
   Vector2 toOtherAnchorPosition(
     Vector2 position,
     Anchor other,
@@ -67,40 +63,5 @@ class Anchor implements Mutable<MutableAnchor> {
       ..add(position);
 
     return out.source;
-  }
-
-  @override
-  MutableAnchor mutate() => MutableAnchor._(this);
-
-  @override
-  bool operator ==(Object other) =>
-      other is Anchor && //
-      x == other.x &&
-      y == other.y;
-
-  @override
-  int get hashCode => x.hashCode * 31 + y.hashCode;
-}
-
-extension type MutableAnchor._(Anchor source) {
-  double get x => source.x; // coverage:ignore-line
-  double get y => source.y; // coverage:ignore-line
-
-  set x(double value) {
-    source._storage[0] = value;
-  }
-
-  set y(double value) {
-    source._storage[1] = value;
-  }
-
-  void setValues(double x, double y) {
-    this.x = x;
-    this.y = y;
-  }
-
-  void setFrom(Anchor other) {
-    x = other.x;
-    y = other.y;
   }
 }

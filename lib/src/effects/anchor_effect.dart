@@ -1,5 +1,6 @@
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
+import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 
 /// An effect that animates a [TransformNode]'s anchor over time.
@@ -48,43 +49,40 @@ abstract class AnchorEffect extends ControlledEffect {
 }
 
 class _AnchorByEffect extends AnchorEffect {
-  final Anchor _offset;
+  final Vector2 _offset;
 
   _AnchorByEffect({
     super.target,
     required Anchor offset,
     required super.controller,
     super.cleanup,
-  }) : _offset = .new(offset.x, offset.y),
+  }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
-      final anchor = _target!.anchor;
-      final delta = progress - previousProgress;
-      anchor.mutate().setValues(anchor.x + _offset.x * delta, anchor.y + _offset.y * delta);
+      _target!.anchor.mutate().addScaled(_offset, progress - previousProgress);
     });
   }
 }
 
 class _AnchorToEffect extends AnchorEffect {
-  final Anchor _destination;
-  final Anchor _offset = .new(0, 0);
+  final Vector2 _destination;
+  final Vector2 _offset = .zero();
 
   _AnchorToEffect({
     super.target,
     required Anchor destination,
     required super.controller,
     super.cleanup,
-  }) : _destination = .new(destination.x, destination.y),
+  }) : _destination = destination.clone(),
        super._() {
     onStart(() {
-      final anchor = _target!.anchor;
-      _offset.mutate().setValues(_destination.x - anchor.x, _destination.y - anchor.y);
+      _offset.mutate()
+        ..setFrom(_destination)
+        ..subtract(_target!.anchor);
     });
 
     onProgress((progress) {
-      final anchor = _target!.anchor;
-      final delta = progress - previousProgress;
-      anchor.mutate().setValues(anchor.x + _offset.x * delta, anchor.y + _offset.y * delta);
+      _target!.anchor.mutate().addScaled(_offset, progress - previousProgress);
     });
   }
 }

@@ -94,7 +94,7 @@ void main() {
 
     test('setFrom copies another anchor', () {
       final anchor = Anchor.topLeft();
-      anchor.mutate().setFrom(.bottomRight());
+      anchor.mutate().setFrom(Anchor.bottomRight());
 
       expect(anchor, Anchor.bottomRight());
     });
