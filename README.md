@@ -210,7 +210,7 @@ Ignis comes with the following nodes.
 | `Node`                   | Base node specifying `enabled`, `priority`, and `children`.                  | `onMount`, `onUnmount`               |
 | `CollisionDetectionNode` | Holds a `CollisionDetection` arena.                                          | -                                    |
 | `ColliderNode`           | Registers its `Shape` with the nearest `CollisionDetectionNode`.             | `onCollisionStart`, `onCollisionEnd` |
-| `EffectNode`             | Base node for time-driven effects; see [Effects](#effects).                  | `onStart`, `onProgress`, `onFinish`  |
+| `EffectNode`             | Base node for time-driven effects; see [Effects](#effects).                  | `onFinish`                           |
 | `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.                         | `onUpdate`                           |
 | `ShapeNode`              | Draws a `Shape` with `Paint`.                                                | -                                    |
 | `SpriteNode`             | Animates a `Spritesheet` with `Paint`; see [Sprites](#sprites).              | `onFrame`, `onLoop`, `onFinish`      |
@@ -220,18 +220,26 @@ Ignis comes with the following nodes.
 
 ## Effects
 
-`EffectNode`, called simply an *effect* in the documentation, is a node that tracks its `progress` from 0 (start) to 1 (finish).
+`EffectNode`, called simply an *effect* in the documentation, is a node with a notion of being "finished".
+
+Most effects extend `ControlledEffect`, exposing a proper `onProgress` signal from 0 (start) to 1 (finish) as their `EffectController` advances. Meanwhile, higher-order effects tend to extend `EffectNode` directly.
 
 Ignis comes with the following effects.
 
-| Effect          | Purpose                                                       |
-|-----------------|---------------------------------------------------------------|
-| `MoveEffect`    | Mutates a `Vector2` towards a destination over time.          |
-| `OpacityEffect` | Given a `Paint`, mutates the color's alpha channel over time. |
+| Effect             | Purpose                                                       |
+|--------------------|---------------------------------------------------------------|
+| `CombinedEffect`   | An effect that finished when all its sub-effects finish.      |
+| `ControlledEffect` | Base effect for effects that use an `EffectController`.       |
+| `MoveEffect`       | Mutates the position of a `TransformNode` over time.          |
+| `OpacityEffect`    | Given a `Paint`, mutates the color's alpha channel over time. |
+| `RotateEffect`     | Mutates the angle of a `TransformNode` over time.             |
+| `SequentialEffect` | An effect that advances its sub-effects serially.             |
+
+Note that specific effects drop their `*Node` suffix and are simply called `*Effect`.
 
 ### Effect Controllers
 
-The progress over time of any particular effect is determined by its `EffectController`.
+The progress over time of any particular `ControlledEffect` is determined by its `EffectController`.
 
 > :fire: The concept of an *effect controller*, like many ideas in Ignis, comes directly from Flame. If you've used Flame's `EffectController` before, you should be quite comfortable!
 

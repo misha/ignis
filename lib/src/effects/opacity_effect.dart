@@ -1,9 +1,9 @@
 import 'dart:ui';
 
-import 'package:ignis/src/nodes/effect_node.dart';
+import 'package:ignis/src/effects/controlled_effect.dart';
 
-/// An [EffectNode] that animates a [Paint]'s opacity by mutating its alpha.
-abstract class OpacityEffect extends EffectNode {
+/// An effect that animates a [Paint]'s opacity by mutating its alpha.
+abstract class OpacityEffect extends ControlledEffect {
   /// The paint whose alpha channel is mutated as this effect progresses.
   final Paint paint;
 

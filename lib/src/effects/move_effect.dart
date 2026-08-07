@@ -1,9 +1,9 @@
+import 'package:ignis/src/effects/controlled_effect.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 
-/// An [EffectNode] that animates a [TransformNode]'s position over time.
-abstract class MoveEffect extends EffectNode {
+/// A effect that animates a [TransformNode]'s position over time.
+abstract class MoveEffect extends ControlledEffect {
   TransformNode? _target;
 
   /// The node whose position is mutated by this effect.

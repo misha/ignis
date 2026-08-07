@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('emits onStart once it starts progressing', () {
-    final effect = EffectNode(controller: EffectController(duration: 1, startDelay: 0.5));
+    final effect = ControlledEffect(controller: .new(duration: 1, startDelay: 0.5));
     effect.mount();
     var starts = 0;
     effect.onStart(() => starts += 1);
@@ -19,7 +19,7 @@ void main() {
   });
 
   test('emits onProgress with its current progress once started', () {
-    final effect = EffectNode(controller: EffectController(duration: 1));
+    final effect = ControlledEffect(controller: .new(duration: 1));
     effect.mount();
     final progresses = <double>[];
     effect.onProgress(progresses.add);
@@ -31,7 +31,7 @@ void main() {
   });
 
   test('emits onFinish once isComplete becomes true, and never again', () {
-    final effect = EffectNode(controller: EffectController(duration: 1));
+    final effect = ControlledEffect(controller: .new(duration: 1));
     effect.mount();
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
@@ -47,7 +47,7 @@ void main() {
   });
 
   test('does not progress while paused', () {
-    final effect = EffectNode(controller: EffectController(duration: 1));
+    final effect = ControlledEffect(controller: .new(duration: 1));
     effect.mount();
     effect.pause();
 
@@ -58,7 +58,7 @@ void main() {
   });
 
   test('resets back to its start', () {
-    final effect = EffectNode(controller: EffectController(duration: 1));
+    final effect = ControlledEffect(controller: .new(duration: 1));
     effect.mount();
     effect.update(1);
     expect(effect.isFinished, isTrue);
@@ -72,7 +72,7 @@ void main() {
 
   test('detaches itself once complete when added as a child, when cleanup is true', () {
     final a = Node();
-    final effect = EffectNode(controller: EffectController(duration: 2), cleanup: true);
+    final effect = ControlledEffect(controller: .new(duration: 2), cleanup: true);
     a.add(effect);
     final scene = a.mount();
 

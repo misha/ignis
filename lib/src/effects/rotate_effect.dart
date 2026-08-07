@@ -1,8 +1,8 @@
-import 'package:ignis/src/nodes/effect_node.dart';
+import 'package:ignis/src/effects/controlled_effect.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 
-/// An [EffectNode] that animates a [TransformNode]'s angle over time.
-abstract class RotateEffect extends EffectNode {
+/// An effect that animates a [TransformNode]'s angle over time.
+abstract class RotateEffect extends ControlledEffect {
   TransformNode? _target;
 
   /// The node whose angle is mutated by this effect.
