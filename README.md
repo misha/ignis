@@ -230,11 +230,13 @@ Ignis comes with the following effects.
 
 | Effect             | Purpose                                                       |
 |--------------------|---------------------------------------------------------------|
+| `AnchorEffect`     | Mutates the anchor of a `TransformNode` over time.            |
 | `CombinedEffect`   | An effect that finished when all its sub-effects finish.      |
 | `ControlledEffect` | Base effect for effects that use an `EffectController`.       |
 | `MoveEffect`       | Mutates the position of a `TransformNode` over time.          |
 | `OpacityEffect`    | Given a `Paint`, mutates the color's alpha channel over time. |
 | `RotateEffect`     | Mutates the angle of a `TransformNode` over time.             |
+| `ScaleEffect`      | Mutates the scale of a `TransformNode` over time.             |
 | `SequentialEffect` | An effect that advances its sub-effects serially.             |
 
 Note that specific effects drop their `*Node` suffix and are simply called `*Effect`.
