@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
-import 'package:ignis/src/nodes/transform_node.dart';
+import 'package:ignis/src/nodes/sized_node.dart';
 
-class TextNode extends TransformNode {
+class TextNode extends SizedNode {
   /// The default style used when no [style] is provided.
   static const DEFAULT_STYLE = TextStyle(
     color: Color(0xFFFFFFFF),
@@ -13,6 +13,12 @@ class TextNode extends TransformNode {
   @visibleForTesting
   late TextPainter painter;
   bool _dirty = true;
+
+  @override
+  double get width => painter.width;
+
+  @override
+  double get height => painter.height;
 
   TextNode({
     String? text,
@@ -72,7 +78,7 @@ class TextNode extends TransformNode {
     _dirty = true;
   }
 
-  /// Updates [size] with the latest text parameters.
+  /// Updates [width] and [height] with the latest text parameters.
   ///
   /// Automatically called when rendering.
   void layout() {
@@ -83,10 +89,6 @@ class TextNode extends TransformNode {
         ..textDirection = textDirection
         ..layout();
 
-      size.mutate()
-        ..x = painter.width
-        ..y = painter.height;
-
       _dirty = false;
     }
   }
@@ -94,13 +96,13 @@ class TextNode extends TransformNode {
   @override
   @mustCallSuper
   void render(Canvas canvas) {
-    // Laid out here, before `size` is used to compute the render transform.
+    // Laid out here, before the size is used for rendering.
     layout();
     super.render(canvas);
   }
 
   @override
-  void renderTransformed(Canvas canvas) {
+  void renderAnchored(Canvas canvas) {
     painter.paint(canvas, .zero);
   }
 }

@@ -1,111 +1,113 @@
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
+
+/// An axis-aligned rectangle's half-extent vectors, given a rotation.
+(Vector2, Vector2) axes(double angle) => (
+  Vector2(math.cos(angle), math.sin(angle)),
+  Vector2(-math.sin(angle), math.cos(angle)),
+);
 
 void main() {
   final system = StandardIntersectionSystem();
 
   group('circle-circle', () {
     test('intersects when overlapping', () {
-      final a = Aabb2.centerAndHalfExtents(.zero(), .all(4));
-      final b = Aabb2.centerAndHalfExtents(.new(6, 0), .all(4));
-
-      expect(system.circleCircle(a, b), isTrue);
+      expect(system.circleCircle(.zero(), 4, .new(6, 0), 4), isTrue);
     });
 
     test('does not intersect when apart', () {
-      final a = Aabb2.centerAndHalfExtents(.zero(), .all(2));
-      final b = Aabb2.centerAndHalfExtents(.new(10, 0), .all(2));
-
-      expect(system.circleCircle(a, b), isFalse);
+      expect(system.circleCircle(.zero(), 2, .new(10, 0), 2), isFalse);
     });
 
     test('touching edges count as intersecting', () {
-      final a = Aabb2.centerAndHalfExtents(.zero(), .all(2));
-      final b = Aabb2.centerAndHalfExtents(.new(5, 0), .all(3));
-
-      expect(system.circleCircle(a, b), isTrue);
+      expect(system.circleCircle(.zero(), 2, .new(5, 0), 3), isTrue);
     });
   });
 
   group('rectangle-rectangle', () {
     test('intersects when overlapping', () {
-      final a = Aabb2.centerAndHalfExtents(.zero(), .all(2));
-      final b = Aabb2.centerAndHalfExtents(.new(3, 0), .all(2));
-
-      expect(system.rectangleRectangle(a, b), isTrue);
+      expect(
+        system.rectangleRectangle(
+          .zero(),
+          .new(2, 0),
+          .new(0, 2),
+          .new(3, 0),
+          .new(2, 0),
+          .new(0, 2),
+        ),
+        isTrue,
+      );
     });
 
     test('does not intersect when apart', () {
-      final a = Aabb2.centerAndHalfExtents(.zero(), .all(1));
-      final b = Aabb2.centerAndHalfExtents(.new(10, 0), .all(1));
-
-      expect(system.rectangleRectangle(a, b), isFalse);
+      expect(
+        system.rectangleRectangle(
+          .zero(),
+          .new(1, 0),
+          .new(0, 1),
+          .new(10, 0),
+          .new(1, 0),
+          .new(0, 1),
+        ),
+        isFalse,
+      );
     });
 
     test('touching edges count as intersecting', () {
-      final a = Aabb2.centerAndHalfExtents(.zero(), .all(2));
-      final b = Aabb2.centerAndHalfExtents(.new(4, 0), .all(2));
+      expect(
+        system.rectangleRectangle(
+          .zero(),
+          .new(2, 0),
+          .new(0, 2),
+          .new(4, 0),
+          .new(2, 0),
+          .new(0, 2),
+        ),
+        isTrue,
+      );
+    });
 
-      expect(system.rectangleRectangle(a, b), isTrue);
+    test('excludes a rotated rectangle from a point its AABB would include', () {
+      // A 10x10 square rotated 45 degrees, centered on the origin, has an
+      // AABB corner at roughly (7.07, 7.07) but doesn't actually reach it.
+      final (diamondEx, diamondEy) = axes(math.pi / 4);
+      final diamondEx5 = diamondEx * 5;
+      final diamondEy5 = diamondEy * 5;
+      final probeEx = Vector2(1, 0); // A tiny (2x2) axis-aligned probe rectangle.
+      final probeEy = Vector2(0, 1);
+
+      // Inside the AABB, outside the diamond.
+      expect(
+        system.rectangleRectangle(.zero(), diamondEx5, diamondEy5, .new(6, 6), probeEx, probeEy),
+        isFalse,
+      );
+
+      // Inside both.
+      expect(
+        system.rectangleRectangle(.zero(), diamondEx5, diamondEy5, .new(3, 3), probeEx, probeEy),
+        isTrue,
+      );
     });
   });
 
   group('circle-rectangle', () {
     test('intersects when the circle overlaps the rectangle', () {
-      final circle = Aabb2.centerAndHalfExtents(.new(4, 0), .all(2));
-      final rectangle = Aabb2.centerAndHalfExtents(.zero(), .all(2));
-
-      expect(system.circleRectangle(circle, rectangle), isTrue);
+      final (ex, ey) = axes(0);
+      expect(system.circleRectangle(.new(4, 0), 2, .zero(), ex * 2, ey * 2), isTrue);
     });
 
     test('does not intersect when the circle does not overlap the rectangle', () {
-      final circle = Aabb2.centerAndHalfExtents(.new(10, 0), .all(1));
-      final rectangle = Aabb2.centerAndHalfExtents(.zero(), .all(2));
-
-      expect(system.circleRectangle(circle, rectangle), isFalse);
+      final (ex, ey) = axes(0);
+      expect(system.circleRectangle(.new(10, 0), 1, .zero(), ex * 2, ey * 2), isFalse);
     });
 
-    // TODO: Tangent test.
-  });
-
-  group('rectangle-point', () {
-    test('intersects when the point lies within the rectangle', () {
-      final rect = Aabb2.centerAndHalfExtents(.zero(), .all(2));
-
-      expect(system.rectanglePoint(rect, .all(1)), isTrue);
-    });
-
-    test('does not intersect when the point lies outside the rectangle', () {
-      final rect = Aabb2.centerAndHalfExtents(.zero(), .all(2));
-
-      expect(system.rectanglePoint(rect, .all(5)), isFalse);
-    });
-
-    test('touching an edge counts as intersecting', () {
-      final rect = Aabb2.centerAndHalfExtents(.zero(), .all(2));
-
-      expect(system.rectanglePoint(rect, .new(2, 0)), isTrue);
-    });
-  });
-
-  group('circle-point', () {
-    test('intersects when the point lies within the circle', () {
-      final circle = Aabb2.centerAndHalfExtents(.zero(), .all(4));
-
-      expect(system.circlePoint(circle, .all(1)), isTrue);
-    });
-
-    test('does not intersect when the point lies outside the circle', () {
-      final circle = Aabb2.centerAndHalfExtents(.zero(), .all(4));
-
-      // (4, 4) sits in the AABB's corner but outside the inscribed circle.
-      expect(system.circlePoint(circle, .all(4)), isFalse);
-    });
-
-    test('touching the edge counts as intersecting', () {
-      final circle = Aabb2.centerAndHalfExtents(.zero(), .all(4));
-
-      expect(system.circlePoint(circle, .new(4, 0)), isTrue);
+    test("accounts for the rectangle's rotation", () {
+      // A 10x10 square rotated 45 degrees, centered on the origin, has an
+      // AABB corner at roughly (7.07, 7.07) but doesn't actually reach it.
+      final (ex, ey) = axes(math.pi / 4);
+      expect(system.circleRectangle(.new(6, 6), 1, .zero(), ex * 5, ey * 5), isFalse);
     });
   });
 }

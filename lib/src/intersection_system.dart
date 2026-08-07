@@ -3,60 +3,101 @@ import 'package:ignis/src/math.dart';
 abstract class IntersectionSystem {
   const IntersectionSystem();
 
-  /// Returns true if [point] lies within the rectangle described by [rect].
-  bool rectanglePoint(Aabb2 rect, Vector2 point);
+  /// Returns true if two rectangles overlap, given their world-space centers
+  /// and, for each, the vectors from its center to the midpoints of its
+  /// right ([exA]/[exB]) and bottom ([eyA]/[eyB]) edges.
+  bool rectangleRectangle(
+    Vector2 centerA,
+    Vector2 exA,
+    Vector2 eyA,
+    Vector2 centerB,
+    Vector2 exB,
+    Vector2 eyB,
+  );
 
-  /// Returns true if [point] lies within the circle described by [circle].
-  bool circlePoint(Aabb2 circle, Vector2 point);
+  /// Returns true if a circle at [circleCenter] with [radius] overlaps a
+  /// rectangle centered at [rectCenter], described by [ex]/[ey] (see
+  /// [rectangleRectangle]).
+  bool circleRectangle(
+    Vector2 circleCenter,
+    double radius,
+    Vector2 rectCenter,
+    Vector2 ex,
+    Vector2 ey,
+  );
 
-  /// Returns true if the AABBs for two rectangles intersect.
-  bool rectangleRectangle(Aabb2 a, Aabb2 b);
+  /// Returns true if two circles overlap.
+  bool circleCircle(Vector2 centerA, double radiusA, Vector2 centerB, double radiusB);
+}
 
-  /// Returns true if the AABBs for two circles intersect.
-  bool circleCircle(Aabb2 a, Aabb2 b);
+/// Returns true if [axis] separates a rectangle described by [exA]/[eyA],
+/// centered [delta] away from a rectangle described by [exB]/[eyB].
+///
+/// [axis] doesn't need to be normalized: both projections scale by the same
+/// factor, which doesn't affect whether their ranges overlap.
+bool _separatedOnAxis(
+  Vector2 delta,
+  Vector2 axis,
+  Vector2 exA,
+  Vector2 eyA,
+  Vector2 exB,
+  Vector2 eyB,
+) {
+  final distance = delta.dot(axis).abs();
+  final radius =
+      exA.dot(axis).abs() + //
+      eyA.dot(axis).abs() +
+      exB.dot(axis).abs() +
+      eyB.dot(axis).abs();
 
-  /// Returns true if the AABBs for a circle and a rect intersect.
-  bool circleRectangle(Aabb2 circle, Aabb2 rect);
+  return distance > radius;
 }
 
 final class StandardIntersectionSystem extends IntersectionSystem {
   const StandardIntersectionSystem();
 
   @override
-  bool rectanglePoint(Aabb2 rect, Vector2 point) {
-    return rect.intersectsWithVector2(point);
+  bool rectangleRectangle(
+    Vector2 centerA,
+    Vector2 exA,
+    Vector2 eyA,
+    Vector2 centerB,
+    Vector2 exB,
+    Vector2 eyB,
+  ) {
+    final delta = centerB - centerA;
+
+    if (_separatedOnAxis(delta, exA, exA, eyA, exB, eyB)) return false;
+    if (_separatedOnAxis(delta, eyA, exA, eyA, exB, eyB)) return false;
+    if (_separatedOnAxis(delta, exB, exA, eyA, exB, eyB)) return false;
+    if (_separatedOnAxis(delta, eyB, exA, eyA, exB, eyB)) return false;
+
+    return true;
   }
 
   @override
-  bool circlePoint(Aabb2 circle, Vector2 point) {
-    final dx = point.x - circle.centerX;
-    final dy = point.y - circle.centerY;
-    final radius = circle.width / 2;
-    return dx * dx + dy * dy <= radius * radius;
+  bool circleRectangle(
+    Vector2 circleCenter,
+    double radius,
+    Vector2 rectCenter,
+    Vector2 ex,
+    Vector2 ey,
+  ) {
+    final delta = circleCenter - rectCenter;
+    final u = (delta.dot(ex) / ex.length2).clamp(-1.0, 1.0);
+    final v = (delta.dot(ey) / ey.length2).clamp(-1.0, 1.0);
+    final closest = rectCenter + ex * u + ey * v;
+    return circleCenter.distance2(closest) <= radius * radius;
   }
 
   @override
-  bool rectangleRectangle(Aabb2 a, Aabb2 b) {
-    return a.intersectsWithAabb2(b);
-  }
-
-  @override
-  bool circleCircle(Aabb2 a, Aabb2 b) {
-    final dx = (a.min.x + a.max.x) - (b.min.x + b.max.x);
-    final dy = (a.min.y + a.max.y) - (b.min.y + b.max.y);
-    final diameter = (a.max.x - a.min.x) + (b.max.x - b.min.x);
-    return dx * dx + dy * dy <= diameter * diameter;
-  }
-
-  @override
-  bool circleRectangle(Aabb2 circle, Aabb2 rect) {
-    final cx = circle.centerX;
-    final cy = circle.centerY;
-    final radius = circle.width / 2;
-    final closestX = cx.clamp(rect.min.x, rect.max.x);
-    final closestY = cy.clamp(rect.min.y, rect.max.y);
-    final dx = cx - closestX;
-    final dy = cy - closestY;
-    return (dx * dx + dy * dy) <= (radius * radius);
+  bool circleCircle(
+    Vector2 centerA,
+    double radiusA,
+    Vector2 centerB,
+    double radiusB,
+  ) {
+    final radii = radiusA + radiusB;
+    return centerA.distance2(centerB) <= radii * radii;
   }
 }

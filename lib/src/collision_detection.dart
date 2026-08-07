@@ -1,7 +1,20 @@
-import 'package:ignis/src/bounds.dart';
 import 'package:ignis/src/intersection_system.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/collider_node.dart';
+import 'package:ignis/src/shape.dart';
+
+/// A collider's cached narrowphase geometry, refreshed once per
+/// [CollisionDetection.process].
+///
+/// [extentX]/[extentY] are only meaningful for rectangles, [radius] only for
+/// circles. Every field is owned and mutated in place - never replace this
+/// object to update it.
+final class _NarrowphaseGeometry {
+  final Vector2 center = .zero();
+  final Vector2 extentX = .zero();
+  final Vector2 extentY = .zero();
+  double radius = 0;
+}
 
 /// A sweep-and-prune collision arena, run once per tick.
 ///
@@ -23,6 +36,15 @@ final class CollisionDetection {
 
   /// Sparsely stores each collider's AABB at exactly the index of their slot.
   final List<Aabb2?> _boundsIndex = [];
+
+  /// Sparsely stores each collider's already-computed transform at exactly
+  /// the index of their slot, so a lazy narrowphase refresh never re-walks
+  /// the ancestor chain [_sort] already walked this tick.
+  final List<Matrix3?> _transformIndex = [];
+
+  /// Sparsely stores each collider's narrowphase geometry at exactly the
+  /// index of their slot.
+  final List<_NarrowphaseGeometry?> _narrowphaseIndex = [];
 
   /// Slots that are not currently in use and may be reassigned.
   final List<int> _freeSlots = [];
@@ -60,7 +82,9 @@ final class CollisionDetection {
       // Create a new slot.
       slot = _colliderIndex.length;
       _colliderIndex.add(collider);
-      _boundsIndex.add(Aabb2());
+      _boundsIndex.add(null);
+      _transformIndex.add(null);
+      _narrowphaseIndex.add(null);
       _orderIndex.add(-1);
     }
 
@@ -97,15 +121,8 @@ final class CollisionDetection {
 
       for (final collider in _colliders) {
         final slot = _mapping[collider]!;
-        final bounds = _boundsIndex[slot]!;
-
-        computeWorldBounds(
-          collider,
-          collider.shape,
-          bounds.mutate(),
-          collider.cd,
-        );
-
+        final transform = _transformIndex[slot] = collider.absoluteTransform(collider.cd);
+        _boundsIndex[slot] = collider.worldBounds(collider.shape, transform);
         _order.add(slot);
       }
 
@@ -115,15 +132,8 @@ final class CollisionDetection {
     } else {
       for (final collider in _colliders) {
         final slot = _mapping[collider]!;
-        final bounds = _boundsIndex[slot]!;
-
-        computeWorldBounds(
-          collider,
-          collider.shape,
-          bounds.mutate(),
-          collider.cd,
-        );
-
+        final transform = _transformIndex[slot] = collider.absoluteTransform(collider.cd);
+        _boundsIndex[slot] = collider.worldBounds(collider.shape, transform);
         _resettle(slot);
       }
     }
@@ -166,9 +176,30 @@ final class CollisionDetection {
 
   // #region Detection
 
+  /// [collider]'s narrowphase geometry at [slot], refreshed lazily.
+  _NarrowphaseGeometry _narrowphase(int slot, ColliderNode collider, Set<int> refreshed) {
+    final narrowphase = _narrowphaseIndex[slot] ??= _NarrowphaseGeometry();
+    if (!refreshed.add(slot)) return narrowphase;
+
+    final bounds = _boundsIndex[slot]!;
+    final transform = _transformIndex[slot]!;
+    narrowphase.center.mutate().setValues(bounds.centerX, bounds.centerY);
+
+    switch (collider.shape) {
+      case Rectangle shape:
+        shape.worldExtents(transform, narrowphase.extentX.mutate(), narrowphase.extentY.mutate());
+
+      case Circle shape:
+        narrowphase.radius = shape.worldRadius(transform);
+    }
+
+    return narrowphase;
+  }
+
   void _detect() {
     // Not faster to make it an instance variable.
     final current = <int, (ColliderNode, ColliderNode)>{};
+    final refreshed = <int>{};
 
     for (var i = 0; i < _order.length; i += 1) {
       final slotA = _order[i];
@@ -193,12 +224,47 @@ final class CollisionDetection {
 
         // Narrowphase:
 
-        final overlapping = switch ((a.shape, b.shape)) {
-          (.rectangle, .rectangle) => true, // Proven by broadphase.
-          (.circle, .circle) => system.circleCircle(boundsA, boundsB),
-          (.circle, .rectangle) => system.circleRectangle(boundsA, boundsB),
-          (.rectangle, .circle) => system.circleRectangle(boundsB, boundsA),
-        };
+        final bool overlapping;
+        final narrowphaseA = _narrowphase(slotA, a, refreshed);
+        final narrowphaseB = _narrowphase(slotB, b, refreshed);
+
+        switch ((a.shape, b.shape)) {
+          case (Rectangle(), Rectangle()):
+            overlapping = system.rectangleRectangle(
+              narrowphaseA.center,
+              narrowphaseA.extentX,
+              narrowphaseA.extentY,
+              narrowphaseB.center,
+              narrowphaseB.extentX,
+              narrowphaseB.extentY,
+            );
+
+          case (Circle(), Circle()):
+            overlapping = system.circleCircle(
+              narrowphaseA.center,
+              narrowphaseA.radius,
+              narrowphaseB.center,
+              narrowphaseB.radius,
+            );
+
+          case (Circle(), Rectangle()):
+            overlapping = system.circleRectangle(
+              narrowphaseA.center,
+              narrowphaseA.radius,
+              narrowphaseB.center,
+              narrowphaseB.extentX,
+              narrowphaseB.extentY,
+            );
+
+          case (Rectangle(), Circle()):
+            overlapping = system.circleRectangle(
+              narrowphaseB.center,
+              narrowphaseB.radius,
+              narrowphaseA.center,
+              narrowphaseA.extentX,
+              narrowphaseA.extentY,
+            );
+        }
 
         if (!overlapping) continue;
 
@@ -247,6 +313,8 @@ final class CollisionDetection {
       ..clear()
       ..addAll(current);
   }
+
+  // #endregion
 
   // Limit is 53 bits for JavaScript compatibility, so keys split the space
   // down the middle, 26 bits per slot.

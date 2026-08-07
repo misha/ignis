@@ -14,29 +14,25 @@ void main() {
       CollisionDetectionNode(
         children: [
           ShapeNode(
-            shape: .circle,
+            shape: .circle(20),
             paint: Paint()..color = RED.withValues(alpha: 0.5),
-            size: .all(40),
             anchor: .center(),
             position: .all(25),
             children: [
               ColliderNode(
-                shape: .circle,
-                size: .all(40),
+                shape: .circle(20),
                 anchor: .center(),
               ),
             ],
           ),
           ShapeNode(
-            shape: .rectangle,
+            shape: .square(50),
             paint: Paint()..color = BLUE.withValues(alpha: 0.5),
-            size: .all(50),
             anchor: .center(),
             position: .all(55),
             children: [
               ColliderNode(
-                shape: .rectangle,
-                size: .all(50),
+                shape: .square(50),
                 anchor: .center(),
               ),
             ],

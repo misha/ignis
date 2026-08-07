@@ -2,18 +2,16 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:ignis/src/bounds.dart';
 import 'package:ignis/src/debug.dart';
-import 'package:ignis/src/intersection_system.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/transform_node.dart';
+import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/shape.dart';
 
 /// A pointer hit area.
 ///
 /// A node wanting more than one gesture just adds more input nodes; [priority]
 /// decides who gets dibs when their shapes overlap.
-abstract class InputNode extends TransformNode {
+abstract class InputNode extends SizedNode {
   /// The shape of the node's hit area.
   Shape shape;
 
@@ -22,12 +20,17 @@ abstract class InputNode extends TransformNode {
     super.position,
     super.scale,
     super.angle,
-    super.size,
     super.anchor,
     super.enabled,
     super.priority,
     super.children,
   });
+
+  @override
+  double get width => shape.width;
+
+  @override
+  double get height => shape.height;
 
   /// Registers [event] with this node's gesture recognizer, if it has one.
   ///
@@ -39,37 +42,44 @@ abstract class InputNode extends TransformNode {
     // Nothing to do.
   }
 
-  static final _BOUNDS_SCRATCH = Aabb2();
-
   @override
   bool containsPoint(Vector2 point) {
-    const SYSTEM = StandardIntersectionSystem();
-    computeWorldBounds(this, shape, _BOUNDS_SCRATCH.mutate());
+    final local = toLocal(point);
+    final adjusted = Vector2(
+      local.x + anchor.x * width,
+      local.y + anchor.y * height,
+    );
 
-    return switch (shape) {
-      .rectangle => SYSTEM.rectanglePoint(_BOUNDS_SCRATCH, point),
-      .circle => SYSTEM.circlePoint(_BOUNDS_SCRATCH, point),
-    };
+    switch (shape) {
+      case Rectangle(:final size):
+        return adjusted.x >= 0 && //
+            adjusted.x <= size.x &&
+            adjusted.y >= 0 &&
+            adjusted.y <= size.y;
+
+      case Circle(:final radius):
+        final dx = adjusted.x - radius;
+        final dy = adjusted.y - radius;
+        return dx * dx + dy * dy <= radius * radius;
+    }
   }
 
   /// Converts [scenePoint] into this node's local space.
   ///
-  /// TODO: Feels bad here. Maybe a TransformNode concern?
+  /// TODO: Feels bad here. Maybe a SizedNode concern?
   Vector2 toLocal(Vector2 scenePoint) {
     final inverse = absoluteTransform()..mutate().invert();
     return scenePoint.transformWith(inverse);
   }
 
   @override
-  void debugRenderTransformed(Canvas canvas) {
-    super.debugRenderTransformed(canvas);
-
+  void debugRenderAnchored(Canvas canvas) {
     switch (shape) {
-      case .circle:
-        canvas.drawOval(shape.rect(size), DEBUG_INPUT_PAINT);
+      case Circle():
+        canvas.drawOval(shape.rect(), DEBUG_INPUT_PAINT);
 
-      case .rectangle:
-        canvas.drawRect(shape.rect(size), DEBUG_INPUT_PAINT);
+      case Rectangle():
+        canvas.drawRect(shape.rect(), DEBUG_INPUT_PAINT);
     }
   }
 }

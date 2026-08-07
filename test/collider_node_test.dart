@@ -4,8 +4,7 @@ import 'package:ignis/ignis.dart';
 void main() {
   test('does nothing without a CollisionNode ancestor', () {
     final collider = ColliderNode(
-      shape: .circle,
-      size: .all(2),
+      shape: .circle(1),
       position: .zero(),
     );
 
@@ -18,8 +17,7 @@ void main() {
     outer.add(inner);
 
     final a = ColliderNode(
-      shape: .circle,
-      size: .all(8),
+      shape: .circle(4),
       position: .zero(),
       layer: 1,
       mask: 1,
@@ -28,8 +26,7 @@ void main() {
     inner.add(a);
 
     final innerSibling = ColliderNode(
-      shape: .circle,
-      size: .all(8),
+      shape: .circle(4),
       position: .new(1, 0),
       layer: 1,
       mask: 1,
@@ -39,8 +36,7 @@ void main() {
 
     outer.add(
       ColliderNode(
-        shape: .circle,
-        size: .all(8),
+        shape: .circle(4),
         position: .zero(),
         layer: 1,
         mask: 1,
@@ -58,16 +54,14 @@ void main() {
   test('unregisters from CollisionNode when detached', () {
     final collisions = CollisionDetectionNode();
     final a = ColliderNode(
-      shape: .circle,
-      size: .all(8),
+      shape: .circle(4),
       position: .zero(),
       layer: 1,
       mask: 1,
     );
 
     final b = ColliderNode(
-      shape: .circle,
-      size: .all(8),
+      shape: .circle(4),
       position: .new(1, 0),
       layer: 1,
       mask: 1,

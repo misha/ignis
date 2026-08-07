@@ -1,26 +1,60 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:ignis/src/math.dart';
 
-/// The kind of geometry drawn or hit-tested against a node's `size`.
-enum Shape {
-  /// Uses the node's full `size`, both width and height.
-  rectangle,
+/// The geometry drawn or hit-tested for a node, in its own local space.
+sealed class Shape {
+  const Shape();
 
-  /// Uses only the node's `size.x`, for both dimensions, to stay a true
-  /// circle rather than an ellipse.
-  circle;
+  /// The width of the axis-aligned box that fully contains this shape.
+  double get width;
 
-  /// This shape's width when scaled to [size].
-  double width(Vector2 size) => size.x;
+  /// The height of the axis-aligned box that fully contains this shape.
+  double get height;
 
-  /// This shape's height when scaled to [size].
-  double height(Vector2 size) => switch (this) {
-    .circle => size.x,
-    .rectangle => size.y,
-  };
+  /// This shape's [width]/[height], as a [Rect] with (0, 0) at its top-left
+  /// corner.
+  Rect rect() => Rect.fromLTWH(0, 0, width, height);
 
-  /// The rectangle described by this shape when scaled to [size], with (0, 0)
-  /// at its top-left corner.
-  Rect rect(Vector2 size) => .fromLTWH(0, 0, width(size), height(size));
+  factory Shape.rectangle(Vector2 size) = Rectangle;
+  factory Shape.square(double size) = Rectangle.square;
+  factory Shape.circle(double radius) = Circle;
+}
+
+final class Rectangle extends Shape {
+  final Vector2 size;
+
+  const Rectangle(this.size);
+  Rectangle.square(double size) : this(.all(size));
+
+  @override
+  double get width => size.x;
+
+  @override
+  double get height => size.y;
+
+  /// Computes this rectangle's world-space half-extents under [transform].
+  void worldExtents(Matrix3 transform, MutableVector2 ex, MutableVector2 ey) {
+    ex.setValues(transform[0] * size.x / 2, transform[1] * size.x / 2);
+    ey.setValues(transform[3] * size.y / 2, transform[4] * size.y / 2);
+  }
+}
+
+final class Circle extends Shape {
+  final double radius;
+
+  const Circle(this.radius);
+
+  @override
+  double get width => radius * 2;
+
+  @override
+  double get height => radius * 2;
+
+  /// Computes this circle's world-space radius under [transform].
+  double worldRadius(Matrix3 transform) {
+    final scaleX = math.sqrt(transform[0] * transform[0] + transform[1] * transform[1]);
+    return radius * scaleX;
+  }
 }

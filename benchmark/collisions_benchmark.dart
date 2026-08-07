@@ -58,10 +58,9 @@ class CollisionsBenchmark extends AsyncBenchmarkBase {
       root.add(
         _Ball(
           shape: switch (entry.shape) {
-            .circle => .circle,
-            .square => .rectangle,
+            .circle => .circle(entry.size / 2),
+            .square => .square(entry.size),
           },
-          size: .all(entry.size),
           position: .new(entry.x, entry.y),
           velocity: .new(entry.vx, entry.vy),
         ),
@@ -70,26 +69,22 @@ class CollisionsBenchmark extends AsyncBenchmarkBase {
 
     root.addAll([
       _Wall(
-        shape: .rectangle,
-        size: .new(span, _WALL_THICKNESS),
+        shape: .rectangle(.new(span, _WALL_THICKNESS)),
         position: .new(0, -half - _WALL_THICKNESS / 2),
         axis: .y,
       ),
       _Wall(
-        shape: .rectangle,
-        size: .new(span, _WALL_THICKNESS),
+        shape: .rectangle(.new(span, _WALL_THICKNESS)),
         position: .new(0, half + _WALL_THICKNESS / 2),
         axis: .y,
       ),
       _Wall(
-        shape: .rectangle,
-        size: .new(_WALL_THICKNESS, span),
+        shape: .rectangle(.new(_WALL_THICKNESS, span)),
         position: .new(-half - _WALL_THICKNESS / 2, 0),
         axis: .x,
       ),
       _Wall(
-        shape: .rectangle,
-        size: .new(_WALL_THICKNESS, span),
+        shape: .rectangle(.new(_WALL_THICKNESS, span)),
         position: .new(half + _WALL_THICKNESS / 2, 0),
         axis: .x,
       ),
@@ -114,14 +109,12 @@ class _Wall extends TransformNode {
 
   _Wall({
     required Shape shape,
-    required Vector2 size,
     required this.axis,
     required super.position,
   }) {
     add(
       ColliderNode(
         shape: shape,
-        size: size,
         anchor: .center(),
         layer: _WALL_LAYER,
       ),
@@ -135,14 +128,12 @@ class _Ball extends TransformNode {
 
   _Ball({
     required Shape shape,
-    required Vector2 size,
     required this.velocity,
     required super.position,
   }) {
     add(
       ColliderNode(
           shape: shape,
-          size: size,
           anchor: .center(),
           layer: _BALL_LAYER,
           mask: _WALL_LAYER | _BALL_LAYER,

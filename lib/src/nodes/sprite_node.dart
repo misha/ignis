@@ -1,12 +1,11 @@
 import 'dart:ui';
 
 import 'package:ignis/src/debug.dart';
-import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/transform_node.dart';
+import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/signal.dart';
 import 'package:ignis/src/spritesheet.dart';
 
-class SpriteNode extends TransformNode {
+class SpriteNode extends SizedNode {
   /// Passed to the canvas when drawing the sprite.
   final Paint paint;
 
@@ -44,6 +43,12 @@ class SpriteNode extends TransformNode {
   int get frame => _frame.floor();
   bool get isFinished => _finished;
 
+  @override
+  double get width => sheet.size.x;
+
+  @override
+  double get height => sheet.size.y;
+
   SpriteNode({
     required Spritesheet sheet,
     Paint? paint,
@@ -53,7 +58,6 @@ class SpriteNode extends TransformNode {
     super.position,
     super.scale,
     super.angle,
-    Vector2? size,
     super.anchor,
     super.enabled,
     super.priority,
@@ -62,8 +66,7 @@ class SpriteNode extends TransformNode {
        paint = paint ?? Paint(),
        fps = fps ?? 0,
        loop = loop ?? true,
-       cleanup = cleanup ?? false,
-       super(size: size ?? sheet.size.clone());
+       cleanup = cleanup ?? false;
 
   SpriteNode.split({
     required Iterable<Spritesheet> sheets,
@@ -74,7 +77,6 @@ class SpriteNode extends TransformNode {
     super.position,
     super.scale,
     super.angle,
-    Vector2? size,
     super.anchor,
     super.enabled,
     super.priority,
@@ -84,8 +86,7 @@ class SpriteNode extends TransformNode {
        paint = paint ?? Paint(),
        fps = fps ?? 0,
        loop = loop ?? true,
-       cleanup = cleanup ?? false,
-       super(size: size ?? sheets.first.size.clone());
+       cleanup = cleanup ?? false;
 
   void play({
     int sheet = 0,
@@ -106,16 +107,24 @@ class SpriteNode extends TransformNode {
       throw ArgumentError.value(row, 'row', 'Cannot be negative.');
     }
 
-    if (row >= selected.rows) {
-      throw ArgumentError.value(row, 'row', 'The selected sheet only has ${selected.rows} rows.');
-    }
-
     if (column < 0) {
       throw ArgumentError.value(column, 'column', 'Cannot be negative.');
     }
 
+    if (row >= selected.rows) {
+      throw ArgumentError.value(
+        row,
+        'row',
+        'The selected sheet only has ${selected.rows} rows.',
+      );
+    }
+
     if (column >= selected.columns) {
-      throw ArgumentError.value(column, 'column', 'The selected sheet only has ${selected.columns} columns.');
+      throw ArgumentError.value(
+        column,
+        'column',
+        'The selected sheet only has ${selected.columns} columns.',
+      );
     }
 
     _sheet = sheet;
@@ -171,18 +180,17 @@ class SpriteNode extends TransformNode {
   late Rect _dest;
 
   @override
-  void renderTransformed(Canvas canvas) {
+  void renderAnchored(Canvas canvas) {
     canvas.drawImageRect(
       sheet.image,
       sheet[frame],
-      _dest = .fromLTWH(0, 0, size.x, size.y),
+      _dest = .fromLTWH(0, 0, width, height),
       paint,
     );
   }
 
   @override
-  void debugRenderTransformed(Canvas canvas) {
-    super.debugRenderTransformed(canvas);
+  void debugRenderAnchored(Canvas canvas) {
     canvas.drawRect(_dest, DEBUG_TRANSFORM_PAINT);
   }
 }

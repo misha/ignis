@@ -131,15 +131,13 @@ class _DropZoneNode extends ShapeNode {
   _DropZoneNode({
     required super.position,
   }) : super(
-         shape: .rectangle,
-         size: .all(_ZONE_SIZE),
+         shape: .square(_ZONE_SIZE),
          anchor: .center(),
          paint: Paint()..color = _ZONE_COLOR,
        ) {
     add(
       ColliderNode(
         shape: shape,
-        size: size,
         anchor: anchor,
         layer: _ZONE_LAYER,
         mask: 0,
@@ -166,8 +164,7 @@ class _PieceNode extends ShapeNode {
   _PieceNode({
     required super.position,
   }) : super(
-         shape: .rectangle,
-         size: .all(_PIECE_SIZE),
+         shape: .square(_PIECE_SIZE),
          anchor: .center(),
          paint: Paint()..color = _PIECE_COLOR,
        ) {
@@ -176,13 +173,11 @@ class _PieceNode extends ShapeNode {
 
     addAll([
       drags = DragInput(
-        shape: shape,
-        size: size + .all(_PIECE_HIT_PADDING * 2),
+        shape: .square(shape.width + _PIECE_HIT_PADDING * 2),
         anchor: anchor,
       ),
       collider = ColliderNode(
         shape: shape,
-        size: size,
         anchor: anchor,
         layer: _PIECE_LAYER,
         mask: _ZONE_LAYER,

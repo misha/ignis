@@ -165,8 +165,7 @@ enum _Axis {
 class _BoxNode extends ShapeNode {
   _BoxNode()
     : super(
-        shape: .rectangle,
-        size: .all(_BOX_SIZE),
+        shape: .square(_BOX_SIZE),
         paint: Paint()
           ..style = .stroke
           ..strokeWidth = _WALL_THICKNESS
@@ -175,26 +174,22 @@ class _BoxNode extends ShapeNode {
     addAll([
       _WallNode(
         axis: .y,
-        shape: .rectangle,
-        size: .new(_BOX_SPAN, _WALL_THICKNESS),
+        shape: .rectangle(.new(_BOX_SPAN, _WALL_THICKNESS)),
         position: .new(_BOX_CENTER, 0),
       ),
       _WallNode(
         axis: .y,
-        shape: .rectangle,
-        size: .new(_BOX_SPAN, _WALL_THICKNESS),
+        shape: .rectangle(.new(_BOX_SPAN, _WALL_THICKNESS)),
         position: .new(_BOX_CENTER, _BOX_SIZE),
       ),
       _WallNode(
         axis: .x,
-        shape: .rectangle,
-        size: .new(_WALL_THICKNESS, _BOX_SPAN),
+        shape: .rectangle(.new(_WALL_THICKNESS, _BOX_SPAN)),
         position: .new(0, _BOX_CENTER),
       ),
       _WallNode(
         axis: .x,
-        shape: .rectangle,
-        size: .new(_WALL_THICKNESS, _BOX_SPAN),
+        shape: .rectangle(.new(_WALL_THICKNESS, _BOX_SPAN)),
         position: .new(_BOX_SIZE, _BOX_CENTER),
       ),
     ]);
@@ -207,7 +202,6 @@ class _WallNode extends ColliderNode {
   _WallNode({
     required this.axis,
     required super.shape,
-    required super.size,
     required super.position,
   }) : super(
          anchor: .center(),
@@ -224,15 +218,13 @@ class _BallNode extends ShapeNode {
     required this.velocity,
     super.position,
   }) : super(
-         shape: .circle,
-         size: .all(_BALL_RADIUS * 2),
+         shape: .circle(_BALL_RADIUS),
          anchor: .center(),
          paint: Paint()..color = _BALL_COLOR,
        ) {
     add(
       ColliderNode(
           shape: shape,
-          size: size,
           anchor: anchor,
           layer: _BALL_LAYER,
           mask: _WALL_LAYER | _BALL_LAYER,

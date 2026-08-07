@@ -31,10 +31,10 @@ class UpdateRenderBenchmark extends AsyncBenchmarkBase {
     final root = Node();
 
     for (var i = 0; i < nodes; i += 1) {
-      final node = ShapeNode(shape: .rectangle, size: .all(2));
+      final node = ShapeNode(shape: .square(2));
 
       for (var j = 0; j < children; j += 1) {
-        node.add(ShapeNode(shape: .rectangle, size: .all(2)));
+        node.add(ShapeNode(shape: .square(2)));
       }
 
       root.add(node);

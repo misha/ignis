@@ -3,26 +3,26 @@ import 'dart:math';
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:ignis/ignis.dart';
 
-/// One shape/bounds pair for an [IntersectionBenchmark] to test.
+/// One shape/center pair for an [IntersectionBenchmark] to test.
 class IntersectionTest {
   final Shape shapeA;
   final Shape shapeB;
-  final Aabb2 boundsA;
-  final Aabb2 boundsB;
+  final Vector2 centerA;
+  final Vector2 centerB;
 
   const IntersectionTest({
     required this.shapeA,
     required this.shapeB,
-    required this.boundsA,
-    required this.boundsB,
+    required this.centerA,
+    required this.centerB,
   });
 
   /// The same test with the a/b sides swapped.
   IntersectionTest swap() => IntersectionTest(
     shapeA: shapeB,
     shapeB: shapeA,
-    boundsA: boundsB,
-    boundsB: boundsA,
+    centerA: centerB,
+    centerB: centerA,
   );
 }
 
@@ -43,6 +43,17 @@ abstract class IntersectionBenchmark extends AsyncBenchmarkBase {
 
   IntersectionTest generate(Random random);
 
+  /// A random point within `[-range / 2, range / 2)` on both axes.
+  Vector2 randomCenter(Random random, double range) {
+    final point = Vector2.random(random);
+
+    point.mutate()
+      ..subtractAll(0.5)
+      ..scale(range);
+
+    return point;
+  }
+
   @override
   Future<void> setup() async {
     final random = Random(seed);
@@ -60,10 +71,34 @@ abstract class IntersectionBenchmark extends AsyncBenchmarkBase {
 
     for (final test in _tests) {
       final hit = switch ((test.shapeA, test.shapeB)) {
-        (.rectangle, .rectangle) => _system.rectangleRectangle(test.boundsA, test.boundsB),
-        (.circle, .circle) => _system.circleCircle(test.boundsA, test.boundsB),
-        (.circle, .rectangle) => _system.circleRectangle(test.boundsA, test.boundsB),
-        (.rectangle, .circle) => _system.circleRectangle(test.boundsB, test.boundsA),
+        (Rectangle a, Rectangle b) => _system.rectangleRectangle(
+          test.centerA,
+          _ex(a),
+          _ey(a),
+          test.centerB,
+          _ex(b),
+          _ey(b),
+        ),
+        (Circle a, Circle b) => _system.circleCircle(
+          test.centerA,
+          a.radius,
+          test.centerB,
+          b.radius,
+        ),
+        (Circle a, Rectangle b) => _system.circleRectangle(
+          test.centerA,
+          a.radius,
+          test.centerB,
+          _ex(b),
+          _ey(b),
+        ),
+        (Rectangle a, Circle b) => _system.circleRectangle(
+          test.centerB,
+          b.radius,
+          test.centerA,
+          _ex(a),
+          _ey(a),
+        ),
       };
 
       if (hit) hits += 1;
@@ -72,4 +107,10 @@ abstract class IntersectionBenchmark extends AsyncBenchmarkBase {
     final rate = hits / count;
     if (rate < 0.1 || rate > 0.9) throw StateError('degenerate hit rate: $rate');
   }
+
+  /// [shape]'s (unrotated) half-extent vector along its right edge.
+  Vector2 _ex(Rectangle shape) => Vector2(shape.size.x / 2, 0);
+
+  /// [shape]'s (unrotated) half-extent vector along its bottom edge.
+  Vector2 _ey(Rectangle shape) => Vector2(0, shape.size.y / 2);
 }

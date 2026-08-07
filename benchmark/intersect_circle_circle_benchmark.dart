@@ -1,7 +1,5 @@
 import 'dart:math';
 
-import 'package:ignis/ignis.dart';
-
 import 'support/intersection_benchmark.dart';
 import 'runner.dart';
 
@@ -24,16 +22,10 @@ class IntersectCircleCircleBenchmark extends IntersectionBenchmark {
     final radiusB = minRadius + random.nextDouble() * (maxRadius - minRadius);
 
     return IntersectionTest(
-      shapeA: .circle,
-      shapeB: .circle,
-      boundsA: Aabb2.centerAndHalfExtents(
-        .new((random.nextDouble() - 0.5) * range, (random.nextDouble() - 0.5) * range),
-        .new(radiusA, radiusA),
-      ),
-      boundsB: Aabb2.centerAndHalfExtents(
-        .new((random.nextDouble() - 0.5) * range, (random.nextDouble() - 0.5) * range),
-        .new(radiusB, radiusB),
-      ),
+      shapeA: .circle(radiusA),
+      shapeB: .circle(radiusB),
+      centerA: randomCenter(random, range),
+      centerB: randomCenter(random, range),
     );
   }
 }

@@ -13,7 +13,6 @@ class HoverInput extends InputNode {
     super.position,
     super.scale,
     super.angle,
-    super.size,
     super.anchor,
     super.enabled,
     super.priority,

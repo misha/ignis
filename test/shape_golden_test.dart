@@ -12,9 +12,8 @@ void main() {
       tester,
       'goldens/shape_red_square.png',
       ShapeNode(
-        shape: .rectangle,
+        shape: .square(50),
         paint: Paint()..color = RED,
-        size: .all(50),
         anchor: .center(),
         position: .all(50),
       ),
@@ -27,9 +26,8 @@ void main() {
       tester,
       'goldens/shape_blue_circle.png',
       ShapeNode(
-        shape: .circle,
+        shape: .circle(25),
         paint: Paint()..color = BLUE,
-        size: .all(50),
         anchor: .center(),
         position: .all(50),
       ),

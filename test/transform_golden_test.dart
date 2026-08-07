@@ -14,9 +14,8 @@ void main() {
       tester,
       'goldens/transform_position.png',
       ShapeNode(
-        shape: .rectangle,
+        shape: .square(20),
         paint: Paint()..color = BLACK,
-        size: .all(20),
         anchor: .center(),
         position: .all(25),
       ),
@@ -29,9 +28,8 @@ void main() {
       tester,
       'goldens/transform_scale.png',
       ShapeNode(
-        shape: .rectangle,
+        shape: .square(25),
         paint: Paint()..color = BLACK,
-        size: .all(25),
         anchor: .center(),
         scale: .new(2, 1),
         position: .all(50),
@@ -45,9 +43,8 @@ void main() {
       tester,
       'goldens/transform_angle.png',
       ShapeNode(
-        shape: .rectangle,
+        shape: .rectangle(.new(30, 10)),
         paint: Paint()..color = BLACK,
-        size: .new(30, 10),
         anchor: .center(),
         angle: math.pi / 4,
         position: .all(50),
@@ -64,9 +61,8 @@ void main() {
         position: .all(50),
         children: [
           ShapeNode(
-            shape: .rectangle,
+            shape: .square(30),
             paint: Paint()..color = BLACK,
-            size: .all(30),
             anchor: .topLeft(),
           ),
         ],
@@ -83,9 +79,8 @@ void main() {
         position: .all(50),
         children: [
           ShapeNode(
-            shape: .rectangle,
+            shape: .square(30),
             paint: Paint()..color = BLACK,
-            size: .all(30),
             anchor: .bottomRight(),
           ),
         ],

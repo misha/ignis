@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/nodes/collision_detection_node.dart';
-import 'package:ignis/src/nodes/transform_node.dart';
+import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/shape.dart';
 import 'package:ignis/src/signal.dart';
 
@@ -11,7 +11,7 @@ import 'package:ignis/src/signal.dart';
 /// same [CollisionDetectionNode].
 ///
 /// Does nothing if no [CollisionDetectionNode] ancestor is found.
-class ColliderNode extends TransformNode {
+class ColliderNode extends SizedNode {
   /// The shape of the collider's hitbox.
   Shape shape;
 
@@ -37,7 +37,6 @@ class ColliderNode extends TransformNode {
     super.position,
     super.scale,
     super.angle,
-    super.size,
     super.anchor,
     super.enabled,
     super.priority,
@@ -56,8 +55,13 @@ class ColliderNode extends TransformNode {
   }
 
   @override
-  void debugRenderTransformed(Canvas canvas) {
-    super.debugRenderTransformed(canvas);
-    canvas.drawRect(shape.rect(size), DEBUG_COLLIDER_PAINT);
+  double get width => shape.width;
+
+  @override
+  double get height => shape.height;
+
+  @override
+  void debugRenderAnchored(Canvas canvas) {
+    canvas.drawRect(shape.rect(), DEBUG_COLLIDER_PAINT);
   }
 }

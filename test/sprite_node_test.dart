@@ -13,7 +13,7 @@ void main() {
 
     expect(node.sheets, 2);
     expect(node.sheet, same(first));
-    expect(node.size, Vector2.all(4));
+    expect((node.width, node.height), (4.0, 4.0));
   });
 
   test('play switches the active sheet and frame', () async {
@@ -29,7 +29,7 @@ void main() {
 
     expect(node.sheet, same(second));
     expect(node.frame, 7);
-    expect(node.size, Vector2.all(4));
+    expect((node.width, node.height), (2.0, 2.0)); // Tracks the active sheet.
 
     node.mount();
 
@@ -37,13 +37,13 @@ void main() {
     expect(node.frame, 7);
   });
 
-  test('render size does not affect sprite sheet dimensions', () async {
+  test('width and height read through from the sheet', () async {
     final sheet = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
-    final node = SpriteNode(sheet: sheet, size: .all(32));
+    final node = SpriteNode(sheet: sheet);
 
     node.mount();
 
-    expect(node.size, Vector2.all(32));
+    expect((node.width, node.height), (4.0, 4.0));
   });
 
   test('renders the active sheet', () async {
@@ -52,12 +52,12 @@ void main() {
     final node = SpriteNode.split(sheets: [first, second]);
     node.mount();
 
-    var image = await renderImage(node, node.size.x.ceil(), node.size.y.ceil());
+    var image = await renderImage(node, node.width.ceil(), node.height.ceil());
     expect(await pixelAt(image, 0, 0), RED);
 
     node.play(sheet: 1);
 
-    image = await renderImage(node, node.size.x.ceil(), node.size.y.ceil());
+    image = await renderImage(node, node.width.ceil(), node.height.ceil());
     expect(await pixelAt(image, 0, 0), BLUE);
   });
 
@@ -75,7 +75,7 @@ void main() {
     node.play(row: 1, column: 1);
 
     expect(node.frame, 3);
-    final image = await renderImage(node, node.size.x.ceil(), node.size.y.ceil());
+    final image = await renderImage(node, node.width.ceil(), node.height.ceil());
     expect(await pixelAt(image, 0, 0), WHITE);
   });
 

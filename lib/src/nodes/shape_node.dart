@@ -1,11 +1,11 @@
 import 'dart:ui';
 
 import 'package:ignis/src/debug.dart';
-import 'package:ignis/src/nodes/transform_node.dart';
+import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/shape.dart';
 
-class ShapeNode extends TransformNode {
-  /// Controls the geometry drawn, scaled to this node's `size`.
+class ShapeNode extends SizedNode {
+  /// Controls the geometry drawn.
   Shape shape;
 
   /// Passed to the canvas when drawing the shape.
@@ -17,31 +17,35 @@ class ShapeNode extends TransformNode {
     super.position,
     super.scale,
     super.angle,
-    super.size,
     super.anchor,
     super.enabled,
     super.priority,
     super.children,
   }) : paint = paint ?? Paint();
 
+  @override
+  double get width => shape.width;
+
+  @override
+  double get height => shape.height;
+
   late Rect _dest;
 
   @override
-  void renderTransformed(Canvas canvas) {
-    _dest = shape.rect(size);
+  void renderAnchored(Canvas canvas) {
+    _dest = shape.rect();
 
     switch (shape) {
-      case .circle:
+      case Circle():
         canvas.drawOval(_dest, paint);
 
-      case .rectangle:
+      case Rectangle():
         canvas.drawRect(_dest, paint);
     }
   }
 
   @override
-  void debugRenderTransformed(Canvas canvas) {
-    super.debugRenderTransformed(canvas);
+  void debugRenderAnchored(Canvas canvas) {
     canvas.drawRect(_dest, DEBUG_TRANSFORM_PAINT);
   }
 }

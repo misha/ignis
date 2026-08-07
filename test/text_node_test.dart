@@ -40,11 +40,11 @@ void main() {
     node.mount();
     node.layout();
 
-    final initialSize = node.size.clone();
+    final initialWidth = node.width;
     node.text = 'Ignis';
     node.layout();
 
-    expect(node.size.x, greaterThan(initialSize.x));
+    expect(node.width, greaterThan(initialWidth));
   });
 
   test('renders styled text', () async {
@@ -59,7 +59,7 @@ void main() {
     node.mount();
     node.layout();
 
-    final image = await renderImage(node, node.size.x.ceil(), node.size.y.ceil());
+    final image = await renderImage(node, node.width.ceil(), node.height.ceil());
     final pixels = await pixelsOf(image);
     expect(pixels, contains(isNot(0)));
   });

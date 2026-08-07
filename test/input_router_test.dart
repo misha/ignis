@@ -17,7 +17,7 @@ void main() {
   const settle = Duration(milliseconds: 50);
 
   testWidgets('a hit fires onTapDown', (tester) async {
-    final tap = TapInput(shape: .rectangle, size: .all(20), position: .zero());
+    final tap = TapInput(shape: .square(20), position: .zero());
     await pumpScene(tester, tap);
     final downs = <TapDownEvent>[];
     tap.onTapDown(downs.add);
@@ -30,7 +30,7 @@ void main() {
   });
 
   testWidgets('a miss fires nothing', (tester) async {
-    final tap = TapInput(shape: .rectangle, size: .all(20), position: .zero());
+    final tap = TapInput(shape: .square(20), position: .zero());
     await pumpScene(tester, tap);
     final downs = <TapDownEvent>[];
     tap.onTapDown(downs.add);
@@ -42,7 +42,7 @@ void main() {
   });
 
   testWidgets('a clean release fires onTapUp and onTap', (tester) async {
-    final tap = TapInput(shape: .rectangle, size: .all(20), position: .zero());
+    final tap = TapInput(shape: .square(20), position: .zero());
     await pumpScene(tester, tap);
     final ups = <TapUpEvent>[];
     var taps = 0;
@@ -58,7 +58,7 @@ void main() {
   });
 
   testWidgets('moving past the slop cancels instead of firing onTapUp', (tester) async {
-    final tap = TapInput(shape: .rectangle, size: .all(200), position: .zero());
+    final tap = TapInput(shape: .square(200), position: .zero());
     await pumpScene(tester, tap);
     final ups = <TapUpEvent>[];
     var cancels = 0;
@@ -75,7 +75,7 @@ void main() {
   });
 
   testWidgets('dragging past the slop starts, then updates with the right delta', (tester) async {
-    final drag = DragInput(shape: .rectangle, size: .all(200), position: .zero());
+    final drag = DragInput(shape: .square(200), position: .zero());
     await pumpScene(tester, drag);
     final starts = <DragStartEvent>[];
     final updates = <DragUpdateEvent>[];
@@ -94,7 +94,7 @@ void main() {
   });
 
   testWidgets('delta stays correct under a scaling ancestor', (tester) async {
-    final drag = DragInput(shape: .rectangle, size: .all(200), position: .zero());
+    final drag = DragInput(shape: .square(200), position: .zero());
     final scene = Node(children: [drag]).mount();
     scene.resize(800, 600);
 
@@ -119,7 +119,7 @@ void main() {
   });
 
   testWidgets('an uncontested drag starts on any movement', (tester) async {
-    final drag = DragInput(shape: .rectangle, size: .all(200), position: .zero());
+    final drag = DragInput(shape: .square(200), position: .zero());
     await pumpScene(tester, drag);
     final starts = <DragStartEvent>[];
     drag.onDragStart(starts.add);
@@ -135,8 +135,8 @@ void main() {
   });
 
   testWidgets('a real drag wins over a contesting tap for the same pointer', (tester) async {
-    final tap = TapInput(shape: .rectangle, size: .all(200), position: .zero());
-    final drag = DragInput(shape: .rectangle, size: .all(200), position: .zero());
+    final tap = TapInput(shape: .square(200), position: .zero());
+    final drag = DragInput(shape: .square(200), position: .zero());
     Node(children: [tap, drag]).mount();
     final taps = <TapUpEvent>[];
     var cancels = 0;
@@ -164,8 +164,8 @@ void main() {
   });
 
   testWidgets('a small movement wins as a tap over a contesting drag', (tester) async {
-    final tap = TapInput(shape: .rectangle, size: .all(200), position: .zero());
-    final drag = DragInput(shape: .rectangle, size: .all(200), position: .zero());
+    final tap = TapInput(shape: .square(200), position: .zero());
+    final drag = DragInput(shape: .square(200), position: .zero());
     Node(children: [tap, drag]).mount();
     final taps = <TapUpEvent>[];
     final starts = <DragStartEvent>[];
@@ -191,7 +191,7 @@ void main() {
     scene.resize(800, 600);
     await tester.pumpWidget(RenderSceneWidget(scene: scene, addRepaintBoundary: true));
 
-    final tap = TapInput(shape: .rectangle, size: .all(20), position: .zero());
+    final tap = TapInput(shape: .square(20), position: .zero());
     final downs = <TapDownEvent>[];
     tap.onTapDown(downs.add);
 
@@ -209,7 +209,7 @@ void main() {
   });
 
   testWidgets('hover emits enter then exit', (tester) async {
-    final hover = HoverInput(shape: .rectangle, size: .all(20), position: .zero());
+    final hover = HoverInput(shape: .square(20), position: .zero());
     await pumpScene(tester, hover);
     final enters = <HoverEvent>[];
     final exits = <HoverEvent>[];

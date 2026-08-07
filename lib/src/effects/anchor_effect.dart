@@ -1,20 +1,20 @@
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/transform_node.dart';
+import 'package:ignis/src/nodes/sized_node.dart';
 
-/// An effect that animates a [TransformNode]'s anchor over time.
+/// An effect that animates a [SizedNode]'s anchor over time.
 abstract class AnchorEffect extends ControlledEffect {
-  TransformNode? _target;
+  SizedNode? _target;
 
   /// The node whose anchor is mutated by this effect.
-  TransformNode? get target => _target;
+  SizedNode? get target => _target;
 
   /// Anchors [target] by [offset] relative to its anchor when the effect starts.
   ///
-  /// If [target] is null, resolves to the closest [TransformNode].
+  /// If [target] is null, resolves to the closest [SizedNode].
   factory AnchorEffect.by({
-    TransformNode? target,
+    SizedNode? target,
     required Anchor offset,
     required EffectController controller,
     bool? cleanup,
@@ -22,9 +22,9 @@ abstract class AnchorEffect extends ControlledEffect {
 
   /// Anchors [target] to [destination].
   ///
-  /// If [target] is null, resolves to the closest [TransformNode].
+  /// If [target] is null, resolves to the closest [SizedNode].
   factory AnchorEffect.to({
-    TransformNode? target,
+    SizedNode? target,
     required Anchor destination,
     required EffectController controller,
     bool? cleanup,
@@ -37,8 +37,8 @@ abstract class AnchorEffect extends ControlledEffect {
   }) {
     if (_target == null) {
       onMount(() {
-        _target = ancestors.whereType<TransformNode>().firstOrNull;
-        assert(_target != null, 'Target must be set, or have a TransformNode ancestor.');
+        _target = ancestors.whereType<SizedNode>().firstOrNull;
+        assert(_target != null, 'Target must be set, or have a SizedNode ancestor.');
       });
 
       onUnmount(() {

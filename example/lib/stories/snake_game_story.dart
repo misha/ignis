@@ -173,16 +173,14 @@ class _GameNode extends Node {
           // Set up horizontal walls.
           for (final x in [0.0, _BOARD_SIZE]) //
             _WallNode(
-              shape: .rectangle,
-              size: .new(_WALL_THICKNESS, _BOARD_SIZE),
+              shape: .rectangle(.new(_WALL_THICKNESS, _BOARD_SIZE)),
               position: .new(x, _BOARD_SIZE / 2),
             ),
 
           // Set up vertical walls.
           for (final y in [0.0, _BOARD_SIZE]) //
             _WallNode(
-              shape: .rectangle,
-              size: .new(_BOARD_SIZE, _WALL_THICKNESS),
+              shape: .rectangle(.new(_BOARD_SIZE, _WALL_THICKNESS)),
               position: .new(_BOARD_SIZE / 2, y),
             ),
 
@@ -216,7 +214,6 @@ class _GameNode extends Node {
 class _WallNode extends ShapeNode {
   _WallNode({
     required super.shape,
-    required super.size,
     required super.position,
   }) : super(
          anchor: .center(),
@@ -225,7 +222,6 @@ class _WallNode extends ShapeNode {
     add(
       ColliderNode(
         shape: shape,
-        size: size,
         anchor: anchor,
         layer: _WALL_LAYER,
         mask: 0,
@@ -243,8 +239,7 @@ class _SegmentNode extends ShapeNode {
   _SegmentNode(this.game, Snake segment)
     : index = segment.index,
       super(
-        shape: .circle,
-        size: .all(_SNAKE_SIZE),
+        shape: .circle(_SNAKE_SIZE / 2),
         anchor: .center(),
         position: segment.tile.position,
       ) {
@@ -253,7 +248,6 @@ class _SegmentNode extends ShapeNode {
     add(
       ColliderNode(
         shape: shape,
-        size: size,
         anchor: .center(),
         layer: _SNAKE_LAYER,
         mask: _SNAKE_LAYER | _FOOD_LAYER | _WALL_LAYER,
@@ -306,8 +300,7 @@ class _FoodNode extends ShapeNode {
 
   _FoodNode(this.game, this.food)
     : super(
-        shape: .circle,
-        size: .all(_FOOD_SIZE),
+        shape: .circle(_FOOD_SIZE / 2),
         anchor: .center(),
         position: food.tile.position,
         paint: Paint()..color = _FOOD_COLOR,
@@ -315,7 +308,6 @@ class _FoodNode extends ShapeNode {
     add(
       ColliderNode(
         shape: shape,
-        size: size,
         anchor: .center(),
         layer: _FOOD_LAYER,
         mask: 0,

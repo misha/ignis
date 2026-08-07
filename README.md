@@ -45,9 +45,8 @@ import 'package:ignis/ignis.dart';
 
 class GameNode extends TransformNode {
   final player = ShapeNode(
-    shape: Shape.circle,
-    size: Vector2.all(32),
-    anchor: Anchor.center,
+    shape: Shape.circle(16),
+    anchor: Anchor.center(),
     paint: Paint()..color = Colors.orange,
   );
 
@@ -206,19 +205,20 @@ Although it was developed with Ignis in mind, `ivector_math` is otherwise genera
 
 Ignis comes with the following nodes.
 
-| Node                     | Purpose                                                                      | Signals                              |
-|--------------------------|------------------------------------------------------------------------------|--------------------------------------|
-| `Node`                   | Base node specifying `enabled`, `priority`, and `children`.                  | `onMount`, `onUnmount`               |
-| `CollisionDetectionNode` | Holds a `CollisionDetection` arena.                                          | -                                    |
-| `ColliderNode`           | Registers its `Shape` with the nearest `CollisionDetectionNode`.             | `onCollisionStart`, `onCollisionEnd` |
-| `EffectNode`             | Base node for time-driven effects; see [Effects](#effects).                  | `onFinish`                           |
-| `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.                         | `onUpdate`                           |
-| `InputNode`              | Base hit area for gestures; see [Inputs](#inputs).                           | -                                    |
-| `ShapeNode`              | Draws a `Shape` with `Paint`.                                                | -                                    |
-| `SpriteNode`             | Animates a `Spritesheet` with `Paint`; see [Sprites](#sprites).              | `onFrame`, `onLoop`, `onFinish`      |
-| `TextNode`               | Draws text with `TextPainter`.                                               | -                                    |
-| `TimerNode`              | Tracks time to power its signal.                                             | `onTrigger`                          |
-| `TransformNode`          | Base spatial node with a `position`, `scale`, `angle`, `size`, and `anchor`. | -                                    |
+| Node                     | Purpose                                                          | Signals                              |
+|--------------------------|------------------------------------------------------------------|--------------------------------------|
+| `Node`                   | Base node specifying `enabled`, `priority`, and `children`.      | `onMount`, `onUnmount`               |
+| `CollisionDetectionNode` | Holds a `CollisionDetection` arena.                              | -                                    |
+| `ColliderNode`           | Registers its `Shape` with the nearest `CollisionDetectionNode`. | `onCollisionStart`, `onCollisionEnd` |
+| `EffectNode`             | Base node for time-driven effects; see [Effects](#effects).      | `onFinish`                           |
+| `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.             | `onUpdate`                           |
+| `InputNode`              | Base hit area for gestures; see [Inputs](#inputs).               | -                                    |
+| `ShapeNode`              | Draws a `Shape` with `Paint`.                                    | -                                    |
+| `SizedNode`              | Base node with a size, used for shapes and hit-testing.          | -                                    |
+| `SpriteNode`             | Animates a `Spritesheet` with `Paint`; see [Sprites](#sprites).  | `onFrame`, `onLoop`, `onFinish`      |
+| `TextNode`               | Draws text with `TextPainter`.                                   | -                                    |
+| `TimerNode`              | Tracks time to power its signal.                                 | `onTrigger`                          |
+| `TransformNode`          | Base spatial node with a `position`, `scale`, and `angle`.       | -                                    |
 
 ## Effects
 
@@ -230,7 +230,7 @@ Ignis comes with the following effects.
 
 | Effect             | Purpose                                                       |
 |--------------------|---------------------------------------------------------------|
-| `AnchorEffect`     | Mutates the anchor of a `TransformNode` over time.            |
+| `AnchorEffect`     | Mutates the anchor of a `SizedNode` over time.                |
 | `CombinedEffect`   | An effect that finished when all its sub-effects finish.      |
 | `ControlledEffect` | Base effect for effects that use an `EffectController`.       |
 | `MoveEffect`       | Mutates the position of a `TransformNode` over time.          |
@@ -305,8 +305,8 @@ Collisions work using two nodes, `CollisionDetectionNode` and `ColliderNode`.
 
 ```dart
 final cd = CollisionDetectionNode();
-final player = ColliderNode(shape: .circle, size: .all(32));
-final wall = ColliderNode(shape: .rectangle, size: .new(32, 200));
+final player = ColliderNode(shape: .circle(16));
+final wall = ColliderNode(shape: .rectangle(.new(32, 200)));
 cd.addAll([player, wall]);
 
 player.onCollisionStart((other) {
@@ -336,15 +336,13 @@ player
 
 ### Limitations in Collision Detection
 
-At this time, the collision detection implementation only supports `Shape` (circles and rectangles) and does not return the collision points. In exchange, it is blindingly fast.
+At this time, the collision detection implementation only supports `Shape` and does not return collision points or depth. In exchange, it is quite fast!
 
-Expanding the capabilities and usefulness of collision detection in Ignis while maintaining solid performance is a focus of ongoing development. 
+Expanding the capabilities and usefulness of collision detection in Ignis while maintaining solid performance is a focus of ongoing development. Specifically, a general `Polygon` shape is well within the engine's scope.
 
 ## Inputs
 
-`InputNode` is a hit area that recognizes pointer gestures by delegating to Flutter's own gesture recognizers.
-
-It's a `TransformNode` in its own right, with its own `shape`, `position`, `size`, and `anchor`, so it's free to cover an area larger or smaller than whatever it's representing.
+`InputNode` is a hit area that recognizes pointer gestures by delegating to Flutter's own gesture recognizers. It has its own shape too, so it's free to cover an area larger or smaller than whatever it's representing.
 
 A node wanting more than one gesture just adds more input nodes. When multiple input nodes overlap, only the topmost one receives the event.
 
@@ -359,8 +357,8 @@ Ignis comes with the following inputs.
 The code below is a simple way to implement the common drag-and-drop pattern.
 
 ```dart
-final piece = ShapeNode(shape: .circle, size: .all(32));
-final drag = DragInput(shape: piece.shape, size: piece.size);
+final piece = ShapeNode(shape: .circle(16));
+final drag = DragInput(shape: piece.shape);
 piece.add(drag);
 
 drag.onDragUpdate((event) {

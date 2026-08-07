@@ -1,13 +1,34 @@
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
+  test(
+    'excludes a point outside a rotated rectangle hit area whose AABB would otherwise contain it',
+    () {
+      final root = Node(
+        children: [
+          TapInput(
+            shape: .square(10),
+            anchor: .center(),
+            position: .zero(),
+            angle: math.pi / 4, // 45 degrees, turning the square into a diamond.
+          ),
+        ],
+      );
+
+      // (7, 7) sits in the AABB's corner but outside the rotated square.
+      expect(root.hitTest(.all(7)), isNull);
+      expect(root.hitTest(.all(3)), isNotNull);
+    },
+  );
+
   test('returns null when no InputNode contains the point', () {
     final root = Node(
       children: [
         TapInput(
-          shape: .rectangle,
-          size: .all(10),
+          shape: .square(10),
           position: .zero(),
         ),
       ],
@@ -22,8 +43,7 @@ void main() {
     final root = Node(
       children: [
         a = TapInput(
-          shape: .rectangle,
-          size: .all(10),
+          shape: .square(10),
           position: .zero(),
         ),
       ],
@@ -38,8 +58,7 @@ void main() {
     final root = Node(
       children: [
         a = TapInput(
-          shape: .circle,
-          size: .all(10),
+          shape: .circle(5),
           position: .zero(),
         ),
       ],
@@ -56,8 +75,7 @@ void main() {
     final root = Node(
       children: [
         a = TapInput(
-          shape: .rectangle,
-          size: .all(10),
+          shape: .square(10),
           position: .zero(),
           anchor: .center(),
         ),
@@ -75,14 +93,12 @@ void main() {
     final root = Node(
       children: [
         a = TapInput(
-          shape: .rectangle,
-          size: .all(10),
+          shape: .square(10),
           position: .zero(),
           priority: 1,
         ),
         TapInput(
-          shape: .rectangle,
-          size: .all(10),
+          shape: .square(10),
           position: .zero(),
         ),
       ],
@@ -97,13 +113,11 @@ void main() {
     final root = Node(
       children: [
         TapInput(
-          shape: .rectangle,
-          size: .all(10),
+          shape: .square(10),
           position: .zero(),
           children: [
             child = TapInput(
-              shape: .rectangle,
-              size: .all(10),
+              shape: .square(10),
               position: .zero(),
             ),
           ],
@@ -119,8 +133,7 @@ void main() {
     final root = Node(
       children: [
         TapInput(
-          shape: .rectangle,
-          size: .all(10),
+          shape: .square(10),
           position: .zero(),
           enabled: false,
         ),
@@ -137,8 +150,7 @@ void main() {
           enabled: false,
           children: [
             TapInput(
-              shape: .rectangle,
-              size: .all(10),
+              shape: .square(10),
               position: .zero(),
             ),
           ],
@@ -157,8 +169,7 @@ void main() {
         Node(
           children: [
             a = TapInput(
-              shape: .rectangle,
-              size: .all(10),
+              shape: .square(10),
               position: .zero(),
             ),
           ],

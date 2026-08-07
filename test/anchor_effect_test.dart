@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('anchors its parent by an offset', () {
-    final node = TransformNode(anchor: .new(10, 20));
+    final node = ShapeNode(shape: .square(0), anchor: .new(10, 20));
     final scene = node.mount();
 
     node.add(
@@ -25,7 +25,7 @@ void main() {
   });
 
   test('anchors its parent to a destination', () {
-    final node = TransformNode(anchor: .new(10, 20));
+    final node = ShapeNode(shape: .square(0), anchor: .new(10, 20));
     final scene = node.mount();
 
     node.add(
@@ -43,7 +43,7 @@ void main() {
   });
 
   test('captures the destination offset when the effect starts', () {
-    final node = TransformNode();
+    final node = ShapeNode(shape: .square(0));
     final scene = node.mount();
 
     node.add(
@@ -61,7 +61,7 @@ void main() {
   });
 
   test('multiple relative anchor effects compose', () {
-    final node = TransformNode();
+    final node = ShapeNode(shape: .square(0));
     final scene = node.mount();
 
     node.add(
@@ -84,8 +84,8 @@ void main() {
 
   test('re-resolves its target after being remounted elsewhere', () {
     final root = TransformNode();
-    final nodeA = TransformNode(anchor: .new(0, 0));
-    final nodeB = TransformNode(anchor: .new(100, 100));
+    final nodeA = ShapeNode(shape: .square(0), anchor: .new(0, 0));
+    final nodeB = ShapeNode(shape: .square(0), anchor: .new(100, 100));
     root.addAll([nodeA, nodeB]);
     final scene = root.mount();
     final effect = AnchorEffect.by(

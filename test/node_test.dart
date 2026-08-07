@@ -125,43 +125,49 @@ void main() {
     expect(b.renders, 0);
   });
 
-  test('a disabled child skips update and render for itself and its subtree, without affecting its siblings', () {
-    final a = TestNode('A');
-    final b = TestNode('B');
-    final c = TestNode('C');
-    a.add(b);
-    a.add(c);
-    a.mount();
-    b.enabled = false;
+  test(
+    'a disabled child skips update and render for itself and its subtree, without affecting its siblings',
+    () {
+      final a = TestNode('A');
+      final b = TestNode('B');
+      final c = TestNode('C');
+      a.add(b);
+      a.add(c);
+      a.mount();
+      b.enabled = false;
 
-    a.update(1);
-    expect(b.updates, 0);
-    expect(c.updates, 1);
+      a.update(1);
+      expect(b.updates, 0);
+      expect(c.updates, 1);
 
-    _render(a);
-    expect(b.renders, 0);
-    expect(c.renders, 1);
-  });
+      _render(a);
+      expect(b.renders, 0);
+      expect(c.renders, 1);
+    },
+  );
 
-  test('a child removed during an update still ticks that same pass, but is gone by the next flush', () {
-    final log = TestLog();
-    final a = TestNode('A', log);
-    final b = TestNode('B', log);
-    final c = TestNode('C', log);
-    b.action = () => a.remove(c);
-    a.add(b);
-    a.add(c);
-    final scene = a.mount();
+  test(
+    'a child removed during an update still ticks that same pass, but is gone by the next flush',
+    () {
+      final log = TestLog();
+      final a = TestNode('A', log);
+      final b = TestNode('B', log);
+      final c = TestNode('C', log);
+      b.action = () => a.remove(c);
+      a.add(b);
+      a.add(c);
+      final scene = a.mount();
 
-    scene.update(1);
-    expect(log.updates, ['A', 'B', 'C']);
-    expect(a.children, [b, c]);
-    log.updates.clear();
+      scene.update(1);
+      expect(log.updates, ['A', 'B', 'C']);
+      expect(a.children, [b, c]);
+      log.updates.clear();
 
-    scene.update(1);
-    expect(log.updates, ['A', 'B']);
-    expect(a.children, [b]);
-  });
+      scene.update(1);
+      expect(log.updates, ['A', 'B']);
+      expect(a.children, [b]);
+    },
+  );
 
   test('defers children added during an update until the next update', () {
     final log = TestLog();
@@ -475,18 +481,21 @@ void main() {
       expect(dMounts, 1);
     });
 
-    test('a node can detach itself from within its own onMount, taking effect on the next flush', () {
-      final a = Node();
-      final b = Node();
-      a.add(b);
-      b.onMount(() => b.detach());
+    test(
+      'a node can detach itself from within its own onMount, taking effect on the next flush',
+      () {
+        final a = Node();
+        final b = Node();
+        a.add(b);
+        b.onMount(() => b.detach());
 
-      final scene = a.mount();
-      expect(b.parent, same(a));
+        final scene = a.mount();
+        expect(b.parent, same(a));
 
-      scene.update(0);
-      expect(b.parent, isNull);
-    });
+        scene.update(0);
+        expect(b.parent, isNull);
+      },
+    );
 
     test('reparenting from within onMount throws because the node still has a parent', () {
       final a = Node();
