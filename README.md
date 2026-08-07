@@ -19,6 +19,7 @@ What is this? See [Motivation](#motivation).
 - [Effects](#effects)
 - [Sprites](#sprites)
 - [Collision Detection](#collision-detection)
+- [Inputs](#inputs)
 - [Assets](#assets)
 - [Globals](#globals)
 - [Motivation](#motivation)
@@ -212,6 +213,7 @@ Ignis comes with the following nodes.
 | `ColliderNode`           | Registers its `Shape` with the nearest `CollisionDetectionNode`.             | `onCollisionStart`, `onCollisionEnd` |
 | `EffectNode`             | Base node for time-driven effects; see [Effects](#effects).                  | `onFinish`                           |
 | `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.                         | `onUpdate`                           |
+| `InputNode`              | Base hit area for gestures; see [Inputs](#inputs).                           | -                                    |
 | `ShapeNode`              | Draws a `Shape` with `Paint`.                                                | -                                    |
 | `SpriteNode`             | Animates a `Spritesheet` with `Paint`; see [Sprites](#sprites).              | `onFrame`, `onLoop`, `onFinish`      |
 | `TextNode`               | Draws text with `TextPainter`.                                               | -                                    |
@@ -334,6 +336,34 @@ player
 At this time, the collision detection implementation only supports `Shape` (circles and rectangles) and does not return the collision points. In exchange, it is blindingly fast.
 
 Expanding the capabilities and usefulness of collision detection in Ignis while maintaining solid performance is a focus of ongoing development. 
+
+## Inputs
+
+`InputNode` is a hit area that recognizes pointer gestures by delegating to Flutter's own gesture recognizers.
+
+It's a `TransformNode` in its own right, with its own `shape`, `position`, `size`, and `anchor`, so it's free to cover an area larger or smaller than whatever it's representing.
+
+A node wanting more than one gesture just adds more input nodes. When multiple input nodes overlap, only the topmost one receives the event.
+
+Ignis comes with the following inputs.
+
+| Input        | Purpose             | Signals                                                    |
+|--------------|---------------------|------------------------------------------------------------|
+| `TapInput`   | Recognizes taps.    | `onTapDown`, `onTapUp`, `onTap`, `onTapCancel`             |
+| `DragInput`  | Recognizes drags.   | `onDragStart`, `onDragUpdate`, `onDragEnd`, `onDragCancel` |
+| `HoverInput` | Tracks mouse hover. | `onHoverEnter`, `onHoverExit`                              |
+
+The code below is a simple way to implement the common drag-and-drop pattern.
+
+```dart
+final piece = ShapeNode(shape: .circle, size: .all(32));
+final drag = DragInput(shape: piece.shape, size: piece.size);
+piece.add(drag);
+
+drag.onDragUpdate((event) {
+  piece.position.mutate().add(event.delta);
+});
+```
 
 ## Assets
 

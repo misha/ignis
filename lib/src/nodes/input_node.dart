@@ -13,8 +13,6 @@ import 'package:ignis/src/shape.dart';
 ///
 /// A node wanting more than one gesture just adds more input nodes; [priority]
 /// decides who gets dibs when their shapes overlap.
-///
-/// TODO: Add input documentation to the README.
 abstract class InputNode extends TransformNode {
   /// The shape of the node's hit area.
   Shape shape;
