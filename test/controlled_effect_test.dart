@@ -125,6 +125,21 @@ void main() {
     expect(finishes, 2);
   });
 
+  test('only emits onFinish once a reverse phase completes', () {
+    final effect = ControlledEffect(controller: .new(duration: 1, reverse: true));
+    effect.mount();
+    var finishes = 0;
+    effect.onFinish(() => finishes += 1);
+
+    effect.update(1);
+    expect(effect.previousProgress, 1); // The forward phase is done.
+    expect(finishes, 0);
+
+    effect.update(1);
+    expect(effect.previousProgress, 0); // Back at the start.
+    expect(finishes, 1);
+  });
+
   test('detaches itself once complete when added as a child, when cleanup is true', () {
     final a = Node();
     final effect = ControlledEffect(controller: .new(duration: 2), cleanup: true);

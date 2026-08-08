@@ -113,6 +113,23 @@ class EffectController {
   /// to 1. Set to null to repeat forever.
   final int? times;
 
+  /// Whether to run back from finish to start after reaching the end,
+  /// before counting as one repeat. Defaults to false.
+  final bool reverse;
+
+  /// How long the reverse phase takes, when [reverse] is true. Defaults to
+  /// [duration].
+  final double reverseDuration;
+
+  /// The curve to use for the reverse phase, when [reverse] is true.
+  /// Defaults to [curve].
+  final Curve reverseCurve;
+
+  /// How long to pause at the end before the reverse phase starts, when
+  /// [reverse] is true. Defaults to 0.
+  final double reverseDelay;
+
+  late final double _totalDuration;
   double _elapsed = 0;
   int _repeats = 0;
 
@@ -120,7 +137,7 @@ class EffectController {
   bool get hasStarted => _elapsed >= 0;
 
   /// Whether or not this effect has finished.
-  bool get isFinished => _elapsed >= duration;
+  bool get isFinished => _elapsed >= _totalDuration;
 
   /// Whether another repeat remains once the current one finishes.
   bool get canRepeat => times == null || _repeats + 1 < times!;
@@ -130,24 +147,39 @@ class EffectController {
     this.curve = Curves.linear,
     this.startDelay = 0,
     this.times = 1,
+    bool? reverse,
+    double? reverseDuration,
+    Curve? reverseCurve,
+    this.reverseDelay = 0,
   }) : assert(duration > 0, 'Duration must be positive.'),
        assert(startDelay >= 0, 'Start delay cannot be negative.'),
        assert(times == null || times > 0, 'Times must be positive.'),
-       _elapsed = -startDelay;
+       assert(reverseDuration == null || reverseDuration > 0, 'Reverse duration must be positive.'),
+       assert(reverseDelay >= 0, 'Reverse delay cannot be negative.'),
+       reverse = reverse ?? false,
+       reverseDuration = reverseDuration ?? duration,
+       reverseCurve = reverseCurve ?? curve,
+       _elapsed = -startDelay {
+    var totalDuration = duration;
+    if (this.reverse) totalDuration += reverseDelay + this.reverseDuration;
+    _totalDuration = totalDuration;
+  }
 
   double get progress {
     if (!hasStarted) return 0;
-    return curve.transform(_elapsed / duration);
+    if (_elapsed <= duration) return curve.transform(_elapsed / duration);
+    if (_elapsed <= duration + reverseDelay) return 1;
+    return 1 - reverseCurve.transform((_elapsed - duration - reverseDelay) / reverseDuration);
   }
 
   double advance(double dt) {
     assert(dt >= 0, 'Delta time cannot be negative.');
     _elapsed += dt;
 
-    if (_elapsed > duration) {
-      final remaining = _elapsed - duration;
-      _elapsed = duration;
-      return remaining;
+    if (_elapsed > _totalDuration) {
+      final overflow = _elapsed - _totalDuration;
+      _elapsed = _totalDuration;
+      return overflow;
     }
 
     return 0;
@@ -171,10 +203,12 @@ class EffectController {
     _repeats = 0;
   }
 
-  void setToEnd() => _elapsed = duration;
+  void setToEnd() {
+    _elapsed = _totalDuration;
+  }
 
   /// Restarts this controller for its next repeat, carrying over [overflow]
-  /// time advanced past [duration].
+  /// time advanced past the end of the run.
   void repeat([double overflow = 0]) {
     _repeats += 1;
     _elapsed = -startDelay + overflow;

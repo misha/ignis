@@ -109,4 +109,88 @@ void main() {
 
     expect(controller.canRepeat, isTrue);
   });
+
+  test('defaults reverseDuration and reverseCurve to duration and curve', () {
+    controller = .new(duration: 1, curve: Curves.easeIn, reverse: true);
+
+    expect(controller.reverseDuration, 1);
+    expect(controller.reverseCurve, Curves.easeIn);
+  });
+
+  test('reverses back to the start after reaching the end', () {
+    controller = .new(duration: 1, reverse: true);
+
+    expect(controller.advance(1), 0);
+    expect(controller.progress, 1);
+    expect(controller.isFinished, isFalse); // Only the forward phase is done.
+
+    expect(controller.advance(0.5), 0);
+    expect(controller.progress, 0.5);
+    expect(controller.isFinished, isFalse);
+
+    expect(controller.advance(0.5), 0);
+    expect(controller.progress, 0);
+    expect(controller.isFinished, isTrue);
+  });
+
+  test('carries overflow from the forward phase into the reverse phase', () {
+    controller = .new(duration: 1, reverse: true);
+
+    expect(controller.advance(1.25), 0);
+    expect(controller.progress, 0.75); // 0.25 into the reverse phase.
+    expect(controller.isFinished, isFalse);
+  });
+
+  test('applies reverseDuration and reverseCurve independently', () {
+    controller = .new(
+      duration: 1,
+      reverse: true,
+      reverseDuration: 2,
+      reverseCurve: Curves.easeIn,
+    );
+
+    controller.advance(1); // Finishes the forward phase.
+    controller.advance(1); // Halfway through the (longer) reverse phase.
+
+    expect(controller.progress, 1 - Curves.easeIn.transform(0.5));
+  });
+
+  test('pauses at the end for reverseDelay before the reverse phase starts', () {
+    controller = .new(duration: 1, reverse: true, reverseDelay: 0.5);
+
+    expect(controller.advance(1), 0); // Finishes the forward phase.
+    expect(controller.progress, 1);
+    expect(controller.isFinished, isFalse);
+
+    expect(controller.advance(0.5), 0); // Waits out the reverse delay.
+    expect(controller.progress, 1);
+    expect(controller.isFinished, isFalse);
+
+    expect(controller.advance(1), 0);
+    expect(controller.progress, 0);
+    expect(controller.isFinished, isTrue);
+  });
+
+  test('setToEnd() parks at the end of the reverse phase, when reverse is true', () {
+    controller = .new(duration: 1, reverse: true, reverseDuration: 2);
+
+    controller.setToEnd();
+
+    expect(controller.isFinished, isTrue);
+    expect(controller.progress, 0);
+  });
+
+  test('repeat() restarts from the forward phase', () {
+    controller = .new(duration: 1, reverse: true, times: 2);
+
+    controller.advance(1);
+    controller.advance(1); // Completes the reverse phase too.
+    expect(controller.isFinished, isTrue);
+
+    controller.repeat();
+    expect(controller.progress, 0);
+
+    controller.advance(1);
+    expect(controller.progress, 1); // Back in the forward phase.
+  });
 }
