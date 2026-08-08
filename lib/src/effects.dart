@@ -6,4 +6,3 @@ export 'effects/opacity_effect.dart';
 export 'effects/rotate_effect.dart';
 export 'effects/scale_effect.dart';
 export 'effects/sequential_effect.dart';
-export 'effects/typewriter_effect.dart';

@@ -238,7 +238,6 @@ Ignis comes with the following effects.
 | `RotateEffect`     | Mutates the angle of a `TransformNode` over time.             |
 | `ScaleEffect`      | Mutates the scale of a `TransformNode` over time.             |
 | `SequentialEffect` | An effect that advances its sub-effects serially.             |
-| `TypewriterEffect` | Types the text of a `TextNode`, one character at a time.      |
 
 Note that specific effects drop their `*Node` suffix and are simply called `*Effect`.
 
