@@ -70,6 +70,61 @@ void main() {
     expect(effect.previousProgress, 0);
   });
 
+  test('restarts times-1 times before emitting onFinish', () {
+    final effect = ControlledEffect(controller: .new(duration: 1, times: 2));
+    effect.mount();
+    var starts = 0;
+    var finishes = 0;
+    effect.onStart(() => starts += 1);
+    effect.onFinish(() => finishes += 1);
+
+    effect.update(1);
+    expect(starts, 1);
+    expect(finishes, 0);
+    expect(effect.isFinished, isFalse);
+
+    effect.update(0.5);
+    expect(starts, 2); // Restarted for its second run.
+    expect(effect.previousProgress, 0.5);
+
+    effect.update(0.5);
+    expect(starts, 2);
+    expect(finishes, 1);
+    expect(effect.isFinished, isTrue);
+  });
+
+  test('repeats forever when times is null', () {
+    final effect = ControlledEffect(controller: .new(duration: 1, times: null));
+    effect.mount();
+    var starts = 0;
+    var finishes = 0;
+    effect.onStart(() => starts += 1);
+    effect.onFinish(() => finishes += 1);
+
+    for (var i = 0; i < 10; i += 1) {
+      effect.update(1);
+    }
+
+    expect(starts, 10);
+    expect(finishes, 0);
+  });
+
+  test('reset() restarts the repeat count from the beginning', () {
+    final effect = ControlledEffect(controller: .new(duration: 1, times: 2));
+    effect.mount();
+    var finishes = 0;
+    effect.onFinish(() => finishes += 1);
+
+    effect.update(1);
+    effect.update(1);
+    expect(finishes, 1);
+
+    effect.reset();
+    effect.update(1);
+    effect.update(1);
+    expect(finishes, 2);
+  });
+
   test('detaches itself once complete when added as a child, when cleanup is true', () {
     final a = Node();
     final effect = ControlledEffect(controller: .new(duration: 2), cleanup: true);

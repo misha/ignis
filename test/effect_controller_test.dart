@@ -73,4 +73,40 @@ void main() {
     expect(controller.recede(1), 0.25);
     expect(controller.progress, 0);
   });
+
+  test('can repeat, carrying over any overflow', () {
+    controller = .new(duration: 1, times: 2);
+
+    expect(controller.advance(1.25), 0.25);
+    expect(controller.isFinished, isTrue); // First repeat is done.
+    expect(controller.canRepeat, isTrue); // A second repeat remains.
+
+    controller.repeat(0.25);
+    expect(controller.progress, 0.25); // Overflow carried into the new repeat.
+    expect(controller.isFinished, isFalse);
+
+    expect(controller.advance(0.75), 0);
+    expect(controller.isFinished, isTrue);
+    expect(controller.canRepeat, isFalse); // No repeats remain.
+  });
+
+  test('repeats forever when times is null', () {
+    controller = .new(duration: 1, times: null);
+
+    for (var i = 0; i < 5; i += 1) {
+      controller.advance(1);
+      expect(controller.canRepeat, isTrue);
+      controller.repeat();
+    }
+  });
+
+  test('setToStart() resets the repeat count', () {
+    controller = .new(duration: 1, times: 2);
+    controller.advance(1);
+    controller.repeat();
+
+    controller.setToStart();
+
+    expect(controller.canRepeat, isTrue);
+  });
 }

@@ -64,7 +64,7 @@ class ControlledEffect extends EffectNode {
       return;
     }
 
-    controller.advance(dt);
+    final overflow = controller.advance(dt);
 
     if (!controller.hasStarted) {
       return;
@@ -80,6 +80,13 @@ class ControlledEffect extends EffectNode {
     _previousProgress = progress;
 
     if (!_finished && controller.isFinished) {
+      if (controller.canRepeat) {
+        controller.repeat(overflow);
+        _previousProgress = 0;
+        _started = false;
+        return;
+      }
+
       _finished = true;
       onFinish.emit();
 
@@ -102,7 +109,12 @@ class EffectController {
   /// How long to wait before starting the effect. Defaults to 0.
   final double startDelay;
 
+  /// How many times to run before [isFinished] stays true for good. Defaults
+  /// to 1. Set to null to repeat forever.
+  final int? times;
+
   double _elapsed = 0;
+  int _repeats = 0;
 
   /// Whether or not this effect has started.
   bool get hasStarted => _elapsed >= 0;
@@ -110,12 +122,17 @@ class EffectController {
   /// Whether or not this effect has finished.
   bool get isFinished => _elapsed >= duration;
 
+  /// Whether another repeat remains once the current one finishes.
+  bool get canRepeat => times == null || _repeats + 1 < times!;
+
   EffectController({
     required this.duration,
     this.curve = Curves.linear,
     this.startDelay = 0,
+    this.times = 1,
   }) : assert(duration > 0, 'Duration must be positive.'),
        assert(startDelay >= 0, 'Start delay cannot be negative.'),
+       assert(times == null || times > 0, 'Times must be positive.'),
        _elapsed = -startDelay;
 
   double get progress {
@@ -149,6 +166,17 @@ class EffectController {
     return 0;
   }
 
-  void setToStart() => _elapsed = -startDelay;
+  void setToStart() {
+    _elapsed = -startDelay;
+    _repeats = 0;
+  }
+
   void setToEnd() => _elapsed = duration;
+
+  /// Restarts this controller for its next repeat, carrying over [overflow]
+  /// time advanced past [duration].
+  void repeat([double overflow = 0]) {
+    _repeats += 1;
+    _elapsed = -startDelay + overflow;
+  }
 }
