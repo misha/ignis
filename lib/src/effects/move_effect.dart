@@ -1,9 +1,10 @@
+import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 
 /// A effect that animates a [TransformNode]'s position over time.
-abstract class MoveEffect extends ControlledEffect {
+abstract class MoveEffect<C extends BaseEffectController> extends ControlledEffect<C> {
   TransformNode? _target;
 
   /// The node whose position is mutated by this effect.
@@ -15,9 +16,10 @@ abstract class MoveEffect extends ControlledEffect {
   factory MoveEffect.by({
     TransformNode? target,
     required Vector2 offset,
-    required EffectController controller,
+    required C controller,
     bool? cleanup,
-  }) = _MoveByEffect;
+    bool? enabled,
+  }) = _MoveByEffect<C>;
 
   /// Moves [target] to [destination].
   ///
@@ -25,14 +27,16 @@ abstract class MoveEffect extends ControlledEffect {
   factory MoveEffect.to({
     TransformNode? target,
     required Vector2 destination,
-    required EffectController controller,
+    required C controller,
     bool? cleanup,
-  }) = _MoveToEffect;
+    bool? enabled,
+  }) = _MoveToEffect<C>;
 
   MoveEffect._({
     this._target,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) {
     if (_target == null) {
       onMount(() {
@@ -47,7 +51,7 @@ abstract class MoveEffect extends ControlledEffect {
   }
 }
 
-class _MoveByEffect extends MoveEffect {
+class _MoveByEffect<C extends BaseEffectController> extends MoveEffect<C> {
   final Vector2 _offset;
 
   _MoveByEffect({
@@ -55,6 +59,7 @@ class _MoveByEffect extends MoveEffect {
     required Vector2 offset,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
@@ -63,7 +68,7 @@ class _MoveByEffect extends MoveEffect {
   }
 }
 
-class _MoveToEffect extends MoveEffect {
+class _MoveToEffect<C extends BaseEffectController> extends MoveEffect<C> {
   final Vector2 _destination;
   final Vector2 _offset = .zero();
 
@@ -72,6 +77,7 @@ class _MoveToEffect extends MoveEffect {
     required Vector2 destination,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : _destination = destination.clone(),
        super._() {
     onStart(() {

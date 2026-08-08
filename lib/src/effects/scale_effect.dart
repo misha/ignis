@@ -1,9 +1,10 @@
+import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 
 /// An effect that animates a [TransformNode]'s scale over time.
-abstract class ScaleEffect extends ControlledEffect {
+abstract class ScaleEffect<C extends BaseEffectController> extends ControlledEffect<C> {
   TransformNode? _target;
 
   /// The node whose scale is mutated by this effect.
@@ -15,9 +16,10 @@ abstract class ScaleEffect extends ControlledEffect {
   factory ScaleEffect.by({
     TransformNode? target,
     required Vector2 offset,
-    required EffectController controller,
+    required C controller,
     bool? cleanup,
-  }) = _ScaleByEffect;
+    bool? enabled,
+  }) = _ScaleByEffect<C>;
 
   /// Scales [target] to [destination].
   ///
@@ -25,14 +27,16 @@ abstract class ScaleEffect extends ControlledEffect {
   factory ScaleEffect.to({
     TransformNode? target,
     required Vector2 destination,
-    required EffectController controller,
+    required C controller,
     bool? cleanup,
-  }) = _ScaleToEffect;
+    bool? enabled,
+  }) = _ScaleToEffect<C>;
 
   ScaleEffect._({
     this._target,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) {
     if (_target == null) {
       onMount(() {
@@ -47,7 +51,7 @@ abstract class ScaleEffect extends ControlledEffect {
   }
 }
 
-class _ScaleByEffect extends ScaleEffect {
+class _ScaleByEffect<C extends BaseEffectController> extends ScaleEffect<C> {
   final Vector2 _offset;
 
   _ScaleByEffect({
@@ -55,6 +59,7 @@ class _ScaleByEffect extends ScaleEffect {
     required Vector2 offset,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
@@ -63,7 +68,7 @@ class _ScaleByEffect extends ScaleEffect {
   }
 }
 
-class _ScaleToEffect extends ScaleEffect {
+class _ScaleToEffect<C extends BaseEffectController> extends ScaleEffect<C> {
   final Vector2 _destination;
   final Vector2 _offset = .zero();
 
@@ -72,6 +77,7 @@ class _ScaleToEffect extends ScaleEffect {
     required Vector2 destination,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : _destination = destination.clone(),
        super._() {
     onStart(() {

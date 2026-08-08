@@ -9,8 +9,8 @@ void main() {
     node.add(
       CombinedEffect(
         effects: [
-          MoveEffect.by(offset: .new(10, 0), controller: .new(duration: 1)),
-          RotateEffect.by(angle: 2, controller: .new(duration: 1)),
+          MoveEffect.by(offset: .new(10, 0), controller: EffectController(duration: 1)),
+          RotateEffect.by(angle: 2, controller: EffectController(duration: 1)),
         ],
       ),
     );
@@ -25,8 +25,8 @@ void main() {
     final scene = node.mount();
     final combined = CombinedEffect(
       effects: [
-        MoveEffect.by(offset: .new(10, 0), controller: .new(duration: 1)),
-        RotateEffect.by(angle: 2, controller: .new(duration: 2)),
+        MoveEffect.by(offset: .new(10, 0), controller: EffectController(duration: 1)),
+        RotateEffect.by(angle: 2, controller: EffectController(duration: 2)),
       ],
     );
 
@@ -50,11 +50,11 @@ void main() {
         effects: [
           MoveEffect.by(
             offset: .new(10, 0),
-            controller: .new(duration: 1),
+            controller: EffectController(duration: 1),
           ),
           RotateEffect.by(
             angle: 2,
-            controller: .new(duration: 1),
+            controller: EffectController(duration: 1),
           ),
         ],
         cleanup: true,
@@ -75,11 +75,11 @@ void main() {
       effects: [
         MoveEffect.by(
           offset: .new(10, 0),
-          controller: .new(duration: 1),
+          controller: EffectController(duration: 1),
         ),
         RotateEffect.by(
           angle: 2,
-          controller: .new(duration: 1),
+          controller: EffectController(duration: 1),
         ),
       ],
     );

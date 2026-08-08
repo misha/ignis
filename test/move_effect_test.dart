@@ -9,7 +9,7 @@ void main() {
     node.add(
       MoveEffect.by(
         offset: .new(20, -10),
-        controller: .new(duration: 1),
+        controller: EffectController(duration: 1),
         cleanup: true,
       ),
     );
@@ -31,7 +31,7 @@ void main() {
     node.add(
       MoveEffect.to(
         destination: .new(30, 10),
-        controller: .new(duration: 1),
+        controller: EffectController(duration: 1),
       ),
     );
 
@@ -49,7 +49,7 @@ void main() {
     node.add(
       MoveEffect.to(
         destination: .new(20, 10),
-        controller: .new(duration: 1, startDelay: 0.5),
+        controller: EffectController(duration: 1, startDelay: 0.5),
       ),
     );
 
@@ -67,14 +67,14 @@ void main() {
     node.add(
       MoveEffect.by(
         offset: .new(10, 0),
-        controller: .new(duration: 1),
+        controller: EffectController(duration: 1),
       ),
     );
 
     node.add(
       MoveEffect.by(
         offset: .new(0, 20),
-        controller: .new(duration: 1),
+        controller: EffectController(duration: 1),
       ),
     );
 
@@ -90,7 +90,7 @@ void main() {
     final scene = root.mount();
     final effect = MoveEffect.by(
       offset: .new(10, 0),
-      controller: .new(duration: 1),
+      controller: EffectController(duration: 1),
     );
 
     nodeA.add(effect);

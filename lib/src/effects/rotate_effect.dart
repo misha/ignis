@@ -1,8 +1,9 @@
+import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 
 /// An effect that animates a [TransformNode]'s angle over time.
-abstract class RotateEffect extends ControlledEffect {
+abstract class RotateEffect<C extends BaseEffectController> extends ControlledEffect<C> {
   TransformNode? _target;
 
   /// The node whose angle is mutated by this effect.
@@ -14,9 +15,10 @@ abstract class RotateEffect extends ControlledEffect {
   factory RotateEffect.by({
     TransformNode? target,
     required double angle,
-    required EffectController controller,
+    required C controller,
     bool? cleanup,
-  }) = _RotateByEffect;
+    bool? enabled,
+  }) = _RotateByEffect<C>;
 
   /// Rotates [target] to [angle].
   ///
@@ -24,14 +26,16 @@ abstract class RotateEffect extends ControlledEffect {
   factory RotateEffect.to({
     TransformNode? target,
     required double angle,
-    required EffectController controller,
+    required C controller,
     bool? cleanup,
-  }) = _RotateToEffect;
+    bool? enabled,
+  }) = _RotateToEffect<C>;
 
   RotateEffect._({
     this._target,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) {
     if (_target == null) {
       onMount(() {
@@ -46,7 +50,7 @@ abstract class RotateEffect extends ControlledEffect {
   }
 }
 
-class _RotateByEffect extends RotateEffect {
+class _RotateByEffect<C extends BaseEffectController> extends RotateEffect<C> {
   final double _angle;
 
   _RotateByEffect({
@@ -54,6 +58,7 @@ class _RotateByEffect extends RotateEffect {
     required this._angle,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : super._() {
     onProgress((progress) {
       _target!.angle += _angle * (progress - previousProgress);
@@ -61,7 +66,7 @@ class _RotateByEffect extends RotateEffect {
   }
 }
 
-class _RotateToEffect extends RotateEffect {
+class _RotateToEffect<C extends BaseEffectController> extends RotateEffect<C> {
   final double _destination;
   double _offset = 0;
 
@@ -70,6 +75,7 @@ class _RotateToEffect extends RotateEffect {
     required double angle,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : _destination = angle,
        super._() {
     onStart(() {

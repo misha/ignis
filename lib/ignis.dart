@@ -3,6 +3,7 @@ export 'dart:ui' show Canvas;
 export 'src/anchor.dart';
 export 'src/cache.dart';
 export 'src/collision_detection.dart';
+export 'src/effect_controller.dart';
 export 'src/effects.dart';
 export 'src/extensions.dart';
 export 'src/loader.dart';

@@ -1,11 +1,11 @@
-import 'package:flutter/animation.dart';
+import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/signal.dart';
 
-/// An effect that progresses over time, driven by its [EffectController].
-class ControlledEffect extends EffectNode {
+/// An effect that progresses over time, driven by an [BaseEffectController].
+class ControlledEffect<C extends BaseEffectController> extends EffectNode {
   /// Drives this effect's timing and progress.
-  final EffectController controller;
+  final C controller;
 
   /// Whether to [detach] once finished. Defaults to false.
   bool cleanup;
@@ -51,7 +51,7 @@ class ControlledEffect extends EffectNode {
 
   @override
   void reset() {
-    controller.setToStart();
+    controller.reset();
     _previousProgress = 0;
     _paused = false;
     _started = false;
@@ -64,30 +64,24 @@ class ControlledEffect extends EffectNode {
       return;
     }
 
-    final overflow = controller.advance(dt);
+    final result = controller.update(dt);
 
     if (!controller.hasStarted) {
       return;
     }
 
-    if (!_started) {
-      _started = true;
-      onStart.emit();
-    }
+    _emit(result.progress);
 
-    final progress = controller.progress;
-    onProgress.emit(progress);
-    _previousProgress = progress;
+    if (result.repeat) {
+      _previousProgress = 0;
+      _started = false;
+    } else if (result.finish && !_finished) {
+      _finished = true;
 
-    if (!_finished && controller.isFinished) {
-      if (controller.canRepeat) {
-        controller.repeat(overflow);
-        _previousProgress = 0;
+      if (result.reset) {
         _started = false;
-        return;
       }
 
-      _finished = true;
       onFinish.emit();
 
       if (cleanup) {
@@ -95,122 +89,37 @@ class ControlledEffect extends EffectNode {
       }
     }
   }
+
+  void _emit(double progress) {
+    if (!_started) {
+      _started = true;
+      _finished = false;
+      onStart.emit();
+    }
+
+    onProgress.emit(progress);
+    _previousProgress = progress;
+  }
 }
 
-/// Drives a [ControlledEffect]'s timing and progress over a fixed
-/// [duration].
-class EffectController {
-  /// How long to run the effect from start to finish.
-  final double duration;
+/// Adds `play` to any [ControlledEffect] driven by a [ManualEffectController].
+extension PlayableControlledEffect on ControlledEffect<ManualEffectController> {
+  /// Plays this effect toward [to], a fraction of the controller's duration
+  /// where 0 is the start and 1 is the end, starting from [from].
+  ///
+  /// Works for any sub-range, in either direction. Calling this again while
+  /// already playing just redirects it, smoothly, from wherever it is.
+  void play({
+    double? from,
+    required double to,
+  }) {
+    controller.play(from: from, to: to);
 
-  /// The curve to use when progressing the effect. Defaults to [Curves.linear].
-  final Curve curve;
-
-  /// How long to wait before starting the effect. Defaults to 0.
-  final double startDelay;
-
-  /// How many times to run before [isFinished] stays true for good. Defaults
-  /// to 1. Set to null to repeat forever.
-  final int? times;
-
-  /// Whether to run back from finish to start after reaching the end,
-  /// before counting as one repeat. Defaults to false.
-  final bool reverse;
-
-  /// How long the reverse phase takes, when [reverse] is true. Defaults to
-  /// [duration].
-  final double reverseDuration;
-
-  /// The curve to use for the reverse phase, when [reverse] is true.
-  /// Defaults to [curve].
-  final Curve reverseCurve;
-
-  /// How long to pause at the end before the reverse phase starts, when
-  /// [reverse] is true. Defaults to 0.
-  final double reverseDelay;
-
-  late final double _totalDuration;
-  double _elapsed = 0;
-  int _repeats = 0;
-
-  /// Whether or not this effect has started.
-  bool get hasStarted => _elapsed >= 0;
-
-  /// Whether or not this effect has finished.
-  bool get isFinished => _elapsed >= _totalDuration;
-
-  /// Whether another repeat remains once the current one finishes.
-  bool get canRepeat => times == null || _repeats + 1 < times!;
-
-  EffectController({
-    required this.duration,
-    this.curve = Curves.linear,
-    this.startDelay = 0,
-    this.times = 1,
-    bool? reverse,
-    double? reverseDuration,
-    Curve? reverseCurve,
-    this.reverseDelay = 0,
-  }) : assert(duration > 0, 'Duration must be positive.'),
-       assert(startDelay >= 0, 'Start delay cannot be negative.'),
-       assert(times == null || times > 0, 'Times must be positive.'),
-       assert(reverseDuration == null || reverseDuration > 0, 'Reverse duration must be positive.'),
-       assert(reverseDelay >= 0, 'Reverse delay cannot be negative.'),
-       reverse = reverse ?? false,
-       reverseDuration = reverseDuration ?? duration,
-       reverseCurve = reverseCurve ?? curve,
-       _elapsed = -startDelay {
-    var totalDuration = duration;
-    if (this.reverse) totalDuration += reverseDelay + this.reverseDuration;
-    _totalDuration = totalDuration;
-  }
-
-  double get progress {
-    if (!hasStarted) return 0;
-    if (_elapsed <= duration) return curve.transform(_elapsed / duration);
-    if (_elapsed <= duration + reverseDelay) return 1;
-    return 1 - reverseCurve.transform((_elapsed - duration - reverseDelay) / reverseDuration);
-  }
-
-  double advance(double dt) {
-    assert(dt >= 0, 'Delta time cannot be negative.');
-    _elapsed += dt;
-
-    if (_elapsed > _totalDuration) {
-      final overflow = _elapsed - _totalDuration;
-      _elapsed = _totalDuration;
-      return overflow;
+    if (from != null) {
+      // Applies the jump immediately,
+      _emit(controller.progress);
     }
 
-    return 0;
-  }
-
-  double recede(double dt) {
-    assert(dt >= 0, 'Delta time cannot be negative.');
-    _elapsed -= dt;
-
-    if (_elapsed < -startDelay) {
-      final remaining = -startDelay - _elapsed;
-      _elapsed = -startDelay;
-      return remaining;
-    }
-
-    return 0;
-  }
-
-  void setToStart() {
-    _elapsed = -startDelay;
-    _repeats = 0;
-  }
-
-  void setToEnd() {
-    _elapsed = _totalDuration;
-  }
-
-  /// Restarts this controller for its next repeat, carrying over [overflow]
-  /// time advanced past the end of the run.
-  void repeat([double overflow = 0]) {
-    _repeats += 1;
-    _elapsed = -startDelay + overflow;
+    _finished = false;
   }
 }

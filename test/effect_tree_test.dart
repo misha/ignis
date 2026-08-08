@@ -11,17 +11,17 @@ void main() {
           effects: [
             MoveEffect.by(
               offset: .new(10, 0),
-              controller: .new(duration: 1),
+              controller: EffectController(duration: 1),
             ),
             RotateEffect.by(
               angle: 2,
-              controller: .new(duration: 1),
+              controller: EffectController(duration: 1),
             ),
           ],
         ),
         MoveEffect.by(
           offset: .new(0, 10),
-          controller: .new(duration: 1),
+          controller: EffectController(duration: 1),
         ),
       ],
     );
