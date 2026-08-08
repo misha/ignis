@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/input_router.dart';
 import 'package:ignis/src/node.dart';
 import 'package:ignis/src/render_loop.dart';
@@ -140,7 +139,7 @@ class SceneRenderBox extends RenderBox {
   }
 
   @override
-  bool hitTestSelf(Offset position) => scene.node.hitTest(position.toVector2()) != null;
+  bool hitTestSelf(Offset position) => true;
 
   @override
   void handleEvent(PointerEvent event, HitTestEntry entry) => _inputRouter.handle(event);

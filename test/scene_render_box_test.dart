@@ -12,19 +12,10 @@ void main() {
     return scene;
   }
 
-  test('is transparent to hit testing where nothing was hit', () {
+  test('is opaque to hit testing', () {
     final scene = makeScene();
     final box = SceneRenderBox(scene, isRepaintBoundary: true);
-    expect(box.hitTestSelf(.zero), isFalse);
-  });
-
-  test('is opaque to hit testing where an input node was hit', () {
-    final scene = makeScene();
-    scene.node.add(TapInput(shape: Shape.square(20)));
-    scene.update(0);
-    final box = SceneRenderBox(scene, isRepaintBoundary: true);
-    expect(box.hitTestSelf(const Offset(10, 10)), isTrue);
-    expect(box.hitTestSelf(const Offset(50, 50)), isFalse);
+    expect(box.hitTestSelf(.zero), isTrue);
   });
 
   testWidgets('drives scene updates and paints every frame', (tester) async {
