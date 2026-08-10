@@ -16,8 +16,7 @@ abstract class IntersectionSystem {
   );
 
   /// Returns true if a circle at [circleCenter] with [radius] overlaps a
-  /// rectangle centered at [rectCenter], described by [ex]/[ey] (see
-  /// [rectangleRectangle]).
+  /// rectangle centered at [rectCenter], described by extents [ex]/[ey].
   bool circleRectangle(
     Vector2 circleCenter,
     double radius,
@@ -28,29 +27,6 @@ abstract class IntersectionSystem {
 
   /// Returns true if two circles overlap.
   bool circleCircle(Vector2 centerA, double radiusA, Vector2 centerB, double radiusB);
-}
-
-/// Returns true if [axis] separates a rectangle described by [exA]/[eyA],
-/// centered [delta] away from a rectangle described by [exB]/[eyB].
-///
-/// [axis] doesn't need to be normalized: both projections scale by the same
-/// factor, which doesn't affect whether their ranges overlap.
-bool _separatedOnAxis(
-  Vector2 delta,
-  Vector2 axis,
-  Vector2 exA,
-  Vector2 eyA,
-  Vector2 exB,
-  Vector2 eyB,
-) {
-  final distance = delta.dot(axis).abs();
-  final radius =
-      exA.dot(axis).abs() + //
-      eyA.dot(axis).abs() +
-      exB.dot(axis).abs() +
-      eyB.dot(axis).abs();
-
-  return distance > radius;
 }
 
 final class StandardIntersectionSystem extends IntersectionSystem {
@@ -66,12 +42,10 @@ final class StandardIntersectionSystem extends IntersectionSystem {
     Vector2 eyB,
   ) {
     final delta = centerB - centerA;
-
-    if (_separatedOnAxis(delta, exA, exA, eyA, exB, eyB)) return false;
-    if (_separatedOnAxis(delta, eyA, exA, eyA, exB, eyB)) return false;
-    if (_separatedOnAxis(delta, exB, exA, eyA, exB, eyB)) return false;
-    if (_separatedOnAxis(delta, eyB, exA, eyA, exB, eyB)) return false;
-
+    if (sat(delta, exA, exA, eyA, exB, eyB)) return false;
+    if (sat(delta, eyA, exA, eyA, exB, eyB)) return false;
+    if (sat(delta, exB, exA, eyA, exB, eyB)) return false;
+    if (sat(delta, eyB, exA, eyA, exB, eyB)) return false;
     return true;
   }
 
@@ -99,5 +73,28 @@ final class StandardIntersectionSystem extends IntersectionSystem {
   ) {
     final radii = radiusA + radiusB;
     return centerA.distance2(centerB) <= radii * radii;
+  }
+
+  /// Returns true if [axis] separates a rectangle described by [exA]/[eyA],
+  /// centered [delta] away from a rectangle described by [exB]/[eyB].
+  ///
+  /// [axis] doesn't need to be normalized: both projections scale by the same
+  /// factor, which doesn't affect whether their ranges overlap.
+  static bool sat(
+    Vector2 delta,
+    Vector2 axis,
+    Vector2 exA,
+    Vector2 eyA,
+    Vector2 exB,
+    Vector2 eyB,
+  ) {
+    final distance = delta.dot(axis).abs();
+    final radius =
+        exA.dot(axis).abs() + //
+        eyA.dot(axis).abs() +
+        exB.dot(axis).abs() +
+        eyB.dot(axis).abs();
+
+    return distance > radius;
   }
 }
