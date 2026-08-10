@@ -183,7 +183,7 @@ All objects that accept an interval or duration are also expressed in seconds.
 final timer = TimerNode(interval: 0.2);
 
 // Progresses an effect over the course of 1.5 seconds.
-final controller = EffectController(duration: 1.5);
+final controller = EffectController.linear(1.5);
 ```
 
 ### Concept: Math
@@ -245,16 +245,39 @@ Note that specific effects drop their `*Node` suffix and are simply called `*Eff
 
 The progress over time of any particular `ControlledEffect` is determined by its `EffectController`.
 
-> :fire: The concept of an *effect controller*, like many ideas in Ignis, comes directly from Flame. If you've used Flame's `EffectController` before, you should be quite comfortable!
+> :fire: The concept of an *effect controller*, like many ideas in Ignis, comes directly from Flame. If you've used Flame's `EffectController`, you should be quite comfortable!
 
-The code below creates a controller that waits 500 milliseconds, then advances `progress` linearly from 0 to 1 over the next 1500 milliseconds. The total duration of this effect is 2 seconds.
+`EffectController` is composable: there's no single monolithic constructor, only a handful of small controllers you chain together with a `SequenceEffectController`. The code below creates a controller that waits 500 milliseconds, then advances `progress` linearly from 0 to 1 over the next 1500 milliseconds.
 
 ```dart
-final controller = EffectController(
-  duration: 1.5,        // Duration is a required parameter.
-  curve: Curves.linear, // Linear is also the default.
-  startDelay: 0.5,      // Defaults to 0.
-);
+final controller = SequenceEffectController([
+  DelayEffectController(0.5),
+  CurveEffectController(1.5, curve: Curves.linear),
+]);
+```
+
+Ignis comes with the following effect controllers.
+
+| Effect Controller              | Purpose                                                           |
+|--------------------------------|-------------------------------------------------------------------|
+| `CurveEffectController`        | Progresses from 0 to 1 over a duration, shaped by a `Curve`.      |
+| `DelayEffectController`        | Waits before counting as started.                                 |
+| `InfiniteEffectController`     | Repeats its child forever.                                        |
+| `NoiseEffectController`        | Progresses through smoothed random noise.                         |
+| `PauseEffectController`        | Holds progress constant for a duration.                           |
+| `RepeatEffectController`       | Repeats its child a fixed number of times.                        |
+| `ReverseCurveEffectController` | Progresses from 1 down to 0 over a duration, shaped by a `Curve`. |
+| `SequenceEffectController`     | Runs controllers one after another.                               |
+| `SineEffectController`         | Oscillates progress as a sine wave.                               |
+| `ZigzagEffectController`       | Oscillates progress as a triangle wave.                           |
+
+Every controller also has a lowercase dot-shorthand constructor (`.curve`, `.delay`, ...). The example from earlier could more succinctly be written:
+
+```dart
+EffectController controller = .sequence([
+  .delay(0.5),
+  .linear(1.5),
+]);
 ```
 
 ## Sprites

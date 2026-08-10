@@ -47,7 +47,7 @@ void main() {
     scene.update(0.5);
     expect(triggers, 1);
     expect(timer.isFinished, isTrue);
-    expect(a.children, [timer]); // detach() enqueued — takes effect next flush.
+    expect(a.children, [timer]); // Still pending.
 
     scene.update(0);
     expect(a.children, isEmpty);

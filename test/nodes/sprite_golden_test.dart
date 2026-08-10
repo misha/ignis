@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-import 'support/expect.dart';
+import '../support/expect.dart';
 
 void main() {
   setUpAll(() async {
@@ -17,7 +17,7 @@ void main() {
     'renders the selected sprite frame',
     (tester) => expectGolden(
       tester,
-      'goldens/sprite_frame.png',
+      '../goldens/sprite_frame.png',
       SpriteNode(
         sheet: .asset(
           'test/assets/fire.png',

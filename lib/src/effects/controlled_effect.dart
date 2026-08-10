@@ -2,21 +2,23 @@ import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/signal.dart';
 
-/// An effect that progresses over time, driven by its [EffectController].
+/// An effect driven by an [EffectController].
 class ControlledEffect extends EffectNode {
-  /// Drives this effect's timing and progress.
+  /// Drives this effect.
   final EffectController controller;
 
-  /// Whether to [detach] once finished. Defaults to false.
-  bool cleanup;
-
-  /// Emitted each time this effect starts progressing from position 0,
-  /// before the first [onProgress] emission of that run.
+  /// Emitted once, when this effect starts progressing.
   final onStart = Signal0();
 
   /// Emitted after each update once this effect starts progressing, with its
   /// current progress.
   final onProgress = Signal1<double>();
+
+  /// Emitted each time [progress] reaches 1.
+  final onMax = Signal0();
+
+  /// Emitted each time [progress] reaches 0.
+  final onMin = Signal0();
 
   double _previousProgress = 0;
   bool _started = false;
@@ -44,11 +46,11 @@ class ControlledEffect extends EffectNode {
 
   ControlledEffect({
     required this.controller,
-    bool? cleanup,
+    super.cleanup,
     super.enabled,
     super.priority,
     super.children,
-  }) : cleanup = cleanup ?? false;
+  });
 
   /// Pauses this effect, so it stops progressing until [resume]d.
   void pause() => _paused = true;
@@ -78,12 +80,10 @@ class ControlledEffect extends EffectNode {
       return;
     }
 
-    final double overflow;
-
     if (_forward) {
-      overflow = controller.advance(dt);
+      controller.advance(dt);
     } else {
-      overflow = controller.recede(dt);
+      controller.recede(dt);
     }
 
     if (!controller.hasStarted) {
@@ -97,6 +97,15 @@ class ControlledEffect extends EffectNode {
     }
 
     final progress = controller.progress;
+
+    if (progress == 1 && _previousProgress != 1) {
+      onMax.emit();
+    }
+
+    if (progress == 0 && _previousProgress != 0) {
+      onMin.emit();
+    }
+
     onProgress.emit(progress);
     _previousProgress = progress;
 
@@ -109,18 +118,7 @@ class ControlledEffect extends EffectNode {
       return;
     }
 
-    if (controller.canRepeat) {
-      controller.repeat(overflow);
-      _previousProgress = 0;
-      _started = false;
-      return;
-    }
-
     _finished = true;
     onFinish.emit();
-
-    if (cleanup) {
-      detach();
-    }
   }
 }

@@ -9,7 +9,7 @@ void main() {
 
   test('fades a paint in from transparent to opaque', () {
     final paint = Paint()..color = COLOR;
-    final effect = OpacityEffect.fadeIn(paint: paint, controller: .new(duration: 1));
+    final effect = OpacityEffect.fadeIn(paint: paint, controller: .linear(1));
     effect.mount();
 
     effect.update(0.25);
@@ -24,7 +24,7 @@ void main() {
 
   test('fades a paint out from opaque to transparent', () {
     final paint = Paint()..color = COLOR;
-    final effect = OpacityEffect.fadeOut(paint: paint, controller: .new(duration: 1));
+    final effect = OpacityEffect.fadeOut(paint: paint, controller: .linear(1));
     effect.mount();
 
     effect.update(0.5);

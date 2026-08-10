@@ -6,18 +6,14 @@ class SequentialEffect extends EffectNode {
   /// The effects run in sequence.
   final List<EffectNode> effects;
 
-  /// Whether to [detach] once the last effect finishes. Defaults to false.
-  bool cleanup;
-
   int _current = 0;
 
   SequentialEffect({
     required this.effects,
-    bool? cleanup,
+    super.cleanup,
     super.enabled,
     super.priority,
-  }) : assert(effects.isNotEmpty, 'At least 1 effect is required.'),
-       cleanup = cleanup ?? false {
+  }) : assert(effects.isNotEmpty, 'At least 1 effect is required.') {
     for (var i = 0; i < effects.length; i += 1) {
       effects[i].onFinish(() => _track(i));
     }
@@ -42,7 +38,6 @@ class SequentialEffect extends EffectNode {
   void _advance() {
     if (_current >= effects.length) {
       onFinish.emit();
-      if (cleanup) detach();
       return;
     }
 

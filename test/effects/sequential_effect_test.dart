@@ -9,8 +9,8 @@ void main() {
     node.add(
       SequentialEffect(
         effects: [
-          MoveEffect.by(offset: .new(10, 0), controller: .new(duration: 1)),
-          MoveEffect.by(offset: .new(0, 10), controller: .new(duration: 1)),
+          MoveEffect.by(offset: .new(10, 0), controller: .linear(1)),
+          MoveEffect.by(offset: .new(0, 10), controller: .linear(1)),
         ],
       ),
     );
@@ -33,12 +33,12 @@ void main() {
     final scene = node.mount();
     final first = MoveEffect.by(
       offset: .new(10, 0),
-      controller: .new(duration: 1),
+      controller: .linear(1),
     );
 
     final second = MoveEffect.by(
       offset: .new(0, 10),
-      controller: .new(duration: 1),
+      controller: .linear(1),
     );
 
     final sequence = SequentialEffect(effects: [first, second]);
@@ -47,9 +47,9 @@ void main() {
     expect(sequence.children, [first]);
 
     scene.update(1);
-    expect(sequence.children, [first]); // detach() enqueued — takes effect next flush.
+    expect(sequence.children, [first]); // Still pending.
 
-    scene.update(0); // Flush the detach and the add of the next effect.
+    scene.update(0);
     expect(sequence.children, [second]);
   });
 
@@ -58,8 +58,8 @@ void main() {
     final scene = node.mount();
     final sequence = SequentialEffect(
       effects: [
-        MoveEffect.by(offset: .new(10, 0), controller: .new(duration: 1)),
-        MoveEffect.by(offset: .new(0, 10), controller: .new(duration: 1)),
+        MoveEffect.by(offset: .new(10, 0), controller: .linear(1)),
+        MoveEffect.by(offset: .new(0, 10), controller: .linear(1)),
       ],
     );
 
@@ -84,7 +84,7 @@ void main() {
         effects: [
           MoveEffect.by(
             offset: .new(10, 0),
-            controller: .new(duration: 1),
+            controller: .linear(1),
           ),
         ],
       ),
@@ -104,11 +104,11 @@ void main() {
       effects: [
         MoveEffect.by(
           offset: .new(10, 0),
-          controller: .new(duration: 1),
+          controller: .linear(1),
         ),
         MoveEffect.by(
           offset: .new(0, 10),
-          controller: .new(duration: 1),
+          controller: .linear(1),
         ),
       ],
     );
@@ -137,11 +137,11 @@ void main() {
       effects: [
         MoveEffect.by(
           offset: .new(10, 0),
-          controller: .new(duration: 1),
+          controller: .linear(1),
         ),
         MoveEffect.by(
           offset: .new(0, 10),
-          controller: .new(duration: 1),
+          controller: .linear(1),
         ),
       ],
     );

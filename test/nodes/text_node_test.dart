@@ -2,8 +2,8 @@ import 'package:flutter/painting.dart' show TextAlign, TextDirection, TextStyle;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-import 'support/colors.dart';
-import 'support/images.dart';
+import '../support/colors.dart';
+import '../support/images.dart';
 
 void main() {
   test('setting text writes through to the painter', () {

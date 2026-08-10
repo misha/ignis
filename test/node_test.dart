@@ -336,8 +336,8 @@ void main() {
       final scene = a.mount();
 
       a.add(b);
-      expect(log.mounts, ['A']); // Not mounted yet — still pending.
-      expect(b.isMounted, isFalse);
+      expect(log.mounts, ['A']);
+      expect(b.isMounted, isFalse); // Still pending.
 
       scene.update(0);
       expect(log.mounts, ['A', 'B', 'C']);
@@ -355,8 +355,8 @@ void main() {
       final scene = a.mount();
 
       a.remove(b);
-      expect(log.unmounts, isEmpty); // Not unmounted yet — still pending.
-      expect(b.isMounted, isTrue);
+      expect(log.unmounts, isEmpty);
+      expect(b.isMounted, isTrue); // Still pending.
 
       scene.update(0);
       expect(log.unmounts, ['C', 'B']);
@@ -427,11 +427,6 @@ void main() {
     });
   });
 
-  // Structural changes made from a signal handler firing mid-cascade (onMount
-  // during a mount, onUnmount during an unmount) never touch _children
-  // synchronously once mounted — they enqueue, same as any other post-mount
-  // add()/remove(). That's what makes these safe: the cascade's own loop
-  // never sees a collection mutated out from under it.
   group('reentrant mutation during mount/unmount', () {
     test('removing a sibling from onMount during a mount cascade defers the removal', () {
       final a = Node();

@@ -21,14 +21,8 @@ import 'profiler.dart';
 /// PROFILE=1 flutter test --enable-vmservice benchmark/your_benchmark.dart # profiled
 /// ```
 ///
-/// Profiling requires the VM service, hence `--enable-vmservice` — it's only
-/// needed when `PROFILE` is actually set.
-///
 /// Benchmarks must extend [AsyncBenchmarkBase], not `BenchmarkBase`, as the
-/// two report scores on different scales ([BenchmarkBase.exercise] secretly
-/// runs 10 times per measured iteration, `AsyncBenchmarkBase.exercise` runs
-/// once), so mixing them produces numbers that look comparable but aren't.
-/// There's no synchronous counterpart here on purpose.
+/// two report scores on different scales.
 Future<void> runBenchmark(AsyncBenchmarkBase benchmark) async {
   if (Platform.environment.containsKey('PROFILE')) {
     await profile(benchmark);

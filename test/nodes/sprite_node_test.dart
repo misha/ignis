@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-import 'support/colors.dart';
-import 'support/images.dart';
+import '../support/colors.dart';
+import '../support/images.dart';
 
 void main() {
   test('loads sheets in order and starts with the first sheet', () async {
@@ -131,7 +131,7 @@ void main() {
 
     scene.update(1);
     expect(node.isFinished, isTrue);
-    expect(a.children, [node]); // detach() enqueued — takes effect next flush.
+    expect(a.children, [node]); // Still pending.
 
     scene.update(0);
     expect(a.children, isEmpty);

@@ -2,15 +2,15 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-import 'support/colors.dart';
-import 'support/expect.dart';
+import '../support/colors.dart';
+import '../support/expect.dart';
 
 void main() {
   testWidgets(
     'renders overlapping colliders with debug rendering',
     (tester) => expectGolden(
       tester,
-      'goldens/collider_overlap.png',
+      '../goldens/collider_overlap.png',
       CollisionDetectionNode(
         children: [
           ShapeNode(
