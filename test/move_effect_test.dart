@@ -42,22 +42,23 @@ void main() {
     expect(node.position, Vector2(30, 10));
   });
 
-  test('captures the destination offset when the effect starts', () {
+  test('captures the destination offset when mounted', () {
     final node = TransformNode();
     final scene = node.mount();
+    node.position.mutate().setFrom(.new(10, 0));
 
     node.add(
       MoveEffect.to(
         destination: .new(20, 10),
-        controller: .new(duration: 1, startDelay: 0.5),
+        controller: .new(duration: 1, initialDelay: 0.5),
       ),
     );
 
     scene.update(0.25);
-    node.position.mutate().setFrom(.new(10, 0));
-    scene.update(0.75);
+    node.position.mutate().setFrom(.new(0, 0));
+    scene.update(1.25);
 
-    expect(node.position, Vector2(15, 5));
+    expect(node.position, Vector2(10, 10));
   });
 
   test('multiple relative movement effects compose', () {

@@ -75,7 +75,7 @@ class _MoveToEffect extends MoveEffect {
     super.cleanup,
   }) : _destination = destination.clone(),
        super._() {
-    onStart(() {
+    onMount(() {
       _offset.mutate()
         ..setFrom(_destination)
         ..subtract(_target!.position);

@@ -42,22 +42,23 @@ void main() {
     expect(node.angle, 3);
   });
 
-  test('captures the destination offset when the effect starts', () {
+  test('captures the destination offset when mounted', () {
     final node = TransformNode();
     final scene = node.mount();
+    node.angle = 1;
 
     node.add(
       RotateEffect.to(
         angle: 2,
-        controller: .new(duration: 1, startDelay: 0.5),
+        controller: .new(duration: 1, initialDelay: 0.5),
       ),
     );
 
     scene.update(0.25);
-    node.angle = 1;
-    scene.update(0.75);
+    node.angle = 0;
+    scene.update(1.25);
 
-    expect(node.angle, 1.5);
+    expect(node.angle, 1);
   });
 
   test('multiple relative rotation effects compose', () {

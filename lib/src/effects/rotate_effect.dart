@@ -73,7 +73,7 @@ class _RotateToEffect extends RotateEffect {
     super.cleanup,
   }) : _destination = angle,
        super._() {
-    onStart(() {
+    onMount(() {
       _offset = _destination - _target!.angle;
     });
 

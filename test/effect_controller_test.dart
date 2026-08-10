@@ -33,10 +33,10 @@ void main() {
     expect(controller.progress, Curves.easeIn.transform(0.5));
   });
 
-  test('waits for its start delay', () {
+  test('waits for its initial delay', () {
     controller = .new(
       duration: 1,
-      startDelay: 0.5,
+      initialDelay: 0.5,
     );
 
     controller.advance(0.25);
@@ -51,7 +51,7 @@ void main() {
   test('can return to either endpoint', () {
     controller = .new(
       duration: 1,
-      startDelay: 0.5,
+      initialDelay: 0.5,
     );
 
     controller.setToEnd();
@@ -110,6 +110,41 @@ void main() {
     expect(controller.canRepeat, isTrue);
   });
 
+  test('recede() floors at bottomDelay once started, even within the same lap', () {
+    controller = .new(duration: 1, initialDelay: 0.5, bottomDelay: 0.25);
+
+    controller.advance(0.75);
+    expect(controller.recede(10), 9.5);
+    expect(controller.hasStarted, isFalse);
+    expect(controller.progress, 0);
+  });
+
+  test('repeat() restarts using bottomDelay, not initialDelay', () {
+    controller = .new(duration: 1, times: 2, initialDelay: 0.5, bottomDelay: 0.25);
+
+    controller.advance(1.5);
+    controller.repeat();
+
+    expect(controller.hasStarted, isFalse);
+
+    expect(controller.advance(0.25), 0);
+    expect(controller.hasStarted, isTrue);
+    expect(controller.progress, 0);
+  });
+
+  test('recede() floors at initialDelay initially, then at bottomDelay after each repeat', () {
+    controller = .new(duration: 1, times: 2, initialDelay: 0.5, bottomDelay: 0.25);
+
+    expect(controller.recede(10), 10);
+    expect(controller.progress, 0);
+
+    controller.advance(1.5);
+    controller.repeat();
+
+    expect(controller.recede(10), 10);
+    expect(controller.progress, 0);
+  });
+
   test('defaults reverseDuration and reverseCurve to duration and curve', () {
     controller = .new(duration: 1, curve: Curves.easeIn, reverse: true);
 
@@ -155,8 +190,8 @@ void main() {
     expect(controller.progress, 1 - Curves.easeIn.transform(0.5));
   });
 
-  test('pauses at the end for reverseDelay before the reverse phase starts', () {
-    controller = .new(duration: 1, reverse: true, reverseDelay: 0.5);
+  test('pauses at the end for topDelay before the reverse phase starts', () {
+    controller = .new(duration: 1, reverse: true, topDelay: 0.5);
 
     expect(controller.advance(1), 0); // Finishes the forward phase.
     expect(controller.progress, 1);

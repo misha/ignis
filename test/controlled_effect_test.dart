@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('emits onStart once it starts progressing', () {
-    final effect = ControlledEffect(controller: .new(duration: 1, startDelay: 0.5));
+    final effect = ControlledEffect(controller: .new(duration: 1, initialDelay: 0.5));
     effect.mount();
     var starts = 0;
     effect.onStart(() => starts += 1);
@@ -16,6 +16,56 @@ void main() {
 
     effect.update(0.25);
     expect(starts, 1);
+  });
+
+  test('emits onStart again on each repeat', () {
+    final effect = ControlledEffect(controller: .new(duration: 1, times: 2));
+    effect.mount();
+    var starts = 0;
+    effect.onStart(() => starts += 1);
+
+    effect.update(1);
+    expect(starts, 1);
+
+    effect.update(0.5);
+    expect(starts, 2);
+  });
+
+  test('reversing back past the start does not redo the initial delay', () {
+    final effect = ControlledEffect(controller: .new(duration: 1, initialDelay: 0.5));
+    effect.mount();
+    var starts = 0;
+    effect.onStart(() => starts += 1);
+
+    effect.update(0.75);
+    expect(starts, 1);
+
+    effect.reverse();
+    effect.update(1);
+    expect(effect.isRunning, isTrue);
+    expect(effect.previousProgress, 0);
+
+    effect.forward();
+    effect.update(0.1);
+    expect(starts, 1);
+  });
+
+  test('emits onStart again after reversing past a nonzero bottomDelay', () {
+    final effect = ControlledEffect(controller: .new(duration: 1, initialDelay: 0.5, bottomDelay: 0.2));
+    effect.mount();
+    var starts = 0;
+    effect.onStart(() => starts += 1);
+
+    effect.update(0.75);
+    expect(starts, 1);
+
+    effect.reverse();
+    effect.update(0.3);
+    expect(effect.isRunning, isFalse);
+
+    effect.forward();
+    effect.update(0.3);
+    expect(starts, 2);
   });
 
   test('emits onProgress with its current progress once started', () {
@@ -73,22 +123,18 @@ void main() {
   test('restarts times-1 times before emitting onFinish', () {
     final effect = ControlledEffect(controller: .new(duration: 1, times: 2));
     effect.mount();
-    var starts = 0;
     var finishes = 0;
-    effect.onStart(() => starts += 1);
     effect.onFinish(() => finishes += 1);
 
     effect.update(1);
-    expect(starts, 1);
+    expect(effect.previousProgress, 0);
     expect(finishes, 0);
     expect(effect.isFinished, isFalse);
 
     effect.update(0.5);
-    expect(starts, 2); // Restarted for its second run.
     expect(effect.previousProgress, 0.5);
 
     effect.update(0.5);
-    expect(starts, 2);
     expect(finishes, 1);
     expect(effect.isFinished, isTrue);
   });
@@ -96,16 +142,14 @@ void main() {
   test('repeats forever when times is null', () {
     final effect = ControlledEffect(controller: .new(duration: 1, times: null));
     effect.mount();
-    var starts = 0;
     var finishes = 0;
-    effect.onStart(() => starts += 1);
     effect.onFinish(() => finishes += 1);
 
     for (var i = 0; i < 10; i += 1) {
       effect.update(1);
+      expect(effect.isFinished, isFalse);
     }
 
-    expect(starts, 10);
     expect(finishes, 0);
   });
 
@@ -138,6 +182,68 @@ void main() {
     effect.update(1);
     expect(effect.previousProgress, 0); // Back at the start.
     expect(finishes, 1);
+  });
+
+  test('defaults to running forward', () {
+    final effect = ControlledEffect(controller: .new(duration: 1));
+
+    expect(effect.isForward, isTrue);
+    expect(effect.isReverse, isFalse);
+  });
+
+  test('reverse() ticks progress backward', () {
+    final effect = ControlledEffect(controller: .new(duration: 1));
+    effect.mount();
+
+    effect.update(0.75);
+    expect(effect.previousProgress, 0.75);
+
+    effect.reverse();
+    expect(effect.isForward, isFalse);
+    expect(effect.isReverse, isTrue);
+
+    effect.update(0.5);
+    expect(effect.previousProgress, 0.25);
+  });
+
+  test('forward() resumes progress forward after reverse()', () {
+    final effect = ControlledEffect(controller: .new(duration: 1));
+    effect.mount();
+
+    effect.update(0.5);
+    effect.reverse();
+    effect.update(0.25);
+    expect(effect.previousProgress, 0.25);
+
+    effect.forward();
+    effect.update(0.25);
+    expect(effect.previousProgress, 0.5);
+  });
+
+  test('reversing off the end un-finishes the effect', () {
+    final effect = ControlledEffect(controller: .new(duration: 1));
+    effect.mount();
+    var finishes = 0;
+    effect.onFinish(() => finishes += 1);
+
+    effect.update(1);
+    expect(effect.isFinished, isTrue);
+
+    effect.reverse();
+    effect.update(0.5);
+    expect(effect.isFinished, isFalse);
+    expect(effect.previousProgress, 0.5);
+    expect(finishes, 1);
+  });
+
+  test('reset() resets direction back to forward', () {
+    final effect = ControlledEffect(controller: .new(duration: 1));
+    effect.mount();
+    effect.reverse();
+
+    effect.reset();
+
+    expect(effect.isForward, isTrue);
   });
 
   test('detaches itself once complete when added as a child, when cleanup is true', () {
