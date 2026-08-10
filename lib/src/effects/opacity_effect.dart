@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
 
 /// An effect that animates a [Paint]'s opacity by mutating its alpha.

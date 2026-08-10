@@ -1,3 +1,4 @@
+import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';

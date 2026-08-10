@@ -4,6 +4,7 @@ export 'src/anchor.dart';
 export 'src/cache.dart';
 export 'src/collision_detection.dart';
 export 'src/effects.dart';
+export 'src/effect_controller.dart';
 export 'src/extensions.dart';
 export 'src/loader.dart';
 export 'src/globals.dart';
