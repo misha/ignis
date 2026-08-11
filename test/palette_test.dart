@@ -22,7 +22,7 @@ void main() {
   test('registers and looks up named paints', () {
     final palette = Palette();
     final glow = Paint();
-    final entry = palette.add('glow', paint: glow);
+    final entry = palette.add(.new('glow', glow));
 
     expect(entry.name, 'glow');
     expect(entry.paint, same(glow));
@@ -36,14 +36,22 @@ void main() {
 
   test('throws when a name is already registered', () {
     final palette = Palette();
-    palette.add('glow', paint: Paint());
+    palette.add(.new('glow', Paint()));
 
-    expect(() => palette.add('glow', paint: Paint()), throwsStateError);
+    expect(() => palette.add(.new('glow', Paint())), throwsStateError);
+  });
+
+  test('throws when an entry is already registered in a palette', () {
+    final palette = Palette();
+    final PaletteEntry entry = .new('glow', Paint());
+    palette.add(entry);
+
+    expect(() => Palette().add(entry), throwsStateError);
   });
 
   test('new entries start enabled and at the origin unless overridden', () {
     final palette = Palette();
-    final entry = palette.add('glow', paint: Paint());
+    final entry = palette.add(.new('glow', Paint()));
 
     expect(entry.enabled, isTrue);
     expect(entry.offset.x, 0);
@@ -53,7 +61,7 @@ void main() {
 
   test('removes a named paint', () {
     final palette = Palette();
-    palette.add('glow', paint: Paint());
+    palette.add(.new('glow', Paint()));
 
     expect(palette.remove('glow'), isTrue);
     expect(() => palette['glow'], throwsStateError);
@@ -75,9 +83,9 @@ void main() {
   test('orders entries by priority while preserving insertion order for ties', () {
     final palette = Palette();
     final first = palette.single;
-    final b = palette.add('b', paint: Paint(), priority: 1);
-    final c = palette.add('c', paint: Paint(), priority: -1);
-    final d = palette.add('d', paint: Paint(), priority: 1);
+    final b = palette.add(.new('b', Paint(), priority: 1));
+    final c = palette.add(.new('c', Paint(), priority: -1));
+    final d = palette.add(.new('d', Paint(), priority: 1));
 
     expect(palette, [c, first, b, d]);
   });
@@ -85,9 +93,9 @@ void main() {
   test('reorders entries when their priority changes', () {
     final palette = Palette();
     final first = palette.single;
-    final b = palette.add('b', paint: Paint());
-    final c = palette.add('c', paint: Paint());
-    final d = palette.add('d', paint: Paint());
+    final b = palette.add(.new('b', Paint()));
+    final c = palette.add(.new('c', Paint()));
+    final d = palette.add(.new('d', Paint()));
 
     c.priority = 1;
     expect(palette, [first, b, d, c]);
@@ -99,7 +107,7 @@ void main() {
   test('entry() returns the default entry, or the entry registered under a name', () {
     final palette = Palette();
     final first = palette.single;
-    final glow = palette.add('glow', paint: Paint());
+    final glow = palette.add(.new('glow', Paint()));
 
     expect(palette.entry(), same(first));
     expect(palette.entry('glow'), same(glow));

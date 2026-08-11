@@ -33,8 +33,8 @@ void main() {
 
   test('draws every enabled paint, in priority order', () {
     final node = _TestPaintedNode();
-    final b = node.palette.add('b', paint: Paint(), priority: 1);
-    final c = node.palette.add('c', paint: Paint(), priority: -1);
+    final b = node.palette.add(.new('b', Paint(), priority: 1));
+    final c = node.palette.add(.new('c', Paint(), priority: -1));
     _render(node);
 
     expect(node.calls.map((call) => call.$1), [c.paint, node.paint, b.paint]);
@@ -42,7 +42,7 @@ void main() {
 
   test('skips disabled paints', () {
     final node = _TestPaintedNode();
-    final glow = node.palette.add('glow', paint: Paint(), enabled: false);
+    final glow = node.palette.add(.new('glow', Paint(), enabled: false));
     _render(node);
 
     expect(node.calls.map((call) => call.$1), [node.paint]);
@@ -51,10 +51,24 @@ void main() {
 
   test('translates by each paint\'s individual offset', () {
     final node = _TestPaintedNode();
-    final shadow = node.palette.add('shadow', paint: Paint(), priority: -1);
-    shadow.offset.mutate().setValues(5, 5);
-    final glow = node.palette.add('glow', paint: Paint(), priority: 1);
-    glow.offset.mutate().setValues(10, 20);
+    final shadow = node.palette.add(
+      .new(
+        'shadow',
+        Paint(),
+        offset: .all(5),
+        priority: -1,
+      ),
+    );
+
+    final glow = node.palette.add(
+      .new(
+        'glow',
+        Paint(),
+        offset: .new(10, 20),
+        priority: 1,
+      ),
+    );
+
     _render(node);
 
     // If the shadow's translate weren't reversed, glow's would read (15, 25).

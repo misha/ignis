@@ -3,11 +3,11 @@ import 'dart:ui';
 
 import 'package:ignis/src/math.dart';
 
-/// A single named [Paint] entry managed by a [Palette].
+/// A named [Paint] entry, registered with a [Palette] via [Palette.add].
 ///
 /// [paint] is never reassigned; mutate its properties directly instead.
 class PaletteEntry {
-  final Palette _palette;
+  Palette? _palette;
 
   /// This paint's key in its owning [Palette], or null for the default paint.
   final String? name;
@@ -26,15 +26,15 @@ class PaletteEntry {
 
   set priority(int value) {
     _priority = value;
-    _palette._reposition(this);
+    _palette?._reposition(this);
   }
 
   /// Whether this paint is drawn. Defaults to true.
   bool enabled;
 
-  PaletteEntry._(
-    this._palette,
-    this.name,
+  /// Creates a named paint entry, to be registered with [Palette.add].
+  PaletteEntry(
+    String this.name,
     this.paint, {
     Vector2? offset,
     int? priority,
@@ -42,6 +42,12 @@ class PaletteEntry {
   }) : offset = offset ?? .zero(),
        _priority = priority ?? 0,
        enabled = enabled ?? true;
+
+  PaletteEntry._default(this.paint)
+    : name = null, //
+      offset = .zero(),
+      _priority = 0,
+      enabled = true;
 }
 
 /// A managed, ordered collection of named [Paint]s.
@@ -64,7 +70,8 @@ class Palette with IterableMixin<PaletteEntry> {
   Palette({
     Paint? paint,
   }) {
-    _default = PaletteEntry._(this, null, paint ?? Paint());
+    _default = PaletteEntry._default(paint ?? Paint());
+    _default._palette = this;
     _paints.add(_default);
   }
 
@@ -82,29 +89,23 @@ class Palette with IterableMixin<PaletteEntry> {
     return entry;
   }
 
-  /// Registers a new [paint] in the palette.
+  /// Registers [entry] in the palette.
   ///
-  /// Throws a [StateError] if [name] is already registered.
-  PaletteEntry add(
-    String name, {
-    required Paint paint,
-    Vector2? offset,
-    int? priority,
-    bool? enabled,
-  }) {
+  /// Throws a [StateError] if [entry] is already in another palette, or if an
+  /// entry with the same name is already registered to this palette.
+  PaletteEntry add(PaletteEntry entry) {
+    if (entry._palette != null) {
+      throw StateError('This entry is registered in a different palette.');
+    }
+
+    // Ensured by the public `Palette` factory.
+    final name = entry.name!;
+
     if (_index.containsKey(name)) {
       throw StateError('A paint named "$name" is already registered.');
     }
 
-    final entry = PaletteEntry._(
-      this,
-      name,
-      paint,
-      offset: offset,
-      priority: priority,
-      enabled: enabled,
-    );
-
+    entry._palette = this;
     _insert(entry);
     _index[name] = entry;
     return entry;
@@ -118,6 +119,7 @@ class Palette with IterableMixin<PaletteEntry> {
     final entry = _index.remove(name);
     if (entry == null) return false;
     _paints.remove(entry);
+    entry._palette = null;
     return true;
   }
 
