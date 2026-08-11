@@ -45,14 +45,14 @@ abstract class EffectController {
   // #region Shorthand
 
   // dart format off
-  factory EffectController.curve(double duration, {required Curve curve}) = CurveEffectController;
+  factory EffectController.curve(double duration, Curve curve, {bool reverse}) = CurveEffectController;
   factory EffectController.delay(double duration) = DelayEffectController;
   factory EffectController.infinite(EffectController child) = InfiniteEffectController;
-  factory EffectController.linear(double duration) => CurveEffectController(duration, curve: Curves.linear);
+  factory EffectController.linear(double duration) => CurveEffectController(duration, Curves.linear);
   factory EffectController.noise(double duration, {double frequency, Random? random}) = NoiseEffectController;
   factory EffectController.pause(double duration, {double progress}) = PauseEffectController;
   factory EffectController.repeat(EffectController child, int times) = RepeatEffectController;
-  factory EffectController.reverseCurve(double duration, {required Curve curve}) = ReverseCurveEffectController;
+  factory EffectController.roundtrip(EffectController child) = RoundtripEffectController;
   factory EffectController.sequence(List<EffectController> children) = SequenceEffectController;
   factory EffectController.sine({required double period}) = SineEffectController;
   factory EffectController.zigzag({required double period}) = ZigzagEffectController;

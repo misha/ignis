@@ -47,8 +47,12 @@ void main() {
 
   test('emits onMin when progress returns exactly to 0', () {
     final effect = ControlledEffect(
-      controller: .sequence([.linear(1), .reverseCurve(1, curve: Curves.linear)]),
+      controller: .sequence([
+        .linear(1),
+        .curve(1, Curves.linear, reverse: true),
+      ]),
     );
+
     effect.mount();
     var mins = 0;
     effect.onMin(() => mins += 1);
@@ -180,7 +184,7 @@ void main() {
     final effect = ControlledEffect(
       controller: .sequence([
         .linear(1),
-        .reverseCurve(1, curve: Curves.linear),
+        .curve(1, Curves.linear, reverse: true),
       ]),
     );
 

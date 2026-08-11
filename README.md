@@ -252,24 +252,24 @@ The progress over time of any particular `ControlledEffect` is determined by its
 ```dart
 final controller = SequenceEffectController([
   DelayEffectController(0.5),
-  CurveEffectController(1.5, curve: Curves.linear),
+  CurveEffectController(1.5, Curves.linear),
 ]);
 ```
 
 Ignis comes with the following effect controllers.
 
-| Effect Controller              | Purpose                                                           |
-|--------------------------------|-------------------------------------------------------------------|
-| `CurveEffectController`        | Progresses from 0 to 1 over a duration, shaped by a `Curve`.      |
-| `DelayEffectController`        | Waits before counting as started.                                 |
-| `InfiniteEffectController`     | Repeats its child forever.                                        |
-| `NoiseEffectController`        | Progresses through smoothed random noise.                         |
-| `PauseEffectController`        | Holds progress constant for a duration.                           |
-| `RepeatEffectController`       | Repeats its child a fixed number of times.                        |
-| `ReverseCurveEffectController` | Progresses from 1 down to 0 over a duration, shaped by a `Curve`. |
-| `SequenceEffectController`     | Runs controllers one after another.                               |
-| `SineEffectController`         | Oscillates progress as a sine wave.                               |
-| `ZigzagEffectController`       | Oscillates progress as a triangle wave.                           |
+| Effect Controller           | Purpose                                              |
+|-----------------------------|------------------------------------------------------|
+| `CurveEffectController`     | Shapes progress using a `Curve`, possibly reversed.  |
+| `DelayEffectController`     | Waits before counting as started.                    |
+| `InfiniteEffectController`  | Repeats its child forever.                           |
+| `NoiseEffectController`     | Progresses through smoothed random noise.            |
+| `PauseEffectController`     | Holds progress constant for a duration.              |
+| `RepeatEffectController`    | Repeats its child a fixed number of times.           |
+| `RoundtripEffectController` | Runs its child forward, then back down to its start. |
+| `SequenceEffectController`  | Runs controllers one after another.                  |
+| `SineEffectController`      | Oscillates progress as a sine wave.                  |
+| `ZigzagEffectController`    | Oscillates progress as a triangle wave.              |
 
 Every controller also has a lowercase dot-shorthand constructor (`.curve`, `.delay`, ...). The example from earlier could more succinctly be written:
 
