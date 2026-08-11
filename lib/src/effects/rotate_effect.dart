@@ -17,6 +17,7 @@ abstract class RotateEffect extends ControlledEffect {
     required double angle,
     required EffectController controller,
     bool? cleanup,
+    bool? enabled,
   }) = _RotateByEffect;
 
   /// Rotates [target] to [angle].
@@ -27,12 +28,14 @@ abstract class RotateEffect extends ControlledEffect {
     required double angle,
     required EffectController controller,
     bool? cleanup,
+    bool? enabled,
   }) = _RotateToEffect;
 
   RotateEffect._({
     this._target,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) {
     if (_target == null) {
       onMount(() {
@@ -55,6 +58,7 @@ class _RotateByEffect extends RotateEffect {
     required this._angle,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : super._() {
     onProgress((progress) {
       _target!.angle += _angle * (progress - previousProgress);
@@ -71,6 +75,7 @@ class _RotateToEffect extends RotateEffect {
     required double angle,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : _destination = angle,
        super._() {
     onMount(() {

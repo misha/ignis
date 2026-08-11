@@ -18,6 +18,7 @@ abstract class MoveEffect extends ControlledEffect {
     required Vector2 offset,
     required EffectController controller,
     bool? cleanup,
+    bool? enabled,
   }) = _MoveByEffect;
 
   /// Moves [target] to [destination].
@@ -28,12 +29,14 @@ abstract class MoveEffect extends ControlledEffect {
     required Vector2 destination,
     required EffectController controller,
     bool? cleanup,
+    bool? enabled,
   }) = _MoveToEffect;
 
   MoveEffect._({
     this._target,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) {
     if (_target == null) {
       onMount(() {
@@ -56,6 +59,7 @@ class _MoveByEffect extends MoveEffect {
     required Vector2 offset,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
@@ -73,6 +77,7 @@ class _MoveToEffect extends MoveEffect {
     required Vector2 destination,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : _destination = destination.clone(),
        super._() {
     onMount(() {

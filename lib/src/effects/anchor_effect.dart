@@ -19,6 +19,7 @@ abstract class AnchorEffect extends ControlledEffect {
     required Anchor offset,
     required EffectController controller,
     bool? cleanup,
+    bool? enabled,
   }) = _AnchorByEffect;
 
   /// Anchors [target] to [destination].
@@ -29,12 +30,14 @@ abstract class AnchorEffect extends ControlledEffect {
     required Anchor destination,
     required EffectController controller,
     bool? cleanup,
+    bool? enabled,
   }) = _AnchorToEffect;
 
   AnchorEffect._({
     this._target,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) {
     if (_target == null) {
       onMount(() {
@@ -57,6 +60,7 @@ class _AnchorByEffect extends AnchorEffect {
     required Anchor offset,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
@@ -74,6 +78,7 @@ class _AnchorToEffect extends AnchorEffect {
     required Anchor destination,
     required super.controller,
     super.cleanup,
+    super.enabled,
   }) : _destination = destination.clone(),
        super._() {
     onMount(() {
