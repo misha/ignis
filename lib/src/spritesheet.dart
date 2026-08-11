@@ -4,6 +4,7 @@ import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 
 // TODO: Document usage and properties.
+// TODO: Keep cache in `Ignis.cache`, perhaps in a format like `$PATH#$WIDTH,$HEIGHT`.
 class Spritesheet {
   static final Map<(String, double?, double?), Spritesheet> _cache = {};
   static void clearCache() => _cache.clear();
