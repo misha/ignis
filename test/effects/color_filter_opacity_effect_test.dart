@@ -50,4 +50,20 @@ void main() {
     effect.update(1);
     expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0.5), .srcIn));
   });
+
+  test('shifts the color filter\'s intensity by a total amount, tracked independently of paint', () {
+    final paint = Paint();
+    final effect = ColorFilterOpacityEffect.by(
+      paint: paint,
+      color: COLOR.withValues(alpha: 0.4),
+      controller: .linear(1),
+    );
+
+    effect.mount();
+    effect.update(0.5);
+    expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0.2), .srcIn));
+
+    effect.update(0.5);
+    expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0.4), .srcIn));
+  });
 }

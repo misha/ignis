@@ -68,4 +68,36 @@ void main() {
       ),
     );
   });
+
+  test('shifts the blur strength by a total amount, tracked independently of paint', () {
+    final paint = Paint();
+    final effect = ImageFilterGlowEffect.by(
+      paint: paint,
+      strength: STRENGTH,
+      controller: .linear(1),
+    );
+
+    effect.mount();
+    effect.update(0.5);
+
+    expect(
+      paint.imageFilter,
+      ImageFilter.blur(
+        sigmaX: STRENGTH * 0.5,
+        sigmaY: STRENGTH * 0.5,
+        tileMode: .decal,
+      ),
+    );
+
+    effect.update(0.5);
+
+    expect(
+      paint.imageFilter,
+      ImageFilter.blur(
+        sigmaX: STRENGTH,
+        sigmaY: STRENGTH,
+        tileMode: .decal,
+      ),
+    );
+  });
 }

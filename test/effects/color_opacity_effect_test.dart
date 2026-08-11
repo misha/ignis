@@ -33,4 +33,16 @@ void main() {
     effect.update(0.5);
     expect(paint.color.a, closeTo(0, EPSILON));
   });
+
+  test('shifts a paint\'s opacity by a total amount, relative to its starting alpha', () {
+    final paint = Paint()..color = COLOR.withValues(alpha: 0.2);
+    final effect = ColorOpacityEffect.by(paint: paint, opacity: 0.5, controller: .linear(1));
+    effect.mount();
+
+    effect.update(0.5);
+    expect(paint.color.a, closeTo(0.45, EPSILON));
+
+    effect.update(0.5);
+    expect(paint.color.a, closeTo(0.7, EPSILON));
+  });
 }
