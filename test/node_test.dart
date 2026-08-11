@@ -146,6 +146,16 @@ void main() {
     },
   );
 
+  test('enable() and disable() set enabled', () {
+    final a = TestNode('A');
+
+    a.disable();
+    expect(a.enabled, isFalse);
+
+    a.enable();
+    expect(a.enabled, isTrue);
+  });
+
   test(
     'a child removed during an update still ticks that same pass, but is gone by the next flush',
     () {

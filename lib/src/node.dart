@@ -63,6 +63,12 @@ class Node {
     addAll(children);
   }
 
+  /// Enables this node, so it resumes updating and rendering.
+  void enable() => enabled = true;
+
+  /// Disables this node, so it stops updating and rendering.
+  void disable() => enabled = false;
+
   /// Updates this node by [dt] seconds.
   @visibleForOverriding
   void tick(double dt) {
