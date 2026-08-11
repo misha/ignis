@@ -37,7 +37,7 @@ void main() {
     final c = node.palette.add('c', paint: Paint(), priority: -1);
     _render(node);
 
-    expect(node.calls.map((call) => call.$1), [c.value, node.paint, b.value]);
+    expect(node.calls.map((call) => call.$1), [c.paint, node.paint, b.paint]);
   });
 
   test('skips disabled paints', () {
@@ -46,7 +46,7 @@ void main() {
     _render(node);
 
     expect(node.calls.map((call) => call.$1), [node.paint]);
-    expect(node.calls.map((call) => call.$1), isNot(contains(glow.value)));
+    expect(node.calls.map((call) => call.$1), isNot(contains(glow.paint)));
   });
 
   test('translates by each paint\'s individual offset', () {
@@ -59,9 +59,9 @@ void main() {
 
     // If the shadow's translate weren't reversed, glow's would read (15, 25).
     expect(node.calls, [
-      (shadow.value, 5.0, 5.0),
+      (shadow.paint, 5.0, 5.0),
       (node.paint, 0.0, 0.0),
-      (glow.value, 10.0, 20.0),
+      (glow.paint, 10.0, 20.0),
     ]);
   });
 }

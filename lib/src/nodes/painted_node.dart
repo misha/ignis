@@ -9,7 +9,7 @@ abstract class PaintedNode extends SizedNode {
   final Palette palette;
 
   /// The default paint.
-  Paint get paint => palette.paint.value;
+  Paint get paint => palette.paint;
 
   PaintedNode({
     Paint? paint,
@@ -24,13 +24,13 @@ abstract class PaintedNode extends SizedNode {
 
   @override
   void renderAnchored(Canvas canvas) {
-    for (final paint in palette.paints) {
-      if (!paint.enabled) continue;
-      final offset = paint.offset;
+    for (final entry in palette) {
+      if (!entry.enabled) continue;
+      final offset = entry.offset;
       // TODO: Profile the different ways to do this.
       final hasOffset = !offset.isZero;
       if (hasOffset) canvas.translate(offset.x, offset.y);
-      renderPainted(canvas, paint.value);
+      renderPainted(canvas, entry.paint);
       if (hasOffset) canvas.translate(-offset.x, -offset.y);
     }
   }

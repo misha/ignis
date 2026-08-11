@@ -8,12 +8,12 @@ void main() {
     final paint = Paint();
     final palette = Palette(paint: paint);
 
-    expect(palette.paint.value, same(paint));
-    expect(palette.paints, hasLength(1));
+    expect(palette.paint, same(paint));
+    expect(palette, hasLength(1));
 
-    final entry = palette.paints.single;
+    final entry = palette.single;
     expect(entry.name, isNull);
-    expect(entry.value, same(paint));
+    expect(entry.paint, same(paint));
     expect(entry.offset.isZero, isTrue);
     expect(entry.enabled, isTrue);
     expect(entry.priority, 0);
@@ -25,13 +25,13 @@ void main() {
     final entry = palette.add('glow', paint: glow);
 
     expect(entry.name, 'glow');
-    expect(entry.value, same(glow));
-    expect(palette['glow'], same(entry));
+    expect(entry.paint, same(glow));
+    expect(palette['glow'], same(glow));
   });
 
-  test('throws an assertion error for an unregistered name', () {
+  test('throws for an unregistered name', () {
     final palette = Palette();
-    expect(() => palette['missing'], throwsA(isA<AssertionError>()));
+    expect(() => palette['missing'], throwsStateError);
   });
 
   test('throws when a name is already registered', () {
@@ -56,7 +56,7 @@ void main() {
     palette.add('glow', paint: Paint());
 
     expect(palette.remove('glow'), isTrue);
-    expect(() => palette['glow'], throwsA(isA<AssertionError>()));
+    expect(() => palette['glow'], throwsStateError);
   });
 
   test('removing an unregistered name is a no-op that returns false', () {
@@ -67,32 +67,41 @@ void main() {
   test('the default paint has no name, and cannot be removed', () {
     final palette = Palette();
 
-    expect(palette.paints.single.name, isNull);
+    expect(palette.single.name, isNull);
     expect(palette.remove('default'), isFalse);
-    expect(palette.paints, hasLength(1));
+    expect(palette, hasLength(1));
   });
 
   test('orders entries by priority while preserving insertion order for ties', () {
     final palette = Palette();
-    final default_ = palette.paints.single;
+    final first = palette.single;
     final b = palette.add('b', paint: Paint(), priority: 1);
     final c = palette.add('c', paint: Paint(), priority: -1);
     final d = palette.add('d', paint: Paint(), priority: 1);
 
-    expect(palette.paints, [c, default_, b, d]);
+    expect(palette, [c, first, b, d]);
   });
 
   test('reorders entries when their priority changes', () {
     final palette = Palette();
-    final default_ = palette.paints.single;
+    final first = palette.single;
     final b = palette.add('b', paint: Paint());
     final c = palette.add('c', paint: Paint());
     final d = palette.add('d', paint: Paint());
 
     c.priority = 1;
-    expect(palette.paints, [default_, b, d, c]);
+    expect(palette, [first, b, d, c]);
 
     c.priority = 0;
-    expect(palette.paints, [default_, b, d, c]);
+    expect(palette, [first, b, d, c]);
+  });
+
+  test('entry() returns the default entry, or the entry registered under a name', () {
+    final palette = Palette();
+    final first = palette.single;
+    final glow = palette.add('glow', paint: Paint());
+
+    expect(palette.entry(), same(first));
+    expect(palette.entry('glow'), same(glow));
   });
 }

@@ -1,18 +1,19 @@
+import 'dart:collection';
 import 'dart:ui';
 
 import 'package:ignis/src/math.dart';
 
 /// A single named [Paint] entry managed by a [Palette].
 ///
-/// [value] is never reassigned; mutate its properties directly instead.
-class PalettePaint {
+/// [paint] is never reassigned; mutate its properties directly instead.
+class PaletteEntry {
   final Palette _palette;
 
   /// This paint's key in its owning [Palette], or null for the default paint.
   final String? name;
 
   /// The paint drawn for this entry.
-  final Paint value;
+  final Paint paint;
 
   /// Where this paint is drawn, relative to its node's origin. Defaults to
   /// the origin.
@@ -31,10 +32,10 @@ class PalettePaint {
   /// Whether this paint is drawn. Defaults to true.
   bool enabled;
 
-  PalettePaint._(
+  PaletteEntry._(
     this._palette,
     this.name,
-    this.value, {
+    this.paint, {
     Vector2? offset,
     int? priority,
     bool? enabled,
@@ -50,27 +51,32 @@ class PalettePaint {
 /// offset and priority, letting a single node configure any number of paints.
 ///
 /// TODO: Document palette usage in the README.
-class Palette {
-  late final PalettePaint _default;
-  final List<PalettePaint> _paints = [];
-  final Map<String, PalettePaint> _index = {};
+class Palette with IterableMixin<PaletteEntry> {
+  late final PaletteEntry _default;
+  final List<PaletteEntry> _paints = [];
+  final Map<String, PaletteEntry> _index = {};
 
-  /// All registered paints, including the default, in ascending priority
-  /// order. Includes disabled paints.
-  Iterable<PalettePaint> get paints => _paints;
+  /// Iterates all registered paints, including the default, in ascending
+  /// priority order. Includes disabled paints.
+  @override
+  Iterator<PaletteEntry> get iterator => _paints.iterator;
 
   Palette({
     Paint? paint,
   }) {
-    _default = PalettePaint._(this, null, paint ?? Paint());
+    _default = PaletteEntry._(this, null, paint ?? Paint());
     _paints.add(_default);
   }
 
   /// The default paint. Always present.
-  PalettePaint get paint => _default;
+  Paint get paint => _default.paint;
 
-  /// The named paint registered via [add].
-  PalettePaint operator [](String name) {
+  /// The paint registered under [name].
+  Paint operator [](String name) => entry(name).paint;
+
+  /// The entry registered under [name], or the default entry if null.
+  PaletteEntry entry([String? name]) {
+    if (name == null) return _default;
     final entry = _index[name];
     if (entry == null) throw StateError('No paint named "$name" is registered.');
     return entry;
@@ -79,7 +85,7 @@ class Palette {
   /// Registers a new [paint] in the palette.
   ///
   /// Throws a [StateError] if [name] is already registered.
-  PalettePaint add(
+  PaletteEntry add(
     String name, {
     required Paint paint,
     Vector2? offset,
@@ -90,7 +96,7 @@ class Palette {
       throw StateError('A paint named "$name" is already registered.');
     }
 
-    final entry = PalettePaint._(
+    final entry = PaletteEntry._(
       this,
       name,
       paint,
@@ -115,7 +121,7 @@ class Palette {
     return true;
   }
 
-  void _insert(PalettePaint entry) {
+  void _insert(PaletteEntry entry) {
     var low = 0;
     var high = _paints.length;
 
@@ -132,7 +138,7 @@ class Palette {
     _paints.insert(low, entry);
   }
 
-  void _reposition(PalettePaint entry) {
+  void _reposition(PaletteEntry entry) {
     _paints.remove(entry);
     _insert(entry);
   }
