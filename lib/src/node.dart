@@ -310,13 +310,13 @@ class Node {
 
   // #region Attachment
 
-  /// Adds [node] to this node.
+  /// Adds [node] to this node. The node is returned.
   ///
   /// Nodes cannot be added to themselves or their descendants. Adding a child
   /// to its current parent is a no-op.
-  void add(Node node) {
+  T add<T extends Node>(T node) {
     if (owns(node)) {
-      return;
+      return node;
     }
 
     if (identical(this, node)) {
@@ -338,6 +338,8 @@ class Node {
     } else {
       _own(node);
     }
+
+    return node;
   }
 
   /// Adds all [nodes] to this node.
