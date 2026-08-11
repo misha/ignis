@@ -107,17 +107,6 @@ void main() {
     expect(finishes, 1);
   });
 
-  test('does not progress while paused', () {
-    final effect = ControlledEffect(controller: .linear(1));
-    effect.mount();
-    effect.pause();
-
-    effect.update(0.5);
-
-    expect(effect.isRunning, isFalse);
-    expect(effect.isFinished, isFalse);
-  });
-
   test('resets back to its start', () {
     final effect = ControlledEffect(controller: .linear(1));
     effect.mount();
@@ -261,6 +250,18 @@ void main() {
     effect.reset();
 
     expect(effect.isForward, isTrue);
+  });
+
+  test('forward() and reverse() implicitly enable the effect', () {
+    final effect = ControlledEffect(controller: .linear(1), enabled: false);
+    expect(effect.enabled, isFalse);
+
+    effect.forward();
+    expect(effect.enabled, isTrue);
+
+    effect.enabled = false;
+    effect.reverse();
+    expect(effect.enabled, isTrue);
   });
 
   test('detaches itself once complete when added as a child, when cleanup is true', () {

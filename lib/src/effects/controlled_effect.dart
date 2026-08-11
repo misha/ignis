@@ -22,7 +22,6 @@ class ControlledEffect extends EffectNode {
 
   double _previousProgress = 0;
   bool _started = false;
-  bool _paused = false;
   bool _finished = false;
   bool _forward = true;
 
@@ -31,9 +30,6 @@ class ControlledEffect extends EffectNode {
 
   /// Whether this effect has started progressing.
   bool get isRunning => _started;
-
-  /// Whether this effect is currently paused.
-  bool get isPaused => _paused;
 
   /// Whether this effect has finished and no longer needs updating.
   bool get isFinished => _finished;
@@ -52,23 +48,26 @@ class ControlledEffect extends EffectNode {
     super.children,
   });
 
-  /// Pauses this effect, so it stops progressing until [resume]d.
-  void pause() => _paused = true;
-
-  /// Resumes this effect after a [pause].
-  void resume() => _paused = false;
-
   /// Run this effect in its forward direction.
-  void forward() => _forward = true;
+  ///
+  /// If the effect was disabled, it is automatically [enabled].
+  void forward() {
+    _forward = true;
+    enabled = true;
+  }
 
   /// Run this effect in its reverse direction.
-  void reverse() => _forward = false;
+  ///
+  /// If the effect was disabled, it is automatically [enabled].
+  void reverse() {
+    _forward = false;
+    enabled = true;
+  }
 
   @override
   void reset() {
     controller.setToStart();
     _previousProgress = 0;
-    _paused = false;
     _started = false;
     _finished = false;
     _forward = true;
@@ -76,10 +75,6 @@ class ControlledEffect extends EffectNode {
 
   @override
   void tick(double dt) {
-    if (_paused) {
-      return;
-    }
-
     if (_forward) {
       controller.advance(dt);
     } else {
