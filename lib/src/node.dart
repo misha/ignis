@@ -42,9 +42,6 @@ import 'package:ignis/src/signal.dart';
 /// unintuitive, this queue allows the engine to mitigate modification
 /// during iteration, and improves performance by batching the changes.
 class Node {
-  /// Whether this node updates and renders. Defaults to true.
-  bool enabled;
-
   /// Creates a new node.
   ///
   /// [enabled] controls whether the node updates and renders.
@@ -59,15 +56,9 @@ class Node {
     int? priority,
     Iterable<Node> children = const [],
   }) : _priority = priority ?? 0,
-       enabled = enabled ?? true {
+       _enabled = enabled ?? true {
     addAll(children);
   }
-
-  /// Enables this node, so it resumes updating and rendering.
-  void enable() => enabled = true;
-
-  /// Disables this node, so it stops updating and rendering.
-  void disable() => enabled = false;
 
   /// Updates this node by [dt] seconds.
   @visibleForOverriding
@@ -78,7 +69,7 @@ class Node {
   /// Updates this node and its children by [dt] seconds.
   @nonVirtual
   void update(double dt) {
-    if (!enabled) return;
+    if (!_enabled) return;
     tick(dt);
 
     final children = _children;
@@ -98,7 +89,7 @@ class Node {
     for (final child in children) {
       // Rendering is recursive, so this is the only way to stop it.
       // A disabled child must never have `render` called on it.
-      if (child.enabled) {
+      if (child._enabled) {
         child.render(canvas);
       }
     }
@@ -114,11 +105,37 @@ class Node {
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
-      if (child.enabled) {
+      if (child._enabled) {
         child.debugRender(canvas);
       }
     }
   }
+
+  // #region Enabled
+
+  bool _enabled;
+
+  /// Whether this node updates and renders. Defaults to true.
+  bool get enabled => _enabled;
+
+  /// Enables this node, so it resumes updating and rendering.
+  @mustCallSuper
+  void enable() => _enabled = true;
+
+  /// Disables this node, so it stops updating and rendering.
+  @mustCallSuper
+  void disable() => _enabled = false;
+
+  @nonVirtual
+  set enabled(bool value) {
+    if (value) {
+      enable();
+    } else {
+      disable();
+    }
+  }
+
+  // #endregion
 
   // #region Priority
 
