@@ -20,7 +20,7 @@ void main() {
   });
 
   test('registers and looks up named paints', () {
-    final palette = Palette(paint: Paint());
+    final palette = Palette();
     final glow = Paint();
     final entry = palette.add('glow', paint: glow);
 
@@ -29,20 +29,20 @@ void main() {
     expect(palette['glow'], same(entry));
   });
 
-  test('returns null for an unregistered name', () {
-    final palette = Palette(paint: Paint());
-    expect(palette['missing'], isNull);
+  test('throws an assertion error for an unregistered name', () {
+    final palette = Palette();
+    expect(() => palette['missing'], throwsA(isA<AssertionError>()));
   });
 
   test('throws when a name is already registered', () {
-    final palette = Palette(paint: Paint());
+    final palette = Palette();
     palette.add('glow', paint: Paint());
 
     expect(() => palette.add('glow', paint: Paint()), throwsStateError);
   });
 
   test('new entries start enabled and at the origin unless overridden', () {
-    final palette = Palette(paint: Paint());
+    final palette = Palette();
     final entry = palette.add('glow', paint: Paint());
 
     expect(entry.enabled, isTrue);
@@ -52,20 +52,20 @@ void main() {
   });
 
   test('removes a named paint', () {
-    final palette = Palette(paint: Paint());
+    final palette = Palette();
     palette.add('glow', paint: Paint());
 
     expect(palette.remove('glow'), isTrue);
-    expect(palette['glow'], isNull);
+    expect(() => palette['glow'], throwsA(isA<AssertionError>()));
   });
 
   test('removing an unregistered name is a no-op that returns false', () {
-    final palette = Palette(paint: Paint());
+    final palette = Palette();
     expect(palette.remove('missing'), isFalse);
   });
 
   test('the default paint has no name, and cannot be removed', () {
-    final palette = Palette(paint: Paint());
+    final palette = Palette();
 
     expect(palette.paints.single.name, isNull);
     expect(palette.remove('default'), isFalse);
@@ -73,7 +73,7 @@ void main() {
   });
 
   test('orders entries by priority while preserving insertion order for ties', () {
-    final palette = Palette(paint: Paint());
+    final palette = Palette();
     final default_ = palette.paints.single;
     final b = palette.add('b', paint: Paint(), priority: 1);
     final c = palette.add('c', paint: Paint(), priority: -1);
@@ -83,7 +83,7 @@ void main() {
   });
 
   test('reorders entries when their priority changes', () {
-    final palette = Palette(paint: Paint());
+    final palette = Palette();
     final default_ = palette.paints.single;
     final b = palette.add('b', paint: Paint());
     final c = palette.add('c', paint: Paint());

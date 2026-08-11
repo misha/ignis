@@ -20,7 +20,7 @@ abstract class PaintedNode extends SizedNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : palette = Palette(paint: paint ?? Paint());
+  }) : palette = Palette(paint: paint);
 
   @override
   void renderAnchored(Canvas canvas) {

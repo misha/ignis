@@ -60,17 +60,21 @@ class Palette {
   Iterable<PalettePaint> get paints => _paints;
 
   Palette({
-    required Paint paint,
+    Paint? paint,
   }) {
-    _default = PalettePaint._(this, null, paint);
+    _default = PalettePaint._(this, null, paint ?? Paint());
     _paints.add(_default);
   }
 
   /// The default paint. Always present.
   PalettePaint get paint => _default;
 
-  /// The named paint registered via [add], or null if none exists.
-  PalettePaint? operator [](String name) => _index[name];
+  /// The named paint registered via [add].
+  PalettePaint operator [](String name) {
+    final entry = _index[name];
+    if (entry == null) throw StateError('No paint named "$name" is registered.');
+    return entry;
+  }
 
   /// Registers a new [paint] in the palette.
   ///
