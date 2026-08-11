@@ -14,6 +14,7 @@ export 'src/intersection_system.dart';
 export 'src/math.dart';
 export 'src/node.dart' show Node, Scene, Mount;
 export 'src/nodes.dart';
+export 'src/palette.dart';
 export 'src/preload.dart';
 export 'src/rng.dart';
 export 'src/scene_widget.dart';

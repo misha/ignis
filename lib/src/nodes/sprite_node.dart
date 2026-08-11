@@ -2,17 +2,14 @@ import 'dart:ui';
 
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/nodes/painted_node.dart';
 import 'package:ignis/src/signal.dart';
 import 'package:ignis/src/spritesheet.dart';
 
-class SpriteNode extends SizedNode {
+class SpriteNode extends PaintedNode {
   /// The size this sprite renders at. Defaults to the first sheet's native
   /// frame size, but may be mutated to stretch or squash the frame.
   final Vector2 size;
-
-  /// Passed to the canvas when drawing the sprite.
-  final Paint paint;
 
   /// The frames per second to use when animating this sprite.
   ///
@@ -57,10 +54,10 @@ class SpriteNode extends SizedNode {
   SpriteNode({
     required Spritesheet sheet,
     Vector2? size,
-    Paint? paint,
     num? fps,
     bool? loop,
     bool? cleanup,
+    super.paint,
     super.position,
     super.scale,
     super.angle,
@@ -70,7 +67,6 @@ class SpriteNode extends SizedNode {
     super.children,
   }) : _sheets = .unmodifiable([sheet]),
        size = size ?? sheet.size.clone(),
-       paint = paint ?? Paint(),
        fps = fps ?? 0,
        loop = loop ?? true,
        cleanup = cleanup ?? false;
@@ -78,10 +74,10 @@ class SpriteNode extends SizedNode {
   SpriteNode.split({
     required Iterable<Spritesheet> sheets,
     Vector2? size,
-    Paint? paint,
     num? fps,
     bool? loop,
     bool? cleanup,
+    super.paint,
     super.position,
     super.scale,
     super.angle,
@@ -92,7 +88,6 @@ class SpriteNode extends SizedNode {
   }) : assert(sheets.isNotEmpty),
        _sheets = .unmodifiable(sheets),
        size = size ?? sheets.first.size.clone(),
-       paint = paint ?? Paint(),
        fps = fps ?? 0,
        loop = loop ?? true,
        cleanup = cleanup ?? false;
@@ -189,11 +184,17 @@ class SpriteNode extends SizedNode {
   late Rect _dest;
 
   @override
-  void renderAnchored(Canvas canvas) {
+  void render(Canvas canvas) {
+    _dest = .fromLTWH(0, 0, width, height);
+    super.render(canvas);
+  }
+
+  @override
+  void renderPainted(Canvas canvas, Paint paint) {
     canvas.drawImageRect(
       sheet.image,
       sheet[frame],
-      _dest = .fromLTWH(0, 0, width, height),
+      _dest,
       paint,
     );
   }

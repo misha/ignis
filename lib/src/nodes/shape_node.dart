@@ -1,19 +1,16 @@
 import 'dart:ui';
 
 import 'package:ignis/src/debug.dart';
-import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/nodes/painted_node.dart';
 import 'package:ignis/src/shape.dart';
 
-class ShapeNode extends SizedNode {
+class ShapeNode extends PaintedNode {
   /// Controls the geometry drawn.
   Shape shape;
 
-  /// Passed to the canvas when drawing the shape.
-  final Paint paint;
-
   ShapeNode({
     required this.shape,
-    Paint? paint,
+    super.paint,
     super.position,
     super.scale,
     super.angle,
@@ -21,7 +18,7 @@ class ShapeNode extends SizedNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : paint = paint ?? Paint();
+  });
 
   @override
   double get width => shape.width;
@@ -32,9 +29,13 @@ class ShapeNode extends SizedNode {
   late Rect _dest;
 
   @override
-  void renderAnchored(Canvas canvas) {
+  void render(Canvas canvas) {
     _dest = shape.rect();
+    super.render(canvas);
+  }
 
+  @override
+  void renderPainted(Canvas canvas, Paint paint) {
     switch (shape) {
       case Circle():
         canvas.drawOval(_dest, paint);

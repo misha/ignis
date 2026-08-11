@@ -210,12 +210,13 @@ Ignis comes with the following nodes.
 | `Node`                   | Base node specifying `enabled`, `priority`, and `children`.      | `onMount`, `onUnmount`               |
 | `CollisionDetectionNode` | Holds a `CollisionDetection` arena.                              | -                                    |
 | `ColliderNode`           | Registers its `Shape` with the nearest `CollisionDetectionNode`. | `onCollisionStart`, `onCollisionEnd` |
-| `EffectNode`             | Base node for time-driven effects; see [Effects](#effects).      | `onFinish`                           |
+| `EffectNode`             | Base node for time-driven effects. See [Effects](#effects).      | `onFinish`                           |
 | `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.             | `onUpdate`                           |
-| `InputNode`              | Base hit area for gestures; see [Inputs](#inputs).               | -                                    |
-| `ShapeNode`              | Draws a `Shape` with `Paint`.                                    | -                                    |
-| `SizedNode`              | Base node with a size, used for shapes and hit-testing.          | -                                    |
-| `SpriteNode`             | Animates a `Spritesheet` with `Paint`; see [Sprites](#sprites).  | `onFrame`, `onLoop`, `onFinish`      |
+| `InputNode`              | Base hit area for gestures. See [Inputs](#inputs).               | -                                    |
+| `PaintedNode`            | Base node managing a `Palette` of `Paint`s.                      | -                                    |
+| `ShapeNode`              | Draws a `Shape`.                                                 | -                                    |
+| `SizedNode`              | Base node with a size, used for shapes, sprites, and more.       | -                                    |
+| `SpriteNode`             | Animates a `Spritesheet`. See [Sprites](#sprites).               | `onFrame`, `onLoop`, `onFinish`      |
 | `TextNode`               | Draws text with `TextPainter`.                                   | -                                    |
 | `TimerNode`              | Tracks time to power its signal.                                 | `onTrigger`                          |
 | `TransformNode`          | Base spatial node with a `position`, `scale`, and `angle`.       | -                                    |
@@ -228,18 +229,22 @@ Most effects extend `ControlledEffect`, exposing a proper `onProgress` signal fr
 
 Ignis comes with the following effects.
 
-| Effect             | Purpose                                                       |
-|--------------------|---------------------------------------------------------------|
-| `AnchorEffect`     | Mutates the anchor of a `SizedNode` over time.                |
-| `CombinedEffect`   | An effect that finished when all its sub-effects finish.      |
-| `ControlledEffect` | Base effect for effects that use an `EffectController`.       |
-| `MoveEffect`       | Mutates the position of a `TransformNode` over time.          |
-| `OpacityEffect`    | Given a `Paint`, mutates the color's alpha channel over time. |
-| `RotateEffect`     | Mutates the angle of a `TransformNode` over time.             |
-| `ScaleEffect`      | Mutates the scale of a `TransformNode` over time.             |
-| `SequentialEffect` | An effect that advances its sub-effects serially.             |
+| Effect                     | Purpose                                                       |
+|----------------------------|---------------------------------------------------------------|
+| `AnchorEffect`             | Mutates the anchor of a `SizedNode` over time.                |
+| `ColorFilterOpacityEffect` | Given a `Paint`, mutates a `ColorFilter`'s alpha over time.   |
+| `ColorOpacityEffect`       | Given a `Paint`, mutates the color's alpha channel over time. |
+| `CombinedEffect`           | An effect that finished when all its sub-effects finish.      |
+| `ControlledEffect`         | Base effect for effects that use an `EffectController`.       |
+| `ImageFilterGlowEffect`    | Given a `Paint`, mutates a blurred `ImageFilter` over time.   |
+| `MoveEffect`               | Mutates the position of a `TransformNode` over time.          |
+| `RotateEffect`             | Mutates the angle of a `TransformNode` over time.             |
+| `ScaleEffect`              | Mutates the scale of a `TransformNode` over time.             |
+| `SequentialEffect`         | An effect that advances its sub-effects serially.             |
 
-Note that specific effects drop their `*Node` suffix and are simply called `*Effect`.
+Specific effects drop their `*Node` suffix and are simply called `*Effect`.
+
+Effects that operate on `Paint` always indicate the specific property *of* `Paint` they operate on. For example, `ColorOpacityEffect` and `ColorFilterOpacityEffect` both animate the opacity of a `Paint`, but the mechanism used differs: one modifies `color`, the other sets the `colorFilter` property.
 
 ### Effect Controllers
 

@@ -3,6 +3,7 @@ export 'nodes/collision_detection_node.dart';
 export 'nodes/effect_node.dart';
 export 'nodes/fps_node.dart';
 export 'nodes/input_node.dart';
+export 'nodes/painted_node.dart';
 export 'nodes/shape_node.dart';
 export 'nodes/sized_node.dart';
 export 'nodes/sprite_node.dart';
