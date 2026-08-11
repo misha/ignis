@@ -32,7 +32,7 @@ class ColorOpacityEffect extends ControlledEffect {
   }
 
   /// Shifts [paint]'s opacity by [opacity], relative to its alpha when this
-  /// effect starts advancing.
+  /// effect starts.
   ColorOpacityEffect.by({
     required this.paint,
     required double opacity,
@@ -40,9 +40,14 @@ class ColorOpacityEffect extends ControlledEffect {
     super.cleanup,
     super.enabled,
   }) {
+    late double initial;
+
+    onMount(() {
+      initial = paint.color.a;
+    });
+
     onProgress((progress) {
-      final delta = opacity * (progress - previousProgress);
-      paint.color = paint.color.withValues(alpha: paint.color.a + delta);
+      paint.color = paint.color.withValues(alpha: initial + opacity * progress);
     });
   }
 }

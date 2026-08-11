@@ -37,23 +37,28 @@ class ColorFilterOpacityEffect extends ControlledEffect {
     });
   }
 
-  /// Shifts a [color]-tinted `ColorFilter` on [paint] by [color]'s alpha,
-  /// relative to its intensity when this effect starts advancing.
+  /// Fades a [color]-tinted `ColorFilter` on [paint] from [fromAlpha]
+  /// [toAlpha]. If [fromAlpha] is not supplied, it animates from zero.
   ///
-  /// Unlike [fadeIn]/[fadeOut], this tracks its own running alpha rather than
-  /// reading it back from [paint], since a [ColorFilter] doesn't expose one.
+  /// Unlike [fadeIn]/[fadeOut], this doesn't derive its endpoints from
+  /// [color]'s own alpha, since a [ColorFilter] can't be read back from
+  /// [paint] to resolve them automatically.
   ColorFilterOpacityEffect.by({
     required this.paint,
     required this.color,
+    double? fromAlpha,
+    required double toAlpha,
     required super.controller,
     super.cleanup,
     super.enabled,
   }) {
-    var alpha = 0.0;
+    final from = fromAlpha ?? 0;
 
     onProgress((progress) {
-      alpha += color.a * (progress - previousProgress);
-      paint.colorFilter = .mode(color.withValues(alpha: alpha), .srcIn);
+      paint.colorFilter = .mode(
+        color.withValues(alpha: from + (toAlpha - from) * progress),
+        .srcIn,
+      );
     });
   }
 }

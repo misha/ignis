@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  const STRENGTH = 8.0;
+  const double STRENGTH = 8;
 
   test('fades a glow in from no blur to full strength', () {
     final paint = Paint();
@@ -69,11 +69,11 @@ void main() {
     );
   });
 
-  test('shifts the blur strength by a total amount, tracked independently of paint', () {
+  test('fades from zero to toStrength by default', () {
     final paint = Paint();
     final effect = ImageFilterGlowEffect.by(
       paint: paint,
-      strength: STRENGTH,
+      toStrength: STRENGTH,
       controller: .linear(1),
     );
 
@@ -96,6 +96,28 @@ void main() {
       ImageFilter.blur(
         sigmaX: STRENGTH,
         sigmaY: STRENGTH,
+        tileMode: .decal,
+      ),
+    );
+  });
+
+  test('fades from fromStrength to toStrength', () {
+    final paint = Paint();
+    final effect = ImageFilterGlowEffect.by(
+      paint: paint,
+      fromStrength: 1,
+      toStrength: STRENGTH,
+      controller: .linear(1),
+    );
+
+    effect.mount();
+    effect.update(0.5);
+
+    expect(
+      paint.imageFilter,
+      ImageFilter.blur(
+        sigmaX: 1 + (STRENGTH - 1) * 0.5,
+        sigmaY: 1 + (STRENGTH - 1) * 0.5,
         tileMode: .decal,
       ),
     );

@@ -45,4 +45,15 @@ void main() {
     effect.update(0.5);
     expect(paint.color.a, closeTo(0.7, EPSILON));
   });
+
+  test('seeds its starting alpha from the paint when it mounts, not when constructed', () {
+    final paint = Paint()..color = COLOR.withValues(alpha: 0.2);
+    final effect = ColorOpacityEffect.by(paint: paint, opacity: 0.5, controller: .linear(1));
+
+    paint.color = COLOR.withValues(alpha: 0.4); // Changed before mounting.
+    effect.mount();
+
+    effect.update(0.5);
+    expect(paint.color.a, closeTo(0.65, EPSILON));
+  });
 }

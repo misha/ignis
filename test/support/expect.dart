@@ -11,8 +11,10 @@ Future<void> expectGolden(
   double width = 100,
   double height = 100,
   Color color = WHITE,
+  double dt = 0,
   bool debug = true,
 }) async {
+  assert(dt >= 0, 'dt cannot be negative.');
   final key = GlobalKey();
 
   await tester.pumpWidget(
@@ -32,5 +34,6 @@ Future<void> expectGolden(
     ),
   );
 
+  if (dt > 0) await tester.pump(Duration(milliseconds: (dt * 1000).round()));
   await expectLater(find.byKey(key), matchesGoldenFile(goldenFile));
 }

@@ -51,11 +51,12 @@ void main() {
     expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0.5), .srcIn));
   });
 
-  test('shifts the color filter\'s intensity by a total amount, tracked independently of paint', () {
+  test('fades from 0 to toAlpha by default', () {
     final paint = Paint();
     final effect = ColorFilterOpacityEffect.by(
       paint: paint,
-      color: COLOR.withValues(alpha: 0.4),
+      color: COLOR,
+      toAlpha: 0.4,
       controller: .linear(1),
     );
 
@@ -65,5 +66,24 @@ void main() {
 
     effect.update(0.5);
     expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0.4), .srcIn));
+  });
+
+  test('fades from fromAlpha to toAlpha', () {
+    final paint = Paint();
+    final effect = ColorFilterOpacityEffect.by(
+      paint: paint,
+      color: COLOR,
+      fromAlpha: 0.1,
+      toAlpha: 0.5,
+      controller: .linear(1),
+    );
+
+    effect.mount();
+    effect.update(0.5);
+
+    expect(
+      paint.colorFilter,
+      ColorFilter.mode(COLOR.withValues(alpha: 0.1 + (0.5 - 0.1) * 0.5), .srcIn),
+    );
   });
 }
