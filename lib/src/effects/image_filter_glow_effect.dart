@@ -4,6 +4,8 @@ import 'package:ignis/src/effects/controlled_effect.dart';
 
 /// An effect that fades a glow in or out on a [Paint] by animating a blurred
 /// [ImageFilter], varying its blur sigma between zero and a given strength.
+///
+/// TODO: The `strength` parameter can probably be a `Vector2`.
 class ImageFilterGlowEffect extends ControlledEffect {
   /// The paint whose [Paint.imageFilter] is mutated as this effect progresses.
   final Paint paint;
