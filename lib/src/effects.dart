@@ -3,7 +3,6 @@ export 'effects/color_filter_opacity_effect.dart';
 export 'effects/color_opacity_effect.dart';
 export 'effects/combined_effect.dart';
 export 'effects/controlled_effect.dart';
-export 'effects/image_filter_glow_effect.dart';
 export 'effects/move_effect.dart';
 export 'effects/rotate_effect.dart';
 export 'effects/scale_effect.dart';

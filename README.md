@@ -236,7 +236,6 @@ Ignis comes with the following effects.
 | `ColorOpacityEffect`       | Given a `Paint`, mutates the color's alpha channel over time. |
 | `CombinedEffect`           | An effect that finished when all its sub-effects finish.      |
 | `ControlledEffect`         | Base effect for effects that use an `EffectController`.       |
-| `ImageFilterGlowEffect`    | Given a `Paint`, mutates a blurred `ImageFilter` over time.   |
 | `MoveEffect`               | Mutates the position of a `TransformNode` over time.          |
 | `RotateEffect`             | Mutates the angle of a `TransformNode` over time.             |
 | `ScaleEffect`              | Mutates the scale of a `TransformNode` over time.             |
