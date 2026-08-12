@@ -90,6 +90,9 @@ void main() {
     expect(starts, hasLength(1));
     expect(starts.single.scene, Vector2.all(5));
     expect(updates, isNotEmpty);
+    // Flutter reports the down position as the first update's globalPosition,
+    // so its delta must come out zero.
+    expect(updates.first.delta, Vector2.zero());
     expect(updates.last.scene, Vector2(55, 5));
   });
 
@@ -106,6 +109,41 @@ void main() {
     await gesture.up();
     await tester.pump(settle);
     expect(drag.isDragging, isFalse);
+  });
+
+  testWidgets('a cancelled drag does not emit onDragEnd by default', (tester) async {
+    final drag = DragInput(shape: .square(200));
+    await pumpScene(tester, [drag]);
+    final ends = <DragEndEvent>[];
+    var cancels = 0;
+    drag.onDragEnd(ends.add);
+    drag.onDragCancel(() => cancels += 1);
+
+    final gesture = await tester.startGesture(const Offset(5, 5));
+    await gesture.moveBy(const Offset(50, 0));
+    await gesture.cancel();
+    await tester.pump(settle);
+
+    expect(cancels, 1);
+    expect(ends, isEmpty);
+  });
+
+  testWidgets('endOnCancel manufactures onDragEnd from the last known position', (tester) async {
+    final drag = DragInput(shape: .square(200), endOnCancel: true);
+    await pumpScene(tester, [drag]);
+    final ends = <DragEndEvent>[];
+    var cancels = 0;
+    drag.onDragEnd(ends.add);
+    drag.onDragCancel(() => cancels += 1);
+
+    final gesture = await tester.startGesture(const Offset(5, 5));
+    await gesture.moveBy(const Offset(50, 0));
+    await gesture.cancel();
+    await tester.pump(settle);
+
+    expect(cancels, 1);
+    expect(ends, hasLength(1));
+    expect(ends.single.details.globalPosition, const Offset(55, 5));
   });
 
   testWidgets('delta stays correct under a scaling ancestor', (tester) async {

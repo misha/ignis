@@ -23,12 +23,21 @@ class DragInput extends InputNode {
   /// Emitted when a drag is cancelled.
   final onDragCancel = Signal0();
 
+  /// Whether a cancelled drag should also manufacture and emit an [onDragEnd],
+  /// built from the last known drag position.
+  ///
+  /// If enabled, [onDragEnd] is called immediately *after* [onDragCancel].
+  ///
+  /// Defaults to `false`.
+  final bool endOnCancel;
+
   ImmediateMultiDragGestureRecognizer? _recognizer;
   Vector2? _pendingStart;
   Offset Function(Offset)? _pendingGlobalToLocal;
 
   DragInput({
     required super.shape,
+    bool? endOnCancel,
     super.behavior,
     super.position,
     super.scale,
@@ -37,7 +46,7 @@ class DragInput extends InputNode {
     super.enabled,
     super.priority,
     super.children,
-  }) {
+  }) : endOnCancel = endOnCancel ?? false {
     onMount(() {
       _recognizer = .new()..onStart = _handleStart;
     });
@@ -61,28 +70,29 @@ class DragInput extends InputNode {
   }
 
   Drag? _handleStart(Offset globalPosition) {
-    final scenePoint = _pendingStart!;
+    final scenePosition = _pendingStart!;
     final globalToLocal = _pendingGlobalToLocal!;
     _pendingStart = null;
     _pendingGlobalToLocal = null;
 
     onDragStart.emit(
       DragStartEvent(
-        scene: scenePoint,
-        local: toLocal(scenePoint),
+        scene: scenePosition,
+        local: toLocal(scenePosition),
       ),
     );
 
-    return _NodeDrag(this, globalToLocal);
+    return _NodeDrag(this, globalToLocal, globalToLocal(globalPosition).toVector2());
   }
 }
 
 class _NodeDrag extends Drag {
   final DragInput node;
   final Offset Function(Offset) globalToLocal;
-  Vector2? last;
+  Vector2 lastScenePosition;
+  Offset lastGlobalOffset = .zero;
 
-  _NodeDrag(this.node, this.globalToLocal);
+  _NodeDrag(this.node, this.globalToLocal, this.lastScenePosition);
 
   @override
   void update(DragUpdateDetails details) {
@@ -90,14 +100,15 @@ class _NodeDrag extends Drag {
     // never threads a transformed position through it, so it's just the raw
     // global position again. Convert it ourselves instead.
     // TODO: Seems unlikely this kluge is required. Reread the Flutter source.
-    final scenePoint = globalToLocal(details.globalPosition).toVector2();
-    final delta = last == null ? Vector2.zero() : scenePoint - last!;
-    last = scenePoint;
+    final scenePosition = globalToLocal(details.globalPosition).toVector2();
+    final delta = scenePosition - lastScenePosition;
+    lastScenePosition = scenePosition;
+    lastGlobalOffset = details.globalPosition;
 
     node.onDragUpdate.emit(
       DragUpdateEvent(
-        scene: scenePoint,
-        local: node.toLocal(scenePoint),
+        scene: scenePosition,
+        local: node.toLocal(scenePosition),
         delta: delta,
         details: details,
       ),
@@ -112,6 +123,16 @@ class _NodeDrag extends Drag {
   @override
   void cancel() {
     node.onDragCancel.emit();
+
+    if (node.endOnCancel) {
+      node.onDragEnd.emit(
+        DragEndEvent(
+          details: DragEndDetails(
+            globalPosition: lastGlobalOffset,
+          ),
+        ),
+      );
+    }
   }
 }
 
