@@ -1,4 +1,5 @@
 import 'package:ignis/src/effect_controller.dart';
+import 'package:ignis/src/effects/controlled_effect.dart';
 
 /// Runs [child] forever, restarting it from the beginning after each run.
 class InfiniteEffectController extends EffectController {
@@ -6,6 +7,9 @@ class InfiniteEffectController extends EffectController {
   final EffectController child;
 
   InfiniteEffectController(this.child) : super.empty();
+
+  @override
+  void attach(ControlledEffect effect) => child.attach(effect);
 
   @override
   double? get duration => double.infinity;

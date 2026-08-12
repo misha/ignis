@@ -9,5 +9,5 @@ class PauseEffectController extends DurationEffectController {
   PauseEffectController(
     super.duration, {
     this.progress = 1,
-  });
+  }) : assert(duration > 0, 'Duration must be positive.');
 }

@@ -1,9 +1,10 @@
 import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
+import 'package:ignis/src/effects/measurable_effect.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 
 /// An effect that animates a [TransformNode]'s angle over time.
-abstract class RotateEffect extends ControlledEffect {
+abstract class RotateEffect extends ControlledEffect implements MeasurableEffect {
   TransformNode? _target;
 
   /// The node whose angle is mutated by this effect.
@@ -64,6 +65,9 @@ class _RotateByEffect extends RotateEffect {
       _target!.angle += _angle * (progress - previousProgress);
     });
   }
+
+  @override
+  double measure() => _angle.abs();
 }
 
 class _RotateToEffect extends RotateEffect {
@@ -86,4 +90,7 @@ class _RotateToEffect extends RotateEffect {
       _target!.angle += _offset * (progress - previousProgress);
     });
   }
+
+  @override
+  double measure() => _offset.abs();
 }

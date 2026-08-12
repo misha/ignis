@@ -8,7 +8,14 @@ import 'package:ignis/src/effects/controlled_effect.dart';
 abstract class EffectController {
   // #region API
 
-  EffectController.empty();
+  const EffectController.empty();
+
+  /// Called once, when this controller's [effect] is constructed.
+  ///
+  /// Implementations should generally just propagate this to their child(ren),
+  /// unless they have something interesting to do with the effect, as in the
+  /// case of the `SpeedEffectController`.
+  void attach(ControlledEffect effect);
 
   /// How long this controller takes to complete, if known. `double.infinity`
   /// if it never completes on its own.
@@ -55,6 +62,8 @@ abstract class EffectController {
   factory EffectController.roundtrip(EffectController child) = RoundtripEffectController;
   factory EffectController.sequence(List<EffectController> children) = SequenceEffectController;
   factory EffectController.sine({required double period}) = SineEffectController;
+  factory EffectController.speed(double speed, {Curve? curve}) = SpeedEffectController;
+  factory EffectController.terminal({double progress}) = TerminalEffectController;
   factory EffectController.zigzag({required double period}) = ZigzagEffectController;
   // dart format on
 

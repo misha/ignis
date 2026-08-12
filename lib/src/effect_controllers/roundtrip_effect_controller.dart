@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:ignis/src/effect_controller.dart';
+import 'package:ignis/src/effects/controlled_effect.dart';
 
 /// Plays [child] forward, then back down to its start, using it as a single
 /// shared instance for both legs.
@@ -15,11 +16,14 @@ class RoundtripEffectController extends EffectController {
 
   RoundtripEffectController(this.child)
     : assert(
-        child.duration != null && child.duration!.isFinite,
+        child.duration?.isFinite ?? false,
         'Cannot round-trip a controller with an unknown or infinite duration.',
       ),
       _legDuration = child.duration!,
       super.empty();
+
+  @override
+  void attach(ControlledEffect effect) => child.attach(effect);
 
   @override
   double? get duration => _legDuration * 2;

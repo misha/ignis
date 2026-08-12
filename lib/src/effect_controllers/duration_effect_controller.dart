@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/effect_controller.dart';
+import 'package:ignis/src/effects/controlled_effect.dart';
 
 /// Base for [EffectController]s driven by a fixed [duration], counting
 /// [elapsed] time from 0 up to [duration].
@@ -14,6 +15,11 @@ abstract class DurationEffectController extends EffectController {
     : assert(duration >= 0, 'Duration cannot be negative.'),
       _elapsed = 0,
       super.empty();
+
+  @override
+  void attach(ControlledEffect effect) {
+    // Nothing to do.
+  }
 
   /// This controller's elapsed time, from 0 to [duration].
   @protected

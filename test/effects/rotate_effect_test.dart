@@ -83,6 +83,24 @@ void main() {
     expect(node.angle, 1.5);
   });
 
+  test('runs at a given speed, deriving its duration from the angle covered', () {
+    final node = TransformNode(angle: 1);
+    final scene = node.mount();
+
+    node.add(
+      RotateEffect.to(
+        angle: 6, // Angle covered 5, at speed 5 -> duration 1.
+        controller: .speed(5),
+      ),
+    );
+
+    scene.update(0.5);
+    expect(node.angle, 3.5);
+
+    scene.update(0.5);
+    expect(node.angle, 6);
+  });
+
   test('re-resolves its target after being remounted elsewhere', () {
     final root = TransformNode();
     final nodeA = TransformNode(angle: 0);

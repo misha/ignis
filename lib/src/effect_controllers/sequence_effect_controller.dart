@@ -1,4 +1,5 @@
 import 'package:ignis/src/effect_controller.dart';
+import 'package:ignis/src/effects/controlled_effect.dart';
 
 /// Runs [children] one after another, advancing to the next once the
 /// current one finishes.
@@ -11,6 +12,13 @@ class SequenceEffectController extends EffectController {
   SequenceEffectController(this.children)
     : assert(children.isNotEmpty, 'At least 1 child is required.'),
       super.empty();
+
+  @override
+  void attach(ControlledEffect effect) {
+    for (final child in children) {
+      child.attach(effect);
+    }
+  }
 
   @override
   double? get duration {

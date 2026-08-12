@@ -1,4 +1,5 @@
 import 'package:ignis/src/effect_controller.dart';
+import 'package:ignis/src/effects/controlled_effect.dart';
 
 /// Runs [child] [times] times before finishing, restarting it from the
 /// beginning after each completed run.
@@ -16,6 +17,9 @@ class RepeatEffectController extends EffectController {
       assert(!child.isInfinite, 'Cannot repeat an infinite controller.'),
       _remaining = times,
       super.empty();
+
+  @override
+  void attach(ControlledEffect effect) => child.attach(effect);
 
   @override
   double? get duration {

@@ -8,4 +8,6 @@ export 'effect_controllers/repeat_effect_controller.dart';
 export 'effect_controllers/roundtrip_effect_controller.dart';
 export 'effect_controllers/sequence_effect_controller.dart';
 export 'effect_controllers/sine_effect_controller.dart';
+export 'effect_controllers/speed_effect_controller.dart';
+export 'effect_controllers/terminal_effect_controller.dart';
 export 'effect_controllers/zigzag_effect_controller.dart';

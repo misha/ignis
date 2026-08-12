@@ -46,7 +46,9 @@ class ControlledEffect extends EffectNode {
     super.enabled,
     super.priority,
     super.children,
-  });
+  }) {
+    controller.attach(this);
+  }
 
   /// Run this effect in its forward direction.
   ///

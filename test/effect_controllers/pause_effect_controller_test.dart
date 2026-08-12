@@ -33,4 +33,8 @@ void main() {
 
     expect(controller.advance(1.5), 0.5);
   });
+
+  test('asserts its duration is positive; use TerminalEffectController for zero', () {
+    expect(() => PauseEffectController(0), throwsAssertionError);
+  });
 }

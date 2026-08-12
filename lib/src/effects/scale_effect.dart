@@ -1,10 +1,11 @@
 import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
+import 'package:ignis/src/effects/measurable_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 
 /// An effect that animates a [TransformNode]'s scale over time.
-abstract class ScaleEffect extends ControlledEffect {
+abstract class ScaleEffect extends ControlledEffect implements MeasurableEffect {
   TransformNode? _target;
 
   /// The node whose scale is mutated by this effect.
@@ -66,6 +67,9 @@ class _ScaleByEffect extends ScaleEffect {
       _target!.scale.mutate().addScaled(_offset, progress - previousProgress);
     });
   }
+
+  @override
+  double measure() => _offset.length;
 }
 
 class _ScaleToEffect extends ScaleEffect {
@@ -90,4 +94,7 @@ class _ScaleToEffect extends ScaleEffect {
       _target!.scale.mutate().addScaled(_offset, progress - previousProgress);
     });
   }
+
+  @override
+  double measure() => _offset.length;
 }

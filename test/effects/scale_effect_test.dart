@@ -83,6 +83,24 @@ void main() {
     expect(node.scale, Vector2(6, 11)); // Starts from the default scale of (1, 1).
   });
 
+  test('runs at a given speed, deriving its duration from the distance covered', () {
+    final node = TransformNode(scale: .new(10, 20));
+    final scene = node.mount();
+
+    node.add(
+      ScaleEffect.to(
+        destination: .new(40, 60), // Offset (30, 40): distance 50, at speed 10 -> duration 5.
+        controller: .speed(10),
+      ),
+    );
+
+    scene.update(2.5);
+    expect(node.scale, Vector2(25, 40));
+
+    scene.update(2.5);
+    expect(node.scale, Vector2(40, 60));
+  });
+
   test('re-resolves its target after being remounted elsewhere', () {
     final root = TransformNode();
     final nodeA = TransformNode(scale: .new(0, 0));

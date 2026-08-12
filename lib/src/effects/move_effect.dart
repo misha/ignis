@@ -1,10 +1,11 @@
 import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
+import 'package:ignis/src/effects/measurable_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 
 /// A effect that animates a [TransformNode]'s position over time.
-abstract class MoveEffect extends ControlledEffect {
+abstract class MoveEffect extends ControlledEffect implements MeasurableEffect {
   TransformNode? _target;
 
   /// The node whose position is mutated by this effect.
@@ -66,6 +67,9 @@ class _MoveByEffect extends MoveEffect {
       _target!.position.mutate().addScaled(_offset, progress - previousProgress);
     });
   }
+
+  @override
+  double measure() => _offset.length;
 }
 
 class _MoveToEffect extends MoveEffect {
@@ -90,4 +94,7 @@ class _MoveToEffect extends MoveEffect {
       _target!.position.mutate().addScaled(_offset, progress - previousProgress);
     });
   }
+
+  @override
+  double measure() => _offset.length;
 }
