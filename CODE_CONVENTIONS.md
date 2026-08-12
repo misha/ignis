@@ -9,6 +9,7 @@ Conventions specific to this codebase, on top of what `dart format` and
 2. [Parameter Defaults](#2-parameter-defaults)
 3. ["Blessed" Effect Targets](#3-blessed-effect-targets)
 4. [The `cleanup` Parameter](#4-the-cleanup-parameter)
+5. [No Mixins](#5-no-mixins)
 
 ## 1. Constructor Parameter Order
 
@@ -83,3 +84,7 @@ EffectNode({
   });
 }
 ```
+
+## 5. No Mixins
+
+Avoid `mixin`. Prefer composition, or implementing an interface directly.
