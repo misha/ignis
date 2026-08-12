@@ -371,7 +371,7 @@ Expanding the capabilities and usefulness of collision detection in Ignis while 
 
 `InputNode` is a hit area that recognizes pointer gestures by delegating to Flutter's own gesture recognizers. It has its own shape too, so it's free to cover an area larger or smaller than whatever it's representing.
 
-A node wanting more than one gesture just adds more input nodes. When multiple input nodes overlap, only the topmost one receives the event.
+A node wanting more than one gesture just adds more input nodes. When multiple input nodes overlap, `priority` decides who's tried first. An event a node doesn't apply to, such as `HoverInput` receiving a tap, always falls through to the next input node. Once a node *does* claim an event, the search stops there unless its `behavior` is `HitBehavior.translucent`.
 
 Ignis comes with the following inputs.
 

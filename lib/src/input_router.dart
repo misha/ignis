@@ -2,14 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/inputs/hover_input.dart';
+import 'package:ignis/src/math.dart';
 import 'package:ignis/src/node.dart';
 import 'package:ignis/src/nodes/input_node.dart';
 import 'package:ignis/src/scene_render_box.dart';
 
 /// Resolves raw pointer events against a [Scene]'s tree and hands off to
-/// whichever gesture recognizer the hit [InputNode] owns.
-///
-/// TODO: Refactor this. It currently has two distinct jobs, routing and hover.
+/// whichever [InputNode]s claim them, per [InputNode.behavior].
 @internal
 class InputRouter {
   final SceneRenderBox box;
@@ -32,13 +31,13 @@ class InputRouter {
   }
 
   void _handleDown(PointerDownEvent event) {
-    final hit = scene.node.hitTest(event.localPosition.toVector2());
-    if (hit is InputNode) hit.register(event, box.globalToLocal);
+    final point = event.localPosition.toVector2();
+    _dispatch(point, (node) => node.register(event, box.globalToLocal));
   }
 
   void _handleHover(PointerHoverEvent event) {
-    final hit = scene.node.hitTest(event.localPosition.toVector2());
-    final target = hit is InputNode ? hit : null;
+    final point = event.localPosition.toVector2();
+    final target = _dispatch(point, (node) => node is HoverInput ? .handled : .ignored);
     final previous = _hovered[event.pointer];
     if (identical(target, previous)) return;
     if (previous is HoverInput) previous.onHoverExit.emit(_wrap(previous, event));
@@ -51,6 +50,21 @@ class InputRouter {
       case null:
         _hovered.remove(event.pointer);
     }
+  }
+
+  /// Walks [point]'s hit-test chain, offering each [InputNode] to [respond]
+  /// until one is claimed by an opaque node.
+  InputNode? _dispatch(Vector2 point, InputResult Function(InputNode) respond) {
+    InputNode? result;
+
+    for (final node in scene.node.hitTest(point).whereType<InputNode>()) {
+      final response = respond(node);
+      if (response == .ignored) continue;
+      result ??= node;
+      if (node.behavior == .opaque) break;
+    }
+
+    return result;
   }
 
   static HoverEvent _wrap(InputNode node, PointerEvent event) {

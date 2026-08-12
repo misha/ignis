@@ -6,9 +6,21 @@ import 'package:ignis/src/signal.dart';
 
 /// A hit area that recognizes drags by delegating to an [ImmediateMultiDragGestureRecognizer].
 class DragInput extends InputNode {
+  bool _dragging = false;
+
+  /// Whether this node is currently being dragged.
+  bool get isDragging => _dragging;
+
+  /// Emitted when a drag starts.
   final onDragStart = Signal1<DragStartEvent>();
+
+  /// Emitted when a drag updates.
   final onDragUpdate = Signal1<DragUpdateEvent>();
+
+  /// Emitted when a drag ends.
   final onDragEnd = Signal1<DragEndEvent>();
+
+  /// Emitted when a drag is cancelled.
   final onDragCancel = Signal0();
 
   ImmediateMultiDragGestureRecognizer? _recognizer;
@@ -17,6 +29,7 @@ class DragInput extends InputNode {
 
   DragInput({
     required super.shape,
+    super.behavior,
     super.position,
     super.scale,
     super.angle,
@@ -33,13 +46,18 @@ class DragInput extends InputNode {
       _recognizer?.dispose();
       _recognizer = null;
     });
+
+    onDragStart((_) => _dragging = true);
+    onDragEnd((_) => _dragging = false);
+    onDragCancel(() => _dragging = false);
   }
 
   @override
-  void register(PointerDownEvent event, Offset Function(Offset) globalToLocal) {
+  InputResult register(PointerDownEvent event, Offset Function(Offset) globalToLocal) {
     _pendingStart = event.localPosition.toVector2();
     _pendingGlobalToLocal = globalToLocal;
     _recognizer!.addPointer(event);
+    return .handled;
   }
 
   Drag? _handleStart(Offset globalPosition) {
@@ -71,6 +89,7 @@ class _NodeDrag extends Drag {
     // DragUpdateDetails.localPosition is unreliable: MultiDragGestureRecognizer
     // never threads a transformed position through it, so it's just the raw
     // global position again. Convert it ourselves instead.
+    // TODO: Seems unlikely this kluge is required. Reread the Flutter source.
     final scenePoint = globalToLocal(details.globalPosition).toVector2();
     final delta = last == null ? Vector2.zero() : scenePoint - last!;
     last = scenePoint;

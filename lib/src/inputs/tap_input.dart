@@ -15,6 +15,7 @@ class TapInput extends InputNode {
 
   TapInput({
     required super.shape,
+    super.behavior,
     super.position,
     super.scale,
     super.angle,
@@ -38,8 +39,9 @@ class TapInput extends InputNode {
   }
 
   @override
-  void register(PointerDownEvent event, _) {
+  InputResult register(PointerDownEvent event, _) {
     _recognizer!.addPointer(event);
+    return .handled;
   }
 
   void _handleTapDown(int pointer, TapDownDetails details) {

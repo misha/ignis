@@ -9,14 +9,22 @@ import 'package:ignis/src/shape.dart';
 
 /// A pointer hit area.
 ///
-/// A node wanting more than one gesture just adds more input nodes; [priority]
-/// decides who gets dibs when their shapes overlap.
+/// A node wanting more than one gesture just adds more input nodes at the
+/// same spot. [priority] decides who's tried first. An event a node doesn't
+/// apply to always falls through to the next one. Once a node does claim an
+/// event, the search stops there unless [behavior] is [HitBehavior.translucent].
 abstract class InputNode extends SizedNode {
   /// The shape of the node's hit area.
   Shape shape;
 
+  /// Whether this node blocks nodes behind it once it claims an event.
+  ///
+  /// Defaults to [HitBehavior.opaque].
+  HitBehavior behavior;
+
   InputNode({
     required this.shape,
+    HitBehavior? behavior,
     super.position,
     super.scale,
     super.angle,
@@ -24,7 +32,7 @@ abstract class InputNode extends SizedNode {
     super.enabled,
     super.priority,
     super.children,
-  });
+  }) : behavior = behavior ?? .opaque;
 
   @override
   double get width => shape.width;
@@ -38,8 +46,8 @@ abstract class InputNode extends SizedNode {
   /// Recognizers whose details don't carry a correctly-transformed position
   /// of their own (namely drag) need it to stay accurate when scaled.
   @internal
-  void register(PointerDownEvent event, Offset Function(Offset) globalToLocal) {
-    // Nothing to do.
+  InputResult register(PointerDownEvent event, Offset Function(Offset) globalToLocal) {
+    return .ignored;
   }
 
   @override
@@ -82,4 +90,23 @@ abstract class InputNode extends SizedNode {
         canvas.drawRect(shape.rect(), DEBUG_INPUT_PAINT);
     }
   }
+}
+
+/// Governs whether an [InputNode] blocks nodes behind it once it claims an
+/// event, or lets the search continue regardless.
+enum HitBehavior {
+  /// Stops the search here once this node claims an event.
+  opaque,
+
+  /// Keeps searching past this node even after it claims an event.
+  translucent,
+}
+
+/// Whether an [InputNode] claimed an event routed to it.
+enum InputResult {
+  /// This node doesn't apply to the event; it falls through to the next one.
+  ignored,
+
+  /// This node claimed the event.
+  handled,
 }

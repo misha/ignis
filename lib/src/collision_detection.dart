@@ -303,8 +303,14 @@ final class CollisionDetection {
       // A pair can end up here because a member was unregistered (e.g.
       // detached) rather than because it stopped overlapping; the arena
       // already dropped it from consideration, so just drop it silently
-      // instead of firing a spurious exit.
-      if (!a.isMounted || !b.isMounted) continue;
+      // instead of firing a spurious exit. The survivor's own bookkeeping
+      // still needs to let go of the gone collider, though.
+      if (!a.isMounted || !b.isMounted) {
+        a.dropCollision(b);
+        b.dropCollision(a);
+        continue;
+      }
+
       if ((a.mask & b.layer) != 0) a.onCollisionEnd.emit(b);
       if ((b.mask & a.layer) != 0) b.onCollisionEnd.emit(a);
     }

@@ -186,6 +186,86 @@ void main() {
     });
   });
 
+  group('active / isColliding', () {
+    test('adds the other collider to active while overlapping', () {
+      final a = ColliderNode(shape: .square(10));
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(a.active, {b});
+      expect(b.active, {a});
+      expect(a.isColliding, isTrue);
+      expect(b.isColliding, isTrue);
+    });
+
+    test('removes the other collider from active once they stop overlapping', () {
+      final a = ColliderNode(shape: .square(10));
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      Node(children: [a, b]).mount();
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      a.position.mutate().x = 200;
+      arena.process();
+
+      expect(a.active, isEmpty);
+      expect(b.active, isEmpty);
+      expect(a.isColliding, isFalse);
+      expect(b.isColliding, isFalse);
+    });
+
+    test(
+      'drops a detached partner from the survivor\'s active set without firing onCollisionEnd',
+      () {
+        final a = ColliderNode(shape: .square(10));
+        final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+        final scene = Node(children: [a, b]).mount();
+
+        arena
+          ..add(a)
+          ..add(b)
+          ..process();
+
+        final bEnded = <ColliderNode>[];
+        b.onCollisionEnd(bEnded.add);
+
+        a.detach();
+        scene.update(0);
+        arena.remove(a);
+        arena.process();
+
+        expect(bEnded, isEmpty);
+        expect(b.active, isEmpty);
+        expect(b.isColliding, isFalse);
+      },
+    );
+
+    test('clears active when this collider itself is unmounted', () {
+      final a = ColliderNode(shape: .square(10));
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      final scene = Node(children: [a, b]).mount();
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(a.active, isNotEmpty);
+
+      a.detach();
+      scene.update(0);
+
+      expect(a.active, isEmpty);
+    });
+  });
+
   group('pair identity', () {
     test('does not re-fire onCollisionStart after a sweep-order swap', () {
       final a = ColliderNode(shape: .square(10), position: .zero());

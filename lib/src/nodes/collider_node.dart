@@ -27,6 +27,14 @@ class ColliderNode extends SizedNode {
   /// Emitted with the other collider when this collider stops overlapping it.
   final onCollisionEnd = Signal1<ColliderNode>();
 
+  final Set<ColliderNode> _active = .identity();
+
+  /// Colliders this node currently overlaps.
+  Iterable<ColliderNode> get active => _active;
+
+  /// Whether this node currently overlaps anything.
+  bool get isColliding => _active.isNotEmpty;
+
   @internal
   CollisionDetectionNode? cd;
 
@@ -51,8 +59,18 @@ class ColliderNode extends SizedNode {
     onUnmount(() {
       cd?.unregister(this);
       cd = null;
+      _active.clear();
     });
+
+    onCollisionStart(_active.add);
+    onCollisionEnd(_active.remove);
   }
+
+  /// Removes [other] from [active] without emitting [onCollisionEnd], for when
+  /// a collision is dropped because a member left the arena, not because it
+  /// stopped overlapping.
+  @internal
+  void dropCollision(ColliderNode other) => _active.remove(other);
 
   @override
   double get width => shape.width;

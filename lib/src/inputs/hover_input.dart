@@ -5,11 +5,20 @@ import 'package:ignis/src/signal.dart';
 
 /// A hit area that recognizes mouse hover.
 class HoverInput extends InputNode {
+  bool _hovering = false;
+
+  /// Whether a pointer is currently hovering this node.
+  bool get isHovering => _hovering;
+
+  /// Emitted when a pointer starts hovering this node.
   final onHoverEnter = Signal1<HoverEvent>();
+
+  /// Emitted when a pointer stops hovering this node.
   final onHoverExit = Signal1<HoverEvent>();
 
   HoverInput({
     required super.shape,
+    super.behavior,
     super.position,
     super.scale,
     super.angle,
@@ -17,7 +26,10 @@ class HoverInput extends InputNode {
     super.enabled,
     super.priority,
     super.children,
-  });
+  }) {
+    onHoverEnter((_) => _hovering = true);
+    onHoverExit((_) => _hovering = false);
+  }
 }
 
 final class HoverEvent {

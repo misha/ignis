@@ -390,25 +390,28 @@ class Node {
 
   // #region Hit Testing
 
-  /// Finds the topmost enabled node in this subtree whose hit area contains
-  /// [point], per [containsPoint].
+  /// Finds every enabled node in this subtree whose hit area contains
+  /// [point], per [containsPoint], topmost first.
   ///
   /// Children are searched in reverse [priority] order before this node's
   /// own hit area, mirroring reverse paint order.
+  ///
+  /// Unlike [add], [remove], and [priority], [enabled] takes effect
+  /// immediately even on a mounted node. A handler invoked mid-walk that
+  /// disables an unvisited node will affect that same walk.
+  /// TODO: Should it really do that? Is enabled actually a tree operation?
   @nonVirtual
-  Node? hitTest(Vector2 point) {
-    if (!enabled) return null;
+  Iterable<Node> hitTest(Vector2 point) sync* {
+    if (!enabled) return;
     final children = _children;
 
     if (children != null && children.isNotEmpty) {
       for (final child in children.reversed) {
-        final hit = child.hitTest(point);
-        if (hit != null) return hit;
+        yield* child.hitTest(point);
       }
     }
 
-    if (containsPoint(point)) return this;
-    return null;
+    if (containsPoint(point)) yield this;
   }
 
   /// Whether this node's hit area contains [point].
