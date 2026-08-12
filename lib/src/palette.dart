@@ -55,8 +55,6 @@ class PaletteEntry {
 /// A [Palette] always holds at least one paint: the default, reached via
 /// [paint]. Additional paints may be registered with [add], each with its own
 /// offset and priority, letting a single node configure any number of paints.
-///
-/// TODO: Document palette usage in the README.
 class Palette with IterableMixin<PaletteEntry> {
   late final PaletteEntry _default;
   final List<PaletteEntry> _paints = [];

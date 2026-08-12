@@ -18,6 +18,7 @@ What is this? See [Motivation](#motivation).
 - [Nodes](#nodes)
 - [Effects](#effects)
 - [Sprites](#sprites)
+- [Palettes](#palettes)
 - [Collision Detection](#collision-detection)
 - [Inputs](#inputs)
 - [Assets](#assets)
@@ -213,7 +214,7 @@ Ignis comes with the following nodes.
 | `EffectNode`             | Base node for time-driven effects. See [Effects](#effects).      | `onFinish`                           |
 | `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.             | `onUpdate`                           |
 | `InputNode`              | Base hit area for gestures. See [Inputs](#inputs).               | -                                    |
-| `PaintedNode`            | Base node managing a `Palette` of `Paint`s.                      | -                                    |
+| `PaintedNode`            | Base node using `Paint`. See [Palettes](#palettes).              | -                                    |
 | `ShapeNode`              | Draws a `Shape`.                                                 | -                                    |
 | `SizedNode`              | Base node with a size, used for shapes, sprites, and more.       | -                                    |
 | `SpriteNode`             | Animates a `Spritesheet`. See [Sprites](#sprites).               | `onFrame`, `onLoop`, `onFinish`      |
@@ -321,6 +322,75 @@ final sprite = SpriteNode.split(
 
 // Animates the third row of the running spritesheet.
 sprite.play(sheet: 1, row: 2);
+```
+
+## Palettes
+
+Sprites and shapes implement `PaintedNode`, giving them access to a `Palette`. A *palette* is an ordered collection of named `Paint`s, letting a single node draw several times each `render` without additional code.
+
+> :fire: Ignis' `Palette` is inspired by Flame's `HasPaint` mixin.
+
+Every palette starts with one default paint, accessible via `paint` on either the palette or its owning node.
+
+```dart
+final shape = ShapeNode(
+  shape: .circle(16),
+  paint: Paint()..color = Colors.orange,
+);
+
+// Painted nodes expose the default paint via their palette.
+assert(identical(shape.paint, shape.palette.paint));
+```
+
+Palettes begin with one paint by default, but you can easily register additional paints. The code below registers a `shadow` paint that draws behind the default paint at a slight offset.
+
+```dart
+// Register a new paint by name.
+palette.add(
+  PaletteEntry(
+    // The paint's unique name.
+    'shadow',
+
+    // The actual paint to draw with.
+    Paint()..color = Colors.black54,
+
+    // The offset at which to draw with this paint.
+    // Defaults to 0.
+    offset: .all(4),
+
+    // The order in which to draw with this paint.
+    // Defaults to 0.
+    priority: -1,
+
+    // Whether or not to draw with this paint.
+    // Defaults to true.
+    enabled: true, 
+  ),
+);
+
+// Retrieve the newly added paint.
+final shadowPaint = palette['shadow'];
+
+// Or retrieve the entire entry to update enabled, priority, etc.
+final shadowEntry = palette.entry('shadow');
+shadowEntry.enabled = false; // No shadow for now.
+
+// When you're done with the paint, remove it by name as well.
+palette.remove('shadow');
+```
+
+> :warning: Entry names must be unique within a palette. Additionally, a `PaletteEntry` may only belong to one `Palette` at a time.
+
+It's quite common to access the palette when creating effects. The code below fades out the `shadow` paint linearly over 500 milliseconds.
+
+```dart
+add(
+  ColorOpacityEffect.fadeOut(
+    paint: palette['shadow'], 
+    controller: .linear(0.5),
+    cleanup: true,
+  ),
+);
 ```
 
 ## Collision Detection
