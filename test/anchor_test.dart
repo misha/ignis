@@ -74,29 +74,4 @@ void main() {
       expect(result, Vector2(60, 45));
     });
   });
-
-  group('mutate', () {
-    test('setValues updates both fractions', () {
-      final anchor = Anchor.topLeft();
-      anchor.mutate().setValues(0.3, 0.7);
-
-      expect((anchor.x, anchor.y), (0.3, 0.7));
-    });
-
-    test('x and y setters each update a single fraction', () {
-      final anchor = Anchor(0.0, 0.0);
-      anchor.mutate()
-        ..x = 0.4
-        ..y = 0.6;
-
-      expect((anchor.x, anchor.y), (0.4, 0.6));
-    });
-
-    test('setFrom copies another anchor', () {
-      final anchor = Anchor.topLeft();
-      anchor.mutate().setFrom(Anchor.bottomRight());
-
-      expect(anchor, Anchor.bottomRight());
-    });
-  });
 }

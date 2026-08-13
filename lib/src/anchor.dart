@@ -48,6 +48,7 @@ extension type Anchor._(Vector2 value) implements Vector2 {
 
   /// Takes a [position] that is on this anchor and give back what that
   /// position would be on in the [other] anchor, given a size of [size].
+  /// TODO: Seems to have a bit of a unique API. Is there something better?
   Vector2 toOtherAnchorPosition(
     Vector2 position,
     Anchor other,
