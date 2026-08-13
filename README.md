@@ -23,6 +23,7 @@ What is this? See [Motivation](#motivation).
 - [Inputs](#inputs)
 - [Assets](#assets)
 - [Globals](#globals)
+- [Dependency Injection](#dependency-injection)
 - [Motivation](#motivation)
 - [Differences from Flame](#differences-from-flame)
 - [Roadmap](#roadmap)
@@ -555,6 +556,32 @@ final sheet2 = Spritesheet(Ignis.cache.retrieve('assets/ship.png'));
 ```
 
 > :warning: `Ignis.cache` and `Ignis.bundle` are mutable static fields, not constants. Swap them out for tests or when running multiple, isolated games in one application.
+
+## Dependency Injection
+
+Nodes come integrated with a type-based dependency injection (DI) system. Any node can `provide` a value to its own subtree, and any node can `read` the nearest match back by type.
+
+Since `read` access its tree, it is not available until mount. Use it in combinations with `onMount`, inside `tick`, or in response to signals that occur when the node is in use, like collisions and inputs.
+
+```dart
+class GameNode extends Node {
+  GameNode() {
+    provide(Settings(volume: 0.8));
+  }
+}
+
+class PlayerNode extends TransformNode {
+  @override
+  void tick(double dt) {
+    final settings = read<Settings>();
+    // ...
+  }
+}
+```
+
+For optional dependencies, `readOrNull` behaves identically but returns null instead of throwing when nothing was provided.
+
+> :warning: Note that `read` and `readOrNull` are *not* reactive. The first read of that type always caches the result - null or otherwise - so a later `provide` won't be picked up.
 
 ## Motivation
 

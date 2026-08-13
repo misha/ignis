@@ -41,6 +41,13 @@ import 'package:ignis/src/signal.dart';
 /// operations for live node trees are always delayed a frame. Although
 /// unintuitive, this queue allows the engine to mitigate modification
 /// during iteration, and improves performance by batching the changes.
+///
+/// **Dependency Injection**
+///
+/// Nodes come integrated with a type-based dependency injection (DI) system.
+/// A node may [provide] a value to its entire subtree, keyed by its type.
+/// [read] resolves the nearest match, checking the node itself before its
+/// [ancestors].
 class Node {
   /// Creates a new node.
   ///
@@ -304,6 +311,7 @@ class Node {
 
     onUnmount.emit();
     _scene = null;
+    _dependencies = null;
   }
 
   // #endregion
@@ -420,6 +428,65 @@ class Node {
   /// invisible to [hitTest]. Override to opt a node into hit-testing.
   @visibleForOverriding
   bool containsPoint(Vector2 point) => false;
+
+  // #endregion
+
+  // #region Dependency Injection
+
+  Map<Type, dynamic>? _providers;
+  Map<Type, dynamic>? _dependencies;
+
+  /// Provides [value] as this node's instance of [T], overwriting any value
+  /// previously provided for [T].
+  void provide<T>(T value) {
+    (_providers ??= {})[T] = value;
+  }
+
+  /// Reads the nearest instance of [T] provided by this node or an
+  /// ancestor, checking this node first.
+  ///
+  /// Not reactive: whether it finds a match or not, the result is cached
+  /// until the node is unmounted, so a later [provide] call for [T] won't be
+  /// picked up until then.
+  ///
+  /// Throws a [StateError] if this node is not mounted yet, or if no [T] was
+  /// ever [provide]d.
+  T read<T>() {
+    final value = readOrNull<T>();
+    if (value != null) return value;
+    throw StateError('No provider found for $T.');
+  }
+
+  /// Reads the nearest instance of [T] provided by this node or an
+  /// ancestor, checking this node first. Returns null if none was provided.
+  ///
+  /// Not reactive: whether it finds a match or not, the result is cached
+  /// until the node is unmounted, so a later [provide] call for [T] won't be
+  /// picked up until then.
+  ///
+  /// Throws a [StateError] if this node is not mounted yet.
+  T? readOrNull<T>() {
+    final dependencies = _dependencies ??= {};
+    if (dependencies.containsKey(T)) return dependencies[T] as T?;
+
+    if (!isMounted) {
+      throw StateError('Cannot read $T because this node is not mounted yet.');
+    }
+
+    Node? node = this;
+
+    while (node != null) {
+      final providers = node._providers;
+
+      if (providers != null && providers.containsKey(T)) {
+        return dependencies[T] = providers[T] as T;
+      }
+
+      node = node.parent;
+    }
+
+    return dependencies[T] = null;
+  }
 
   // #endregion
 }

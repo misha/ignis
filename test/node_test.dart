@@ -171,6 +171,7 @@ void main() {
       scene.update(1);
       expect(log.updates, ['A', 'B', 'C']);
       expect(a.children, [b, c]);
+
       log.updates.clear();
 
       scene.update(1);
@@ -190,6 +191,7 @@ void main() {
 
     scene.update(1);
     expect(log.updates, ['A', 'B']);
+
     log.updates.clear();
 
     scene.update(1);
@@ -212,6 +214,7 @@ void main() {
 
     scene.update(1);
     expect(log.updates, ['A', 'B', 'C', 'D']);
+
     log.updates.clear();
 
     scene.update(1);
@@ -226,9 +229,9 @@ void main() {
       calls += 1;
       b.detach();
     });
+
     a.add(b);
     final scene = a.mount();
-
     a.remove(b);
     scene.update(0);
 
@@ -244,7 +247,6 @@ void main() {
     a.add(b);
     a.add(c);
     final scene = a.mount();
-
     a.removeAll();
     scene.update(0);
 
@@ -257,7 +259,6 @@ void main() {
     final c = Node();
     a.add(b);
     a.add(c);
-
     a.removeAll();
 
     expect(a.children, isEmpty);
@@ -274,8 +275,8 @@ void main() {
     expect(b.parent, isNull);
 
     a.add(b);
-    expect(a.children, [b]);
 
+    expect(a.children, [b]);
     expect(a.remove(b), isTrue);
     expect(b.parent, isNull);
   });
@@ -298,6 +299,7 @@ void main() {
     parent.add(child);
     final scene = parent.mount();
     child.onUnmount(() => expect(parent, same(child.parent)));
+
     parent.remove(child);
     scene.update(0);
     expect(child.parent, isNull);
@@ -311,7 +313,6 @@ void main() {
       final c = TestNode('C', log);
       a.add(b);
       b.add(c);
-
       a.mount();
 
       expect(log.mounts, ['A', 'B', 'C']);
@@ -328,7 +329,6 @@ void main() {
       a.add(b);
       b.add(c);
       final scene = a.mount();
-
       scene.destroy();
 
       expect(log.unmounts, ['C', 'B', 'A']);
@@ -390,7 +390,6 @@ void main() {
       var mounts = 0;
       a.onMount(() => mounts += 1);
       final scene = a.mount();
-
       final result = a.mount();
 
       expect(result, same(scene));
@@ -415,7 +414,6 @@ void main() {
       final b = Node();
       a.add(b);
       final scene = a.mount();
-
       scene.destroy();
 
       expect(a.isMounted, isFalse);
@@ -426,10 +424,8 @@ void main() {
       final log = TestLog();
       final a = TestNode('A', log);
       final scene = a.mount();
-
       scene.destroy();
       final newScene = a.mount();
-
       expect(log.mounts, ['A', 'A']);
       expect(log.unmounts, ['A']);
       expect(a.isMounted, isTrue);
@@ -445,7 +441,6 @@ void main() {
       a.add(b);
       a.add(c);
       b.onMount(() => a.remove(c));
-
       final scene = a.mount();
       // The removal was requested mid-cascade, but a.remove(c) only enqueues.
       // c still gets mounted this same pass.
@@ -465,7 +460,6 @@ void main() {
       var cUnmounts = 0;
       c.onUnmount(() => cUnmounts += 1);
       b.onUnmount(() => a.remove(c));
-
       scene.destroy();
       expect(cUnmounts, 1);
     });
@@ -518,7 +512,6 @@ void main() {
       });
 
       a.mount();
-
       expect(caught, isStateError);
     });
 
@@ -532,8 +525,117 @@ void main() {
       });
 
       a.mount();
-
       expect(mounts, 1);
+    });
+  });
+
+  group('dependency injection', () {
+    test('reads a value provided by the node itself', () {
+      final a = Node();
+      a.provide(42);
+      a.mount();
+
+      expect(a.readOrNull<int>(), 42);
+    });
+
+    test('reads a value provided by an ancestor', () {
+      final a = Node();
+      final b = Node();
+      final c = Node();
+      a.add(b);
+      b.add(c);
+      a.provide('hello');
+      a.mount();
+
+      expect(c.readOrNull<String>(), 'hello');
+    });
+
+    test('prefers the nearest provider over one further up the tree', () {
+      final a = Node();
+      final b = Node();
+      a.add(b);
+      a.provide(1);
+      b.provide(2);
+      a.mount();
+
+      expect(b.readOrNull<int>(), 2);
+    });
+
+    test('overwrites a previously provided value of the same type', () {
+      final a = Node();
+      a.provide(1);
+      a.provide(2);
+      a.mount();
+
+      expect(a.readOrNull<int>(), 2);
+    });
+
+    test('returns null when nothing has provided the requested type', () {
+      final a = Node();
+      a.mount();
+
+      expect(a.readOrNull<int>(), isNull);
+    });
+
+    test('caches a hit, so a later provide of the same type is not picked up', () {
+      final a = Node();
+      a.provide(1);
+      a.mount();
+      expect(a.readOrNull<int>(), 1);
+
+      a.provide(2);
+      expect(a.readOrNull<int>(), 1);
+    });
+
+    test('caches a miss, so a later provide of the same type is not picked up', () {
+      final a = Node();
+      a.mount();
+      expect(a.readOrNull<int>(), isNull);
+
+      a.provide(1);
+      expect(a.readOrNull<int>(), isNull);
+    });
+
+    test('throws when the node is not mounted yet', () {
+      final a = Node();
+
+      expect(() => a.readOrNull<int>(), throwsStateError);
+    });
+
+    test('clears a cached value when the node is unmounted', () {
+      final a = Node();
+      a.provide(1);
+      final scene = a.mount();
+      expect(a.readOrNull<int>(), 1);
+
+      scene.destroy();
+      expect(() => a.readOrNull<int>(), throwsStateError);
+    });
+
+    test('resolves anew after an unmount/remount cycle', () {
+      final parent = Node();
+      final child = Node();
+      parent.provide(1);
+      parent.add(child);
+      final scene = parent.mount();
+      expect(child.readOrNull<int>(), 1);
+
+      scene.destroy();
+      parent.provide(2);
+      parent.mount();
+
+      expect(child.readOrNull<int>(), 2);
+    });
+
+    test('read returns the value readOrNull finds, or throws when it finds none', () {
+      final a = Node();
+      a.provide(1);
+      a.mount();
+      expect(a.read<int>(), 1);
+
+      final b = Node();
+      b.mount();
+      expect(() => b.read<int>(), throwsStateError);
     });
   });
 }
