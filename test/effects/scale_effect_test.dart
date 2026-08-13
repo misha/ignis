@@ -103,8 +103,8 @@ void main() {
 
   test('re-resolves its target after being remounted elsewhere', () {
     final root = TransformNode();
-    final nodeA = TransformNode(scale: .new(0, 0));
-    final nodeB = TransformNode(scale: .new(100, 100));
+    final nodeA = TransformNode(scale: .zero());
+    final nodeB = TransformNode(scale: .all(100));
     root.addAll([nodeA, nodeB]);
     final scene = root.mount();
     final effect = ScaleEffect.by(

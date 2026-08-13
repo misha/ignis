@@ -30,15 +30,15 @@ void main() {
 
   group('constrain', () {
     test('clamps a size within min and max', () {
-      final constraints = LayoutConstraints(min: .new(10, 10), max: .new(50, 50));
+      final constraints = LayoutConstraints(min: .all(10), max: .all(50));
 
       expect(constraints.satisfy(.new(5, 100)), Vector2(10, 50));
-      expect(constraints.satisfy(.new(20, 20)), Vector2(20, 20));
+      expect(constraints.satisfy(.all(20)), Vector2(20, 20));
     });
 
     test('clamps an infinite size down to a finite max', () {
-      final constraints = LayoutConstraints(min: .new(0, 0), max: .new(50, 30));
-      expect(constraints.satisfy(.new(double.infinity, double.infinity)), Vector2(50, 30));
+      final constraints = LayoutConstraints(min: .zero(), max: .new(50, 30));
+      expect(constraints.satisfy(.all(double.infinity)), Vector2(50, 30));
     });
 
     test('leaves an infinite max unbounded', () {
@@ -67,7 +67,7 @@ void main() {
 
   group('deflate', () {
     test('subtracts padding from min and max', () {
-      final constraints = LayoutConstraints(min: .new(30, 30), max: .new(100, 100));
+      final constraints = LayoutConstraints(min: .all(30), max: .all(100));
       final deflated = constraints.deflate(.all(10));
 
       expect(deflated.min, Vector2(10, 10));
@@ -75,14 +75,14 @@ void main() {
     });
 
     test('clamps min to zero when padding exceeds it', () {
-      final constraints = LayoutConstraints(min: .new(4, 4), max: .new(100, 100));
+      final constraints = LayoutConstraints(min: .all(4), max: .all(100));
       final deflated = constraints.deflate(.all(10));
 
       expect(deflated.min, Vector2.zero());
     });
 
     test('collapses to zero when padding exceeds the whole box', () {
-      final constraints = LayoutConstraints(min: .new(0, 0), max: .new(5, 5));
+      final constraints = LayoutConstraints(min: .zero(), max: .all(5));
       final deflated = constraints.deflate(.all(10));
 
       expect(deflated.min, Vector2.zero());
@@ -99,15 +99,15 @@ void main() {
   group('equality', () {
     test('constraints with the same min and max are equal', () {
       expect(
-        LayoutConstraints(min: .new(0, 0), max: .new(10, 10)),
-        LayoutConstraints(min: .new(0, 0), max: .new(10, 10)),
+        LayoutConstraints(min: .zero(), max: .all(10)),
+        LayoutConstraints(min: .zero(), max: .all(10)),
       );
     });
 
     test('constraints with different min or max are not equal', () {
       expect(
-        LayoutConstraints(min: .new(0, 0), max: .new(10, 10)),
-        isNot(LayoutConstraints(min: .new(0, 0), max: .new(20, 10))),
+        LayoutConstraints(min: .zero(), max: .all(10)),
+        isNot(LayoutConstraints(min: .zero(), max: .new(20, 10))),
       );
     });
   });

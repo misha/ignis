@@ -9,7 +9,7 @@ void main() {
       final a = ShapeNode(shape: Rectangle.square(10));
       final b = ShapeNode(shape: Rectangle(.new(20, 10)));
       final node = RowNode(children: [a, b]);
-      node.layout(.loose(.new(200, 200)));
+      node.layout(.loose(.all(200)));
       expect([a.position, b.position], [Vector2.zero(), Vector2(10, 0)]);
     });
 
@@ -17,7 +17,7 @@ void main() {
       final a = ShapeNode(shape: Rectangle.square(10));
       final b = ShapeNode(shape: Rectangle(.new(10, 20)));
       final node = ColumnNode(children: [a, b]);
-      node.layout(.loose(.new(200, 200)));
+      node.layout(.loose(.all(200)));
       expect([a.position, b.position], [Vector2.zero(), Vector2(0, 10)]);
     });
   });
@@ -74,7 +74,7 @@ void main() {
     test('a fixed-size leaf ignores it and sits at the cross-axis start', () {
       final child = ShapeNode(shape: Rectangle.square(10));
       final node = RowNode(crossAxisAlignment: .center, children: [child]);
-      node.layout(.tight(.new(100, 100)));
+      node.layout(.tight(.all(100)));
       expect(child.position.y, 0);
     });
 
@@ -119,14 +119,14 @@ void main() {
       final a = ShapeNode(shape: Rectangle.square(10));
       final b = ShapeNode(shape: Rectangle(.new(20, 10)));
       final node = RowNode(mainAxisSize: .min, children: [a, b]);
-      node.layout(.loose(.new(200, 200)));
+      node.layout(.loose(.all(200)));
       expect(node.width, 30);
     });
 
     test('max (the default) fills the available main axis', () {
       final a = ShapeNode(shape: Rectangle.square(10));
       final node = RowNode(children: [a]);
-      node.layout(.loose(.new(200, 200)));
+      node.layout(.loose(.all(200)));
       expect(node.width, 200);
     });
   });
@@ -136,7 +136,7 @@ void main() {
       final a = ShapeNode(shape: Rectangle.square(10));
       final b = ShapeNode(shape: Rectangle.square(10));
       final node = RowNode(mainAxisSize: .min, spacing: 5, children: [a, b]);
-      node.layout(.loose(.new(200, 200)));
+      node.layout(.loose(.all(200)));
       expect([a.position.x, b.position.x], [0.0, 15.0]);
       expect(node.width, 25);
     });

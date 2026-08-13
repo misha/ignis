@@ -59,7 +59,7 @@ void main() {
       final Vector2 ex = .zero();
       final Vector2 ey = .zero();
 
-      shape.worldExtents(transform(position: .new(100, 100)), ex.mutate(), ey.mutate());
+      shape.worldExtents(transform(position: .all(100)), ex.mutate(), ey.mutate());
 
       expect(ex, Vector2(10, 0));
       expect(ey, Vector2(0, 5));
@@ -80,7 +80,7 @@ void main() {
   group('Circle.worldRadius', () {
     test('unaffected by rotation or translation', () {
       final shape = Circle(5);
-      final radius = shape.worldRadius(transform(angle: math.pi / 3, position: .new(50, 50)));
+      final radius = shape.worldRadius(transform(angle: math.pi / 3, position: .all(50)));
       expect(radius, closeTo(5, 1e-9));
     });
 

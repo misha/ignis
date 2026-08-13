@@ -6,8 +6,8 @@ import 'support/test_measurable.dart';
 void main() {
   group('stack', () {
     test('measures every child against the same constraints', () {
-      final childConstraints = LayoutConstraints.tight(.new(50, 50));
-      final items = List.generate(3, (_) => TestMeasurable(size: .new(10, 10)));
+      final childConstraints = LayoutConstraints.tight(.all(50));
+      final items = List.generate(3, (_) => TestMeasurable(size: .all(10)));
 
       LayoutEngine.stack(
         items: items,
@@ -90,7 +90,7 @@ void main() {
       final items = List.generate(
         2,
         (_) => TestMeasurable(
-          size: .new(50, 50),
+          size: .all(50),
           flex: 1,
           fit: .tight,
           canResize: true,
@@ -113,7 +113,7 @@ void main() {
     });
 
     test('falls back to start for a child that cannot resize, even with stretch', () {
-      final items = [TestMeasurable(size: .new(10, 10))];
+      final items = [TestMeasurable(size: .all(10))];
 
       LayoutEngine.flex(
         direction: .horizontal,
@@ -130,7 +130,7 @@ void main() {
     });
 
     test('honors spacing between non-flex children and shrinks to consumed space', () {
-      final items = List.generate(2, (_) => TestMeasurable(size: .new(10, 10)));
+      final items = List.generate(2, (_) => TestMeasurable(size: .all(10)));
 
       final selfSize = LayoutEngine.flex(
         direction: .horizontal,
@@ -148,7 +148,7 @@ void main() {
     });
 
     test('reverse accumulates children from the end of the main axis', () {
-      final items = List.generate(2, (_) => TestMeasurable(size: .new(10, 10)));
+      final items = List.generate(2, (_) => TestMeasurable(size: .all(10)));
 
       LayoutEngine.flex(
         direction: .horizontal,
@@ -168,7 +168,7 @@ void main() {
       final items = List.generate(
         2,
         (_) => TestMeasurable(
-          size: .new(50, 50),
+          size: .all(50),
           flex: 1,
           fit: .tight,
           canResize: true,

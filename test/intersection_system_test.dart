@@ -80,13 +80,13 @@ void main() {
 
       // Inside the AABB, outside the diamond.
       expect(
-        system.rectangleRectangle(.zero(), diamondEx5, diamondEy5, .new(6, 6), probeEx, probeEy),
+        system.rectangleRectangle(.zero(), diamondEx5, diamondEy5, .all(6), probeEx, probeEy),
         isFalse,
       );
 
       // Inside both.
       expect(
-        system.rectangleRectangle(.zero(), diamondEx5, diamondEy5, .new(3, 3), probeEx, probeEy),
+        system.rectangleRectangle(.zero(), diamondEx5, diamondEy5, .all(3), probeEx, probeEy),
         isTrue,
       );
     });
@@ -107,7 +107,7 @@ void main() {
       // A 10x10 square rotated 45 degrees, centered on the origin, has an
       // AABB corner at roughly (7.07, 7.07) but doesn't actually reach it.
       final (ex, ey) = axes(math.pi / 4);
-      expect(system.circleRectangle(.new(6, 6), 1, .zero(), ex * 5, ey * 5), isFalse);
+      expect(system.circleRectangle(.all(6), 1, .zero(), ex * 5, ey * 5), isFalse);
     });
   });
 }

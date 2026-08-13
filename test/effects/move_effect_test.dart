@@ -84,7 +84,7 @@ void main() {
   });
 
   test('runs at a given speed, deriving its duration from the distance covered', () {
-    final node = TransformNode(position: .new(0, 0));
+    final node = TransformNode(position: .zero());
     final scene = node.mount();
 
     node.add(
@@ -108,7 +108,7 @@ void main() {
 
     node.add(
       MoveEffect.to(
-        destination: .new(40, 40), // Offset (30, 40) from (10, 0): distance 50.
+        destination: .all(40), // Offset (30, 40) from (10, 0): distance 50.
         controller: .sequence([
           .once(.wait(0.5)),
           .speed(10),
@@ -125,8 +125,8 @@ void main() {
 
   test('re-resolves its target after being remounted elsewhere', () {
     final root = TransformNode();
-    final nodeA = TransformNode(position: .new(0, 0));
-    final nodeB = TransformNode(position: .new(100, 100));
+    final nodeA = TransformNode(position: .zero());
+    final nodeB = TransformNode(position: .all(100));
     root.addAll([nodeA, nodeB]);
     final scene = root.mount();
     final effect = MoveEffect.by(

@@ -7,7 +7,7 @@ void main() {
   });
 
   test('returns the sole element regardless of distance', () {
-    final a = TransformNode(position: .new(100, 100));
+    final a = TransformNode(position: .all(100));
 
     expect([a].nearest(.zero()), same(a));
   });

@@ -8,7 +8,7 @@ void main() {
   group('FlexibleNode', () {
     test('sizes to the smallest constraint when there is no child', () {
       final node = FlexibleNode();
-      node.layout(.new(min: .new(5, 5), max: .new(50, 50)));
+      node.layout(.new(min: .all(5), max: .all(50)));
       expect((node.width, node.height), (5.0, 5.0));
     });
 
@@ -22,7 +22,7 @@ void main() {
     test('lays out a LayoutNode child with exactly the received constraints', () {
       final child = TestLayoutNode();
       final node = FlexibleNode(children: [child]);
-      final constraints = LayoutConstraints(min: .new(10, 10), max: .new(100, 60));
+      final constraints = LayoutConstraints(min: .all(10), max: .new(100, 60));
       node.layout(constraints);
       expect(child.lastConstraints, constraints);
     });
@@ -46,7 +46,7 @@ void main() {
     test('flex and fit are inert without a FlexNode ancestor', () {
       final child = ShapeNode(shape: Rectangle(.new(20, 10)));
       final node = FlexibleNode(fit: .tight, children: [child]);
-      node.layout(.new(min: .zero(), max: .new(200, 200)));
+      node.layout(.new(min: .zero(), max: .all(200)));
       expect((node.width, node.height), (20.0, 10.0));
     });
   });

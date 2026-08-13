@@ -16,7 +16,7 @@ void main() {
   });
 
   test('re-reads velocity every tick', () {
-    final node = TransformNode(position: .new(0, 0));
+    final node = TransformNode(position: .zero());
     final scene = node.mount();
     final velocity = Vector2(10, 0);
 

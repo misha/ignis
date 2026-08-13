@@ -6,7 +6,7 @@ import '../../support/test_layout_node.dart';
 void main() {
   test('sizes to the smallest constraint when there is no child', () {
     final node = AlignNode();
-    node.layout(.new(min: .new(5, 5), max: .new(50, 50)));
+    node.layout(.new(min: .all(5), max: .all(50)));
     expect((node.width, node.height), (5.0, 5.0));
   });
 
@@ -34,7 +34,7 @@ void main() {
   test('lays out a LayoutNode child with loosened constraints', () {
     final child = TestLayoutNode();
     final node = AlignNode(children: [child]);
-    node.layout(.new(min: .new(10, 10), max: .new(100, 60)));
+    node.layout(.new(min: .all(10), max: .new(100, 60)));
     expect(child.lastConstraints, LayoutConstraints(min: .zero(), max: .new(100, 60)));
   });
 

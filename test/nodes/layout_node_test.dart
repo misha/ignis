@@ -61,14 +61,14 @@ void main() {
 
   test('layout clamps an out-of-range performLayout result to the given constraints', () {
     final node = TestLayoutNode(sizeToReturn: .new(200, 5));
-    node.layout(.new(min: .new(10, 10), max: .new(100, 100)));
+    node.layout(.new(min: .all(10), max: .all(100)));
     expect((node.width, node.height), (100.0, 10.0));
   });
 
   test('LayoutEngine.place compensates for a non-default child anchor', () {
     final child = TestLayoutNode(sizeToReturn: .new(20, 10), anchor: .center());
     child.layout(.tight(.new(20, 10)));
-    LayoutEngine.place(child, .new(50, 50));
+    LayoutEngine.place(child, .all(50));
     expect(child.position, Vector2(60, 55));
   });
 }
