@@ -21,3 +21,9 @@ final DEBUG_INPUT_PAINT = Paint()
   ..color = Color(0xFF1E90FF)
   ..style = .stroke
   ..strokeWidth = 0;
+
+@internal
+final DEBUG_LAYOUT_PAINT = Paint()
+  ..color = Color(0xFF2DBD6F)
+  ..style = .stroke
+  ..strokeWidth = 0;

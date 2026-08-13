@@ -17,7 +17,7 @@ void main() {
     'moves a sprite by an offset',
     (tester) => expectGolden(
       tester,
-      '../goldens/move_effect_by.png',
+      'goldens/move_effect_by.png',
       SpriteNode(
         sheet: .asset('test/assets/fire.png', size: .new(32, 48)),
         anchor: .center(),

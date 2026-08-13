@@ -10,7 +10,7 @@ void main() {
     'renders styled text',
     (tester) => expectGolden(
       tester,
-      '../goldens/text_label.png',
+      'goldens/text_label.png',
       TextNode(
         text: 'Ignis',
         style: const TextStyle(color: BLACK, fontSize: 24),

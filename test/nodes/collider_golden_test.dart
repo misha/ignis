@@ -10,7 +10,7 @@ void main() {
     'renders overlapping colliders with debug rendering',
     (tester) => expectGolden(
       tester,
-      '../goldens/collider_overlap.png',
+      'goldens/collider_overlap.png',
       CollisionDetectionNode(
         children: [
           ShapeNode(

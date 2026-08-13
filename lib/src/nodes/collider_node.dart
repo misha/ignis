@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/debug.dart';
+import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/collision_detection_node.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/shape.dart';
@@ -14,6 +15,9 @@ import 'package:ignis/src/signal.dart';
 class ColliderNode extends SizedNode {
   /// The shape of the collider's hitbox.
   Shape shape;
+
+  @override
+  Vector2 get size => shape.size;
 
   /// Bitmask of physics layers this collider exists on. Defaults to all 1-bits.
   int layer;
@@ -71,12 +75,6 @@ class ColliderNode extends SizedNode {
   /// stopped overlapping.
   @internal
   void dropCollision(ColliderNode other) => _active.remove(other);
-
-  @override
-  double get width => shape.width;
-
-  @override
-  double get height => shape.height;
 
   @override
   void debugRenderAnchored(Canvas canvas) {

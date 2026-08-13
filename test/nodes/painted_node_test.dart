@@ -4,22 +4,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 class _TestPaintedNode extends PaintedNode {
-  final calls = <(Paint paint, double x, double y)>[];
+  final paints = <(Paint paint, double x, double y)>[];
 
   _TestPaintedNode({
     super.paint,
   });
 
   @override
-  double get width => 0;
-
-  @override
-  double get height => 0;
+  Vector2 get size => .zero();
 
   @override
   void renderPainted(Canvas canvas, Paint paint) {
     final transform = canvas.getTransform();
-    calls.add((paint, transform[12], transform[13]));
+    paints.add((paint, transform[12], transform[13]));
   }
 }
 
@@ -28,7 +25,7 @@ void main() {
     final paint = Paint();
     final node = _TestPaintedNode(paint: paint);
     _render(node);
-    expect(node.calls, [(paint, 0.0, 0.0)]);
+    expect(node.paints, [(paint, 0.0, 0.0)]);
   });
 
   test('draws every enabled paint, in priority order', () {
@@ -37,7 +34,7 @@ void main() {
     final c = node.palette.add(.new('c', Paint(), priority: -1));
     _render(node);
 
-    expect(node.calls.map((call) => call.$1), [c.paint, node.paint, b.paint]);
+    expect(node.paints.map((call) => call.$1), [c.paint, node.paint, b.paint]);
   });
 
   test('skips disabled paints', () {
@@ -45,8 +42,8 @@ void main() {
     final glow = node.palette.add(.new('glow', Paint(), enabled: false));
     _render(node);
 
-    expect(node.calls.map((call) => call.$1), [node.paint]);
-    expect(node.calls.map((call) => call.$1), isNot(contains(glow.paint)));
+    expect(node.paints.map((call) => call.$1), [node.paint]);
+    expect(node.paints.map((call) => call.$1), isNot(contains(glow.paint)));
   });
 
   test('translates by each paint\'s individual offset', () {
@@ -72,7 +69,7 @@ void main() {
     _render(node);
 
     // If the shadow's translate weren't reversed, glow's would read (15, 25).
-    expect(node.calls, [
+    expect(node.paints, [
       (shadow.paint, 5.0, 5.0),
       (node.paint, 0.0, 0.0),
       (glow.paint, 10.0, 20.0),

@@ -10,7 +10,7 @@ void main() {
     'renders a red square',
     (tester) => expectGolden(
       tester,
-      '../goldens/shape_red_square.png',
+      'goldens/shape_red_square.png',
       ShapeNode(
         shape: .square(50),
         paint: Paint()..color = RED,
@@ -24,7 +24,7 @@ void main() {
     'renders a blue circle',
     (tester) => expectGolden(
       tester,
-      '../goldens/shape_blue_circle.png',
+      'goldens/shape_blue_circle.png',
       ShapeNode(
         shape: .circle(25),
         paint: Paint()..color = BLUE,

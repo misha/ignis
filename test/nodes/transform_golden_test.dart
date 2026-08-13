@@ -12,7 +12,7 @@ void main() {
     'offsets by position',
     (tester) => expectGolden(
       tester,
-      '../goldens/transform_position.png',
+      'goldens/transform_position.png',
       ShapeNode(
         shape: .square(20),
         paint: Paint()..color = BLACK,
@@ -26,7 +26,7 @@ void main() {
     'scales non-uniformly',
     (tester) => expectGolden(
       tester,
-      '../goldens/transform_scale.png',
+      'goldens/transform_scale.png',
       ShapeNode(
         shape: .square(25),
         paint: Paint()..color = BLACK,
@@ -41,7 +41,7 @@ void main() {
     'rotates by its angle',
     (tester) => expectGolden(
       tester,
-      '../goldens/transform_angle.png',
+      'goldens/transform_angle.png',
       ShapeNode(
         shape: .rectangle(.new(30, 10)),
         paint: Paint()..color = BLACK,
@@ -56,7 +56,7 @@ void main() {
     'anchors from its top-left corner',
     (tester) => expectGolden(
       tester,
-      '../goldens/transform_anchor_top_left.png',
+      'goldens/transform_anchor_top_left.png',
       TransformNode(
         position: .all(50),
         children: [
@@ -74,7 +74,7 @@ void main() {
     'anchors from its bottom-right corner',
     (tester) => expectGolden(
       tester,
-      '../goldens/transform_anchor_bottom_right.png',
+      'goldens/transform_anchor_bottom_right.png',
       TransformNode(
         position: .all(50),
         children: [

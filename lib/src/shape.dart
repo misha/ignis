@@ -7,14 +7,16 @@ import 'package:ignis/src/math.dart';
 sealed class Shape {
   const Shape();
 
-  /// The width of the axis-aligned box that fully contains this shape.
-  double get width;
+  /// This shape's size, if fully contained by an AABB.
+  Vector2 get size;
 
-  /// The height of the axis-aligned box that fully contains this shape.
-  double get height;
+  /// The width of the AABB that fully contains this shape.
+  double get width => size.x;
 
-  /// This shape's [width]/[height], as a [Rect] with (0, 0) at its top-left
-  /// corner.
+  /// The height of the AABB that fully contains this shape.
+  double get height => size.y;
+
+  /// This shape's size, expressed in a canvas-friendly type.
   Rect rect() => Rect.fromLTWH(0, 0, width, height);
 
   factory Shape.rectangle(Vector2 size) = Rectangle;
@@ -23,16 +25,11 @@ sealed class Shape {
 }
 
 final class Rectangle extends Shape {
+  @override
   final Vector2 size;
 
   const Rectangle(this.size);
   Rectangle.square(double size) : this(.all(size));
-
-  @override
-  double get width => size.x;
-
-  @override
-  double get height => size.y;
 
   /// Computes this rectangle's world-space half-extents under [transform].
   void worldExtents(Matrix3 transform, MutableVector2 ex, MutableVector2 ey) {
@@ -43,18 +40,21 @@ final class Rectangle extends Shape {
 
 final class Circle extends Shape {
   final double radius;
+  final double diameter;
 
-  const Circle(this.radius);
-
-  @override
-  double get width => radius * 2;
+  const Circle(this.radius) : diameter = radius * 2;
 
   @override
-  double get height => radius * 2;
+  Vector2 get size => .all(diameter);
+
+  @override
+  double get width => diameter;
+
+  @override
+  double get height => diameter;
 
   /// Computes this circle's world-space radius under [transform].
   double worldRadius(Matrix3 transform) {
-    final scaleX = math.sqrt(transform[0] * transform[0] + transform[1] * transform[1]);
-    return radius * scaleX;
+    return radius * math.sqrt(transform[0] * transform[0] + transform[1] * transform[1]);
   }
 }

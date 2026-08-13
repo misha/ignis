@@ -1,12 +1,16 @@
 import 'dart:ui';
 
 import 'package:ignis/src/debug.dart';
+import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/painted_node.dart';
 import 'package:ignis/src/shape.dart';
 
 class ShapeNode extends PaintedNode {
   /// Controls the geometry drawn.
   Shape shape;
+
+  @override
+  Vector2 get size => shape.size;
 
   ShapeNode({
     required this.shape,
@@ -19,12 +23,6 @@ class ShapeNode extends PaintedNode {
     super.priority,
     super.children,
   });
-
-  @override
-  double get width => shape.width;
-
-  @override
-  double get height => shape.height;
 
   late Rect _dest;
 

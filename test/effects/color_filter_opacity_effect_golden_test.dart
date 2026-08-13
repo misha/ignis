@@ -23,7 +23,7 @@ void main() {
 
       return expectGolden(
         tester,
-        '../goldens/color_filter_opacity_effect_fade_in.png',
+        'goldens/color_filter_opacity_effect_fade_in.png',
         SpriteNode(
           sheet: .asset('test/assets/fire.png', size: .new(32, 48)),
           anchor: .center(),

@@ -17,7 +17,7 @@ void main() {
     'renders the selected sprite frame',
     (tester) => expectGolden(
       tester,
-      '../goldens/sprite_frame.png',
+      'goldens/sprite_frame.png',
       SpriteNode(
         sheet: .asset(
           'test/assets/fire.png',

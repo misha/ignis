@@ -235,10 +235,10 @@ packages:
     dependency: transitive
     description:
       name: ivector_math
-      sha256: de4672b57ba19906979f3a2a109f55bc0887b13ab681af1a62730e9a0066dafe
+      sha256: "25375ff65c70e6da0780cb8ad06314b1edaa53b091ce8675d8eb26b4a1e7d65a"
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.4"
+    version: "0.0.5"
   leak_tracker:
     dependency: transitive
     description:

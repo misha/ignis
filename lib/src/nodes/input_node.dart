@@ -17,6 +17,9 @@ abstract class InputNode extends SizedNode {
   /// The shape of the node's hit area.
   Shape shape;
 
+  @override
+  Vector2 get size => shape.size;
+
   /// Whether this node blocks nodes behind it once it claims an event.
   ///
   /// Defaults to [HitBehavior.opaque].
@@ -33,12 +36,6 @@ abstract class InputNode extends SizedNode {
     super.priority,
     super.children,
   }) : behavior = behavior ?? .opaque;
-
-  @override
-  double get width => shape.width;
-
-  @override
-  double get height => shape.height;
 
   /// Registers [event] with this node's gesture recognizer, if it has one.
   ///

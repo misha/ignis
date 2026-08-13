@@ -9,6 +9,7 @@ import 'package:ignis/src/spritesheet.dart';
 class SpriteNode extends PaintedNode {
   /// The size this sprite renders at. Defaults to the first sheet's native
   /// frame size, but may be mutated to stretch or squash the frame.
+  @override
   final Vector2 size;
 
   /// The frames per second to use when animating this sprite.
@@ -44,12 +45,6 @@ class SpriteNode extends PaintedNode {
   Spritesheet get sheet => _sheets[_sheet];
   int get frame => _frame.floor();
   bool get isFinished => _finished;
-
-  @override
-  double get width => size.x;
-
-  @override
-  double get height => size.y;
 
   SpriteNode({
     required Spritesheet sheet,

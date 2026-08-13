@@ -2,19 +2,18 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/anchor.dart';
+import 'package:ignis/src/layout_engine.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 import 'package:ignis/src/owners/anchor_owner.dart';
 import 'package:ignis/src/shape.dart';
 
-/// A [TransformNode] with a [width]/[height], defining an area for shapes,
+/// A [TransformNode] with a [size], defining an area for shapes,
 /// hit-testing, rendering, and other systems to work against.
-abstract class SizedNode extends TransformNode implements AnchorOwner {
-  /// This node's width.
-  double get width;
-
-  /// This node's height.
-  double get height;
+abstract class SizedNode extends TransformNode with Measurable implements AnchorOwner {
+  /// This node's size, as a [Vector2].
+  @override
+  Vector2 get size;
 
   /// Where this node's area sits relative to [position]. Defaults to `topLeft`.
   @override

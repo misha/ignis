@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
+import 'package:ignis/src/extensions.dart';
+import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 
 class TextNode extends SizedNode {
@@ -15,10 +17,7 @@ class TextNode extends SizedNode {
   bool _dirty = true;
 
   @override
-  double get width => painter.width;
-
-  @override
-  double get height => painter.height;
+  Vector2 get size => painter.size.toVector2();
 
   TextNode({
     String? text,
@@ -78,7 +77,7 @@ class TextNode extends SizedNode {
     _dirty = true;
   }
 
-  /// Updates [width] and [height] with the latest text parameters.
+  /// Updates [size] with the latest text parameters.
   ///
   /// Automatically called when rendering.
   void layout() {

@@ -17,7 +17,7 @@ void main() {
     'anchors a sprite to a destination',
     (tester) => expectGolden(
       tester,
-      '../goldens/anchor_effect_to.png',
+      'goldens/anchor_effect_to.png',
       SpriteNode(
         sheet: .asset('test/assets/fire.png', size: .new(32, 48)),
         position: .all(50),
