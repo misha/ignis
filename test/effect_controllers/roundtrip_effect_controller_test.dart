@@ -1,10 +1,9 @@
-import 'package:flutter/animation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
   test('advances forward, then back down to the start', () {
-    final controller = RoundtripEffectController(CurveEffectController(1, Curves.linear));
+    final controller = RoundtripEffectController(DurationEffectController(1));
 
     expect(controller.duration, 2);
 
@@ -26,7 +25,7 @@ void main() {
   });
 
   test('cascades overflow across the leg boundary and past the very end', () {
-    final controller = RoundtripEffectController(CurveEffectController(1, Curves.linear));
+    final controller = RoundtripEffectController(DurationEffectController(1));
 
     expect(controller.advance(1.5), 0);
     expect(controller.progress, 0.5);
@@ -38,7 +37,7 @@ void main() {
   });
 
   test('recedes back through both legs symmetrically', () {
-    final controller = RoundtripEffectController(CurveEffectController(1, Curves.linear));
+    final controller = RoundtripEffectController(DurationEffectController(1));
     controller.advance(2);
     expect(controller.isFinished, isTrue);
 
@@ -54,7 +53,7 @@ void main() {
   });
 
   test('setToStart() and setToEnd() reset the child and both legs', () {
-    final controller = RoundtripEffectController(CurveEffectController(1, Curves.linear));
+    final controller = RoundtripEffectController(DurationEffectController(1));
 
     controller.setToEnd();
     expect(controller.isFinished, isTrue);

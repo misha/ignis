@@ -27,7 +27,7 @@ void main() {
         children: [
           RotateEffect.by(
             angle: math.pi / 2,
-            controller: .linear(1),
+            controller: .duration(1),
           ),
         ],
       )..play(column: 4),

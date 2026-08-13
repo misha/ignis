@@ -2,18 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  test('is always already finished, at its progress', () {
-    final controller = TerminalEffectController(progress: 0.5);
+  test('is always already finished, at progress 1', () {
+    final controller = TerminalEffectController();
 
     expect(controller.duration, 0);
     expect(controller.hasStarted, isTrue);
     expect(controller.isFinished, isTrue);
-    expect(controller.progress, 0.5);
-  });
-
-  test('defaults its progress to one', () {
-    final controller = TerminalEffectController();
-
     expect(controller.progress, 1);
   });
 
@@ -27,12 +21,12 @@ void main() {
   });
 
   test('setToStart() and setToEnd() are no-ops', () {
-    final controller = TerminalEffectController(progress: 0.5);
+    final controller = TerminalEffectController();
 
     controller.setToStart();
-    expect(controller.progress, 0.5);
+    expect(controller.progress, 1);
 
     controller.setToEnd();
-    expect(controller.progress, 0.5);
+    expect(controller.progress, 1);
   });
 }

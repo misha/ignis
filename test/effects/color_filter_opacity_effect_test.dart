@@ -11,7 +11,7 @@ void main() {
     final effect = ColorFilterOpacityEffect.fadeIn(
       paint: paint,
       color: COLOR,
-      controller: .linear(1),
+      controller: .duration(1),
     );
 
     effect.mount();
@@ -27,7 +27,7 @@ void main() {
     final effect = ColorFilterOpacityEffect.fadeOut(
       paint: paint,
       color: COLOR,
-      controller: .linear(1),
+      controller: .duration(1),
     );
 
     effect.mount();
@@ -43,7 +43,7 @@ void main() {
     final effect = ColorFilterOpacityEffect.fadeIn(
       paint: paint,
       color: COLOR.withValues(alpha: 0.5),
-      controller: .linear(1),
+      controller: .duration(1),
     );
 
     effect.mount();
@@ -57,7 +57,7 @@ void main() {
       paint: paint,
       color: COLOR,
       toAlpha: 0.4,
-      controller: .linear(1),
+      controller: .duration(1),
     );
 
     effect.mount();
@@ -75,7 +75,7 @@ void main() {
       color: COLOR,
       fromAlpha: 0.1,
       toAlpha: 0.5,
-      controller: .linear(1),
+      controller: .duration(1),
     );
 
     effect.mount();

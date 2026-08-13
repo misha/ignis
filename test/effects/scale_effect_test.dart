@@ -9,7 +9,7 @@ void main() {
     node.add(
       ScaleEffect.by(
         offset: .new(20, -10),
-        controller: .linear(1),
+        controller: .duration(1),
         cleanup: true,
       ),
     );
@@ -31,7 +31,7 @@ void main() {
     node.add(
       ScaleEffect.to(
         destination: .new(30, 10),
-        controller: .linear(1),
+        controller: .duration(1),
       ),
     );
 
@@ -45,17 +45,17 @@ void main() {
   test('captures the destination offset when mounted', () {
     final node = TransformNode();
     final scene = node.mount();
-    node.scale.mutate().setFrom(.new(10, 0));
+    node.scale.mutate().setValues(10, 0);
 
     node.add(
       ScaleEffect.to(
         destination: .new(20, 10),
-        controller: .sequence([.delay(0.5), .linear(1)]),
+        controller: .sequence([.once(.wait(0.5)), .duration(1)]),
       ),
     );
 
     scene.update(0.25);
-    node.scale.mutate().setFrom(.new(0, 0));
+    node.scale.mutate().setValues(0, 0);
     scene.update(1.25);
 
     expect(node.scale, Vector2(10, 10));
@@ -68,14 +68,14 @@ void main() {
     node.add(
       ScaleEffect.by(
         offset: .new(10, 0),
-        controller: .linear(1),
+        controller: .duration(1),
       ),
     );
 
     node.add(
       ScaleEffect.by(
         offset: .new(0, 20),
-        controller: .linear(1),
+        controller: .duration(1),
       ),
     );
 
@@ -109,7 +109,7 @@ void main() {
     final scene = root.mount();
     final effect = ScaleEffect.by(
       offset: .new(10, 0),
-      controller: .linear(1),
+      controller: .duration(1),
     );
 
     nodeA.add(effect);

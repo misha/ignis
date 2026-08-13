@@ -1,16 +1,9 @@
 import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
 
-/// Always finished, at a fixed [progress], consuming no time.
+/// Always finished, at progress 1, consuming no time.
 class TerminalEffectController extends EffectController {
-  /// This controller's fixed, constant progress. Defaults to 1.
-  @override
-  final double progress;
-
-  const TerminalEffectController({
-    double? progress,
-  }) : progress = progress ?? 1,
-       super.empty();
+  const TerminalEffectController() : super.empty();
 
   @override
   void attach(ControlledEffect effect) {
@@ -25,6 +18,9 @@ class TerminalEffectController extends EffectController {
 
   @override
   bool get isFinished => true;
+
+  @override
+  double get progress => 1;
 
   @override
   double advance(double dt) => dt;

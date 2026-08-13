@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('never finishes', () {
-    final controller = InfiniteEffectController(.linear(1));
+    final controller = InfiniteEffectController(.duration(1));
 
     expect(controller.duration, double.infinity);
     expect(controller.isInfinite, isTrue);
@@ -13,14 +13,14 @@ void main() {
   });
 
   test('loops its child, wrapping progress around', () {
-    final controller = InfiniteEffectController(.linear(1));
+    final controller = InfiniteEffectController(.duration(1));
 
     expect(controller.advance(2.25), 0);
     expect(controller.progress, 0.25);
   });
 
   test('recedes backward, wrapping progress around', () {
-    final controller = InfiniteEffectController(.linear(1));
+    final controller = InfiniteEffectController(.duration(1));
     controller.advance(2.25);
 
     expect(controller.recede(0.5), 0);

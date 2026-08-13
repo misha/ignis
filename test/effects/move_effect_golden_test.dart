@@ -25,7 +25,7 @@ void main() {
         children: [
           MoveEffect.by(
             offset: .new(20, -10),
-            controller: .linear(1),
+            controller: .duration(1),
           ),
         ],
       )..play(column: 4),

@@ -5,15 +5,21 @@ import 'package:flutter/foundation.dart';
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/node.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/owners/angle_owner.dart';
+import 'package:ignis/src/owners/position_owner.dart';
+import 'package:ignis/src/owners/scale_owner.dart';
 
-class TransformNode extends Node {
+class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwner {
   /// This node's position. Defaults to (0, 0).
+  @override
   final Vector2 position;
 
   /// This node's scale. Defaults to (1, 1).
+  @override
   final Vector2 scale;
 
   /// This node's clockwise rotation, in radians. Defaults to 0.
+  @override
   double angle;
 
   TransformNode({

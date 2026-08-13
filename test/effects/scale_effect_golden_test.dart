@@ -25,7 +25,7 @@ void main() {
         children: [
           ScaleEffect.by(
             offset: .new(0.5, 0.5),
-            controller: .linear(1),
+            controller: .duration(1),
           ),
         ],
       )..play(column: 4),

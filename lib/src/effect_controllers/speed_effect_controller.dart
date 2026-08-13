@@ -1,6 +1,6 @@
 import 'package:flutter/animation.dart';
 import 'package:ignis/src/effect_controller.dart';
-import 'package:ignis/src/effect_controllers/curve_effect_controller.dart';
+import 'package:ignis/src/effect_controllers/duration_effect_controller.dart';
 import 'package:ignis/src/effect_controllers/terminal_effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
 import 'package:ignis/src/effects/measurable_effect.dart';
@@ -15,12 +15,10 @@ class SpeedEffectController extends EffectController {
   MeasurableEffect? _effect;
   EffectController? _child;
 
-  SpeedEffectController(
-    this.speed, {
-    Curve? curve,
-  }) : assert(speed > 0, 'Speed must be positive.'),
-       curve = curve ?? Curves.linear,
-       super.empty();
+  SpeedEffectController(this.speed, [Curve? curve])
+    : assert(speed > 0, 'Speed must be positive.'),
+      curve = curve ?? Curves.linear,
+      super.empty();
 
   @override
   void attach(ControlledEffect effect) {
@@ -42,7 +40,7 @@ class SpeedEffectController extends EffectController {
     final distance = effect.measure();
 
     if (distance > 0) {
-      return CurveEffectController(distance / speed, curve);
+      return DurationEffectController(distance / speed, curve);
     } else {
       // A zero distance can't drive a curve; treat it as already finished.
       return const TerminalEffectController();

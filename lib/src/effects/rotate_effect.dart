@@ -1,31 +1,27 @@
 import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
+import 'package:ignis/src/effects/effect_target.dart';
 import 'package:ignis/src/effects/measurable_effect.dart';
-import 'package:ignis/src/nodes/transform_node.dart';
+import 'package:ignis/src/owners/angle_owner.dart';
 
-/// An effect that animates a [TransformNode]'s angle over time.
+/// An effect that animates an [AngleOwner]'s angle over time.
 abstract class RotateEffect extends ControlledEffect implements MeasurableEffect {
-  TransformNode? _target;
+  late final EffectTarget<AngleOwner> _target;
 
-  /// The node whose angle is mutated by this effect.
-  TransformNode? get target => _target;
+  /// The [AngleOwner] whose angle is mutated by this effect.
+  AngleOwner? get target => _target.value;
 
-  /// Rotates [target] by [angle], relative to its angle when the effect starts.
-  ///
-  /// If [target] is null, resolves to the closest [TransformNode].
+  /// Rotates the closest [AngleOwner] ancestor by [angle], relative to its
+  /// angle when the effect starts.
   factory RotateEffect.by({
-    TransformNode? target,
     required double angle,
     required EffectController controller,
     bool? cleanup,
     bool? enabled,
   }) = _RotateByEffect;
 
-  /// Rotates [target] to [angle].
-  ///
-  /// If [target] is null, resolves to the closest [TransformNode].
+  /// Rotates the closest [AngleOwner] ancestor to [angle].
   factory RotateEffect.to({
-    TransformNode? target,
     required double angle,
     required EffectController controller,
     bool? cleanup,
@@ -33,21 +29,11 @@ abstract class RotateEffect extends ControlledEffect implements MeasurableEffect
   }) = _RotateToEffect;
 
   RotateEffect._({
-    this._target,
     required super.controller,
     super.cleanup,
     super.enabled,
   }) {
-    if (_target == null) {
-      onMount(() {
-        _target = ancestors.whereType<TransformNode>().firstOrNull;
-        assert(_target != null, 'Target must be set, or have a TransformNode ancestor.');
-      });
-
-      onUnmount(() {
-        _target = null;
-      });
-    }
+    _target = EffectTarget<AngleOwner>(this);
   }
 }
 
@@ -55,14 +41,13 @@ class _RotateByEffect extends RotateEffect {
   final double _angle;
 
   _RotateByEffect({
-    super.target,
     required this._angle,
     required super.controller,
     super.cleanup,
     super.enabled,
   }) : super._() {
     onProgress((progress) {
-      _target!.angle += _angle * (progress - previousProgress);
+      target!.angle += _angle * (progress - previousProgress);
     });
   }
 
@@ -75,7 +60,6 @@ class _RotateToEffect extends RotateEffect {
   double _offset = 0;
 
   _RotateToEffect({
-    super.target,
     required double angle,
     required super.controller,
     super.cleanup,
@@ -83,11 +67,11 @@ class _RotateToEffect extends RotateEffect {
   }) : _destination = angle,
        super._() {
     onMount(() {
-      _offset = _destination - _target!.angle;
+      _offset = _destination - target!.angle;
     });
 
     onProgress((progress) {
-      _target!.angle += _offset * (progress - previousProgress);
+      target!.angle += _offset * (progress - previousProgress);
     });
   }
 

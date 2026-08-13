@@ -4,8 +4,8 @@ import 'package:ignis/ignis.dart';
 void main() {
   test('advances through children in order, cascading overflow', () {
     final controller = SequenceEffectController([
-      .linear(1),
-      .linear(1),
+      .duration(1),
+      .duration(1),
     ]);
 
     expect(controller.advance(1.5), 0);
@@ -19,12 +19,12 @@ void main() {
 
   test('delegates progress and hasStarted to the current child', () {
     final controller = SequenceEffectController([
-      .delay(0.5),
-      .linear(1),
+      .once(.wait(0.5)),
+      .duration(1),
     ]);
 
     expect(controller.hasStarted, isFalse);
-    expect(controller.progress, 0);
+    expect(controller.progress, 1);
 
     controller.advance(0.5);
     expect(controller.hasStarted, isTrue);
@@ -35,8 +35,8 @@ void main() {
 
   test('recedes back through children in reverse order', () {
     final controller = SequenceEffectController([
-      .linear(1),
-      .linear(1),
+      .duration(1),
+      .duration(1),
     ]);
 
     controller.advance(1.5);
@@ -50,8 +50,8 @@ void main() {
 
   test('setToStart() and setToEnd() reset every child', () {
     final controller = SequenceEffectController([
-      .linear(1),
-      .linear(1),
+      .duration(1),
+      .duration(1),
     ]);
 
     controller.setToEnd();

@@ -24,7 +24,7 @@ void main() {
         children: [
           AnchorEffect.to(
             destination: .center(),
-            controller: .linear(1),
+            controller: .duration(1),
           ),
         ],
       )..play(column: 4),

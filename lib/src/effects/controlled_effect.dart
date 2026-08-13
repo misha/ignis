@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/signal.dart';
@@ -40,6 +41,7 @@ class ControlledEffect extends EffectNode {
   /// Whether this effect is running in the reverse direction.
   bool get isReverse => !_forward;
 
+  @visibleForTesting
   ControlledEffect({
     required this.controller,
     super.cleanup,

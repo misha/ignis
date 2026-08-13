@@ -33,7 +33,7 @@ void main() {
             ColorFilterOpacityEffect.fadeIn(
               paint: paint,
               color: BLUE,
-              controller: .linear(1),
+              controller: .duration(1),
             ),
           ],
         )..play(column: 4),

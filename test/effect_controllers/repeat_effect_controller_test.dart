@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('repeats its child, carrying overflow into the next lap', () {
-    final controller = RepeatEffectController(.linear(1), 2);
+    final controller = RepeatEffectController(.duration(1), 2);
 
     expect(controller.advance(1.25), 0);
     expect(controller.progress, 0.25);
@@ -17,7 +17,7 @@ void main() {
   test(
     'the lap transition needs a following nonzero advance once landed exactly on the boundary',
     () {
-      final controller = RepeatEffectController(.linear(1), 2);
+      final controller = RepeatEffectController(.duration(1), 2);
 
       expect(controller.advance(1), 0);
       expect(controller.progress, 1);
@@ -29,7 +29,7 @@ void main() {
   );
 
   test('finishes exactly once the last lap lands on the boundary', () {
-    final controller = RepeatEffectController(.linear(1), 2);
+    final controller = RepeatEffectController(.duration(1), 2);
 
     controller.advance(1.5);
     expect(controller.advance(0.5), 0);
@@ -39,7 +39,7 @@ void main() {
   });
 
   test('recedes back into a previous lap', () {
-    final controller = RepeatEffectController(.linear(1), 2);
+    final controller = RepeatEffectController(.duration(1), 2);
     controller.advance(1.5);
 
     expect(controller.recede(1), 0);
@@ -47,7 +47,7 @@ void main() {
   });
 
   test('setToStart() and setToEnd() reset the repeat count', () {
-    final controller = RepeatEffectController(.linear(1), 2);
+    final controller = RepeatEffectController(.duration(1), 2);
 
     controller.setToEnd();
     expect(controller.isFinished, isTrue);
@@ -58,9 +58,9 @@ void main() {
   });
 
   test('asserts times is positive and its child is not infinite', () {
-    expect(() => RepeatEffectController(.linear(1), 0), throwsAssertionError);
+    expect(() => RepeatEffectController(.duration(1), 0), throwsAssertionError);
     expect(
-      () => RepeatEffectController(InfiniteEffectController(.linear(1)), 2),
+      () => RepeatEffectController(InfiniteEffectController(.duration(1)), 2),
       throwsAssertionError,
     );
   });

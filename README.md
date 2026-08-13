@@ -184,7 +184,7 @@ All objects that accept an interval or duration are also expressed in seconds.
 final timer = TimerNode(interval: 0.2);
 
 // Progresses an effect over the course of 1.5 seconds.
-final controller = EffectController.linear(1.5);
+final controller = EffectController.duration(1.5);
 ```
 
 ### Concept: Math
@@ -256,8 +256,8 @@ The progress over time of any particular `ControlledEffect` is determined by its
 
 ```dart
 final controller = SequenceEffectController([
-  DelayEffectController(0.5),
-  CurveEffectController(1.5, Curves.linear),
+  OnceEffectController(WaitEffectController(0.5)),
+  DurationEffectController(1.5),
 ]);
 ```
 
@@ -265,23 +265,20 @@ Ignis comes with the following effect controllers.
 
 | Effect Controller           | Purpose                                              |
 |-----------------------------|------------------------------------------------------|
-| `CurveEffectController`     | Shapes progress using a `Curve`, possibly reversed.  |
-| `DelayEffectController`     | Waits before counting as started.                    |
+| `DurationEffectController`  | Progresses over a duration, shaped by a `Curve`.     |
 | `InfiniteEffectController`  | Repeats its child forever.                           |
-| `NoiseEffectController`     | Progresses through smoothed random noise.            |
-| `PauseEffectController`     | Holds progress constant for a duration.              |
+| `OnceEffectController`      | Runs its child once; ignored after that.             |
 | `RepeatEffectController`    | Repeats its child a fixed number of times.           |
 | `RoundtripEffectController` | Runs its child forward, then back down to its start. |
 | `SequenceEffectController`  | Runs controllers one after another.                  |
-| `SineEffectController`      | Oscillates progress as a sine wave.                  |
-| `ZigzagEffectController`    | Oscillates progress as a triangle wave.              |
+| `WaitEffectController`      | Holds progress at 1 for a duration.                  |
 
-Every controller also has a lowercase dot-shorthand constructor (`.curve`, `.delay`, ...). The example from earlier could more succinctly be written:
+Common controllers have a dot-shorthand constructor. Use it to make controller trees legible at a glance. The example from earlier could more succinctly be written:
 
 ```dart
 EffectController controller = .sequence([
-  .delay(0.5),
-  .linear(1.5),
+  .once(.wait(0.5)),
+  .duration(1.5),
 ]);
 ```
 
@@ -387,7 +384,7 @@ It's quite common to access the palette when creating effects. The code below fa
 add(
   ColorOpacityEffect.fadeOut(
     paint: palette['shadow'], 
-    controller: .linear(0.5),
+    controller: .duration(0.5),
     cleanup: true,
   ),
 );

@@ -9,7 +9,7 @@ void main() {
     node.add(
       MoveEffect.by(
         offset: .new(20, -10),
-        controller: .linear(1),
+        controller: .duration(1),
         cleanup: true,
       ),
     );
@@ -31,7 +31,7 @@ void main() {
     node.add(
       MoveEffect.to(
         destination: .new(30, 10),
-        controller: .linear(1),
+        controller: .duration(1),
       ),
     );
 
@@ -45,17 +45,17 @@ void main() {
   test('captures the destination offset when mounted', () {
     final node = TransformNode();
     final scene = node.mount();
-    node.position.mutate().setFrom(.new(10, 0));
+    node.position.mutate().setValues(10, 0);
 
     node.add(
       MoveEffect.to(
         destination: .new(20, 10),
-        controller: .sequence([.delay(0.5), .linear(1)]),
+        controller: .sequence([.once(.wait(0.5)), .duration(1)]),
       ),
     );
 
     scene.update(0.25);
-    node.position.mutate().setFrom(.new(0, 0));
+    node.position.mutate().setValues(0, 0);
     scene.update(1.25);
 
     expect(node.position, Vector2(10, 10));
@@ -68,14 +68,14 @@ void main() {
     node.add(
       MoveEffect.by(
         offset: .new(10, 0),
-        controller: .linear(1),
+        controller: .duration(1),
       ),
     );
 
     node.add(
       MoveEffect.by(
         offset: .new(0, 20),
-        controller: .linear(1),
+        controller: .duration(1),
       ),
     );
 
@@ -104,17 +104,20 @@ void main() {
   test('speed uses the offset captured at mount, not a live re-measurement', () {
     final node = TransformNode();
     final scene = node.mount();
-    node.position.mutate().setFrom(.new(10, 0));
+    node.position.mutate().setValues(10, 0);
 
     node.add(
       MoveEffect.to(
         destination: .new(40, 40), // Offset (30, 40) from (10, 0): distance 50.
-        controller: .sequence([.delay(0.5), .speed(10)]), // Duration 5 once started.
+        controller: .sequence([
+          .once(.wait(0.5)),
+          .speed(10),
+        ]), // Duration 5 once started.
       ),
     );
 
     scene.update(0.25); // Still within the delay; no movement yet.
-    node.position.mutate().setFrom(.new(0, 0));
+    node.position.mutate().setValues(0, 0);
     scene.update(5.25); // Remaining 0.25 delay, then the full speed-driven leg.
 
     expect(node.position, Vector2(30, 40));
@@ -128,7 +131,7 @@ void main() {
     final scene = root.mount();
     final effect = MoveEffect.by(
       offset: .new(10, 0),
-      controller: .linear(1),
+      controller: .duration(1),
     );
 
     nodeA.add(effect);

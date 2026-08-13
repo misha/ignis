@@ -5,16 +5,15 @@ Conventions specific to this codebase, on top of what `dart format` and
 
 ## Table of Contents
 
-1. [Constructor Parameter Order](#1-constructor-parameter-order)
+1. [Node Constructors](#1-node-constructors)
 2. [Parameter Defaults](#2-parameter-defaults)
-3. ["Blessed" Effect Targets](#3-blessed-effect-targets)
-4. [The `cleanup` Parameter](#4-the-cleanup-parameter)
-5. [No Mixins](#5-no-mixins)
+3. [The `cleanup` Parameter](#3-the-cleanup-parameter)
+4. [No Mixins](#4-no-mixins)
+5. [Effect Controller Constructors](#5-effect-controller-constructors)
 
-## 1. Constructor Parameter Order
+## 1. Node Constructors
 
-Own fields first, in declaration order, then forwarded `super.x` fields, in
-their own established order. Don't interleave.
+Node constructors always use named parameters, listing their own fields first in declaration order, then forwarded `super.x` fields in their established order. Don't interleave.
 
 ```dart
 class ColliderNode extends SizedNode {
@@ -54,19 +53,7 @@ EffectNode({
 });
 ```
 
-## 3. "Blessed" Effect Targets
-
-A builtin effect should only ever target one of a small, fixed set of "blessed" types,
-whether that target is passed in explicitly or resolved automatically.
-
-Currently, the blessed target types are:
-
-- `TransformNode`
-- `SizedNode`
-- `Paint`
-
-
-## 4. The `cleanup` Parameter
+## 3. The `cleanup` Parameter
 
 Any `bool` parameter that offers to self-`detach` a node once it "finishes" is always
 named `cleanup`, and always defaults to `false`.
@@ -85,6 +72,17 @@ EffectNode({
 }
 ```
 
-## 5. No Mixins
+## 4. No Mixins
 
 Avoid `mixin`. Prefer composition, or implementing an interface directly.
+
+## 5. Effect Controller Constructors
+
+Effect controller constructors always use positional parameters (`[...]`), not named (`{...}`). 
+
+```dart
+class DurationEffectController extends EffectController {
+  DurationEffectController(this.duration, [Curve? curve,]) //
+    : curve = curve ?? Curves.linear;
+}
+```

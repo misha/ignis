@@ -117,7 +117,7 @@ void main() {
 
     final sequence = MoveEffect.by(
       offset: .new(6, 8),
-      controller: .sequence([.speed(10), .linear(1)]),
+      controller: .sequence([.speed(10), .duration(1)]),
     );
 
     expect(sequence.controller.advance(1.5), 0);

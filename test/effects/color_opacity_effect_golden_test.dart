@@ -31,7 +31,7 @@ void main() {
           children: [
             ColorOpacityEffect.fadeOut(
               paint: paint,
-              controller: .linear(1),
+              controller: .duration(1),
             ),
           ],
         )..play(column: 4),

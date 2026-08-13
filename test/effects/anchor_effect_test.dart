@@ -9,7 +9,7 @@ void main() {
     node.add(
       AnchorEffect.by(
         offset: .new(20, -10),
-        controller: .linear(1),
+        controller: .duration(1),
         cleanup: true,
       ),
     );
@@ -31,7 +31,7 @@ void main() {
     node.add(
       AnchorEffect.to(
         destination: .new(30, 10),
-        controller: .linear(1),
+        controller: .duration(1),
       ),
     );
 
@@ -50,7 +50,7 @@ void main() {
     node.add(
       AnchorEffect.to(
         destination: .new(20, 10),
-        controller: .sequence([.delay(0.5), .linear(1)]),
+        controller: .sequence([.once(.wait(0.5)), .duration(1)]),
       ),
     );
 
@@ -68,14 +68,14 @@ void main() {
     node.add(
       AnchorEffect.by(
         offset: .new(10, 0),
-        controller: .linear(1),
+        controller: .duration(1),
       ),
     );
 
     node.add(
       AnchorEffect.by(
         offset: .new(0, 20),
-        controller: .linear(1),
+        controller: .duration(1),
       ),
     );
 
@@ -91,7 +91,7 @@ void main() {
     final scene = root.mount();
     final effect = AnchorEffect.by(
       offset: .new(10, 0),
-      controller: .linear(1),
+      controller: .duration(1),
     );
 
     nodeA.add(effect);

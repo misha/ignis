@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/animation.dart';
+import 'package:ignis/src/curves.dart';
 import 'package:ignis/src/effect_controllers.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
 
@@ -52,19 +53,17 @@ abstract class EffectController {
   // #region Shorthand
 
   // dart format off
-  factory EffectController.curve(double duration, Curve curve, {bool reverse}) = CurveEffectController;
-  factory EffectController.delay(double duration) = DelayEffectController;
+  factory EffectController.duration(double duration, [Curve? curve]) = DurationEffectController;
   factory EffectController.infinite(EffectController child) = InfiniteEffectController;
-  factory EffectController.linear(double duration) => CurveEffectController(duration, Curves.linear);
-  factory EffectController.noise(double duration, {double frequency, Random? random}) = NoiseEffectController;
-  factory EffectController.pause(double duration, {double progress}) = PauseEffectController;
+  factory EffectController.noise(double duration, [double? frequency, Random? random]) =>
+      DurationEffectController(duration, NoiseCurve((duration * (frequency ?? 1)).ceil(), random: random));
+  factory EffectController.once(EffectController child) = OnceEffectController;
   factory EffectController.repeat(EffectController child, int times) = RepeatEffectController;
   factory EffectController.roundtrip(EffectController child) = RoundtripEffectController;
   factory EffectController.sequence(List<EffectController> children) = SequenceEffectController;
-  factory EffectController.sine({required double period}) = SineEffectController;
-  factory EffectController.speed(double speed, {Curve? curve}) = SpeedEffectController;
-  factory EffectController.terminal({double progress}) = TerminalEffectController;
-  factory EffectController.zigzag({required double period}) = ZigzagEffectController;
+  factory EffectController.speed(double speed, [Curve? curve]) = SpeedEffectController;
+  factory EffectController.terminal() = TerminalEffectController;
+  factory EffectController.wait(double duration) = WaitEffectController;
   // dart format on
 
   // #endregion

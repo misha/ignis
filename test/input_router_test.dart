@@ -2,7 +2,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
-import 'package:ignis/src/identity.dart';
 import 'package:ignis/src/scene_render_box.dart';
 
 void main() {

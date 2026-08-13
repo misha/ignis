@@ -1,18 +1,21 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/animation.dart';
 import 'package:ignis/src/effect_controller.dart';
 import 'package:ignis/src/effects/controlled_effect.dart';
 
-/// Base for [EffectController]s driven by a fixed [duration], counting
-/// [elapsed] time from 0 up to [duration].
-abstract class DurationEffectController extends EffectController {
+/// Progresses from 0 to 1 over [duration], shaped by [curve].
+class DurationEffectController extends EffectController {
   /// How long this controller takes to complete.
   @override
   final double duration;
 
+  /// The curve to shape progress with. Defaults to [Curves.linear].
+  final Curve curve;
+
   double _elapsed;
 
-  DurationEffectController(this.duration)
-    : assert(duration >= 0, 'Duration cannot be negative.'),
+  DurationEffectController(this.duration, [Curve? curve])
+    : assert(duration > 0, 'Duration must be positive.'),
+      curve = curve ?? Curves.linear,
       _elapsed = 0,
       super.empty();
 
@@ -21,15 +24,14 @@ abstract class DurationEffectController extends EffectController {
     // Nothing to do.
   }
 
-  /// This controller's elapsed time, from 0 to [duration].
-  @protected
-  double get elapsed => _elapsed;
-
   @override
   bool get hasStarted => true;
 
   @override
   bool get isFinished => _elapsed == duration;
+
+  @override
+  double get progress => curve.transform(_elapsed / duration);
 
   @override
   double advance(double dt) {

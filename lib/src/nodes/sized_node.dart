@@ -4,11 +4,12 @@ import 'package:flutter/foundation.dart';
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
+import 'package:ignis/src/owners/anchor_owner.dart';
 import 'package:ignis/src/shape.dart';
 
 /// A [TransformNode] with a [width]/[height], defining an area for shapes,
 /// hit-testing, rendering, and other systems to work against.
-abstract class SizedNode extends TransformNode {
+abstract class SizedNode extends TransformNode implements AnchorOwner {
   /// This node's width.
   double get width;
 
@@ -16,6 +17,7 @@ abstract class SizedNode extends TransformNode {
   double get height;
 
   /// Where this node's area sits relative to [position]. Defaults to `topLeft`.
+  @override
   Anchor anchor;
 
   SizedNode({
