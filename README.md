@@ -648,10 +648,7 @@ Until `1.0.0`, Ignis will change frequently and dramatically.
 I'm currently working on the following:
 
 - Camera
-- Collision details
 - Audio
-- Hit testing
-- Gestures & input
 - Particles
 - Debugging tools
 - More nodes
