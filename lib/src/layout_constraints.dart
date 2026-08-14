@@ -48,13 +48,14 @@ final class LayoutConstraints {
   /// No minimum; unbounded maximum, in both axes.
   const LayoutConstraints.unbounded() : min = .zero, max = const .all(double.infinity);
 
-  /// The size closest to [size] that satisfies these constraints.
+  /// The size closest to ([x], [y]) that satisfies these constraints.
   ///
-  /// TODO: Examine callers and see if this method can't be responsible for the
-  ///   creation of the return vector, allowing it set it up via MVector2.
-  Vector2 satisfy(Vector2 size) => size
-      .clampedToX(min.x, max.x) //
-      .clampedToY(min.y, max.y);
+  /// Takes components rather than a [Vector2] so callers never build one just
+  /// to hand it over.
+  Vector2 satisfy(double x, double y) => .new(
+    x.clamp(min.x, max.x).toDouble(),
+    y.clamp(min.y, max.y).toDouble(),
+  );
 
   /// Whether [max]'s x component is finite.
   bool get hasBoundedWidth => max.x.isFinite;

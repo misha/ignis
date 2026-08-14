@@ -91,7 +91,8 @@ abstract class LayoutNode extends SizedNode {
   /// Lays out this node under [constraints] and stores the result.
   @nonVirtual
   void layout(LayoutConstraints constraints) {
-    _size.setFrom(constraints.satisfy(constrain(constraints)));
+    final size = constrain(constraints);
+    _size.setFrom(constraints.satisfy(size.x, size.y));
   }
 
   /// Lays this node out under [constraints], then returns its resulting size.

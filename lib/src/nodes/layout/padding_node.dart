@@ -29,10 +29,8 @@ class PaddingNode extends LayoutNode {
       items: layoutChildren,
       childConstraints: constraints.deflate(padding),
       computeSelfSize: (count, largest) => constraints.satisfy(
-        .new(
-          largest.x + padding.horizontal,
-          largest.y + padding.vertical,
-        ),
+        largest.x + padding.horizontal,
+        largest.y + padding.vertical,
       ),
       computeOffset: (selfSize, childSize) => .new(padding.left, padding.top),
     );

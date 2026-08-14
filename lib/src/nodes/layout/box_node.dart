@@ -66,10 +66,8 @@ class BoxNode extends LayoutNode {
       items: layoutChildren,
       childConstraints: boxConstraints.deflate(padding),
       computeSelfSize: (count, largest) => constraints.satisfy(
-        .new(
-          requestedX ?? (largest.x + padding.horizontal),
-          requestedY ?? (largest.y + padding.vertical),
-        ),
+        requestedX ?? (largest.x + padding.horizontal),
+        requestedY ?? (largest.y + padding.vertical),
       ),
       computeOffset: (selfSize, childSize) => .new(padding.left, padding.top),
     );

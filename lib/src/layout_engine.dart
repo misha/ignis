@@ -145,7 +145,10 @@ final class LayoutEngine {
     }
 
     final idealMain = mainAxisSize == .max && canFlex ? maxMain : consumedMain;
-    final selfSize = constraints.satisfy(direction.toVector2(main: idealMain, cross: maxCross));
+    final selfSize = switch (direction) {
+      .horizontal => constraints.satisfy(idealMain, maxCross),
+      .vertical => constraints.satisfy(maxCross, idealMain),
+    };
 
     // Pass 3: position every item.
     final selfMain = selfSize.axis(direction);

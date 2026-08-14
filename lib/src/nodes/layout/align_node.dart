@@ -30,14 +30,14 @@ class AlignNode extends LayoutNode {
     return LayoutEngine.stack(
       items: layoutChildren,
       childConstraints: constraints.loosen(),
-      computeSelfSize: (count, largest) => count == 0
-          ? constraints.min
-          : constraints.satisfy(
-              .new(
-                constraints.hasBoundedWidth ? double.infinity : largest.x,
-                constraints.hasBoundedHeight ? double.infinity : largest.y,
-              ),
-            ),
+      computeSelfSize: (count, largest) {
+        if (count == 0) return constraints.min;
+
+        return constraints.satisfy(
+          constraints.hasBoundedWidth ? double.infinity : largest.x,
+          constraints.hasBoundedHeight ? double.infinity : largest.y,
+        );
+      },
       computeOffset: (selfSize, childSize) => .new(
         (selfSize.x - childSize.x) * alignment.x,
         (selfSize.y - childSize.y) * alignment.y,

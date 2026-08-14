@@ -32,18 +32,18 @@ void main() {
     test('clamps a size within min and max', () {
       final constraints = LayoutConstraints(min: .all(10), max: .all(50));
 
-      expect(constraints.satisfy(.new(5, 100)), Vector2(10, 50));
-      expect(constraints.satisfy(.all(20)), Vector2(20, 20));
+      expect(constraints.satisfy(5, 100), Vector2(10, 50));
+      expect(constraints.satisfy(20, 20), Vector2(20, 20));
     });
 
     test('clamps an infinite size down to a finite max', () {
       final constraints = LayoutConstraints(min: .zero, max: .new(50, 30));
-      expect(constraints.satisfy(.all(double.infinity)), Vector2(50, 30));
+      expect(constraints.satisfy(double.infinity, double.infinity), Vector2(50, 30));
     });
 
     test('leaves an infinite max unbounded', () {
       final constraints = LayoutConstraints.unbounded();
-      expect(constraints.satisfy(.new(50, 30)), Vector2(50, 30));
+      expect(constraints.satisfy(50, 30), Vector2(50, 30));
     });
   });
 
