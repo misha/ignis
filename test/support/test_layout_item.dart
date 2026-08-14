@@ -13,6 +13,9 @@ final class TestLayoutItem implements LayoutItem {
   final Vector2 size;
 
   @override
+  Vector2 scale;
+
+  @override
   double get width => size.x;
 
   @override
@@ -29,10 +32,12 @@ final class TestLayoutItem implements LayoutItem {
     MVector2? position,
     Anchor? anchor,
     Vector2? size,
+    Vector2? scale,
     LayoutFlex? flex,
   }) : position = position ?? .zero(),
        anchor = anchor ?? .topLeft,
        size = size ?? .zero,
+       scale = scale ?? .all(1),
        flex = flex ?? .none;
 
   @override

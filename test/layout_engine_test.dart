@@ -87,6 +87,34 @@ void main() {
       expect(box(items, constraints: .tight(.new(100, 60))), Vector2(100, 60));
     });
 
+    test('shrink-wraps to a scaled item\'s scaled extent', () {
+      final items = [TestLayoutItem(size: .all(10), scale: .all(2))];
+      expect(box(items), Vector2(20, 20));
+    });
+
+    test('measures a scaled item against constraints carried into its space', () {
+      final items = [TestLayoutItem(size: .all(10), scale: .all(2))];
+      box(items, constraints: .tight(.all(50)));
+      expect(items.single.lastConstraints, LayoutConstraints.tight(.all(25)));
+    });
+
+    test('aligns a scaled item by its scaled extent', () {
+      final items = [TestLayoutItem(size: .all(10), scale: .all(2))];
+      box(items, constraints: .tight(.new(100, 60)), alignment: .bottomRight);
+      expect(items.single.position, Vector2(80, 40));
+    });
+
+    test('a flipped item occupies the same room as the thing it flips', () {
+      final items = [TestLayoutItem(size: .all(10), scale: .new(-2, 1))];
+      expect(box(items), Vector2(20, 10));
+    });
+
+    test('a zero-scaled item occupies nothing and is left unconstrained', () {
+      final items = [TestLayoutItem(size: .all(10), scale: .zero)];
+      expect(box(items, constraints: .tight(.all(50))), Vector2(50, 50));
+      expect(items.single.lastConstraints, LayoutConstraints(min: .zero, max: .infinity));
+    });
+
     test('reports the smallest constraint with no items at all', () {
       expect(
         box(
@@ -177,6 +205,45 @@ void main() {
       expect(items.map((i) => i.position), [Vector2(0, 0), Vector2(0, 50)]);
     });
 
+    test('advances the main axis by a scaled child\'s scaled extent', () {
+      final items = [
+        TestLayoutItem(size: .all(10), scale: .all(2)),
+        TestLayoutItem(size: .all(10)),
+      ];
+
+      LayoutEngine.flex(
+        direction: .horizontal,
+        constraints: .tight(.new(100, 50)),
+        items: items,
+        mainAxisAlignment: .start,
+        crossAxisAlignment: .start,
+        mainAxisSize: .max,
+        spacing: 0,
+      );
+
+      expect(items.map((i) => i.position), [Vector2(0, 0), Vector2(20, 0)]);
+    });
+
+    test('a scaled flex child is asked for the share its scale fills', () {
+      final items = [TestLayoutItem(size: .all(10), scale: .all(2), flex: .expanded())];
+
+      LayoutEngine.flex(
+        direction: .horizontal,
+        constraints: .tight(.new(100, 50)),
+        items: items,
+        mainAxisAlignment: .start,
+        crossAxisAlignment: .start,
+        mainAxisSize: .max,
+        spacing: 0,
+      );
+
+      // 50 of its own units is what it takes to fill the whole 100 wide row.
+      expect(
+        items.single.lastConstraints,
+        LayoutConstraints(min: .new(50, 0), max: .new(50, 25)),
+      );
+    });
+
     test('throws when the main axis is unbounded and a flex child demands forced space', () {
       final items = [TestLayoutItem(flex: .expanded())];
 
@@ -200,6 +267,21 @@ void main() {
       final item = TestLayoutItem(size: .new(20, 10), anchor: .center);
       LayoutEngine.place(item, .all(50));
       expect(item.position, Vector2(60, 55));
+    });
+
+    test('scales the anchor offset it compensates by', () {
+      final item = TestLayoutItem(size: .new(20, 10), anchor: .center, scale: .all(2));
+      LayoutEngine.place(item, .all(50));
+      expect(item.position, Vector2(70, 60));
+    });
+
+    test('a flipped item still lands inside the space it was given', () {
+      final item = TestLayoutItem(size: .all(10), scale: .new(-2, 1));
+      LayoutEngine.place(item, .all(50));
+
+      // Its content runs back from position, so its left edge is the 50 asked
+      // for and its right edge is 20 further along.
+      expect(item.position, Vector2(70, 50));
     });
   });
 }

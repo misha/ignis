@@ -14,6 +14,9 @@ abstract interface class LayoutItem {
   /// This item's size.
   Vector2 get size;
 
+  /// This item's scale.
+  Vector2 get scale;
+
   /// This item's width.
   double get width;
 

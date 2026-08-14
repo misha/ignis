@@ -88,12 +88,21 @@ abstract final class LayoutEngine {
       itemConstraints = itemConstraints.loosen();
     }
 
-    // Measure.
+    // Measure. An item reports a size in its own space, so it is measured
+    // against constraints carried into that space and compared on the extent
+    // that size occupies back out here.
     final largest = MVector2.zero();
+    final extent = MVector2.zero();
 
     for (final item in items) {
-      item.layout(itemConstraints);
-      largest.max(item.size);
+      item.layout(itemConstraints.descale(item.scale));
+
+      extent
+        ..setFrom(item.size)
+        ..multiply(item.scale)
+        ..absolute();
+
+      largest.max(extent);
     }
 
     // Size. An alignment asks for room to align within, so it takes every
@@ -113,13 +122,16 @@ abstract final class LayoutEngine {
     final innerHeight = size.y - padding.vertical;
 
     for (final item in items) {
-      final itemSize = item.size;
+      extent
+        ..setFrom(item.size)
+        ..multiply(item.scale)
+        ..absolute();
 
       place(
         item,
         .new(
-          padding.left + (innerWidth - itemSize.x) * anchor.x,
-          padding.top + (innerHeight - itemSize.y) * anchor.y,
+          padding.left + (innerWidth - extent.x) * anchor.x,
+          padding.top + (innerHeight - extent.y) * anchor.y,
         ),
       );
     }
@@ -198,6 +210,7 @@ abstract final class LayoutEngine {
     var maxCross = 0.0;
 
     // Identical for every item, so it is built once rather than per child.
+    // Only a scaled item pays for one of its own, via [LayoutConstraints.descale].
     final looseConstraints = LayoutConstraints(
       min: direction.toVector2(main: 0, cross: fillCross ? crossMax : 0),
       max: direction.toVector2(main: double.infinity, cross: crossMax),
@@ -209,10 +222,11 @@ abstract final class LayoutEngine {
       if (canFlex && item.flex.factor > 0) {
         totalFlex += item.flex.factor;
       } else {
-        item.layout(looseConstraints);
+        final scale = item.scale;
+        item.layout(looseConstraints.descale(scale));
         final size = item.size;
-        mains[index] = size.axis(direction);
-        crosses[index] = size.axis(crossAxis);
+        mains[index] = (size.axis(direction) * scale.axis(direction)).abs();
+        crosses[index] = (size.axis(crossAxis) * scale.axis(crossAxis)).abs();
         consumedMain += mains[index];
         maxCross = math.max(maxCross, crosses[index]);
       }
@@ -237,10 +251,11 @@ abstract final class LayoutEngine {
             max: direction.toVector2(main: maxExtent, cross: crossMax),
           );
 
-          item.layout(childConstraints);
+          final scale = item.scale;
+          item.layout(childConstraints.descale(scale));
           final size = item.size;
-          mains[index] = size.axis(direction);
-          crosses[index] = size.axis(crossAxis);
+          mains[index] = (size.axis(direction) * scale.axis(direction)).abs();
+          crosses[index] = (size.axis(crossAxis) * scale.axis(crossAxis)).abs();
           consumedMain += mains[index];
           maxCross = math.max(maxCross, crosses[index]);
         }
@@ -276,12 +291,22 @@ abstract final class LayoutEngine {
   }
 
   /// Positions [item] so its content's top-left corner lands at [position],
-  /// honoring [item]'s own anchor.
+  /// honoring [item]'s own anchor and scale.
   static void place(LayoutItem item, Vector2 position) {
-    item.position
-      ..setFrom(item.anchor)
-      ..multiply(item.size)
-      ..add(position);
+    final size = item.size;
+    final scale = item.scale;
+    final anchor = item.anchor;
+
+    // The anchor offset is applied in the item's own space, so it arrives here
+    // scaled. A flipped axis grows the other way, which puts its anchor on the
+    // opposite edge. Without that, the content lands outside its own space.
+    final anchorX = scale.x < 0 ? anchor.x - 1 : anchor.x;
+    final anchorY = scale.y < 0 ? anchor.y - 1 : anchor.y;
+
+    item.position.setValues(
+      anchorX * size.x * scale.x + position.x,
+      anchorY * size.y * scale.y + position.y,
+    );
   }
 
   /// The leading gap and the gap between each pair of adjacent items, for

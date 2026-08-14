@@ -93,6 +93,25 @@ final class LayoutConstraints {
     );
   }
 
+  /// These constraints, carried from a parent's space into the space of an
+  /// item scaled by [scale].
+  LayoutConstraints descale(Vector2 scale) {
+    final x = scale.x.abs();
+    final y = scale.y.abs();
+    if (x == 1 && y == 1) return this;
+
+    return .new(
+      min: .new(
+        x == 0 ? 0 : min.x / x,
+        y == 0 ? 0 : min.y / y,
+      ),
+      max: .new(
+        x == 0 ? double.infinity : max.x / x,
+        y == 0 ? double.infinity : max.y / y,
+      ),
+    );
+  }
+
   @override
   String toString() => '$min -> $max';
 

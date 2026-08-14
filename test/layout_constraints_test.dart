@@ -116,6 +116,49 @@ void main() {
     });
   });
 
+  group('descale', () {
+    test('divides both bounds, so a 2x item fills a slot with half of it', () {
+      final constraints = LayoutConstraints(min: .all(30), max: .all(100));
+      final descaled = constraints.descale(.all(2));
+
+      expect(descaled.min, Vector2(15, 15));
+      expect(descaled.max, Vector2(50, 50));
+    });
+
+    test('divides each axis by its own scale', () {
+      final constraints = LayoutConstraints(min: .zero, max: .new(100, 60));
+      final descaled = constraints.descale(.new(2, 3));
+
+      expect(descaled.max, Vector2(50, 20));
+    });
+
+    test('leaves an unbounded axis unbounded', () {
+      final constraints = LayoutConstraints(min: .zero, max: .new(double.infinity, 60));
+      expect(constraints.descale(.all(2)).max, Vector2(double.infinity, 30));
+    });
+
+    test('takes a flip as the room it occupies, not the way it faces', () {
+      final constraints = LayoutConstraints(min: .all(30), max: .all(100));
+      final descaled = constraints.descale(.all(-2));
+
+      expect(descaled.min, Vector2(15, 15));
+      expect(descaled.max, Vector2(50, 50));
+    });
+
+    test('frees a zero-scaled axis entirely, since nothing it reports fits', () {
+      final constraints = LayoutConstraints(min: .all(30), max: .all(100));
+      final descaled = constraints.descale(.zero);
+
+      expect(descaled.min, Vector2.zero);
+      expect(descaled.max, Vector2.infinity);
+    });
+
+    test('hands back the same instance at unit scale', () {
+      final constraints = LayoutConstraints(min: .all(30), max: .all(100));
+      expect(identical(constraints.descale(.all(1)), constraints), isTrue);
+    });
+  });
+
   group('equality', () {
     test('constraints with the same min and max are equal', () {
       expect(
