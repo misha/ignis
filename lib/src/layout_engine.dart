@@ -1,15 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';
+import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/layout_constraints.dart';
 import 'package:ignis/src/layout_flex.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/owners/anchor_owner.dart';
-import 'package:ignis/src/owners/position_owner.dart';
 
 /// Something a layout algorithm can measure, position, and allocate space to.
-mixin Measurable implements PositionOwner, AnchorOwner {
+mixin Measurable {
   /// This item's size.
   Vector2 get size;
 
@@ -18,6 +17,12 @@ mixin Measurable implements PositionOwner, AnchorOwner {
 
   /// This item's height.
   double get height => size.y;
+
+  /// This item's position, written in place by [LayoutEngine.place].
+  MVector2 get position;
+
+  /// Where this item's area sits relative to [position].
+  Anchor get anchor;
 
   /// This item's size under [constraints], laying itself out first if possible.
   ///
