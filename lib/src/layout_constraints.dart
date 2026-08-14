@@ -49,9 +49,6 @@ final class LayoutConstraints {
   const LayoutConstraints.unbounded() : min = .zero, max = const .all(double.infinity);
 
   /// The size closest to ([x], [y]) that satisfies these constraints.
-  ///
-  /// Takes components rather than a [Vector2] so callers never build one just
-  /// to hand it over.
   Vector2 satisfy(double x, double y) => .new(
     x.clamp(min.x, max.x).toDouble(),
     y.clamp(min.y, max.y).toDouble(),
