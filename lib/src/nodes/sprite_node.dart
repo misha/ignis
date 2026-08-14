@@ -196,6 +196,6 @@ class SpriteNode extends PaintedNode {
 
   @override
   void debugRenderAnchored(Canvas canvas) {
-    canvas.drawRect(_dest, DEBUG_TRANSFORM_PAINT);
+    canvas.drawRect(.fromLTWH(0, 0, width, height), DEBUG_TRANSFORM_PAINT);
   }
 }

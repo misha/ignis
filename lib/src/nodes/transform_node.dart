@@ -128,7 +128,7 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
   @mustCallSuper
   void debugRender(Canvas canvas) {
     canvas.save();
-    canvas.transform(_lastRenderTransform);
+    canvas.transform(renderTransform);
     debugRenderTransformed(canvas);
     super.debugRender(canvas);
     canvas.restore();

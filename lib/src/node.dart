@@ -104,10 +104,6 @@ class Node {
   }
 
   /// Renders the debug overlay for this node and its children to [canvas].
-  ///
-  /// The scene guarantees that [render] will always be called before this
-  /// method is called, so implementations are welcome to reuse cached values
-  /// to make debug rendering as cheap as possible.
   void debugRender(Canvas canvas) {
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;

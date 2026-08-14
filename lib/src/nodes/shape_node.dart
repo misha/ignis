@@ -45,6 +45,6 @@ class ShapeNode extends PaintedNode {
 
   @override
   void debugRenderAnchored(Canvas canvas) {
-    canvas.drawRect(_dest, DEBUG_TRANSFORM_PAINT);
+    canvas.drawRect(shape.rect(), DEBUG_TRANSFORM_PAINT);
   }
 }
