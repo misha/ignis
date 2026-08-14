@@ -29,16 +29,16 @@ abstract class SizedNode extends TransformNode implements Measurable, AnchorOwne
   @override
   Anchor anchor;
 
-  /// This node's size under [constraints]. A plain [SizedNode] can't lay
-  /// itself out, so this is [size] whatever the constraints say.
-  @override
-  Vector2 measure(LayoutConstraints constraints) => size;
-
   /// The share of a flex layout's leftover space this node asks for.
   ///
   /// A plain [SizedNode] asks for none.
   @override
   LayoutFlex get flex => .none;
+
+  /// This node's size under [constraints]. A plain [SizedNode] can't lay
+  /// itself out, so this is [size] whatever the constraints say.
+  @override
+  Vector2 measure(LayoutConstraints constraints) => size;
 
   SizedNode({
     Anchor? anchor,

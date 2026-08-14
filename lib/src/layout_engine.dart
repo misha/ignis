@@ -24,17 +24,17 @@ abstract interface class Measurable {
   /// This item's height.
   double get height;
 
-  /// This item's size under [constraints], laying itself out first if possible.
-  ///
-  /// An item that can't lay itself out any further returns [size], ignoring
-  /// [constraints] entirely.
-  Vector2 measure(LayoutConstraints constraints);
-
   /// How a flex layout shares its leftover main-axis space with this item.
   ///
   /// An item asking for no share returns [LayoutFlex.none], leaving it a
   /// fixed, non-flexible space.
   LayoutFlex get flex;
+
+  /// This item's size under [constraints], laying itself out first if possible.
+  ///
+  /// An item that can't lay itself out any further returns [size], ignoring
+  /// [constraints] entirely.
+  Vector2 measure(LayoutConstraints constraints);
 }
 
 /// A standalone set of layout algorithms, operating on [Measurable] items.
