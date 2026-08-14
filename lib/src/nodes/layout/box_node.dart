@@ -25,6 +25,7 @@ class BoxNode extends LayoutNode {
     double? width,
     double? height,
     EdgeInsets? padding,
+    super.flex,
     super.position,
     super.scale,
     super.angle,
@@ -40,6 +41,7 @@ class BoxNode extends LayoutNode {
   BoxNode.square(
     double size, {
     EdgeInsets? padding,
+    super.flex,
     super.position,
     super.scale,
     super.angle,
@@ -53,8 +55,6 @@ class BoxNode extends LayoutNode {
 
   @override
   Vector2 constrain(LayoutConstraints constraints) {
-    // TODO: Cache children by type.
-    final items = children.whereType<Measurable>().toList(growable: false);
     final requestedX = targetWidth?.clamp(constraints.min.x, constraints.max.x).toDouble();
     final requestedY = targetHeight?.clamp(constraints.min.y, constraints.max.y).toDouble();
     final boxConstraints = LayoutConstraints(
@@ -63,7 +63,7 @@ class BoxNode extends LayoutNode {
     );
 
     return LayoutEngine.stack(
-      items: items,
+      items: layoutChildren,
       childConstraints: boxConstraints.deflate(padding),
       computeSelfSize: (count, largest) => constraints.satisfy(
         .new(

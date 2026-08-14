@@ -91,8 +91,7 @@ void main() {
         2,
         (_) => TestMeasurable(
           size: .all(50),
-          flex: 1,
-          fit: .tight,
+          flex: .expanded(),
           canResize: true,
         ),
       );
@@ -169,8 +168,7 @@ void main() {
         2,
         (_) => TestMeasurable(
           size: .all(50),
-          flex: 1,
-          fit: .tight,
+          flex: .expanded(),
           canResize: true,
         ),
       );
@@ -192,8 +190,7 @@ void main() {
     test('throws when the main axis is unbounded and a flex child demands forced space', () {
       final items = [
         TestMeasurable(
-          flex: 1,
-          fit: .tight,
+          flex: .expanded(),
           canResize: true,
         ),
       ];

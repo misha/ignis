@@ -9,6 +9,15 @@ import 'package:ignis/ignis.dart';
 import 'runner.dart';
 
 /// Randomly generated layout trees, re-laid out from scratch on every tick.
+///
+/// Every tree is its own layout root, so a single `scene.update` drives a
+/// full constraint-propagation pass over all of them: measure, distribute,
+/// place, top to bottom. Nothing else runs, so the tick cost is the layout
+/// cost.
+///
+/// Trees mix every layout node the engine ships, which keeps the measurement
+/// honest about the mix a real UI hits rather than one node type in a loop.
+/// Generation is deterministic for a given [seed].
 class LayoutBenchmark extends AsyncBenchmarkBase {
   final int seed;
   final int trees;
@@ -33,7 +42,7 @@ class LayoutBenchmark extends AsyncBenchmarkBase {
     final root = Node();
 
     for (var i = 0; i < trees; i += 1) {
-      root.add(generate(depth, boundedX: true, boundedY: true));
+      root.add(generate(depth));
     }
 
     scene = root.mount();
@@ -50,185 +59,50 @@ class LayoutBenchmark extends AsyncBenchmarkBase {
   @override
   Future<void> teardown() async => scene.destroy();
 
-  /// A random subtree [depth] levels deep, to be laid out under constraints
-  /// whose axes are bounded per [boundedX] and [boundedY].
-  ///
-  /// Boundedness is threaded through generation because two choices are only
-  /// legal on a bounded axis, and picking them blindly would generate trees
-  /// the engine rejects rather than trees it lays out:
-  ///
-  /// - A flex child, which `LayoutEngine.flex` asserts against when the main
-  ///   axis is unbounded (there is no leftover space to divide).
-  /// - `CrossAxisAlignment.stretch`, which pins each child's cross-axis
-  ///   minimum to the incoming maximum, and so would force an infinite
-  ///   minimum on an unbounded axis.
-  ///
-  /// A `FlexNode` measures its non-flex children with an unbounded main
-  /// axis, so nesting alone is enough to reach both cases.
-  SizedNode generate(
-    int depth, {
-    required bool boundedX,
-    required bool boundedY,
-  }) {
+  /// A random subtree [depth] levels deep, bottoming out in fixed-size leaves.
+  SizedNode generate(int depth) {
     if (depth == 0) return ShapeNode(shape: .square(extent(4, 24)));
 
-    return switch (random.nextInt(5)) {
-      0 => box(depth, boundedX: boundedX, boundedY: boundedY),
-      1 => padding(depth, boundedX: boundedX, boundedY: boundedY),
-      2 => align(depth, boundedX: boundedX, boundedY: boundedY),
-      3 => flex(depth, .horizontal, boundedX: boundedX, boundedY: boundedY),
-      _ => flex(depth, .vertical, boundedX: boundedX, boundedY: boundedY),
+    return switch (random.nextInt(4)) {
+      0 => BoxNode(padding: .all(4), children: children(depth)),
+      1 => PaddingNode(padding: .all(4), children: children(depth)),
+      2 => AlignNode(children: children(depth)),
+      _ => flex(depth),
     };
   }
 
-  /// A [BoxNode] with each axis independently fixed or left to its children.
-  /// A fixed axis bounds that axis for everything underneath.
-  BoxNode box(
-    int depth, {
-    required bool boundedX,
-    required bool boundedY,
-  }) {
-    final width = random.nextBool() ? extent(32, 256) : null;
-    final height = random.nextBool() ? extent(32, 256) : null;
-
-    return BoxNode(
-      width: width,
-      height: height,
-      padding: insets(),
-      children: descend(
-        depth,
-        boundedX: boundedX || width != null,
-        boundedY: boundedY || height != null,
-      ),
-    );
-  }
-
-  /// A [PaddingNode], which deflates its constraints without changing which
-  /// axes are bounded.
-  PaddingNode padding(
-    int depth, {
-    required bool boundedX,
-    required bool boundedY,
-  }) {
-    return PaddingNode(
-      padding: insets(),
-      children: descend(
-        depth,
-        boundedX: boundedX,
-        boundedY: boundedY,
-      ),
-    );
-  }
-
-  /// An [AlignNode], which loosens its constraints without changing which
-  /// axes are bounded.
-  AlignNode align(
-    int depth, {
-    required bool boundedX,
-    required bool boundedY,
-  }) {
-    return AlignNode(
-      alignment: .new(random.nextDouble(), random.nextDouble()),
-      children: descend(
-        depth,
-        boundedX: boundedX,
-        boundedY: boundedY,
-      ),
-    );
-  }
-
-  /// A [RowNode] or [ColumnNode] along [direction], with a random share of
-  /// its children wrapped in flex nodes.
+  /// A [FlexNode] along a random axis, whose container children are all
+  /// flexed.
   ///
-  /// Non-flex children are measured with an unbounded main axis; flex
-  /// children get a finite slice of the leftover space instead. The cross
-  /// axis passes through untouched.
-  FlexNode flex(
-    int depth,
-    Axis direction, {
-    required bool boundedX,
-    required bool boundedY,
-  }) {
-    final horizontal = direction == Axis.horizontal;
-    final boundedMain = horizontal ? boundedX : boundedY;
-    final boundedCross = horizontal ? boundedY : boundedX;
-    final children = <Node>[];
-    final count = 1 + random.nextInt(breadth);
+  /// That one rule is what keeps generation simple. A flexed child is
+  /// measured against a finite slice of the main axis, so every container in
+  /// the tree ends up with bounded constraints, and every flex factor,
+  /// alignment, and `MainAxisSize` below it is legal without a special case.
+  /// Leaves are left unflexed - they ignore their constraints anyway - so
+  /// both the flex and non-flex paths still get exercised.
+  FlexNode flex(int depth) {
+    final items = children(depth);
 
-    for (var i = 0; i < count; i += 1) {
-      final flexible = boundedMain && random.nextInt(3) == 0;
-      final child = generate(
-        depth - 1,
-        boundedX: horizontal ? flexible : boundedX,
-        boundedY: horizontal ? boundedY : flexible,
-      );
-
-      children.add(flexible ? wrap(child) : child);
+    for (final item in items) {
+      if (item is LayoutNode) {
+        item.flex = .flexible(1 + random.nextInt(3));
+      }
     }
 
-    final mainAxisAlignment =
-        MainAxisAlignment.values[random.nextInt(MainAxisAlignment.values.length)];
-    final crossAxisAlignment = crossAlignment(boundedCross);
-    final mainAxisSize = random.nextBool() ? MainAxisSize.max : MainAxisSize.min;
-    final reverse = random.nextBool();
-    final spacing = extent(0, 8);
-
-    return switch (direction) {
-      .horizontal => RowNode(
-        mainAxisAlignment: mainAxisAlignment,
-        crossAxisAlignment: crossAxisAlignment,
-        mainAxisSize: mainAxisSize,
-        reverse: reverse,
-        spacing: spacing,
-        children: children,
-      ),
-      .vertical => ColumnNode(
-        mainAxisAlignment: mainAxisAlignment,
-        crossAxisAlignment: crossAxisAlignment,
-        mainAxisSize: mainAxisSize,
-        reverse: reverse,
-        spacing: spacing,
-        children: children,
-      ),
-    };
-  }
-
-  /// Wraps [child] so an ancestor [FlexNode] gives it a share of the
-  /// leftover main-axis space. Both wrappers hold a single child, which is
-  /// all [FlexibleNode] supports.
-  FlexibleNode wrap(SizedNode child) {
-    final factor = 1 + random.nextInt(3);
-
-    return random.nextBool()
-        ? ExpandedNode(flex: factor, children: [child])
-        : FlexibleNode(flex: factor, children: [child]);
+    return FlexNode(
+      direction: random.nextBool() ? .horizontal : .vertical,
+      mainAxisAlignment: .values[random.nextInt(MainAxisAlignment.values.length)],
+      crossAxisAlignment: .values[random.nextInt(CrossAxisAlignment.values.length)],
+      children: items,
+    );
   }
 
   /// Between one and [breadth] subtrees, one level shallower.
-  List<Node> descend(
-    int depth, {
-    required bool boundedX,
-    required bool boundedY,
-  }) {
-    return List.generate(
-      1 + random.nextInt(breadth),
-      (_) => generate(depth - 1, boundedX: boundedX, boundedY: boundedY),
-    );
-  }
-
-  /// A random [CrossAxisAlignment], falling back to `center` when `stretch`
-  /// comes up on an unbounded cross axis.
-  CrossAxisAlignment crossAlignment(bool boundedCross) {
-    final alignment = CrossAxisAlignment.values[random.nextInt(CrossAxisAlignment.values.length)];
-    if (alignment == .stretch && !boundedCross) return .center;
-    return alignment;
-  }
+  List<Node> children(int depth) =>
+      List.generate(1 + random.nextInt(breadth), (_) => generate(depth - 1));
 
   /// A random extent in `[min, max)`.
   double extent(double min, double max) => min + random.nextDouble() * (max - min);
-
-  /// Random padding, small enough to leave room for content.
-  EdgeInsets insets() => .all(random.nextDouble() * 8);
 }
 
 Future<void> main() async {

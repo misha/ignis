@@ -242,6 +242,7 @@ class Node {
     _insert(node);
     node._parent = this;
     node._pendingParent = null;
+    _notifyStructuralChange();
     final scene = _scene;
     if (scene != null) node._mount(scene);
   }
@@ -253,6 +254,7 @@ class Node {
       _children?.remove(node);
       node._parent = null;
       node._pendingRemoval = false;
+      _notifyStructuralChange();
     }
   }
 
@@ -262,6 +264,25 @@ class Node {
     final removed = children.remove(node);
     if (!removed) return;
     _insert(node);
+    _notifyStructuralChange();
+  }
+
+  /// Whether this node absorbs a structural change at or below itself, rather
+  /// than letting it bubble further up to [parent].
+  ///
+  /// Nodes caching anything about their descendants override this to drop
+  /// that cache and stop the bubble. Defaults to false, so a plain node is
+  /// transparent and passes the change straight through.
+  @internal
+  @visibleForOverriding
+  bool absorbStructuralChange() => false;
+
+  void _notifyStructuralChange() {
+    Node? node = this;
+
+    while (node != null && !node.absorbStructuralChange()) {
+      node = node._parent;
+    }
   }
 
   void _insert(Node node) {

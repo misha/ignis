@@ -5,11 +5,13 @@ import 'package:ignis/src/layout_engine.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/layout_node.dart';
 
-/// Lays its children out along [direction], giving [FlexibleNode] children a
-/// share of the leftover space by [FlexibleNode.flex]. Shared base for
-/// `RowNode` and `ColumnNode`.
-abstract class FlexNode extends LayoutNode {
-  /// The axis children are laid out along. Fixed per subclass.
+/// Lays its children out along [direction], giving each child a share of the
+/// leftover space by its [LayoutNode.flex].
+///
+/// Usable directly when [direction] varies, à la Flutter's `Flex`. `RowNode`
+/// and `ColumnNode` are the same thing with the axis fixed.
+class FlexNode extends LayoutNode {
+  /// The axis children are laid out along.
   final Axis direction;
 
   /// How children are placed along [direction]. Defaults to `start`.
@@ -40,6 +42,7 @@ abstract class FlexNode extends LayoutNode {
     MainAxisSize? mainAxisSize,
     bool? reverse,
     double? spacing,
+    super.flex,
     super.position,
     super.scale,
     super.angle,
@@ -56,13 +59,10 @@ abstract class FlexNode extends LayoutNode {
 
   @override
   Vector2 constrain(LayoutConstraints constraints) {
-    // TODO: Cache children by type.
-    final items = children.whereType<Measurable>().toList(growable: false);
-
     return LayoutEngine.flex(
       direction: direction,
       constraints: constraints,
-      items: items,
+      items: layoutChildren,
       mainAxisAlignment: mainAxisAlignment,
       crossAxisAlignment: crossAxisAlignment,
       mainAxisSize: mainAxisSize,

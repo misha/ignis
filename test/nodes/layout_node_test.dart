@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart' show FlexFit;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
@@ -49,14 +50,179 @@ void main() {
     expect(child.layouts.length, 1);
   });
 
-  test('a LayoutNode behind a plain non-SizedNode intermediate is never laid out', () {
+  test('a LayoutNode behind a plain node is still laid out by its ancestor', () {
     final child = TestLayoutNode();
     final wrapper = Node(children: [child]);
     final parent = TestLayoutNode(children: [wrapper]);
     final scene = parent.mount();
     scene.resize(100, 80);
     scene.update(0);
-    expect(child.layouts, isEmpty);
+    expect(child.layouts.length, 1);
+  });
+
+  test('a LayoutNode behind several plain nodes is still laid out by its ancestor', () {
+    final child = TestLayoutNode();
+    final parent = TestLayoutNode(
+      children: [
+        Node(
+          children: [
+            Node(children: [child]),
+          ],
+        ),
+      ],
+    );
+
+    final scene = parent.mount();
+    scene.resize(100, 80);
+    scene.update(0);
+    expect(child.layouts.length, 1);
+  });
+
+  test('every item a plain node holds is spliced into its layout parent', () {
+    final node = RowNode(
+      mainAxisSize: .min,
+      children: [
+        Node(
+          children: [
+            ShapeNode(shape: Rectangle.square(10)),
+            ShapeNode(shape: Rectangle.square(20)),
+          ],
+        ),
+      ],
+    );
+
+    node.layout(.loose(.all(200)));
+    expect(node.width, 30);
+  });
+
+  test('a LayoutNode behind a fixed-size leaf roots itself instead', () {
+    final child = TestLayoutNode();
+    final leaf = ShapeNode(shape: Rectangle.square(10), children: [child]);
+    final parent = TestLayoutNode(children: [leaf]);
+    final scene = parent.mount();
+    scene.resize(100, 80);
+    scene.update(0);
+
+    expect(child.isLayoutRoot, isTrue);
+    expect(child.layouts, [LayoutConstraints.tight(.new(100, 80))]);
+  });
+
+  group('isLayoutRoot', () {
+    test('is true without a parent', () {
+      expect(TestLayoutNode().isLayoutRoot, isTrue);
+    });
+
+    test('is false under a LayoutNode', () {
+      final child = TestLayoutNode();
+      TestLayoutNode(children: [child]);
+      expect(child.isLayoutRoot, isFalse);
+    });
+
+    test('is false under a LayoutNode behind a plain node', () {
+      final child = TestLayoutNode();
+      TestLayoutNode(
+        children: [
+          Node(children: [child]),
+        ],
+      );
+
+      expect(child.isLayoutRoot, isFalse);
+    });
+
+    test('is true under a plain node with no LayoutNode above it', () {
+      final child = TestLayoutNode();
+      Node(children: [child]);
+      expect(child.isLayoutRoot, isTrue);
+    });
+  });
+
+  group('layout child cache', () {
+    test('re-resolves after a child is added', () {
+      final node = RowNode(
+        mainAxisSize: .min,
+        children: [ShapeNode(shape: Rectangle.square(10))],
+      );
+
+      node.layout(.loose(.all(200)));
+      expect(node.width, 10);
+
+      node.add(ShapeNode(shape: Rectangle.square(20)));
+      node.layout(.loose(.all(200)));
+      expect(node.width, 30);
+    });
+
+    test('re-resolves after a child is removed', () {
+      final victim = ShapeNode(shape: Rectangle.square(20));
+      final node = RowNode(
+        mainAxisSize: .min,
+        children: [
+          ShapeNode(shape: Rectangle.square(10)),
+          victim,
+        ],
+      );
+
+      node.layout(.loose(.all(200)));
+      expect(node.width, 30);
+
+      node.remove(victim);
+      node.layout(.loose(.all(200)));
+      expect(node.width, 10);
+    });
+
+    test('re-resolves after a change behind a plain node', () {
+      final wrapper = Node(children: [ShapeNode(shape: Rectangle.square(10))]);
+      final node = RowNode(mainAxisSize: .min, children: [wrapper]);
+
+      node.layout(.loose(.all(200)));
+      expect(node.width, 10);
+
+      wrapper.add(ShapeNode(shape: Rectangle.square(20)));
+      node.layout(.loose(.all(200)));
+      expect(node.width, 30);
+    });
+
+    test('re-resolves after a reorder by priority', () {
+      final a = ShapeNode(shape: Rectangle.square(10));
+      final b = ShapeNode(shape: Rectangle.square(20));
+      final node = RowNode(mainAxisSize: .min, children: [a, b]);
+
+      node.layout(.loose(.all(200)));
+      expect([a.position.x, b.position.x], [0.0, 10.0]);
+
+      b.priority = -1;
+      node.layout(.loose(.all(200)));
+      expect([a.position.x, b.position.x], [20.0, 0.0]);
+    });
+  });
+
+  group('flex', () {
+    test('defaults to no flex', () {
+      expect(BoxNode().flex, LayoutFlex.none);
+    });
+
+    test('expanded takes a share of the leftover space and fills it', () {
+      final node = BoxNode(flex: .expanded());
+      expect((node.flex.factor, node.flex.fit), (1, FlexFit.tight));
+    });
+
+    test('flexible takes a share of the leftover space without filling it', () {
+      final node = BoxNode(flex: .flexible(3));
+      expect((node.flex.factor, node.flex.fit), (3, FlexFit.loose));
+    });
+
+    test('rejects a factor that asks for no space', () {
+      expect(() => LayoutFlex.expanded(0), throwsAssertionError);
+    });
+
+    test('flex is inert without a FlexNode parent', () {
+      final node = BoxNode(
+        flex: .expanded(),
+        children: [ShapeNode(shape: Rectangle(.new(20, 10)))],
+      );
+
+      node.layout(.new(min: .zero, max: .all(200)));
+      expect((node.width, node.height), (20.0, 10.0));
+    });
   });
 
   test('layout clamps an out-of-range performLayout result to the given constraints', () {

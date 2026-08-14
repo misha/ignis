@@ -15,8 +15,6 @@ export 'nodes/transform_node.dart';
 export 'nodes/layout/align_node.dart';
 export 'nodes/layout/box_node.dart';
 export 'nodes/layout/column_node.dart';
-export 'nodes/layout/expanded_node.dart';
 export 'nodes/layout/flex_node.dart';
-export 'nodes/layout/flexible_node.dart';
 export 'nodes/layout/padding_node.dart';
 export 'nodes/layout/row_node.dart';

@@ -27,7 +27,7 @@ final class TestLayoutNode extends LayoutNode {
   Vector2 constrain(LayoutConstraints constraints) {
     layouts.add(constraints);
 
-    for (final child in children.whereType<LayoutNode>()) {
+    for (final child in layoutChildren.whereType<LayoutNode>()) {
       child.layout(constraints);
     }
 

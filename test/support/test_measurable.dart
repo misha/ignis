@@ -1,4 +1,3 @@
-import 'package:flutter/rendering.dart' show FlexFit;
 import 'package:ignis/ignis.dart';
 
 final class TestMeasurable with Measurable {
@@ -14,10 +13,7 @@ final class TestMeasurable with Measurable {
   final Vector2 size;
 
   @override
-  int flex;
-
-  @override
-  FlexFit fit;
+  LayoutFlex flex;
 
   @override
   bool canResize;
@@ -30,14 +26,12 @@ final class TestMeasurable with Measurable {
     MVector2? position,
     Anchor? anchor,
     Vector2? size,
-    int? flex,
-    FlexFit? fit,
+    LayoutFlex? flex,
     bool? canResize,
   }) : position = position ?? .zero(),
        anchor = anchor ?? .topLeft,
        size = size ?? .zero,
-       flex = flex ?? 0,
-       fit = fit ?? .loose,
+       flex = flex ?? .none,
        canResize = canResize ?? false;
 
   @override

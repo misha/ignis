@@ -13,6 +13,7 @@ class PaddingNode extends LayoutNode {
 
   PaddingNode({
     EdgeInsets? padding,
+    super.flex,
     super.position,
     super.scale,
     super.angle,
@@ -24,11 +25,8 @@ class PaddingNode extends LayoutNode {
 
   @override
   Vector2 constrain(LayoutConstraints constraints) {
-    // TODO: Cache this.
-    final items = children.whereType<Measurable>().toList(growable: false);
-
     return LayoutEngine.stack(
-      items: items,
+      items: layoutChildren,
       childConstraints: constraints.deflate(padding),
       computeSelfSize: (count, largest) => constraints.satisfy(
         .new(

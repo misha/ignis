@@ -8,6 +8,7 @@ class RowNode extends FlexNode {
     super.mainAxisSize,
     super.reverse,
     super.spacing,
+    super.flex,
     super.position,
     super.scale,
     super.angle,

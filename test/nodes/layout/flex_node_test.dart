@@ -5,6 +5,14 @@ import '../../support/test_layout_node.dart';
 
 void main() {
   group('direction', () {
+    test('a FlexNode lays out along whichever axis it is given', () {
+      final a = ShapeNode(shape: Rectangle.square(10));
+      final b = ShapeNode(shape: Rectangle(.new(10, 20)));
+      final node = FlexNode(direction: .vertical, children: [a, b]);
+      node.layout(.loose(.all(200)));
+      expect([a.position, b.position], [Vector2.zero, Vector2(0, 10)]);
+    });
+
     test('RowNode lays out along the x axis', () {
       final a = ShapeNode(shape: Rectangle.square(10));
       final b = ShapeNode(shape: Rectangle(.new(20, 10)));
@@ -154,24 +162,24 @@ void main() {
 
   group('flex distribution', () {
     test('splits leftover space evenly among equal-flex children', () {
-      final a = ExpandedNode();
-      final b = ExpandedNode();
+      final a = BoxNode(flex: .expanded());
+      final b = BoxNode(flex: .expanded());
       final node = RowNode(children: [a, b]);
       node.layout(.tight(.new(100, 50)));
       expect((a.width, b.width), (50.0, 50.0));
     });
 
     test('splits leftover space proportionally by flex weight', () {
-      final a = ExpandedNode(flex: 1);
-      final b = ExpandedNode(flex: 3);
+      final a = BoxNode(flex: .expanded(1));
+      final b = BoxNode(flex: .expanded(3));
       final node = RowNode(children: [a, b]);
       node.layout(.tight(.new(100, 50)));
       expect((a.width, b.width), (25.0, 75.0));
     });
 
     test('FlexFit.loose only guarantees up to its share, not exactly it', () {
-      final a = FlexibleNode(
-        fit: .loose,
+      final a = BoxNode(
+        flex: .flexible(),
         children: [
           ShapeNode(
             shape: Rectangle.square(5),
@@ -179,7 +187,7 @@ void main() {
         ],
       );
 
-      final b = ExpandedNode();
+      final b = BoxNode(flex: .expanded());
       final node = RowNode(children: [a, b]);
       node.layout(.tight(.new(100, 50)));
       expect((a.width, b.width), (5.0, 50.0));
@@ -187,23 +195,30 @@ void main() {
 
     test('flex children get zero extra space when non-flex children consume everything', () {
       final fixed = ShapeNode(shape: Rectangle(.new(100, 10)));
-      final flexible = ExpandedNode();
+      final flexible = BoxNode(flex: .expanded());
       final node = RowNode(children: [fixed, flexible]);
       node.layout(.tight(.new(100, 50)));
       expect(flexible.width, 0);
     });
 
-    test('an empty ExpandedNode acts as a flexible spacer between fixed children', () {
+    test('an empty expanded child acts as a flexible spacer between fixed children', () {
       final a = ShapeNode(shape: Rectangle.square(10));
       final b = ShapeNode(shape: Rectangle.square(10));
-      final node = RowNode(children: [a, ExpandedNode(), b]);
+      final node = RowNode(
+        children: [
+          a,
+          BoxNode(flex: .expanded()),
+          b,
+        ],
+      );
+
       node.layout(.tight(.new(100, 50)));
       expect([a.position.x, b.position.x], [0.0, 90.0]);
     });
 
     test('ColumnNode distributes flex along the y axis', () {
-      final a = ExpandedNode();
-      final b = ExpandedNode();
+      final a = BoxNode(flex: .expanded());
+      final b = BoxNode(flex: .expanded());
       final node = ColumnNode(children: [a, b]);
       node.layout(.tight(.new(50, 100)));
       expect((a.height, b.height), (50.0, 50.0));
@@ -213,14 +228,21 @@ void main() {
   group('unbounded main axis', () {
     test('a loose-fit flex child with mainAxisSize.min shrink-wraps without error', () {
       final a = ShapeNode(shape: Rectangle.square(10));
-      final flexible = FlexibleNode(children: [ShapeNode(shape: Rectangle.square(5))]);
+      final flexible = BoxNode(
+        flex: .flexible(),
+        children: [ShapeNode(shape: Rectangle.square(5))],
+      );
+
       final node = RowNode(mainAxisSize: .min, children: [a, flexible]);
       node.layout(.loose(.new(double.infinity, 50)));
       expect(node.width, 15);
     });
 
     test('a tight-fit flex child throws', () {
-      final node = RowNode(mainAxisSize: .min, children: [ExpandedNode()]);
+      final node = RowNode(
+        mainAxisSize: .min,
+        children: [BoxNode(flex: .expanded())],
+      );
 
       expect(
         () => node.layout(.loose(.new(double.infinity, 50))),
@@ -229,7 +251,7 @@ void main() {
     });
 
     test('mainAxisSize.max with any flexible child throws', () {
-      final node = RowNode(children: [FlexibleNode()]);
+      final node = RowNode(children: [BoxNode(flex: .flexible())]);
 
       expect(
         () => node.layout(.loose(.new(double.infinity, 50))),

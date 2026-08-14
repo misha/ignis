@@ -15,6 +15,7 @@ class AlignNode extends LayoutNode {
 
   AlignNode({
     Anchor? alignment,
+    super.flex,
     super.position,
     super.scale,
     super.angle,
@@ -26,11 +27,8 @@ class AlignNode extends LayoutNode {
 
   @override
   Vector2 constrain(LayoutConstraints constraints) {
-    // TODO: Cache this.
-    final items = children.whereType<Measurable>().toList(growable: false);
-
     return LayoutEngine.stack(
-      items: items,
+      items: layoutChildren,
       childConstraints: constraints.loosen(),
       computeSelfSize: (count, largest) => count == 0
           ? constraints.min

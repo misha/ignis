@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/rendering.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/layout_constraints.dart';
+import 'package:ignis/src/layout_flex.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/anchor_owner.dart';
 import 'package:ignis/src/owners/position_owner.dart';
@@ -23,15 +24,10 @@ mixin Measurable implements PositionOwner, AnchorOwner {
   /// Defaults to [size] for items that can't lay themselves out any further.
   Vector2 measure(LayoutConstraints constraints) => size;
 
-  /// The flex factor a flex layout gives this item.
+  /// How a flex layout shares its leftover main-axis space with this item.
   ///
-  /// Defaults to 0 (meaning a fixed, non-flexible space).
-  int get flex => 0;
-
-  /// How a flex layout fits this item into its allocated space.
-  ///
-  /// Defaults to `loose`.
-  FlexFit get fit => .loose;
+  /// Defaults to [LayoutFlex.none] (meaning a fixed, non-flexible space).
+  LayoutFlex get flex => .none;
 
   /// Whether a flex layout can resize this item at all.
   ///
@@ -90,9 +86,13 @@ final class LayoutEngine {
 
     assert(
       canFlex ||
-          !items.any((item) => item.flex > 0 && (mainAxisSize == .max || item.fit == .tight)),
-      'LayoutEngine has an unbounded main axis with a flexible item that demands '
-      'tight/max-forced space. Bound the axis, or use MainAxisSize.min with loose-fit items.',
+          !items.any(
+            (item) =>
+                item.flex.factor > 0 && //
+                (mainAxisSize == .max || item.flex.fit == .tight),
+          ),
+      'Layout has an unbounded main axis with a flexible item that demands a tight or'
+      'max-forced space. Bound the axis, or use MainAxisSize.min with loose-fit items.',
     );
 
     // Pass 1: lay out every non-flex item. If the main axis is unbounded,
@@ -104,8 +104,9 @@ final class LayoutEngine {
 
     for (var i = 0; i < childCount; i++) {
       final item = items[i];
-      if (canFlex && item.flex > 0) {
-        totalFlex += item.flex;
+
+      if (canFlex && item.flex.factor > 0) {
+        totalFlex += item.flex.factor;
         continue;
       }
 
@@ -126,10 +127,11 @@ final class LayoutEngine {
 
       for (var i = 0; i < childCount; i++) {
         final item = items[i];
-        if (item.flex <= 0) continue;
+        final flex = item.flex;
+        if (flex.factor <= 0) continue;
 
-        final maxExtent = spacePerFlex * item.flex;
-        final minExtent = item.fit == .tight ? maxExtent : 0.0;
+        final maxExtent = spacePerFlex * flex.factor;
+        final minExtent = flex.fit == .tight ? maxExtent : 0.0;
         final childConstraints = LayoutConstraints(
           min: direction.toVector2(main: minExtent, cross: fillCross ? crossMax : 0),
           max: direction.toVector2(main: maxExtent, cross: crossMax),

@@ -34,7 +34,7 @@ void main() {
     );
 
     testWidgets(
-      'mixes a fixed leaf, an ExpandedNode, and a FlexibleNode',
+      'mixes a fixed leaf, an expanded child, and a flexible child',
       (tester) => expectGolden(
         tester,
         'goldens/flex_row_expanded.png',
@@ -45,7 +45,8 @@ void main() {
               shape: .square(10),
               paint: Paint()..color = RED,
             ),
-            ExpandedNode(
+            BoxNode(
+              flex: .expanded(),
               children: [
                 ShapeNode(
                   shape: .square(10),
@@ -53,7 +54,8 @@ void main() {
                 ),
               ],
             ),
-            FlexibleNode(
+            BoxNode(
+              flex: .flexible(),
               children: [
                 ShapeNode(
                   shape: .square(10),
@@ -69,14 +71,15 @@ void main() {
 
   group('ColumnNode', () {
     testWidgets(
-      'stretches an ExpandedNode across the cross axis',
+      'stretches an expanded child across the cross axis',
       (tester) => expectGolden(
         tester,
         'goldens/flex_column_stretch.png',
         ColumnNode(
           crossAxisAlignment: .stretch,
           children: [
-            ExpandedNode(
+            BoxNode(
+              flex: .expanded(),
               children: [
                 ShapeNode(
                   shape: .square(20),
