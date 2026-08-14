@@ -28,7 +28,7 @@ void main() {
     });
   });
 
-  group('constrain', () {
+  group('satisfy', () {
     test('clamps a size within min and max', () {
       final constraints = LayoutConstraints(min: .all(10), max: .all(50));
 

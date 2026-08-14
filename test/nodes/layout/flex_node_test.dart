@@ -6,11 +6,29 @@ import '../../support/test_layout_node.dart';
 void main() {
   group('direction', () {
     test('a FlexNode lays out along whichever axis it is given', () {
-      final a = ShapeNode(shape: Rectangle.square(10));
-      final b = ShapeNode(shape: Rectangle(.new(10, 20)));
-      final node = FlexNode(direction: .vertical, children: [a, b]);
-      node.layout(.loose(.all(200)));
-      expect([a.position, b.position], [Vector2.zero, Vector2(0, 10)]);
+      final across = ShapeNode(shape: Rectangle.square(10));
+      final down = ShapeNode(shape: Rectangle.square(10));
+
+      FlexNode(
+        direction: .horizontal,
+        children: [
+          ShapeNode(shape: Rectangle.square(10)),
+          across,
+        ],
+      ).layout(.loose(.all(200)));
+
+      FlexNode(
+        direction: .vertical,
+        children: [
+          ShapeNode(shape: Rectangle.square(10)),
+          down,
+        ],
+      ).layout(.loose(.all(200)));
+
+      expect(
+        [across.position, down.position],
+        [Vector2(10, 0), Vector2(0, 10)],
+      );
     });
 
     test('RowNode lays out along the x axis', () {
@@ -167,7 +185,7 @@ void main() {
       expect((a.width, b.width), (25.0, 75.0));
     });
 
-    test('FlexFit.loose only guarantees up to its share, not exactly it', () {
+    test('a flexible fit only guarantees up to its share, not exactly it', () {
       final a = BoxNode(
         flex: .flexible(),
         children: [

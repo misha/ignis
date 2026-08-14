@@ -194,4 +194,12 @@ void main() {
       );
     });
   });
+
+  group('place', () {
+    test('compensates for a non-default item anchor', () {
+      final item = TestLayoutItem(size: .new(20, 10), anchor: .center);
+      LayoutEngine.place(item, .all(50));
+      expect(item.position, Vector2(60, 55));
+    });
+  });
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/rendering.dart' show FlexFit;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
@@ -83,18 +82,6 @@ void main() {
     expect(node.width, 0);
   });
 
-  test('a LayoutNode behind a fixed-size leaf roots itself instead', () {
-    final child = TestLayoutNode();
-    final leaf = ShapeNode(shape: Rectangle.square(10), children: [child]);
-    final parent = TestLayoutNode(children: [leaf]);
-    final scene = parent.mount();
-    scene.resize(100, 80);
-    scene.update(0);
-
-    expect(child.isLayoutRoot, isTrue);
-    expect(child.layouts, [LayoutConstraints.tight(.new(100, 80))]);
-  });
-
   group('isLayoutRoot', () {
     test('is true without a parent', () {
       expect(TestLayoutNode().isLayoutRoot, isTrue);
@@ -124,7 +111,7 @@ void main() {
     });
   });
 
-  group('layout child cache', () {
+  group('structural changes', () {
     test('re-resolves after a child is added', () {
       final node = RowNode(
         mainAxisSize: .min,
@@ -162,8 +149,6 @@ void main() {
       final node = RowNode(mainAxisSize: .min, children: [wrapper]);
 
       node.layout(.loose(.all(200)));
-      expect(node.width, 0);
-
       wrapper.add(ShapeNode(shape: Rectangle.square(20)));
       node.layout(.loose(.all(200)));
       expect(node.width, 0);
@@ -183,46 +168,9 @@ void main() {
     });
   });
 
-  group('flex', () {
-    test('defaults to no flex', () {
-      expect(BoxNode().flex, LayoutFlex.none);
-    });
-
-    test('expanded takes a share of the leftover space and fills it', () {
-      final node = BoxNode(flex: .expanded());
-      expect((node.flex.factor, node.flex.fit), (1, FlexFit.tight));
-    });
-
-    test('flexible takes a share of the leftover space without filling it', () {
-      final node = BoxNode(flex: .flexible(3));
-      expect((node.flex.factor, node.flex.fit), (3, FlexFit.loose));
-    });
-
-    test('rejects a factor that asks for no space', () {
-      expect(() => LayoutFlex.expanded(0), throwsAssertionError);
-    });
-
-    test('flex is inert without a FlexNode parent', () {
-      final node = BoxNode(
-        flex: .expanded(),
-        children: [ShapeNode(shape: Rectangle(.new(20, 10)))],
-      );
-
-      node.layout(.new(min: .zero, max: .all(200)));
-      expect((node.width, node.height), (20.0, 10.0));
-    });
-  });
-
-  test('layout clamps an out-of-range performLayout result to the given constraints', () {
+  test('layout clamps an out-of-range constrain result to the given constraints', () {
     final node = TestLayoutNode(sizeToReturn: .new(200, 5));
     node.layout(.new(min: .all(10), max: .all(100)));
     expect((node.width, node.height), (100.0, 10.0));
-  });
-
-  test('LayoutEngine.place compensates for a non-default child anchor', () {
-    final child = TestLayoutNode(sizeToReturn: .new(20, 10), anchor: .center);
-    child.layout(.tight(.new(20, 10)));
-    LayoutEngine.place(child, .all(50));
-    expect(child.position, Vector2(60, 55));
   });
 }

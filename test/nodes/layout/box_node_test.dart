@@ -17,7 +17,7 @@ void main() {
   });
 
   test('square sets width and height to the same size', () {
-    final node = BoxNode.square(30);
+    final node = BoxNode.square(size: 30);
     node.layout(.loose(.all(100)));
     expect((node.width, node.height), (30.0, 30.0));
   });

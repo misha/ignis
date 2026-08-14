@@ -46,8 +46,8 @@ class BoxNode extends LayoutNode {
        padding = padding ?? .zero;
 
   /// A [BoxNode] with [targetWidth] and [targetHeight] both set to [size].
-  BoxNode.square(
-    double size, {
+  BoxNode.square({
+    required double size,
     EdgeInsets? padding,
     this.alignment,
     super.flex,
