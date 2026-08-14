@@ -24,6 +24,7 @@ Measured with `flutter test` on 2026/08/14, average of 3 runs.
 | Intersect Circle-Circle       | 2012.87 us  |
 | Intersect Circle-Rectangle    | 14665.78 us |
 | Intersect Rectangle-Rectangle | 9116.06 us  |
+| Layout                        | 47795.60 us |
 | Lifecycle Events              | 49223.99 us |
 | Signal Emissions              | 2534.44 us  |
 | Update                        | 17683.70 us |
