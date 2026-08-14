@@ -1,6 +1,6 @@
 import 'package:ignis/ignis.dart';
 
-final class TestMeasurable with Measurable {
+final class TestMeasurable implements Measurable {
   final constraints = <LayoutConstraints>[];
 
   @override
@@ -11,6 +11,12 @@ final class TestMeasurable with Measurable {
 
   @override
   final Vector2 size;
+
+  @override
+  double get width => size.x;
+
+  @override
+  double get height => size.y;
 
   @override
   LayoutFlex flex;

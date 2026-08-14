@@ -8,31 +8,33 @@ import 'package:ignis/src/layout_flex.dart';
 import 'package:ignis/src/math.dart';
 
 /// Something a layout algorithm can measure, position, and allocate space to.
-mixin Measurable {
-  /// This item's size.
-  Vector2 get size;
-
-  /// This item's width.
-  double get width => size.x;
-
-  /// This item's height.
-  double get height => size.y;
-
-  /// This item's position, written in place by [LayoutEngine.place].
+abstract interface class Measurable {
+  /// This item's position. Must be mutable for the engine to place.
   MVector2 get position;
 
   /// Where this item's area sits relative to [position].
   Anchor get anchor;
 
+  /// This item's size.
+  Vector2 get size;
+
+  /// This item's width.
+  double get width;
+
+  /// This item's height.
+  double get height;
+
   /// This item's size under [constraints], laying itself out first if possible.
   ///
-  /// Defaults to [size] for items that can't lay themselves out any further.
-  Vector2 measure(LayoutConstraints constraints) => size;
+  /// An item that can't lay itself out any further returns [size], ignoring
+  /// [constraints] entirely.
+  Vector2 measure(LayoutConstraints constraints);
 
   /// How a flex layout shares its leftover main-axis space with this item.
   ///
-  /// Defaults to [LayoutFlex.none] (meaning a fixed, non-flexible space).
-  LayoutFlex get flex => .none;
+  /// An item asking for no share returns [LayoutFlex.none], leaving it a
+  /// fixed, non-flexible space.
+  LayoutFlex get flex;
 }
 
 /// A standalone set of layout algorithms, operating on [Measurable] items.

@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/anchor.dart';
+import 'package:ignis/src/layout_constraints.dart';
 import 'package:ignis/src/layout_engine.dart';
+import 'package:ignis/src/layout_flex.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 import 'package:ignis/src/owners/anchor_owner.dart';
@@ -10,14 +12,33 @@ import 'package:ignis/src/shape.dart';
 
 /// A [TransformNode] with a [size], defining an area for shapes,
 /// hit-testing, rendering, and other systems to work against.
-abstract class SizedNode extends TransformNode with Measurable implements AnchorOwner {
+abstract class SizedNode extends TransformNode implements Measurable, AnchorOwner {
   /// This node's size, as a [Vector2].
   @override
   Vector2 get size;
 
+  /// This node's width.
+  @override
+  double get width => size.x;
+
+  /// This node's height.
+  @override
+  double get height => size.y;
+
   /// Where this node's area sits relative to [position]. Defaults to `topLeft`.
   @override
   Anchor anchor;
+
+  /// This node's size under [constraints]. A plain [SizedNode] can't lay
+  /// itself out, so this is [size] whatever the constraints say.
+  @override
+  Vector2 measure(LayoutConstraints constraints) => size;
+
+  /// The share of a flex layout's leftover space this node asks for.
+  ///
+  /// A plain [SizedNode] asks for none.
+  @override
+  LayoutFlex get flex => .none;
 
   SizedNode({
     Anchor? anchor,
