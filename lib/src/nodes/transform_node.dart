@@ -33,11 +33,11 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
        scale = .copy(scale ?? .all(1)),
        angle = angle ?? 0;
 
-  /// The distance between this node's [position] and [other]'s.
-  double distance(TransformNode other) => position.distance(other.position);
+  /// The distance between this node's absolute position and [other]'s.
+  double distance(TransformNode other) => absolutePosition.distance(other.absolutePosition);
 
-  /// The squared distance between this node's [position] and [other]'s.
-  double distance2(TransformNode other) => position.distance2(other.position);
+  /// The squared distance between this node's absolute position and [other]'s.
+  double distance2(TransformNode other) => absolutePosition.distance2(other.absolutePosition);
 
   final MMatrix3 _lastLocalTransform = .identity();
 
@@ -80,6 +80,61 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
     }
 
     return transform;
+  }
+
+  /// This node's [position], composed with the transform of every
+  /// [TransformNode] ancestor, stopping at (but not including) [upTo].
+  ///
+  /// The returned vector is a fresh copy, free for the caller to mutate.
+  MVector2 scenePosition([Node? upTo]) {
+    final absolute = MVector2.copy(position);
+    var current = parent;
+
+    while (current != null && !identical(current, upTo)) {
+      if (current is TransformNode) {
+        absolute.transform(current.localTransform);
+      }
+
+      current = current.parent;
+    }
+
+    return absolute;
+  }
+
+  /// This node's [position] in scene space.
+  MVector2 get absolutePosition => scenePosition();
+
+  /// The nearest [T] to this node among [within]'s descendants, or null if
+  /// there is none.
+  ///
+  /// Defaults to searching this node's whole tree. Never returns this node.
+  T? nearest<T extends TransformNode>([Node? within]) {
+    var root = within;
+
+    if (root == null) {
+      root = this;
+
+      while (root!.parent != null) {
+        root = root.parent;
+      }
+    }
+
+    final absolute = absolutePosition;
+    T? closest;
+    var closestDistance2 = double.infinity;
+
+    for (final descendant in root.descendants) {
+      if (descendant is! T || identical(descendant, this)) continue;
+
+      final distance2 = descendant.absolutePosition.distance2(absolute);
+
+      if (distance2 < closestDistance2) {
+        closest = descendant;
+        closestDistance2 = distance2;
+      }
+    }
+
+    return closest;
   }
 
   final Float64List _lastRenderTransform = Float64List(16)

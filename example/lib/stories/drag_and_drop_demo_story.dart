@@ -211,7 +211,7 @@ class _PieceNode extends ShapeNode {
   }
 
   void drop() {
-    final zone = _active.nearest(position);
+    final zone = _active.nearest(this);
     if (zone != null) position.setFrom(zone.position);
     onDropped.emit(zone);
   }
