@@ -16,20 +16,20 @@ PROFILE=1 flutter test --enable-vmservice benchmark/update_benchmark.dart
 
 > :warning: This is not the performance tuning log and does not explain changes.
 
-Measured with `flutter test` on 2026/08/14, average of 3 or more runs.
+Measured with `flutter test` on 2026/08/15, average of 3 or more runs.
 
 | Benchmark                     | Runtime     |
 |-------------------------------|-------------|
-| Collisions                    | 6926.39 us  |
-| Intersect Circle-Circle       | 2012.87 us  |
-| Intersect Circle-Rectangle    | 14665.78 us |
-| Intersect Rectangle-Rectangle | 9116.06 us  |
-| Layout                        | 21543.87 us |
-| Lifecycle Events              | 47056.24 us |
-| Nearest                       | 6728.26 us  |
-| Signal Emissions              | 2534.44 us  |
-| Update                        | 15357.43 us |
-| Update + Render               | 32887.69 us |
+| Collisions                    | 7058.91 us  |
+| Intersect Circle-Circle       | 2118.30 us  |
+| Intersect Circle-Rectangle    | 14934.67 us |
+| Intersect Rectangle-Rectangle | 9305.33 us  |
+| Layout                        | 21702.94 us |
+| Lifecycle Events              | 47344.48 us |
+| Nearest                       | 6862.29 us  |
+| Signal Emissions              | 2545.72 us  |
+| Update                        | 18608.55 us |
+| Update + Render               | 32807.71 us |
 
 System details:
 
