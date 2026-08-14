@@ -19,4 +19,28 @@ void main() {
       ),
     ),
   );
+
+  testWidgets(
+    'wraps its text to the width a BoxNode gives it',
+    (tester) => expectGolden(
+      tester,
+      'goldens/text_wrapped.png',
+      // The scene's constraints are tight, so the inner box only gets to be
+      // 60 wide once something loosens them.
+      BoxNode(
+        alignment: .topLeft,
+        children: [
+          BoxNode(
+            width: 60,
+            children: [
+              TextNode(
+                text: 'Sally sells sea shells by the sea shore',
+                style: const TextStyle(color: BLACK, fontSize: 10),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
 }

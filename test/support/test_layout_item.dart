@@ -1,6 +1,6 @@
 import 'package:ignis/ignis.dart';
 
-final class TestMeasurable implements Measurable {
+final class TestLayoutItem implements LayoutItem {
   final constraints = <LayoutConstraints>[];
 
   @override
@@ -25,7 +25,7 @@ final class TestMeasurable implements Measurable {
   /// it hasn't been measured yet.
   LayoutConstraints? get lastConstraints => constraints.lastOrNull;
 
-  TestMeasurable({
+  TestLayoutItem({
     MVector2? position,
     Anchor? anchor,
     Vector2? size,
@@ -36,8 +36,5 @@ final class TestMeasurable implements Measurable {
        flex = flex ?? .none;
 
   @override
-  Vector2 measure(LayoutConstraints constraints) {
-    this.constraints.add(constraints);
-    return size;
-  }
+  void layout(LayoutConstraints constraints) => this.constraints.add(constraints);
 }

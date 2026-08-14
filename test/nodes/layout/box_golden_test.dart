@@ -7,7 +7,7 @@ import '../../support/expect.dart';
 
 void main() {
   testWidgets(
-    'confines a nested AlignNode to its fixed size',
+    'confines a nested aligned BoxNode to its fixed size',
     (tester) => expectGolden(
       tester,
       'goldens/box_fixed_size.png',
@@ -15,7 +15,7 @@ void main() {
         width: 40,
         height: 40,
         children: [
-          AlignNode(
+          BoxNode(
             alignment: .bottomRight,
             children: [
               ShapeNode(
@@ -116,6 +116,61 @@ void main() {
         children: [
           ShapeNode(
             shape: .square(50),
+            paint: Paint()..color = BLACK,
+          ),
+          ShapeNode(
+            shape: .square(20),
+            paint: Paint()..color = RED,
+          ),
+        ],
+      ),
+    ),
+  );
+
+  testWidgets(
+    'centers a child',
+    (tester) => expectGolden(
+      tester,
+      'goldens/align_default.png',
+      BoxNode(
+        alignment: .center,
+        children: [
+          ShapeNode(
+            shape: .square(20),
+            paint: Paint()..color = BLACK,
+          ),
+        ],
+      ),
+    ),
+  );
+
+  testWidgets(
+    'aligns a child per a custom alignment',
+    (tester) => expectGolden(
+      tester,
+      'goldens/align_bottom_right.png',
+      BoxNode(
+        alignment: .bottomRight,
+        children: [
+          ShapeNode(
+            shape: .square(20),
+            paint: Paint()..color = BLACK,
+          ),
+        ],
+      ),
+    ),
+  );
+
+  testWidgets(
+    'aligns multiple children sharing the same alignment',
+    (tester) => expectGolden(
+      tester,
+      'goldens/align_multiple_children.png',
+      BoxNode(
+        alignment: .bottomRight,
+        children: [
+          ShapeNode(
+            shape: .square(40),
             paint: Paint()..color = BLACK,
           ),
           ShapeNode(

@@ -65,7 +65,7 @@ class LayoutBenchmark extends AsyncBenchmarkBase {
 
     return switch (random.nextInt(3)) {
       0 => BoxNode(padding: .all(4), children: children(depth)),
-      1 => AlignNode(children: children(depth)),
+      1 => BoxNode(alignment: .center, children: children(depth)),
       _ => flex(depth),
     };
   }

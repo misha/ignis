@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/layout_constraints.dart';
-import 'package:ignis/src/layout_engine.dart';
+import 'package:ignis/src/layout_item.dart';
 import 'package:ignis/src/layout_flex.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
@@ -12,7 +12,7 @@ import 'package:ignis/src/shape.dart';
 
 /// A [TransformNode] with a [size], defining an area for shapes,
 /// hit-testing, rendering, and other systems to work against.
-abstract class SizedNode extends TransformNode implements Measurable, AnchorOwner {
+abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwner {
   /// This node's size, as a [Vector2].
   @override
   Vector2 get size;
@@ -35,10 +35,12 @@ abstract class SizedNode extends TransformNode implements Measurable, AnchorOwne
   @override
   LayoutFlex get flex => .none;
 
-  /// This node's size under [constraints]. A plain [SizedNode] can't lay
-  /// itself out, so this is [size] whatever the constraints say.
+  /// A plain [SizedNode] can't lay itself out, so its [size] stands whatever
+  /// [constraints] say.
   @override
-  Vector2 measure(LayoutConstraints constraints) => size;
+  void layout(LayoutConstraints constraints) {
+    // Nothing to do.
+  }
 
   SizedNode({
     Anchor? anchor,

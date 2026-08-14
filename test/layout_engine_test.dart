@@ -1,87 +1,100 @@
+import 'package:flutter/painting.dart' show EdgeInsets;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-import 'support/test_measurable.dart';
+import 'support/test_layout_item.dart';
 
 void main() {
-  group('stack', () {
-    test('measures every child against the same constraints', () {
-      final childConstraints = LayoutConstraints.tight(.all(50));
-      final items = List.generate(3, (_) => TestMeasurable(size: .all(10)));
+  group('box', () {
+    Vector2 box(
+      List<TestLayoutItem> items, {
+      LayoutConstraints? constraints,
+      double? width,
+      double? height,
+      EdgeInsets? padding,
+      Anchor? alignment,
+    }) => LayoutEngine.box(
+      items: items,
+      constraints: constraints ?? .unbounded(),
+      targetWidth: width,
+      targetHeight: height,
+      padding: padding ?? EdgeInsets.zero,
+      alignment: alignment,
+    );
 
-      LayoutEngine.stack(
-        items: items,
-        childConstraints: childConstraints,
-        computeSelfSize: (count, largest) => largest,
-        computeOffset: (self, child) => .zero,
-      );
-
-      expect(items.map((i) => i.lastConstraints), [
-        childConstraints,
-        childConstraints,
-        childConstraints,
-      ]);
+    test('sizes to its target, whatever the items measure', () {
+      final items = [TestLayoutItem(size: .all(10))];
+      expect(box(items, width: 40, height: 30), Vector2(40, 30));
     });
 
-    test('reports the largest extent per axis across all children', () {
-      final sizes = [Vector2(10, 30), Vector2(20, 5), Vector2(5, 5)];
-      final items = sizes.map((size) => TestMeasurable(size: size)).toList();
-      Vector2? largestSeen;
+    test('shrink-wraps to the largest item per axis without a target', () {
+      final items = [
+        TestLayoutItem(size: .new(20, 10)),
+        TestLayoutItem(size: .new(10, 30)),
+      ];
 
-      LayoutEngine.stack(
-        items: items,
-        childConstraints: .unbounded(),
-        computeSelfSize: (count, largest) {
-          largestSeen = largest;
-          return largest;
-        },
-        computeOffset: (self, child) => .zero,
-      );
-
-      expect(largestSeen, Vector2(20, 30));
+      expect(box(items), Vector2(20, 30));
     });
 
-    test('passes the child count to computeSelfSize', () {
-      final items = List.generate(4, (_) => TestMeasurable());
-      int? countSeen;
-
-      LayoutEngine.stack(
-        items: items,
-        childConstraints: .unbounded(),
-        computeSelfSize: (count, largest) {
-          countSeen = count;
-          return largest;
-        },
-        computeOffset: (self, child) => .zero,
-      );
-
-      expect(countSeen, 4);
+    test('grows past its items by the padding', () {
+      final items = [TestLayoutItem(size: .all(10))];
+      expect(box(items, padding: const .all(5)), Vector2(20, 20));
     });
 
-    test('computes an offset per child, in order, via computeOffset, and applies it', () {
-      final sizes = [Vector2(10, 10), Vector2(20, 20)];
-      final items = sizes.map((size) => TestMeasurable(size: size)).toList();
-
-      final selfSize = LayoutEngine.stack(
-        items: items,
-        childConstraints: .unbounded(),
-        computeSelfSize: (count, largest) => largest,
-        computeOffset: (self, child) => .new(self.x - child.x, self.y - child.y),
-      );
-
-      expect(selfSize, Vector2(20, 20));
-      expect(items.map((i) => i.position), [Vector2(10, 10), Vector2(0, 0)]);
+    test('an unaligned item lands on the padded origin', () {
+      final items = [TestLayoutItem(size: .all(10))];
+      box(items, width: 100, height: 100, padding: const .fromLTRB(4, 8, 0, 0));
+      expect(items.single.position, Vector2(4, 8));
     });
 
-    test('applies nothing and reports a zero largest extent with no children', () {
-      final selfSize = LayoutEngine.stack(
-        items: [],
-        childConstraints: .unbounded(),
-        computeSelfSize: (count, largest) => largest,
-        computeOffset: (self, child) => .zero,
+    test('an unaligned item is measured against the unloosened constraints', () {
+      final items = [TestLayoutItem(size: .all(10))];
+      box(items, constraints: .tight(.all(50)));
+      expect(items.single.lastConstraints, LayoutConstraints.tight(.all(50)));
+    });
+
+    test('an aligned item is measured against loosened constraints', () {
+      final items = [TestLayoutItem(size: .all(10))];
+      box(items, constraints: .tight(.all(50)), alignment: .center);
+      expect(items.single.lastConstraints, LayoutConstraints(min: .zero, max: .all(50)));
+    });
+
+    test('alignment places each item in the room left over', () {
+      final items = [
+        TestLayoutItem(size: .new(20, 10)),
+        TestLayoutItem(size: .new(10, 20)),
+      ];
+
+      box(items, constraints: .tight(.new(100, 60)), alignment: .bottomRight);
+      expect(items.map((i) => i.position), [Vector2(80, 50), Vector2(90, 40)]);
+    });
+
+    test('alignment measures the leftover room inside the padding', () {
+      final items = [TestLayoutItem(size: .all(20))];
+      box(
+        items,
+        constraints: .tight(.all(100)),
+        padding: const .all(10),
+        alignment: .center,
       );
 
-      expect(selfSize, Vector2.zero);
+      // The padded interior is 80x80, so 60 of leftover room, halved.
+      expect(items.single.position, Vector2(40, 40));
+    });
+
+    test('shrink-wrapping under tight constraints still fills, via satisfy', () {
+      final items = [TestLayoutItem(size: .all(10))];
+      expect(box(items, constraints: .tight(.new(100, 60))), Vector2(100, 60));
+    });
+
+    test('reports the smallest constraint with no items at all', () {
+      expect(
+        box(
+          [],
+          constraints: .new(min: .all(5), max: .all(50)),
+        ),
+        Vector2(5, 5),
+      );
     });
   });
 
@@ -89,7 +102,7 @@ void main() {
     test('splits leftover main-axis space evenly among equal-flex children', () {
       final items = List.generate(
         2,
-        (_) => TestMeasurable(
+        (_) => TestLayoutItem(
           size: .all(50),
           flex: .expanded(),
         ),
@@ -110,7 +123,7 @@ void main() {
     });
 
     test('stretch places every child at the cross-axis origin', () {
-      final items = [TestMeasurable(size: .all(10))];
+      final items = [TestLayoutItem(size: .all(10))];
 
       LayoutEngine.flex(
         direction: .horizontal,
@@ -126,7 +139,7 @@ void main() {
     });
 
     test('honors spacing between non-flex children and shrinks to consumed space', () {
-      final items = List.generate(2, (_) => TestMeasurable(size: .all(10)));
+      final items = List.generate(2, (_) => TestLayoutItem(size: .all(10)));
 
       final selfSize = LayoutEngine.flex(
         direction: .horizontal,
@@ -145,7 +158,7 @@ void main() {
     test('uses the y axis as main when direction is vertical', () {
       final items = List.generate(
         2,
-        (_) => TestMeasurable(
+        (_) => TestLayoutItem(
           size: .all(50),
           flex: .expanded(),
         ),
@@ -165,11 +178,7 @@ void main() {
     });
 
     test('throws when the main axis is unbounded and a flex child demands forced space', () {
-      final items = [
-        TestMeasurable(
-          flex: .expanded(),
-        ),
-      ];
+      final items = [TestLayoutItem(flex: .expanded())];
 
       expect(
         () => LayoutEngine.flex(

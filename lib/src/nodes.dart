@@ -12,7 +12,6 @@ export 'nodes/text_node.dart';
 export 'nodes/timer_node.dart';
 export 'nodes/transform_node.dart';
 
-export 'nodes/layout/align_node.dart';
 export 'nodes/layout/box_node.dart';
 export 'nodes/layout/column_node.dart';
 export 'nodes/layout/flex_node.dart';

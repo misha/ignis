@@ -38,13 +38,55 @@ void main() {
   test('updates its layout when text changes', () {
     final node = TextNode(text: 'I');
     node.mount();
-    node.layout();
+    node.layout(.unbounded());
 
     final initialWidth = node.width;
     node.text = 'Ignis';
-    node.layout();
+    node.layout(.unbounded());
 
     expect(node.width, greaterThan(initialWidth));
+  });
+
+  test('wraps its text within the available width', () {
+    final node = TextNode(text: 'Ignis lays its text out');
+    node.mount();
+
+    node.layout(.unbounded());
+    final unwrapped = node.size;
+
+    node.layout(.loose(.new(unwrapped.x / 2, double.infinity)));
+
+    expect(node.width, lessThan(unwrapped.x));
+    expect(node.height, greaterThan(unwrapped.y));
+  });
+
+  test('re-wraps when the constraints change, not just the text', () {
+    final node = TextNode(text: 'Ignis lays its text out');
+    node.mount();
+
+    node.layout(.unbounded());
+    final unwrapped = node.size;
+
+    node.layout(.loose(.new(unwrapped.x / 2, double.infinity)));
+    final wrapped = node.size;
+
+    node.layout(.unbounded());
+    expect(node.size, unwrapped);
+    expect(wrapped.x, lessThan(unwrapped.x));
+  });
+
+  test('fills a tight width rather than shrinking to its text', () {
+    final node = TextNode(text: 'I');
+    node.mount();
+
+    node.layout(.tight(.new(200, 50)));
+    expect(node.width, 200);
+  });
+
+  test('reports a zero size until it is laid out', () {
+    final node = TextNode(text: 'Ignis');
+    node.mount();
+    expect(node.size, Vector2.zero);
   });
 
   test('renders styled text', () async {
@@ -57,7 +99,7 @@ void main() {
     );
 
     node.mount();
-    node.layout();
+    node.layout(.unbounded());
 
     final image = await renderImage(node, node.width.ceil(), node.height.ceil());
     final pixels = await pixelsOf(image);

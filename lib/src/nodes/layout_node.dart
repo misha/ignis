@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/layout_constraints.dart';
-import 'package:ignis/src/layout_engine.dart';
+import 'package:ignis/src/layout_item.dart';
 import 'package:ignis/src/layout_flex.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/node.dart';
@@ -44,15 +44,15 @@ abstract class LayoutNode extends SizedNode {
 
   /// The items this node lays out: its direct [SizedNode] children.
   ///
-  /// Queried as [SizedNode] rather than [Measurable] because that is what a
-  /// layout item is *in the tree* - [Measurable] exists so `LayoutEngine` can
+  /// Queried as [SizedNode] rather than [LayoutItem] because that is what a
+  /// layout item is *in the tree* - [LayoutItem] exists so `LayoutEngine` can
   /// work on things that aren't nodes at all.
   ///
   /// [Node.query] hands back live storage that is maintained in place rather
   /// than replaced, so the reference is resolved once and kept; later adds and
   /// removals show up through it.
   @protected
-  late final Iterable<Measurable> layoutChildren = query<SizedNode>();
+  late final Iterable<LayoutItem> layoutChildren = query<SizedNode>();
 
   /// Whether no [LayoutNode] lays this node out, leaving it to lay itself out
   /// against the scene every frame.
@@ -60,20 +60,14 @@ abstract class LayoutNode extends SizedNode {
 
   /// Lays out this node under [constraints] and stores the result.
   @nonVirtual
+  @override
   void layout(LayoutConstraints constraints) {
     final size = constrain(constraints);
     _size.setFrom(constraints.satisfy(size.x, size.y));
   }
 
-  /// Lays this node out under [constraints], then returns its resulting size.
-  @override
-  Vector2 measure(LayoutConstraints constraints) {
-    layout(constraints);
-    return size;
-  }
-
   /// Computes and returns this node's size under [constraints], laying out
-  /// and positioning every [Measurable] child.
+  /// and positioning every [LayoutItem] child.
   ///
   /// The returned size need not satisfy [constraints]; [layout] clamps it.
   @visibleForOverriding

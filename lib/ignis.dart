@@ -16,6 +16,7 @@ export 'src/intersection_system.dart';
 export 'src/layout_constraints.dart';
 export 'src/layout_engine.dart';
 export 'src/layout_flex.dart';
+export 'src/layout_item.dart';
 export 'src/math.dart';
 export 'src/node.dart' show Node, Scene, Mount;
 export 'src/nodes.dart';

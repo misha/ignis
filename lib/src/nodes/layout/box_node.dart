@@ -1,15 +1,18 @@
 import 'package:flutter/painting.dart' show EdgeInsets;
+import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/layout_constraints.dart';
 import 'package:ignis/src/layout_engine.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/layout_node.dart';
 
-/// Forces a fixed size on the space this node claims.
+/// Claims a region, optionally at a fixed size, and places every child inside
+/// it under a shared [padding] and [alignment].
 ///
 /// A null [targetWidth]/[targetHeight] leaves that axis to the largest child
-/// (or zero, with none), still clamped to this node's own constraints.
+/// plus [padding], still clamped to this node's own constraints, so it fills
+/// under tight constraints and shrink-wraps under unbounded ones.
 ///
-/// Roughly equivalent to Flutter's `SizedBox`.
+/// Roughly equivalent to Flutter's `Container`.
 class BoxNode extends LayoutNode {
   /// This node's fixed width, or null to size to the largest child on this axis.
   double? targetWidth;
@@ -21,10 +24,15 @@ class BoxNode extends LayoutNode {
   /// Defaults to `EdgeInsets.zero`.
   EdgeInsets padding;
 
+  /// Where each child sits in the room left over inside [padding], as a
+  /// fraction of that room on each axis.
+  Anchor? alignment;
+
   BoxNode({
     double? width,
     double? height,
     EdgeInsets? padding,
+    this.alignment,
     super.flex,
     super.position,
     super.scale,
@@ -41,6 +49,7 @@ class BoxNode extends LayoutNode {
   BoxNode.square(
     double size, {
     EdgeInsets? padding,
+    this.alignment,
     super.flex,
     super.position,
     super.scale,
@@ -55,21 +64,13 @@ class BoxNode extends LayoutNode {
 
   @override
   Vector2 constrain(LayoutConstraints constraints) {
-    final requestedX = targetWidth?.clamp(constraints.min.x, constraints.max.x).toDouble();
-    final requestedY = targetHeight?.clamp(constraints.min.y, constraints.max.y).toDouble();
-    final boxConstraints = LayoutConstraints(
-      min: .new(requestedX ?? constraints.min.x, requestedY ?? constraints.min.y),
-      max: .new(requestedX ?? constraints.max.x, requestedY ?? constraints.max.y),
-    );
-
-    return LayoutEngine.stack(
+    return LayoutEngine.box(
       items: layoutChildren,
-      childConstraints: boxConstraints.deflate(padding),
-      computeSelfSize: (count, largest) => constraints.satisfy(
-        requestedX ?? (largest.x + padding.horizontal),
-        requestedY ?? (largest.y + padding.vertical),
-      ),
-      computeOffset: (selfSize, childSize) => .new(padding.left, padding.top),
+      constraints: constraints,
+      targetWidth: targetWidth,
+      targetHeight: targetHeight,
+      padding: padding,
+      alignment: alignment,
     );
   }
 }

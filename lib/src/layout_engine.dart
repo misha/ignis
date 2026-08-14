@@ -2,68 +2,141 @@ import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';
 import 'package:ignis/src/anchor.dart';
+import 'package:ignis/src/layout_item.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/layout_constraints.dart';
-import 'package:ignis/src/layout_flex.dart';
 import 'package:ignis/src/math.dart';
 
-/// Something a layout algorithm can measure, position, and allocate space to.
-abstract interface class Measurable {
-  /// This item's position. Must be mutable for the engine to place.
-  MVector2 get position;
-
-  /// Where this item's area sits relative to [position].
-  Anchor get anchor;
-
-  /// This item's size.
-  Vector2 get size;
-
-  /// This item's width.
-  double get width;
-
-  /// This item's height.
-  double get height;
-
-  /// How a flex layout shares its leftover main-axis space with this item.
-  ///
-  /// An item asking for no share returns [LayoutFlex.none], leaving it a
-  /// fixed, non-flexible space.
-  LayoutFlex get flex;
-
-  /// This item's size under [constraints], laying itself out first if possible.
-  ///
-  /// An item that can't lay itself out any further returns [size], ignoring
-  /// [constraints] entirely.
-  Vector2 measure(LayoutConstraints constraints);
-}
-
-/// A standalone set of layout algorithms, operating on [Measurable] items.
+/// A standalone set of layout algorithms, operating on [LayoutItem] items.
 final class LayoutEngine {
   const LayoutEngine._();
 
-  /// Measures every item against the same [childConstraints], tracks the
-  /// largest extent, then places each item via [computeOffset].
-  static Vector2 stack({
-    required Iterable<Measurable> items,
-    required LayoutConstraints childConstraints,
-    required Vector2 Function(int childCount, Vector2 largestChildSize) computeSelfSize,
-    required Vector2 Function(Vector2 selfSize, Vector2 childSize) computeOffset,
+  /// Sizes a region to [targetWidth]/[targetHeight] - or to its largest item
+  /// plus [padding] where either is null - then places every item inside it
+  /// at [alignment].
+  ///
+  /// ## Example (no alignment)
+  ///
+  /// Let's say you have a 100x60 region with 10 of padding and no alignment,
+  /// holding one resizable item.
+  ///
+  ///     +----------------------------------------+
+  ///     |                                        |
+  ///     |    +--------------------------------+  |
+  ///     |    |              item              |  |
+  ///     |    +--------------------------------+  |
+  ///     |                                        |
+  ///     +----------------------------------------+
+  ///     0   10                              90 100
+  ///
+  /// The steps are as follows:
+  ///
+  ///   1. Narrow the constraints. The padding leaves an 80x40 interior, and
+  ///      nothing loosens it, so its minimum carries through.
+  ///   2. Measure every item against that. Forced to fill, the item reports
+  ///      80x40.
+  ///   3. Size the region. With no target it shrink-wraps to the largest item
+  ///      plus padding, landing on 100x60.
+  ///   4. Place every item on the padded origin, (10, 10).
+  ///
+  /// ## Example (alignment)
+  ///
+  /// Now the same region, aligned at (0.5, 0.5), holding one 20x20 item.
+  ///
+  ///     +----------------------------------------+
+  ///     |                                        |
+  ///     |                +------+                |
+  ///     |                | item |                |
+  ///     |                +------+                |
+  ///     |                                        |
+  ///     +----------------------------------------+
+  ///     0                40      60            100
+  ///
+  /// The steps are as follows:
+  ///
+  ///   1. Narrow the constraints. The padding leaves an 80x40 interior, and
+  ///      aligning loosens it, so the item may come back smaller.
+  ///   2. Measure every item against that. The item reports 20x20.
+  ///   3. Size the region. With no target it shrink-wraps to the largest item
+  ///      plus padding, 40x40, which its own constraints clamp up to 100x60.
+  ///   4. Place every item. That leaves 60x20 of room inside the padding, and
+  ///      half of it puts the item at (40, 20).
+  static Vector2 box({
+    required Iterable<LayoutItem> items,
+    required LayoutConstraints constraints,
+    required double? targetWidth,
+    required double? targetHeight,
+    required EdgeInsets padding,
+    required Anchor? alignment,
   }) {
-    final largest = MVector2.zero();
-    final sizes = <Vector2>[];
+    final requestedX = targetWidth?.clamp(constraints.min.x, constraints.max.x).toDouble();
+    final requestedY = targetHeight?.clamp(constraints.min.y, constraints.max.y).toDouble();
 
-    for (final item in items) {
-      final size = item.measure(childConstraints);
-      sizes.add(size);
-      largest.max(size);
+    // Each of these narrows what items are measured against, and each rebuilds
+    // a whole [LayoutConstraints] to do it. A region with no target, no
+    // padding and no alignment hands its own constraints straight down, so
+    // every step is skipped where it would only rebuild what it was given.
+    var childConstraints = constraints;
+
+    if (requestedX != null || requestedY != null) {
+      childConstraints = LayoutConstraints(
+        min: .new(requestedX ?? constraints.min.x, requestedY ?? constraints.min.y),
+        max: .new(requestedX ?? constraints.max.x, requestedY ?? constraints.max.y),
+      );
     }
 
-    final selfSize = computeSelfSize(sizes.length, largest);
-    var index = 0;
+    if (padding != .zero) {
+      childConstraints = childConstraints.deflate(padding);
+    }
+
+    if (alignment != null) {
+      childConstraints = childConstraints.loosen();
+    }
+
+    final largest = MVector2.zero();
+
+    if (alignment == null) {
+      final offset = Vector2(padding.left, padding.top);
+
+      for (final item in items) {
+        item.layout(childConstraints);
+        largest.max(item.size);
+        place(item, offset);
+      }
+
+      return constraints.satisfy(
+        requestedX ?? (largest.x + padding.horizontal),
+        requestedY ?? (largest.y + padding.vertical),
+      );
+    }
+
+    // Aligning needs the region's own size, which isn't known until every item
+    // has been measured. Nothing is kept between the two passes: [LayoutItem]
+    // guarantees an item still reports the size it just measured at, so the
+    // second pass reads it back off the item.
+    for (final item in items) {
+      item.layout(childConstraints);
+      largest.max(item.size);
+    }
+
+    final selfSize = constraints.satisfy(
+      requestedX ?? (largest.x + padding.horizontal),
+      requestedY ?? (largest.y + padding.vertical),
+    );
+
+    final innerWidth = selfSize.x - padding.horizontal;
+    final innerHeight = selfSize.y - padding.vertical;
 
     for (final item in items) {
-      place(item, computeOffset(selfSize, sizes[index]));
-      index += 1;
+      final size = item.size;
+
+      place(
+        item,
+        .new(
+          padding.left + (innerWidth - size.x) * alignment.x,
+          padding.top + (innerHeight - size.y) * alignment.y,
+        ),
+      );
     }
 
     return selfSize;
@@ -96,7 +169,7 @@ final class LayoutEngine {
   static Vector2 flex({
     required Axis direction,
     required LayoutConstraints constraints,
-    required Iterable<Measurable> items,
+    required Iterable<LayoutItem> items,
     required MainAxisAlignment mainAxisAlignment,
     required CrossAxisAlignment crossAxisAlignment,
     required MainAxisSize mainAxisSize,
@@ -151,7 +224,8 @@ final class LayoutEngine {
       if (canFlex && item.flex.factor > 0) {
         totalFlex += item.flex.factor;
       } else {
-        final size = item.measure(looseConstraints);
+        item.layout(looseConstraints);
+        final size = item.size;
         mains[index] = size.axis(direction);
         crosses[index] = size.axis(crossAxis);
         consumedMain += mains[index];
@@ -178,7 +252,8 @@ final class LayoutEngine {
             max: direction.toVector2(main: maxExtent, cross: crossMax),
           );
 
-          final size = item.measure(childConstraints);
+          item.layout(childConstraints);
+          final size = item.size;
           mains[index] = size.axis(direction);
           crosses[index] = size.axis(crossAxis);
           consumedMain += mains[index];
@@ -217,7 +292,7 @@ final class LayoutEngine {
 
   /// Positions [item] so its content's top-left corner lands at [position],
   /// honoring [item]'s own anchor.
-  static void place(Measurable item, Vector2 position) {
+  static void place(LayoutItem item, Vector2 position) {
     item.position
       ..setFrom(item.anchor)
       ..multiply(item.size)
