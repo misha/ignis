@@ -79,11 +79,11 @@ void main() {
   });
 
   group('crossAxisAlignment', () {
-    test('a fixed-size leaf ignores it and sits at the cross-axis start', () {
+    test('center positions a fixed-size leaf too, not just a LayoutNode', () {
       final child = ShapeNode(shape: Rectangle.square(10));
       final node = RowNode(crossAxisAlignment: .center, children: [child]);
       node.layout(.tight(.all(100)));
-      expect(child.position.y, 0);
+      expect(child.position.y, 45);
     });
 
     test('start positions a LayoutNode child at the cross-axis start', () {
@@ -147,16 +147,6 @@ void main() {
       node.layout(.loose(.all(200)));
       expect([a.position.x, b.position.x], [0.0, 15.0]);
       expect(node.width, 25);
-    });
-  });
-
-  group('reverse', () {
-    test('accumulates children from the end of the main axis', () {
-      final a = ShapeNode(shape: Rectangle.square(10));
-      final b = ShapeNode(shape: Rectangle.square(10));
-      final node = RowNode(reverse: true, children: [a, b]);
-      node.layout(.tight(.new(100, 50)));
-      expect([a.position.x, b.position.x], [90.0, 80.0]);
     });
   });
 

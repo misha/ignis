@@ -27,10 +27,6 @@ class FlexNode extends LayoutNode {
   /// to `max`.
   MainAxisSize mainAxisSize;
 
-  /// Whether children accumulate from the end of [direction] instead of the
-  /// start. Defaults to false.
-  bool reverse;
-
   /// Extra space inserted between each pair of adjacent children. Defaults
   /// to 0.
   double spacing;
@@ -40,7 +36,6 @@ class FlexNode extends LayoutNode {
     MainAxisAlignment? mainAxisAlignment,
     CrossAxisAlignment? crossAxisAlignment,
     MainAxisSize? mainAxisSize,
-    bool? reverse,
     double? spacing,
     super.flex,
     super.position,
@@ -54,7 +49,6 @@ class FlexNode extends LayoutNode {
        mainAxisAlignment = mainAxisAlignment ?? .start,
        crossAxisAlignment = crossAxisAlignment ?? .center,
        mainAxisSize = mainAxisSize ?? .max,
-       reverse = reverse ?? false,
        spacing = spacing ?? 0;
 
   @override
@@ -66,7 +60,6 @@ class FlexNode extends LayoutNode {
       mainAxisAlignment: mainAxisAlignment,
       crossAxisAlignment: crossAxisAlignment,
       mainAxisSize: mainAxisSize,
-      reverse: reverse,
       spacing: spacing,
     );
   }

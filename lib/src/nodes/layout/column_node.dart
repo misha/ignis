@@ -6,7 +6,6 @@ class ColumnNode extends FlexNode {
     super.mainAxisAlignment,
     super.crossAxisAlignment,
     super.mainAxisSize,
-    super.reverse,
     super.spacing,
     super.flex,
     super.position,

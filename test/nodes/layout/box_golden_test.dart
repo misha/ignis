@@ -88,4 +88,42 @@ void main() {
       ),
     ),
   );
+
+  testWidgets(
+    'insets a single child with no fixed size',
+    (tester) => expectGolden(
+      tester,
+      'goldens/padding_single_child.png',
+      BoxNode(
+        padding: .all(15),
+        children: [
+          ShapeNode(
+            shape: .square(40),
+            paint: Paint()..color = BLACK,
+          ),
+        ],
+      ),
+    ),
+  );
+
+  testWidgets(
+    'insets every child by the same padding',
+    (tester) => expectGolden(
+      tester,
+      'goldens/padding_multiple_children.png',
+      BoxNode(
+        padding: .fromLTRB(10, 20, 0, 0),
+        children: [
+          ShapeNode(
+            shape: .square(50),
+            paint: Paint()..color = BLACK,
+          ),
+          ShapeNode(
+            shape: .square(20),
+            paint: Paint()..color = RED,
+          ),
+        ],
+      ),
+    ),
+  );
 }

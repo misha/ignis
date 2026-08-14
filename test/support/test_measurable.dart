@@ -15,9 +15,6 @@ final class TestMeasurable with Measurable {
   @override
   LayoutFlex flex;
 
-  @override
-  bool canResize;
-
   /// The constraints passed to the most recent [measure] call, or null if
   /// it hasn't been measured yet.
   LayoutConstraints? get lastConstraints => constraints.lastOrNull;
@@ -27,12 +24,10 @@ final class TestMeasurable with Measurable {
     Anchor? anchor,
     Vector2? size,
     LayoutFlex? flex,
-    bool? canResize,
   }) : position = position ?? .zero(),
        anchor = anchor ?? .topLeft,
        size = size ?? .zero,
-       flex = flex ?? .none,
-       canResize = canResize ?? false;
+       flex = flex ?? .none;
 
   @override
   Vector2 measure(LayoutConstraints constraints) {

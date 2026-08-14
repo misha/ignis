@@ -109,10 +109,6 @@ abstract class LayoutNode extends SizedNode {
   @visibleForOverriding
   Vector2 constrain(LayoutConstraints constraints);
 
-  /// A [LayoutNode] can always be resized by an ancestor `FlexNode`.
-  @override
-  bool get canResize => true;
-
   @nonVirtual
   @override
   void tick(double dt) {

@@ -63,10 +63,9 @@ class LayoutBenchmark extends AsyncBenchmarkBase {
   SizedNode generate(int depth) {
     if (depth == 0) return ShapeNode(shape: .square(extent(4, 24)));
 
-    return switch (random.nextInt(4)) {
+    return switch (random.nextInt(3)) {
       0 => BoxNode(padding: .all(4), children: children(depth)),
-      1 => PaddingNode(padding: .all(4), children: children(depth)),
-      2 => AlignNode(children: children(depth)),
+      1 => AlignNode(children: children(depth)),
       _ => flex(depth),
     };
   }

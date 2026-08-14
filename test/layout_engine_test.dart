@@ -92,7 +92,6 @@ void main() {
         (_) => TestMeasurable(
           size: .all(50),
           flex: .expanded(),
-          canResize: true,
         ),
       );
 
@@ -103,7 +102,6 @@ void main() {
         mainAxisAlignment: .start,
         crossAxisAlignment: .center,
         mainAxisSize: .max,
-        reverse: false,
         spacing: 0,
       );
 
@@ -111,7 +109,7 @@ void main() {
       expect(items.map((i) => i.position), [Vector2(0, 0), Vector2(50, 0)]);
     });
 
-    test('falls back to start for a child that cannot resize, even with stretch', () {
+    test('stretch places every child at the cross-axis origin', () {
       final items = [TestMeasurable(size: .all(10))];
 
       LayoutEngine.flex(
@@ -121,7 +119,6 @@ void main() {
         mainAxisAlignment: .start,
         crossAxisAlignment: .stretch,
         mainAxisSize: .max,
-        reverse: false,
         spacing: 0,
       );
 
@@ -138,29 +135,11 @@ void main() {
         mainAxisAlignment: .start,
         crossAxisAlignment: .start,
         mainAxisSize: .min,
-        reverse: false,
         spacing: 5,
       );
 
       expect(selfSize.x, 25);
       expect(items.map((i) => i.position), [Vector2(0, 0), Vector2(15, 0)]);
-    });
-
-    test('reverse accumulates children from the end of the main axis', () {
-      final items = List.generate(2, (_) => TestMeasurable(size: .all(10)));
-
-      LayoutEngine.flex(
-        direction: .horizontal,
-        constraints: .tight(.new(100, 50)),
-        items: items,
-        mainAxisAlignment: .start,
-        crossAxisAlignment: .start,
-        mainAxisSize: .max,
-        reverse: true,
-        spacing: 0,
-      );
-
-      expect(items.map((i) => i.position), [Vector2(90, 0), Vector2(80, 0)]);
     });
 
     test('uses the y axis as main when direction is vertical', () {
@@ -169,7 +148,6 @@ void main() {
         (_) => TestMeasurable(
           size: .all(50),
           flex: .expanded(),
-          canResize: true,
         ),
       );
 
@@ -180,7 +158,6 @@ void main() {
         mainAxisAlignment: .start,
         crossAxisAlignment: .center,
         mainAxisSize: .max,
-        reverse: false,
         spacing: 0,
       );
 
@@ -191,7 +168,6 @@ void main() {
       final items = [
         TestMeasurable(
           flex: .expanded(),
-          canResize: true,
         ),
       ];
 
@@ -203,7 +179,6 @@ void main() {
           mainAxisAlignment: .start,
           crossAxisAlignment: .center,
           mainAxisSize: .max,
-          reverse: false,
           spacing: 0,
         ),
         throwsAssertionError,

@@ -28,11 +28,6 @@ mixin Measurable implements PositionOwner, AnchorOwner {
   ///
   /// Defaults to [LayoutFlex.none] (meaning a fixed, non-flexible space).
   LayoutFlex get flex => .none;
-
-  /// Whether a flex layout can resize this item at all.
-  ///
-  /// Defaults to false.
-  bool get canResize => false;
 }
 
 /// A standalone set of layout algorithms, operating on [Measurable] items.
@@ -66,7 +61,29 @@ final class LayoutEngine {
   }
 
   /// Measures non-flex items, distributes remaining main-axis space to flex
-  /// items, then positions everyone.
+  /// items, then positions everyone in exactly three passes.
+  ///
+  /// ## Example
+  ///
+  /// Let's say you have a 100 wide row holding a 10px leaf and two items
+  /// flexed 1 and 3, set to `MainAxisSize.max`.
+  ///
+  ///     +----+---------+---------------------------+
+  ///     |leaf|  flex 1 |          flex 3           |
+  ///     | 10 |   22.5  |           67.5            |
+  ///     +----+---------+---------------------------+
+  ///     0    10        32.5                      100
+  ///
+  /// The passes are as follows:
+  ///
+  ///   1. Measure everything that isn't flexed, against an unbounded main
+  ///      axis. The leaf reports 10, consuming 10 of the row. The other two
+  ///      are skipped, owing 4 shares between them.
+  ///   2. Divide what's left. 90 across 4 shares is 22.5 each, so the flexed
+  ///      items are measured against 22.5 and 67.5. A tight fit must fill its
+  ///      share; a loose one may report back smaller.
+  ///   3. Walk a cursor along the main axis, placing each item and advancing
+  ///      by its extent plus [spacing], landing them at 0, 10 and 32.5.
   static Vector2 flex({
     required Axis direction,
     required LayoutConstraints constraints,
@@ -74,7 +91,6 @@ final class LayoutEngine {
     required MainAxisAlignment mainAxisAlignment,
     required CrossAxisAlignment crossAxisAlignment,
     required MainAxisSize mainAxisSize,
-    required bool reverse,
     required double spacing,
   }) {
     final crossAxis = flipAxis(direction);
@@ -97,10 +113,20 @@ final class LayoutEngine {
 
     // Pass 1: lay out every non-flex item. If the main axis is unbounded,
     // every item (flex or not) is treated as non-flex here.
-    final sizes = List<Vector2?>.filled(childCount, null);
+    //
+    // Extents are kept as main/cross doubles rather than sizes, so passes 2
+    // and 3 never re-derive them from an axis.
+    final mains = List<double>.filled(childCount, 0);
+    final crosses = List<double>.filled(childCount, 0);
     var totalFlex = 0;
     var consumedMain = spacing * math.max(0, childCount - 1);
     var maxCross = 0.0;
+
+    // Identical for every item, so it is built once rather than per child.
+    final looseConstraints = LayoutConstraints(
+      min: direction.toVector2(main: 0, cross: fillCross ? crossMax : 0),
+      max: direction.toVector2(main: double.infinity, cross: crossMax),
+    );
 
     for (var i = 0; i < childCount; i++) {
       final item = items[i];
@@ -110,15 +136,11 @@ final class LayoutEngine {
         continue;
       }
 
-      final childConstraints = LayoutConstraints(
-        min: direction.toVector2(main: 0, cross: fillCross ? crossMax : 0),
-        max: direction.toVector2(main: double.infinity, cross: crossMax),
-      );
-
-      final size = item.measure(childConstraints);
-      sizes[i] = size;
-      consumedMain += size.axis(direction);
-      maxCross = math.max(maxCross, size.axis(crossAxis));
+      final size = item.measure(looseConstraints);
+      mains[i] = size.axis(direction);
+      crosses[i] = size.axis(crossAxis);
+      consumedMain += mains[i];
+      maxCross = math.max(maxCross, crosses[i]);
     }
 
     // Pass 2: distribute remaining main-axis space to flex items.
@@ -138,9 +160,10 @@ final class LayoutEngine {
         );
 
         final size = item.measure(childConstraints);
-        sizes[i] = size;
-        consumedMain += size.axis(direction);
-        maxCross = math.max(maxCross, size.axis(crossAxis));
+        mains[i] = size.axis(direction);
+        crosses[i] = size.axis(crossAxis);
+        consumedMain += mains[i];
+        maxCross = math.max(maxCross, crosses[i]);
       }
     }
 
@@ -159,16 +182,9 @@ final class LayoutEngine {
     var cursor = leading;
 
     for (var i = 0; i < childCount; i++) {
-      final item = items[i];
-      final size = sizes[i]!;
-      final itemMain = size.axis(direction);
-      final itemCross = size.axis(crossAxis);
-      final effectiveCross = item.canResize ? crossAxisAlignment : CrossAxisAlignment.start;
-      final crossOffset = crossAxisOffset(effectiveCross, selfCross - itemCross);
-      final mainPosition = reverse ? selfMain - cursor - itemMain : cursor;
-
-      place(item, direction.toVector2(main: mainPosition, cross: crossOffset));
-      cursor += itemMain + spacing + between;
+      final crossOffset = crossAxisOffset(crossAxisAlignment, selfCross - crosses[i]);
+      place(items[i], direction.toVector2(main: cursor, cross: crossOffset));
+      cursor += mains[i] + spacing + between;
     }
 
     return selfSize;

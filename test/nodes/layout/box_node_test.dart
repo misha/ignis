@@ -77,4 +77,45 @@ void main() {
     node.layout(.loose(.all(100)));
     expect(child.lastConstraints, LayoutConstraints.tight(.all(40)));
   });
+
+  test('grows to fit the child plus the padding when nothing is fixed', () {
+    final child = ShapeNode(shape: Rectangle(.new(20, 10)));
+    final node = BoxNode(padding: .all(5), children: [child]);
+    node.layout(.loose(.all(100)));
+    expect((node.width, node.height), (30.0, 20.0));
+  });
+
+  test('positions the child inset by an asymmetric padding', () {
+    final child = ShapeNode(shape: Rectangle(.new(20, 10)));
+    final node = BoxNode(
+      padding: .fromLTRB(4, 8, 0, 0),
+      children: [child],
+    );
+
+    node.layout(.loose(.all(100)));
+    expect(child.position, Vector2(4, 8));
+  });
+
+  test('deflates unfixed constraints by the padding for a LayoutNode child', () {
+    final child = TestLayoutNode();
+    final node = BoxNode(padding: .all(5), children: [child]);
+    node.layout(.new(min: .all(20), max: .all(100)));
+    expect(child.lastConstraints, LayoutConstraints(min: .all(10), max: .all(90)));
+  });
+
+  test('positions every child inset by the same padding', () {
+    final a = ShapeNode(shape: Rectangle(.new(20, 10)));
+    final b = ShapeNode(shape: Rectangle.square(10));
+    final node = BoxNode(padding: .all(5), children: [a, b]);
+    node.layout(.loose(.all(100)));
+    expect([a.position, b.position], [Vector2(5, 5), Vector2(5, 5)]);
+  });
+
+  test('grows to fit the largest child plus the padding', () {
+    final a = ShapeNode(shape: Rectangle(.new(20, 10)));
+    final b = ShapeNode(shape: Rectangle(.new(10, 25)));
+    final node = BoxNode(padding: .all(5), children: [a, b]);
+    node.layout(.loose(.all(100)));
+    expect((node.width, node.height), (30.0, 35.0));
+  });
 }
