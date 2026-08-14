@@ -34,6 +34,7 @@ class DragInput extends InputNode {
   ImmediateMultiDragGestureRecognizer? _recognizer;
   Vector2? _pendingStart;
   Offset Function(Offset)? _pendingGlobalToLocal;
+  _NodeDrag? _drag;
 
   DragInput({
     required super.shape,
@@ -52,6 +53,7 @@ class DragInput extends InputNode {
     });
 
     onUnmount(() {
+      _drag?.cancel();
       _recognizer?.dispose();
       _recognizer = null;
     });
@@ -82,7 +84,11 @@ class DragInput extends InputNode {
       ),
     );
 
-    return _NodeDrag(this, globalToLocal, globalToLocal(globalPosition).toVector2());
+    return _drag = _NodeDrag(
+      this,
+      globalToLocal,
+      globalToLocal(globalPosition).toVector2(),
+    );
   }
 }
 
@@ -117,11 +123,13 @@ class _NodeDrag extends Drag {
 
   @override
   void end(DragEndDetails details) {
+    node._drag = null;
     node.onDragEnd.emit(DragEndEvent(details: details));
   }
 
   @override
   void cancel() {
+    node._drag = null;
     node.onDragCancel.emit();
 
     if (node.endOnCancel) {

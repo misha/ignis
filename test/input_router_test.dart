@@ -399,4 +399,136 @@ void main() {
     await tester.pump();
     expect(exits, hasLength(1));
   });
+
+  testWidgets('unmounting mid-hover emits onHoverExit', (tester) async {
+    final hover = HoverInput(shape: .square(20));
+    final subtree = Node(children: [hover]);
+    final scene = await pumpScene(tester, [subtree]);
+    scene.node.provide('cursor');
+    final exits = <HoverEvent>[];
+    final reads = <String>[];
+
+    hover.onHoverExit((event) {
+      exits.add(event);
+      reads.add(hover.read<String>());
+    });
+
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: const Offset(500, 500));
+    await tester.pump();
+
+    await gesture.moveTo(const Offset(5, 5));
+    await tester.pump();
+    expect(hover.isHovering, isTrue);
+
+    scene.node.remove(subtree);
+    await tester.pump();
+
+    expect(exits, hasLength(1));
+    expect(exits.single.scene, Vector2.all(5));
+    expect(reads, ['cursor']);
+    expect(hover.isHovering, isFalse);
+  });
+
+  testWidgets('a hover event after the hovered node unmounted emits nothing', (tester) async {
+    final hover = HoverInput(shape: .square(20));
+    final scene = await pumpScene(tester, [hover]);
+    final exits = <HoverEvent>[];
+    hover.onHoverExit(exits.add);
+
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: const Offset(500, 500));
+    await tester.pump();
+
+    await gesture.moveTo(const Offset(5, 5));
+    await tester.pump();
+
+    scene.node.remove(hover);
+    await tester.pump();
+    expect(exits, hasLength(1));
+
+    await gesture.moveTo(const Offset(500, 500));
+    await tester.pump();
+
+    expect(exits, hasLength(1));
+  });
+
+  testWidgets('still tracks hover after unmounting mid-hover and being re-added', (tester) async {
+    final hover = HoverInput(shape: .square(20));
+    final scene = await pumpScene(tester, [hover]);
+    final enters = <HoverEvent>[];
+    final exits = <HoverEvent>[];
+    hover.onHoverEnter(enters.add);
+    hover.onHoverExit(exits.add);
+
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: const Offset(500, 500));
+    await tester.pump();
+
+    await gesture.moveTo(const Offset(5, 5));
+    await tester.pump();
+    scene.node.remove(hover);
+    await tester.pump();
+    scene.node.add(hover);
+    await tester.pump();
+
+    await gesture.moveTo(const Offset(500, 500));
+    await tester.pump();
+    await gesture.moveTo(const Offset(5, 5));
+    await tester.pump();
+
+    expect(enters, hasLength(2));
+    expect(exits, hasLength(1));
+    expect(hover.isHovering, isTrue);
+  });
+
+  testWidgets('unmounting mid-drag cancels the drag', (tester) async {
+    final drag = DragInput(shape: .square(200));
+    final scene = await pumpScene(tester, [drag]);
+    final ends = <DragEndEvent>[];
+    var cancels = 0;
+    drag.onDragEnd(ends.add);
+    drag.onDragCancel(() => cancels += 1);
+
+    final gesture = await tester.startGesture(const Offset(5, 5));
+    await gesture.moveBy(const Offset(50, 0));
+    await tester.pump(settle);
+    expect(drag.isDragging, isTrue);
+
+    scene.node.remove(drag);
+    await tester.pump();
+
+    expect(cancels, 1);
+    expect(ends, isEmpty);
+    expect(drag.isDragging, isFalse);
+
+    // The arena resolution the release would have triggered is already spent,
+    // so it must NOT manufacture a second terminal signal.
+    await gesture.up();
+    await tester.pump(settle);
+
+    expect(cancels, 1);
+  });
+
+  testWidgets('unmounting mid-drag honors endOnCancel', (tester) async {
+    final drag = DragInput(shape: .square(200), endOnCancel: true);
+    final scene = await pumpScene(tester, [drag]);
+    final ends = <DragEndEvent>[];
+    var cancels = 0;
+    drag.onDragEnd(ends.add);
+    drag.onDragCancel(() => cancels += 1);
+
+    final gesture = await tester.startGesture(const Offset(5, 5));
+    await gesture.moveBy(const Offset(50, 0));
+    await tester.pump(settle);
+
+    scene.node.remove(drag);
+    await tester.pump();
+    await gesture.up();
+    await tester.pump(settle);
+
+    expect(cancels, 1);
+    expect(ends, hasLength(1));
+    expect(ends.single.details.globalPosition, const Offset(55, 5));
+  });
 }

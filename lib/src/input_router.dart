@@ -6,6 +6,7 @@ import 'package:ignis/src/math.dart';
 import 'package:ignis/src/node.dart';
 import 'package:ignis/src/nodes/input_node.dart';
 import 'package:ignis/src/scene_render_box.dart';
+import 'package:ignis/src/signal.dart';
 
 /// Resolves raw pointer events against a [Scene]'s tree and hands off to
 /// whichever [InputNode]s claim them, per [InputNode.behavior].
@@ -14,7 +15,7 @@ class InputRouter {
   final SceneRenderBox box;
   Scene get scene => box.scene;
 
-  final Map<int, InputNode> _hovered = {};
+  final Map<int, _Hover> _hovered = {};
 
   InputRouter(this.box);
 
@@ -39,17 +40,31 @@ class InputRouter {
     final point = event.localPosition.toVector2();
     final target = _dispatch(point, (node) => node is HoverInput ? .handled : .ignored);
     final previous = _hovered[event.pointer];
-    if (identical(target, previous)) return;
-    if (previous is HoverInput) previous.onHoverExit.emit(_wrap(previous, event));
+    if (identical(target, previous?.node)) return;
+    if (previous != null) _exit(event.pointer, _wrap(previous.node, event));
+    if (target != null) _enter(event.pointer, target, event);
+  }
 
-    switch (target) {
-      case InputNode():
-        _hovered[event.pointer] = target;
-        if (target is HoverInput) target.onHoverEnter.emit(_wrap(target, event));
+  /// Records [target] as [pointer]'s hover, emitting `onHoverEnter`.
+  void _enter(int pointer, InputNode target, PointerHoverEvent event) {
+    final hover = _wrap(target, event);
 
-      case null:
-        _hovered.remove(event.pointer);
-    }
+    _hovered[pointer] = _Hover(
+      node: target,
+      // Arm an unwatch in case the node is unmounted mid-hover.
+      unwatch: target.onUnmount(() => _exit(pointer, hover)),
+    );
+
+    if (target is HoverInput) target.onHoverEnter.emit(hover);
+  }
+
+  /// Drops [pointer]'s hover, emitting `onHoverExit`.
+  void _exit(int pointer, HoverEvent event) {
+    final hovered = _hovered.remove(pointer);
+    if (hovered == null) return;
+    hovered.unwatch();
+    final node = hovered.node;
+    if (node is HoverInput && node.isMounted) node.onHoverExit.emit(event);
   }
 
   /// Walks [point]'s hit-test chain, offering each [InputNode] to [respond]
@@ -69,10 +84,22 @@ class InputRouter {
 
   static HoverEvent _wrap(InputNode node, PointerEvent event) {
     final scenePoint = event.localPosition.toVector2();
+
     return HoverEvent(
       scene: scenePoint,
       local: node.toLocal(scenePoint),
       source: event,
     );
   }
+}
+
+/// A pointer's current hover, and the subscription arming its exit on unmount.
+final class _Hover {
+  final InputNode node;
+  final Unwatch unwatch;
+
+  const _Hover({
+    required this.node,
+    required this.unwatch,
+  });
 }
