@@ -132,7 +132,7 @@ class _DropZoneNode extends ShapeNode {
     required super.position,
   }) : super(
          shape: .square(_ZONE_SIZE),
-         anchor: .center(),
+         anchor: .center,
          paint: Paint()..color = _ZONE_COLOR,
        ) {
     add(
@@ -165,7 +165,7 @@ class _PieceNode extends ShapeNode {
     required super.position,
   }) : super(
          shape: .square(_PIECE_SIZE),
-         anchor: .center(),
+         anchor: .center,
          paint: Paint()..color = _PIECE_COLOR,
        ) {
     late final DragInput drags;
@@ -185,7 +185,7 @@ class _PieceNode extends ShapeNode {
     ]);
 
     drags
-      ..onDragUpdate((event) => position.mutate().add(event.delta))
+      ..onDragUpdate((event) => position.add(event.delta))
       ..onDragEnd((_) => drop())
       ..onDragCancel(drop);
 
@@ -212,7 +212,7 @@ class _PieceNode extends ShapeNode {
 
   void drop() {
     final zone = _active.nearest(position);
-    if (zone != null) position.mutate().setFrom(zone.position);
+    if (zone != null) position.setFrom(zone.position);
     onDropped.emit(zone);
   }
 }

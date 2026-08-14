@@ -3,13 +3,13 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('returns null for an empty iterable', () {
-    expect(<TransformNode>[].nearest(.zero()), isNull);
+    expect(<TransformNode>[].nearest(.zero), isNull);
   });
 
   test('returns the sole element regardless of distance', () {
     final a = TransformNode(position: .all(100));
 
-    expect([a].nearest(.zero()), same(a));
+    expect([a].nearest(.zero), same(a));
   });
 
   test('returns the element whose position is closest to the target', () {
@@ -17,7 +17,7 @@ void main() {
     final b = TransformNode(position: .new(1, 0));
     final c = TransformNode(position: .new(5, 0));
 
-    expect([a, b, c].nearest(.zero()), same(b));
+    expect([a, b, c].nearest(.zero), same(b));
   });
 
   test('finds the nearest regardless of iteration order', () {
@@ -25,6 +25,6 @@ void main() {
     final b = TransformNode(position: .new(10, 0));
     final c = TransformNode(position: .new(5, 0));
 
-    expect([a, b, c].nearest(.zero()), same(a));
+    expect([a, b, c].nearest(.zero), same(a));
   });
 }

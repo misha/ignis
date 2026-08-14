@@ -16,7 +16,7 @@ void main() {
       ShapeNode(
         shape: .square(20),
         paint: Paint()..color = BLACK,
-        anchor: .center(),
+        anchor: .center,
         position: .all(25),
       ),
     ),
@@ -30,7 +30,7 @@ void main() {
       ShapeNode(
         shape: .square(25),
         paint: Paint()..color = BLACK,
-        anchor: .center(),
+        anchor: .center,
         scale: .new(2, 1),
         position: .all(50),
       ),
@@ -45,7 +45,7 @@ void main() {
       ShapeNode(
         shape: .rectangle(.new(30, 10)),
         paint: Paint()..color = BLACK,
-        anchor: .center(),
+        anchor: .center,
         angle: math.pi / 4,
         position: .all(50),
       ),
@@ -63,7 +63,7 @@ void main() {
           ShapeNode(
             shape: .square(30),
             paint: Paint()..color = BLACK,
-            anchor: .topLeft(),
+            anchor: .topLeft,
           ),
         ],
       ),
@@ -81,7 +81,7 @@ void main() {
           ShapeNode(
             shape: .square(30),
             paint: Paint()..color = BLACK,
-            anchor: .bottomRight(),
+            anchor: .bottomRight,
           ),
         ],
       ),

@@ -53,7 +53,7 @@ void main() {
   });
 
   test('measures lazily, after mount-time state the effect computes', () {
-    final node = TransformNode(position: .zero());
+    final node = TransformNode(position: .zero);
     final scene = node.mount();
     final effect = MoveEffect.to(
       destination: .new(30, 40),
@@ -70,7 +70,7 @@ void main() {
 
   test('finishes instantly when the measured distance is 0', () {
     final controller = SpeedEffectController(10);
-    MoveEffect.by(offset: .zero(), controller: controller);
+    MoveEffect.by(offset: .zero, controller: controller);
 
     expect(controller.duration, isNull); // Not yet resolved.
     expect(controller.advance(1), 1);

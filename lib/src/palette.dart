@@ -39,13 +39,13 @@ class PaletteEntry {
     Vector2? offset,
     int? priority,
     bool? enabled,
-  }) : offset = offset ?? .zero(),
+  }) : offset = offset ?? .zero,
        _priority = priority ?? 0,
        enabled = enabled ?? true;
 
   PaletteEntry._default(this.paint)
     : name = null, //
-      offset = .zero(),
+      offset = .zero,
       _priority = 0,
       enabled = true;
 }

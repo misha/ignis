@@ -14,14 +14,14 @@ void main() {
     test('loose spans zero to size', () {
       final constraints = LayoutConstraints.loose(.new(10, 20));
 
-      expect(constraints.min, Vector2.zero());
+      expect(constraints.min, Vector2.zero);
       expect(constraints.max, Vector2(10, 20));
     });
 
     test('unbounded has no minimum and an infinite maximum', () {
       final constraints = LayoutConstraints.unbounded();
 
-      expect(constraints.min, Vector2.zero());
+      expect(constraints.min, Vector2.zero);
       expect(constraints.max, Vector2(double.infinity, double.infinity));
       expect(constraints.hasBoundedWidth, isFalse);
       expect(constraints.hasBoundedHeight, isFalse);
@@ -37,7 +37,7 @@ void main() {
     });
 
     test('clamps an infinite size down to a finite max', () {
-      final constraints = LayoutConstraints(min: .zero(), max: .new(50, 30));
+      final constraints = LayoutConstraints(min: .zero, max: .new(50, 30));
       expect(constraints.satisfy(.all(double.infinity)), Vector2(50, 30));
     });
 
@@ -47,20 +47,11 @@ void main() {
     });
   });
 
-  group('biggest and smallest', () {
-    test('report max and min respectively', () {
-      final constraints = LayoutConstraints(min: .new(10, 20), max: .new(30, 40));
-
-      expect(constraints.biggest, Vector2(30, 40));
-      expect(constraints.smallest, Vector2(10, 20));
-    });
-  });
-
   group('loosen', () {
     test('clears min to zero, keeping max', () {
       final constraints = LayoutConstraints(min: .new(10, 20), max: .new(30, 40)).loosen();
 
-      expect(constraints.min, Vector2.zero());
+      expect(constraints.min, Vector2.zero);
       expect(constraints.max, Vector2(30, 40));
     });
   });
@@ -78,51 +69,50 @@ void main() {
       final constraints = LayoutConstraints(min: .all(4), max: .all(100));
       final deflated = constraints.deflate(.all(10));
 
-      expect(deflated.min, Vector2.zero());
+      expect(deflated.min, Vector2.zero);
     });
 
     test('collapses to zero when padding exceeds the whole box', () {
-      final constraints = LayoutConstraints(min: .zero(), max: .all(5));
+      final constraints = LayoutConstraints(min: .zero, max: .all(5));
       final deflated = constraints.deflate(.all(10));
 
-      expect(deflated.min, Vector2.zero());
-      expect(deflated.max, Vector2.zero());
-    });
-  });
-
-  group('validation', () {
-    test('rejects a min greater than max', () {
-      expect(() => LayoutConstraints(min: .new(10, 0), max: .new(5, 0)), throwsAssertionError);
+      expect(deflated.min, Vector2.zero);
+      expect(deflated.max, Vector2.zero);
     });
   });
 
   group('equality', () {
     test('constraints with the same min and max are equal', () {
       expect(
-        LayoutConstraints(min: .zero(), max: .all(10)),
-        LayoutConstraints(min: .zero(), max: .all(10)),
+        LayoutConstraints(min: .zero, max: .all(10)),
+        LayoutConstraints(min: .zero, max: .all(10)),
       );
     });
 
     test('constraints with different min or max are not equal', () {
       expect(
-        LayoutConstraints(min: .zero(), max: .all(10)),
-        isNot(LayoutConstraints(min: .zero(), max: .new(20, 10))),
+        LayoutConstraints(min: .zero, max: .all(10)),
+        isNot(LayoutConstraints(min: .zero, max: .new(20, 10))),
       );
     });
   });
 
-  group('defensive copying', () {
-    test('mutating the input vectors afterward does not affect the constraints', () {
-      final min = Vector2.zero();
-      final max = Vector2.all(10);
+  group('aliasing', () {
+    test('reuses the given immutable vectors directly, without cloning', () {
+      final min = Vector2(1, 2);
+      final max = Vector2(3, 4);
       final constraints = LayoutConstraints(min: min, max: max);
 
-      min.mutate().setValues(5, 5);
-      max.mutate().setValues(20, 20);
+      expect(identical(constraints.min, min), isTrue);
+      expect(identical(constraints.max, max), isTrue);
+    });
 
-      expect(constraints.min, Vector2.zero());
-      expect(constraints.max, Vector2.all(10));
+    test('rejects a mutable min', () {
+      expect(() => LayoutConstraints(min: MVector2.zero(), max: .all(10)), throwsAssertionError);
+    });
+
+    test('rejects a mutable max', () {
+      expect(() => LayoutConstraints(min: .zero, max: MVector2.all(10)), throwsAssertionError);
     });
   });
 }

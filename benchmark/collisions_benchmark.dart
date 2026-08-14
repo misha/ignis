@@ -115,7 +115,7 @@ class _Wall extends TransformNode {
     add(
       ColliderNode(
         shape: shape,
-        anchor: .center(),
+        anchor: .center,
         layer: _WALL_LAYER,
       ),
     );
@@ -123,7 +123,7 @@ class _Wall extends TransformNode {
 }
 
 class _Ball extends TransformNode {
-  final Vector2 velocity;
+  final MVector2 velocity;
   int balls = 0;
 
   _Ball({
@@ -134,7 +134,7 @@ class _Ball extends TransformNode {
     add(
       ColliderNode(
           shape: shape,
-          anchor: .center(),
+          anchor: .center,
           layer: _BALL_LAYER,
           mask: _WALL_LAYER | _BALL_LAYER,
         )
@@ -146,10 +146,10 @@ class _Ball extends TransformNode {
             case _Wall(:final axis):
               switch (axis) {
                 case .x:
-                  velocity.mutate().x *= -1;
+                  velocity.x *= -1;
 
                 case .y:
-                  velocity.mutate().y *= -1;
+                  velocity.y *= -1;
               }
           }
         })
@@ -164,7 +164,7 @@ class _Ball extends TransformNode {
 
   @override
   void tick(double dt) {
-    position.mutate().addScaled(velocity, dt);
+    position.addScaled(velocity, dt);
   }
 }
 

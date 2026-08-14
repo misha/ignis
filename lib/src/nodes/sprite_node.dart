@@ -10,7 +10,7 @@ class SpriteNode extends PaintedNode {
   /// The size this sprite renders at. Defaults to the first sheet's native
   /// frame size, but may be mutated to stretch or squash the frame.
   @override
-  final Vector2 size;
+  final MVector2 size;
 
   /// The frames per second to use when animating this sprite.
   ///
@@ -61,7 +61,7 @@ class SpriteNode extends PaintedNode {
     super.priority,
     super.children,
   }) : _sheets = .unmodifiable([sheet]),
-       size = size ?? sheet.size.clone(),
+       size = .copy(size ?? sheet.size),
        fps = fps ?? 0,
        loop = loop ?? true,
        cleanup = cleanup ?? false;
@@ -82,7 +82,7 @@ class SpriteNode extends PaintedNode {
     super.children,
   }) : assert(sheets.isNotEmpty),
        _sheets = .unmodifiable(sheets),
-       size = size ?? sheets.first.size.clone(),
+       size = .copy(size ?? sheets.first.size),
        fps = fps ?? 0,
        loop = loop ?? true,
        cleanup = cleanup ?? false;

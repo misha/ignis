@@ -11,7 +11,7 @@ void main() {
         children: [
           TapInput(
             shape: .square(10),
-            anchor: .center(),
+            anchor: .center,
             angle: math.pi / 4, // 45 degrees, turning the square into a diamond.
           ),
         ],
@@ -72,7 +72,7 @@ void main() {
       children: [
         a = TapInput(
           shape: .square(10),
-          anchor: .center(),
+          anchor: .center,
         ),
       ],
     );

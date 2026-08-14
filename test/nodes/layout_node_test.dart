@@ -66,7 +66,7 @@ void main() {
   });
 
   test('LayoutEngine.place compensates for a non-default child anchor', () {
-    final child = TestLayoutNode(sizeToReturn: .new(20, 10), anchor: .center());
+    final child = TestLayoutNode(sizeToReturn: .new(20, 10), anchor: .center);
     child.layout(.tight(.new(20, 10)));
     LayoutEngine.place(child, .all(50));
     expect(child.position, Vector2(60, 55));

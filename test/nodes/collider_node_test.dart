@@ -5,7 +5,7 @@ void main() {
   test('does nothing without a CollisionNode ancestor', () {
     final collider = ColliderNode(
       shape: .circle(1),
-      position: .zero(),
+      position: .zero,
     );
 
     expect(() => collider.mount(), returnsNormally);
@@ -18,7 +18,7 @@ void main() {
 
     final a = ColliderNode(
       shape: .circle(4),
-      position: .zero(),
+      position: .zero,
       layer: 1,
       mask: 1,
     );
@@ -37,7 +37,7 @@ void main() {
     outer.add(
       ColliderNode(
         shape: .circle(4),
-        position: .zero(),
+        position: .zero,
         layer: 1,
         mask: 1,
       ),
@@ -55,7 +55,7 @@ void main() {
     final collisions = CollisionDetectionNode();
     final a = ColliderNode(
       shape: .circle(4),
-      position: .zero(),
+      position: .zero,
       layer: 1,
       mask: 1,
     );

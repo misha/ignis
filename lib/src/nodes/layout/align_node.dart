@@ -22,7 +22,7 @@ class AlignNode extends LayoutNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : alignment = alignment ?? .center();
+  }) : alignment = alignment ?? .center;
 
   @override
   Vector2 constrain(LayoutConstraints constraints) {
@@ -33,7 +33,7 @@ class AlignNode extends LayoutNode {
       items: items,
       childConstraints: constraints.loosen(),
       computeSelfSize: (count, largest) => count == 0
-          ? constraints.smallest
+          ? constraints.min
           : constraints.satisfy(
               .new(
                 constraints.hasBoundedWidth ? double.infinity : largest.x,

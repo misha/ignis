@@ -10,9 +10,9 @@ import 'package:ignis/src/shape.dart';
 /// circles. Every field is owned and mutated in place - never replace this
 /// object to update it.
 final class _NarrowphaseGeometry {
-  final Vector2 center = .zero();
-  final Vector2 extentX = .zero();
-  final Vector2 extentY = .zero();
+  final MVector2 center = .zero();
+  final MVector2 extentX = .zero();
+  final MVector2 extentY = .zero();
   double radius = 0;
 }
 
@@ -183,11 +183,11 @@ final class CollisionDetection {
 
     final bounds = _boundsIndex[slot]!;
     final transform = _transformIndex[slot]!;
-    narrowphase.center.mutate().setValues(bounds.centerX, bounds.centerY);
+    narrowphase.center.setValues(bounds.centerX, bounds.centerY);
 
     switch (collider.shape) {
       case Rectangle shape:
-        shape.worldExtents(transform, narrowphase.extentX.mutate(), narrowphase.extentY.mutate());
+        shape.worldExtents(transform, narrowphase.extentX, narrowphase.extentY);
 
       case Circle shape:
         narrowphase.radius = shape.worldRadius(transform);

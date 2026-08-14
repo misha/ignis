@@ -49,7 +49,7 @@ class _ScaleByEffect extends ScaleEffect {
   }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
-      target!.scale.mutate().addScaled(_offset, progress - previousProgress);
+      target!.scale.addScaled(_offset, progress - previousProgress);
     });
   }
 
@@ -59,7 +59,7 @@ class _ScaleByEffect extends ScaleEffect {
 
 class _ScaleToEffect extends ScaleEffect {
   final Vector2 _destination;
-  final Vector2 _offset = .zero();
+  final MVector2 _offset = .zero();
 
   _ScaleToEffect({
     required Vector2 destination,
@@ -69,13 +69,13 @@ class _ScaleToEffect extends ScaleEffect {
   }) : _destination = destination.clone(),
        super._() {
     onMount(() {
-      _offset.mutate()
+      _offset
         ..setFrom(_destination)
         ..subtract(target!.scale);
     });
 
     onProgress((progress) {
-      target!.scale.mutate().addScaled(_offset, progress - previousProgress);
+      target!.scale.addScaled(_offset, progress - previousProgress);
     });
   }
 

@@ -45,7 +45,7 @@ void main() {
   test('captures the destination offset when mounted', () {
     final node = TransformNode();
     final scene = node.mount();
-    node.scale.mutate().setValues(10, 0);
+    node.scale.setValues(10, 0);
 
     node.add(
       ScaleEffect.to(
@@ -55,7 +55,7 @@ void main() {
     );
 
     scene.update(0.25);
-    node.scale.mutate().setValues(0, 0);
+    node.scale.setValues(0, 0);
     scene.update(1.25);
 
     expect(node.scale, Vector2(10, 10));
@@ -103,7 +103,7 @@ void main() {
 
   test('re-resolves its target after being remounted elsewhere', () {
     final root = TransformNode();
-    final nodeA = TransformNode(scale: .zero());
+    final nodeA = TransformNode(scale: .zero);
     final nodeB = TransformNode(scale: .all(100));
     root.addAll([nodeA, nodeB]);
     final scene = root.mount();

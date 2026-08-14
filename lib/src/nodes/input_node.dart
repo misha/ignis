@@ -73,8 +73,8 @@ abstract class InputNode extends SizedNode {
   ///
   /// TODO: Feels bad here. Maybe a SizedNode concern?
   Vector2 toLocal(Vector2 scenePoint) {
-    final inverse = absoluteTransform()..mutate().invert();
-    return scenePoint.transformWith(inverse);
+    final inverse = absoluteTransform()..invert();
+    return scenePoint.transformed(inverse);
   }
 
   @override

@@ -42,14 +42,14 @@ class FollowEffect extends EffectNode {
     final step = speed * dt;
 
     if (distance <= step) {
-      position.mutate().setFrom(destination);
+      position.setFrom(destination);
 
       if (!_arrived) {
         _arrived = true;
         onFinish.emit();
       }
     } else {
-      position.mutate().addScaled(offset, step / distance);
+      position.addScaled(offset, step / distance);
       _arrived = false;
     }
   }

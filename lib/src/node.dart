@@ -575,8 +575,10 @@ class Scene<T extends Node> {
   bool _mounted = true;
   bool _sized = false;
 
+  Vector2 _size = .zero;
+
   /// Current scene size, updated on every resize via [resize].
-  final Vector2 size = .zero();
+  Vector2 get size => _size;
 
   /// Whether the scene has been [resize]d at least once.
   bool get hasSize => _sized;
@@ -608,7 +610,7 @@ class Scene<T extends Node> {
   }
 
   void resize(double width, double height) {
-    size.mutate().setValues(width, height);
+    _size = .new(width, height);
     _sized = true;
     onResize.emit(size);
   }

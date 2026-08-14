@@ -25,7 +25,7 @@ void main() {
         'goldens/color_opacity_effect_fade_out.png',
         SpriteNode(
           sheet: .asset('test/assets/fire.png', size: .new(32, 48)),
-          anchor: .center(),
+          anchor: .center,
           position: .all(50),
           paint: paint,
           children: [

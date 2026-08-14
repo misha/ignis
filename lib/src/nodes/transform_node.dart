@@ -12,11 +12,11 @@ import 'package:ignis/src/owners/scale_owner.dart';
 class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwner {
   /// This node's position. Defaults to (0, 0).
   @override
-  final Vector2 position;
+  final MVector2 position;
 
   /// This node's scale. Defaults to (1, 1).
   @override
-  final Vector2 scale;
+  final MVector2 scale;
 
   /// This node's clockwise rotation, in radians. Defaults to 0.
   @override
@@ -29,8 +29,8 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
     super.enabled,
     super.priority,
     super.children,
-  }) : position = position ?? .zero(),
-       scale = scale ?? .all(1),
+  }) : position = .copy(position ?? .zero),
+       scale = .copy(scale ?? .all(1)),
        angle = angle ?? 0;
 
   /// The distance between this node's [position] and [other]'s.
@@ -39,17 +39,17 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
   /// The squared distance between this node's [position] and [other]'s.
   double distance2(TransformNode other) => position.distance2(other.position);
 
-  final Matrix3 _lastLocalTransform = .identity();
+  final MMatrix3 _lastLocalTransform = .identity();
 
   /// This node's local transform.
   ///
   /// The returned matrix is owned by this node and should not be retained.
-  Matrix3 get localTransform {
+  MMatrix3 get localTransform {
     final transform = _lastLocalTransform;
     final cosA = math.cos(angle);
     final sinA = math.sin(angle);
 
-    transform.mutate().setValues(
+    transform.setValues(
       // dart format off
       cosA * scale.x,   sinA * scale.x, 0,
       -sinA * scale.y,  cosA * scale.y, 0,
@@ -60,20 +60,20 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
     return transform;
   }
 
-  final Matrix3 _lastAbsoluteTransform = .identity();
+  final MMatrix3 _lastAbsoluteTransform = .identity();
 
   /// This node's transform composed with every [TransformNode] ancestor,
   /// stopping at (but not including) [upTo].
   ///
   /// The returned matrix is owned by this node and should not be retained.
-  Matrix3 absoluteTransform([Node? upTo]) {
+  MMatrix3 absoluteTransform([Node? upTo]) {
     final transform = _lastAbsoluteTransform;
-    transform.mutate().setFrom(localTransform);
+    transform.setFrom(localTransform);
     var current = parent;
 
     while (current != null && !identical(current, upTo)) {
       if (current is TransformNode) {
-        transform.mutate().premultiply(current.localTransform);
+        transform.premultiply(current.localTransform);
       }
 
       current = current.parent;

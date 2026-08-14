@@ -49,7 +49,7 @@ class _MoveByEffect extends MoveEffect {
   }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
-      target!.position.mutate().addScaled(_offset, progress - previousProgress);
+      target!.position.addScaled(_offset, progress - previousProgress);
     });
   }
 
@@ -59,7 +59,7 @@ class _MoveByEffect extends MoveEffect {
 
 class _MoveToEffect extends MoveEffect {
   final Vector2 _destination;
-  final Vector2 _offset = .zero();
+  final MVector2 _offset = .zero();
 
   _MoveToEffect({
     required Vector2 destination,
@@ -69,13 +69,13 @@ class _MoveToEffect extends MoveEffect {
   }) : _destination = destination.clone(),
        super._() {
     onMount(() {
-      _offset.mutate()
+      _offset
         ..setFrom(_destination)
         ..subtract(target!.position);
     });
 
     onProgress((progress) {
-      target!.position.mutate().addScaled(_offset, progress - previousProgress);
+      target!.position.addScaled(_offset, progress - previousProgress);
     });
   }
 

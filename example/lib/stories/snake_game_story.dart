@@ -216,7 +216,7 @@ class _WallNode extends ShapeNode {
     required super.shape,
     required super.position,
   }) : super(
-         anchor: .center(),
+         anchor: .center,
          paint: Paint()..color = _WALL_COLOR,
        ) {
     add(
@@ -240,15 +240,15 @@ class _SegmentNode extends ShapeNode {
     : index = segment.index,
       super(
         shape: .circle(_SNAKE_SIZE / 2),
-        anchor: .center(),
-        position: segment.tile.position,
+        anchor: .center,
+        position: .copy(segment.tile.position),
       ) {
     paint.color = isHead ? _SNAKE_HEAD_COLOR : _SNAKE_COLOR;
 
     add(
       ColliderNode(
         shape: shape,
-        anchor: .center(),
+        anchor: .center,
         layer: _SNAKE_LAYER,
         mask: _SNAKE_LAYER | _FOOD_LAYER | _WALL_LAYER,
       )..onCollisionStart((other) {
@@ -301,14 +301,14 @@ class _FoodNode extends ShapeNode {
   _FoodNode(this.game, this.food)
     : super(
         shape: .circle(_FOOD_SIZE / 2),
-        anchor: .center(),
-        position: food.tile.position,
+        anchor: .center,
+        position: .copy(food.tile.position),
         paint: Paint()..color = _FOOD_COLOR,
       ) {
     add(
       ColliderNode(
         shape: shape,
-        anchor: .center(),
+        anchor: .center,
         layer: _FOOD_LAYER,
         mask: 0,
       ),
@@ -328,10 +328,7 @@ class _FoodNode extends ShapeNode {
 }
 
 extension on Tile {
-  Vector2 get position => vector
-    ..modify((tile) {
-      tile
-        ..addAll(0.5)
-        ..scale(_TILE_SIZE);
-    });
+  Vector2 get position => MVector2.cast(x, y)
+    ..add(.all(0.5))
+    ..scale(_TILE_SIZE);
 }

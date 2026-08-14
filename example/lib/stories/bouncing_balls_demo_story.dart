@@ -142,7 +142,7 @@ class _DemoNode extends Node {
 
     spawner.onTrigger(() {
       final angle = _RNG.nextDouble() * 2 * pi;
-      final velocity = Vector2(cos(angle), sin(angle)) * _BALL_SPEED;
+      final velocity = MVector2(cos(angle), sin(angle))..scale(_BALL_SPEED);
 
       box.add(
         _BallNode(
@@ -204,14 +204,14 @@ class _WallNode extends ColliderNode {
     required super.shape,
     required super.position,
   }) : super(
-         anchor: .center(),
+         anchor: .center,
          layer: _WALL_LAYER,
          priority: 1,
        );
 }
 
 class _BallNode extends ShapeNode {
-  final Vector2 velocity;
+  final MVector2 velocity;
   int collisions = 0;
 
   _BallNode({
@@ -219,7 +219,7 @@ class _BallNode extends ShapeNode {
     super.position,
   }) : super(
          shape: .circle(_BALL_RADIUS),
-         anchor: .center(),
+         anchor: .center,
          paint: Paint()..color = _BALL_COLOR,
        ) {
     add(
@@ -234,10 +234,10 @@ class _BallNode extends ShapeNode {
             case _WallNode(:final axis):
               switch (axis) {
                 case .x:
-                  velocity.mutate().x *= -1;
+                  velocity.x *= -1;
 
                 case .y:
-                  velocity.mutate().y *= -1;
+                  velocity.y *= -1;
               }
 
             case ColliderNode(parent: _BallNode()):
@@ -257,6 +257,6 @@ class _BallNode extends ShapeNode {
 
   @override
   void tick(double dt) {
-    position.mutate().addScaled(velocity, dt);
+    position.addScaled(velocity, dt);
   }
 }

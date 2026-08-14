@@ -10,7 +10,7 @@ void main() {
       final b = ShapeNode(shape: Rectangle(.new(20, 10)));
       final node = RowNode(children: [a, b]);
       node.layout(.loose(.all(200)));
-      expect([a.position, b.position], [Vector2.zero(), Vector2(10, 0)]);
+      expect([a.position, b.position], [Vector2.zero, Vector2(10, 0)]);
     });
 
     test('ColumnNode lays out along the y axis', () {
@@ -18,7 +18,7 @@ void main() {
       final b = ShapeNode(shape: Rectangle(.new(10, 20)));
       final node = ColumnNode(children: [a, b]);
       node.layout(.loose(.all(200)));
-      expect([a.position, b.position], [Vector2.zero(), Vector2(0, 10)]);
+      expect([a.position, b.position], [Vector2.zero, Vector2(0, 10)]);
     });
   });
 

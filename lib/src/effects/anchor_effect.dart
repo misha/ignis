@@ -49,14 +49,16 @@ class _AnchorByEffect extends AnchorEffect {
   }) : _offset = offset.clone(),
        super._() {
     onProgress((progress) {
-      target!.anchor.mutate().addScaled(_offset, progress - previousProgress);
+      final delta = _offset.scaled(progress - previousProgress);
+      final next = target!.anchor + delta;
+      target!.anchor = Anchor(next.x, next.y);
     });
   }
 }
 
 class _AnchorToEffect extends AnchorEffect {
   final Vector2 _destination;
-  final Vector2 _offset = .zero();
+  final MVector2 _offset = .zero();
 
   _AnchorToEffect({
     required Anchor destination,
@@ -66,13 +68,15 @@ class _AnchorToEffect extends AnchorEffect {
   }) : _destination = destination.clone(),
        super._() {
     onMount(() {
-      _offset.mutate()
+      _offset
         ..setFrom(_destination)
         ..subtract(target!.anchor);
     });
 
     onProgress((progress) {
-      target!.anchor.mutate().addScaled(_offset, progress - previousProgress);
+      final delta = _offset.scaled(progress - previousProgress);
+      final next = target!.anchor + delta;
+      target!.anchor = Anchor(next.x, next.y);
     });
   }
 }

@@ -13,7 +13,7 @@ void main() {
         items: items,
         childConstraints: childConstraints,
         computeSelfSize: (count, largest) => largest,
-        computeOffset: (self, child) => .zero(),
+        computeOffset: (self, child) => .zero,
       );
 
       expect(items.map((i) => i.lastConstraints), [
@@ -35,7 +35,7 @@ void main() {
           largestSeen = largest;
           return largest;
         },
-        computeOffset: (self, child) => .zero(),
+        computeOffset: (self, child) => .zero,
       );
 
       expect(largestSeen, Vector2(20, 30));
@@ -52,7 +52,7 @@ void main() {
           countSeen = count;
           return largest;
         },
-        computeOffset: (self, child) => .zero(),
+        computeOffset: (self, child) => .zero,
       );
 
       expect(countSeen, 4);
@@ -78,10 +78,10 @@ void main() {
         items: [],
         childConstraints: .unbounded(),
         computeSelfSize: (count, largest) => largest,
-        computeOffset: (self, child) => .zero(),
+        computeOffset: (self, child) => .zero,
       );
 
-      expect(selfSize, Vector2.zero());
+      expect(selfSize, Vector2.zero);
     });
   });
 

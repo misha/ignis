@@ -45,7 +45,7 @@ void main() {
   test('captures the destination offset when mounted', () {
     final node = TransformNode();
     final scene = node.mount();
-    node.position.mutate().setValues(10, 0);
+    node.position.setValues(10, 0);
 
     node.add(
       MoveEffect.to(
@@ -55,7 +55,7 @@ void main() {
     );
 
     scene.update(0.25);
-    node.position.mutate().setValues(0, 0);
+    node.position.setValues(0, 0);
     scene.update(1.25);
 
     expect(node.position, Vector2(10, 10));
@@ -84,7 +84,7 @@ void main() {
   });
 
   test('runs at a given speed, deriving its duration from the distance covered', () {
-    final node = TransformNode(position: .zero());
+    final node = TransformNode(position: .zero);
     final scene = node.mount();
 
     node.add(
@@ -104,7 +104,7 @@ void main() {
   test('speed uses the offset captured at mount, not a live re-measurement', () {
     final node = TransformNode();
     final scene = node.mount();
-    node.position.mutate().setValues(10, 0);
+    node.position.setValues(10, 0);
 
     node.add(
       MoveEffect.to(
@@ -117,7 +117,7 @@ void main() {
     );
 
     scene.update(0.25); // Still within the delay; no movement yet.
-    node.position.mutate().setValues(0, 0);
+    node.position.setValues(0, 0);
     scene.update(5.25); // Remaining 0.25 delay, then the full speed-driven leg.
 
     expect(node.position, Vector2(30, 40));
@@ -125,7 +125,7 @@ void main() {
 
   test('re-resolves its target after being remounted elsewhere', () {
     final root = TransformNode();
-    final nodeA = TransformNode(position: .zero());
+    final nodeA = TransformNode(position: .zero);
     final nodeB = TransformNode(position: .all(100));
     root.addAll([nodeA, nodeB]);
     final scene = root.mount();

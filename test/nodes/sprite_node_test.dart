@@ -66,7 +66,7 @@ void main() {
     final sheet = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
     final node = SpriteNode(sheet: sheet);
 
-    node.size.mutate().setValues(10, 20);
+    node.size.setValues(10, 20);
 
     expect((node.width, node.height), (10.0, 20.0));
   });

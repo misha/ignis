@@ -27,12 +27,12 @@ abstract class SizedNode extends TransformNode with Measurable implements Anchor
     super.enabled,
     super.priority,
     super.children,
-  }) : anchor = anchor ?? .topLeft();
+  }) : anchor = anchor ?? .topLeft;
 
-  static final _CENTER_SCRATCH = Vector2.zero();
-  static final _HALF_EXTENTS_SCRATCH = Vector2.zero();
+  static final _CENTER_SCRATCH = MVector2.zero();
+  static final _HALF_EXTENTS_SCRATCH = MVector2.zero();
 
-  final Aabb2 _lastWorldBounds = Aabb2();
+  final MAabb2 _lastWorldBounds = .zero();
 
   /// This node's world-space AABB for [shape], given its already-computed
   /// [transform] (see [absoluteTransform]).
@@ -47,16 +47,16 @@ abstract class SizedNode extends TransformNode with Measurable implements Anchor
     final height = shape.height;
 
     // Compute the shape's center, adjusted for the anchor and absolute transform.
-    _CENTER_SCRATCH.mutate()
+    _CENTER_SCRATCH
       ..setValues(width * (0.5 - anchor.x), height * (0.5 - anchor.y))
-      ..transformWith(transform);
+      ..transform(transform);
 
     // Compute the shape's half-extents, adjusted for absolute rotation (*not* transform).
-    _HALF_EXTENTS_SCRATCH.mutate()
+    _HALF_EXTENTS_SCRATCH
       ..setValues(width / 2, height / 2)
-      ..absoluteRotate2With(transform);
+      ..absoluteRotate2(transform);
 
-    bounds.mutate().setCenterAndHalfExtents(_CENTER_SCRATCH, _HALF_EXTENTS_SCRATCH);
+    bounds.setCenterAndHalfExtents(_CENTER_SCRATCH, _HALF_EXTENTS_SCRATCH);
     return bounds;
   }
 

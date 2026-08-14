@@ -14,7 +14,7 @@ void main() {
       ShapeNode(
         shape: .square(50),
         paint: Paint()..color = RED,
-        anchor: .center(),
+        anchor: .center,
         position: .all(50),
       ),
     ),
@@ -28,7 +28,7 @@ void main() {
       ShapeNode(
         shape: .circle(25),
         paint: Paint()..color = BLUE,
-        anchor: .center(),
+        anchor: .center,
         position: .all(50),
       ),
     ),

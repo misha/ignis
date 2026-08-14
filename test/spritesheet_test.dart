@@ -46,10 +46,10 @@ void main() {
   });
 
   test('clones the supplied frame size', () async {
-    final size = Vector2.all(2);
+    final size = MVector2.all(2);
     final sheet = Spritesheet(await solidImage(4, 4), size: size);
 
-    size.mutate().setAll(1);
+    size.splat(1);
 
     expect(sheet.size, Vector2.all(2));
   });
@@ -58,9 +58,9 @@ void main() {
     const key = 'spritesheet';
     final image = await solidImage(4, 4);
     Ignis.cache.add(key, image);
-    final size = Vector2.all(2);
+    final size = MVector2.all(2);
     final sheet = Spritesheet.asset(key, size: size);
-    size.mutate().setAll(4);
+    size.splat(4);
 
     expect(sheet.image, same(image));
     expect(sheet.size, Vector2.all(2));

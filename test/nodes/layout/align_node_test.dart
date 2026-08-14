@@ -19,7 +19,7 @@ void main() {
 
   test('honors a custom alignment', () {
     final child = ShapeNode(shape: Rectangle(.new(20, 10)));
-    final node = AlignNode(alignment: .bottomRight(), children: [child]);
+    final node = AlignNode(alignment: .bottomRight, children: [child]);
     node.layout(.tight(.new(100, 60)));
     expect(child.position, Vector2(80, 50));
   });
@@ -35,11 +35,11 @@ void main() {
     final child = TestLayoutNode();
     final node = AlignNode(children: [child]);
     node.layout(.new(min: .all(10), max: .new(100, 60)));
-    expect(child.lastConstraints, LayoutConstraints(min: .zero(), max: .new(100, 60)));
+    expect(child.lastConstraints, LayoutConstraints(min: .zero, max: .new(100, 60)));
   });
 
   test('accounts for a non-default child anchor', () {
-    final child = ShapeNode(shape: Rectangle(.new(20, 10)), anchor: .center());
+    final child = ShapeNode(shape: Rectangle(.new(20, 10)), anchor: .center);
     final node = AlignNode(children: [child]);
     node.layout(.tight(.new(100, 60)));
     expect(child.position, Vector2(50, 30));
@@ -48,7 +48,7 @@ void main() {
   test('positions every child according to the same alignment', () {
     final a = ShapeNode(shape: Rectangle(.new(20, 10)));
     final b = ShapeNode(shape: Rectangle(.new(10, 20)));
-    final node = AlignNode(alignment: .bottomRight(), children: [a, b]);
+    final node = AlignNode(alignment: .bottomRight, children: [a, b]);
     node.layout(.tight(.new(100, 60)));
     expect(a.position, Vector2(80, 50));
     expect(b.position, Vector2(90, 40));

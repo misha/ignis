@@ -5,7 +5,7 @@ final class TestMeasurable with Measurable {
   final constraints = <LayoutConstraints>[];
 
   @override
-  final Vector2 position;
+  final MVector2 position;
 
   @override
   Anchor anchor;
@@ -27,15 +27,15 @@ final class TestMeasurable with Measurable {
   LayoutConstraints? get lastConstraints => constraints.lastOrNull;
 
   TestMeasurable({
-    Vector2? position,
+    MVector2? position,
     Anchor? anchor,
     Vector2? size,
     int? flex,
     FlexFit? fit,
     bool? canResize,
   }) : position = position ?? .zero(),
-       anchor = anchor ?? .topLeft(),
-       size = size ?? .zero(),
+       anchor = anchor ?? .topLeft,
+       size = size ?? .zero,
        flex = flex ?? 0,
        fit = fit ?? .loose,
        canResize = canResize ?? false;

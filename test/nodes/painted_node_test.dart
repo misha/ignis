@@ -11,7 +11,7 @@ class _TestPaintedNode extends PaintedNode {
   });
 
   @override
-  Vector2 get size => .zero();
+  Vector2 get size => .zero;
 
   @override
   void renderPainted(Canvas canvas, Paint paint) {

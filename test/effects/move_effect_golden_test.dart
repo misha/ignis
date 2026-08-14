@@ -20,7 +20,7 @@ void main() {
       'goldens/move_effect_by.png',
       SpriteNode(
         sheet: .asset('test/assets/fire.png', size: .new(32, 48)),
-        anchor: .center(),
+        anchor: .center,
         position: .all(50),
         children: [
           MoveEffect.by(

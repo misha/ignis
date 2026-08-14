@@ -40,7 +40,9 @@ mixin Measurable implements PositionOwner, AnchorOwner {
 }
 
 /// A standalone set of layout algorithms, operating on [Measurable] items.
-class LayoutEngine {
+final class LayoutEngine {
+  const LayoutEngine._();
+
   /// Measures every item against the same [childConstraints], tracks the
   /// largest extent, then places each item via [computeOffset].
   static Vector2 stack({
@@ -49,13 +51,13 @@ class LayoutEngine {
     required Vector2 Function(int childCount, Vector2 largestChildSize) computeSelfSize,
     required Vector2 Function(Vector2 selfSize, Vector2 childSize) computeOffset,
   }) {
-    final largest = Vector2.zero();
+    final largest = MVector2.zero();
     final sizes = <Vector2>[];
 
     for (final item in items) {
       final size = item.measure(childConstraints);
       sizes.add(size);
-      largest.mutate().max(size);
+      largest.max(size);
     }
 
     final selfSize = computeSelfSize(items.length, largest);
@@ -170,7 +172,7 @@ class LayoutEngine {
   /// Positions [item] so its content's top-left corner lands at [position],
   /// honoring [item]'s own anchor.
   static void place(Measurable item, Vector2 position) {
-    item.position.mutate()
+    item.position
       ..setFrom(item.anchor)
       ..multiply(item.size)
       ..add(position);
@@ -184,20 +186,20 @@ class LayoutEngine {
     int count,
   ) {
     return switch (alignment) {
-      .start => (0.0, 0.0),
-      .end => (freeSpace, 0.0),
-      .center => (freeSpace / 2, 0.0),
+      .start => (0, 0),
+      .end => (freeSpace, 0),
+      .center => (freeSpace / 2, 0),
       .spaceBetween => (
-        0.0,
-        count > 1 ? freeSpace / (count - 1) : 0.0,
+        0,
+        count > 1 ? freeSpace / (count - 1) : 0,
       ),
       .spaceAround => (
-        count > 0 ? freeSpace / count / 2 : 0.0,
-        count > 0 ? freeSpace / count : 0.0,
+        count > 0 ? freeSpace / count / 2 : 0,
+        count > 0 ? freeSpace / count : 0,
       ),
       .spaceEvenly => (
-        count > 0 ? freeSpace / (count + 1) : 0.0,
-        count > 0 ? freeSpace / (count + 1) : 0.0,
+        count > 0 ? freeSpace / (count + 1) : 0,
+        count > 0 ? freeSpace / (count + 1) : 0,
       ),
     };
   }

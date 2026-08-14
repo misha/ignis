@@ -28,7 +28,7 @@ void main() {
       tester,
       'goldens/align_bottom_right.png',
       AlignNode(
-        alignment: .bottomRight(),
+        alignment: .bottomRight,
         children: [
           ShapeNode(
             shape: .square(20),
@@ -45,7 +45,7 @@ void main() {
       tester,
       'goldens/align_multiple_children.png',
       AlignNode(
-        alignment: .bottomRight(),
+        alignment: .bottomRight,
         children: [
           ShapeNode(
             shape: .square(40),

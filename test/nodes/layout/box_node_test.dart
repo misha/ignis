@@ -55,7 +55,7 @@ void main() {
     final b = ShapeNode(shape: Rectangle.square(10));
     final node = BoxNode(width: 50, height: 50, children: [a, b]);
     node.layout(.tight(.all(50)));
-    expect([a.position, b.position], [Vector2.zero(), Vector2.zero()]);
+    expect([a.position, b.position], [Vector2.zero, Vector2.zero]);
   });
 
   test('grows to fit the padding alone when nothing else is fixed', () {

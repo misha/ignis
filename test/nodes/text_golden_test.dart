@@ -14,7 +14,7 @@ void main() {
       TextNode(
         text: 'Ignis',
         style: const TextStyle(color: BLACK, fontSize: 24),
-        anchor: .center(),
+        anchor: .center,
         position: .all(50),
       ),
     ),

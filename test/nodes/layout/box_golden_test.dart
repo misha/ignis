@@ -16,7 +16,7 @@ void main() {
         height: 40,
         children: [
           AlignNode(
-            alignment: .bottomRight(),
+            alignment: .bottomRight,
             children: [
               ShapeNode(
                 shape: .square(10),

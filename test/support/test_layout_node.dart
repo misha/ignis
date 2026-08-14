@@ -21,7 +21,7 @@ final class TestLayoutNode extends LayoutNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : sizeToReturn = sizeToReturn ?? .zero();
+  }) : sizeToReturn = sizeToReturn ?? .zero;
 
   @override
   Vector2 constrain(LayoutConstraints constraints) {

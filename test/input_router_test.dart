@@ -91,7 +91,7 @@ void main() {
     expect(updates, isNotEmpty);
     // Flutter reports the down position as the first update's globalPosition,
     // so its delta must come out zero.
-    expect(updates.first.delta, Vector2.zero());
+    expect(updates.first.delta, Vector2.zero);
     expect(updates.last.scene, Vector2(55, 5));
   });
 

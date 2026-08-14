@@ -16,16 +16,16 @@ void main() {
   });
 
   test('re-reads velocity every tick', () {
-    final node = TransformNode(position: .zero());
+    final node = TransformNode(position: .zero);
     final scene = node.mount();
-    final velocity = Vector2(10, 0);
+    final velocity = MVector2(10, 0);
 
     node.add(VelocityEffect(velocity: velocity));
 
     scene.update(1);
     expect(node.position, Vector2(10, 0));
 
-    velocity.mutate().setValues(0, 5);
+    velocity.setValues(0, 5);
     scene.update(1);
     expect(node.position, Vector2(10, 5));
   });
@@ -57,6 +57,6 @@ void main() {
   test('setting speed on a zero velocity is a no-op', () {
     final effect = VelocityEffect(velocity: .zero());
     effect.speed = 10;
-    expect(effect.velocity, Vector2.zero());
+    expect(effect.velocity, Vector2.zero);
   });
 }

@@ -12,7 +12,7 @@ class VelocityEffect extends EffectNode implements SpeedOwner {
   PositionOwner? get target => _target.value;
 
   /// The rate of change of [target]'s position, in units per second.
-  final Vector2 velocity;
+  final MVector2 velocity;
 
   VelocityEffect({
     required this.velocity,
@@ -27,13 +27,13 @@ class VelocityEffect extends EffectNode implements SpeedOwner {
 
   @override
   set speed(double value) {
-    if (velocity.mutate().normalize() == 0) return; // No direction to preserve.
-    velocity.mutate().scale(value);
+    if (velocity.normalize() == 0) return; // No direction to preserve.
+    velocity.scale(value);
   }
 
   @override
   void tick(double dt) {
-    target!.position.mutate().addScaled(velocity, dt);
+    target!.position.addScaled(velocity, dt);
   }
 
   @override

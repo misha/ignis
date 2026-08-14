@@ -32,7 +32,7 @@ final class Rectangle extends Shape {
   Rectangle.square(double size) : this(.all(size));
 
   /// Computes this rectangle's world-space half-extents under [transform].
-  void worldExtents(Matrix3 transform, MutableVector2 ex, MutableVector2 ey) {
+  void worldExtents(Matrix3 transform, MVector2 ex, MVector2 ey) {
     ex.setValues(transform[0] * size.x / 2, transform[1] * size.x / 2);
     ey.setValues(transform[3] * size.y / 2, transform[4] * size.y / 2);
   }
@@ -40,18 +40,11 @@ final class Rectangle extends Shape {
 
 final class Circle extends Shape {
   final double radius;
-  final double diameter;
-
-  const Circle(this.radius) : diameter = radius * 2;
 
   @override
-  Vector2 get size => .all(diameter);
+  final Vector2 size;
 
-  @override
-  double get width => diameter;
-
-  @override
-  double get height => diameter;
+  Circle(this.radius) : size = .all(radius * 2);
 
   /// Computes this circle's world-space radius under [transform].
   double worldRadius(Matrix3 transform) {

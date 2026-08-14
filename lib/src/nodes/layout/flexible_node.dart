@@ -40,10 +40,10 @@ class FlexibleNode extends LayoutNode {
     );
 
     final child = children.whereType<Measurable>().firstOrNull;
-    if (child == null) return constraints.smallest;
+    if (child == null) return constraints.min;
 
     final size = child.measure(constraints);
-    LayoutEngine.place(child, .zero());
+    LayoutEngine.place(child, .zero);
     return size;
   }
 }

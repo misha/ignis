@@ -20,8 +20,10 @@ import 'package:ignis/src/nodes/sized_node.dart';
 /// layout subtrees contiguous.
 /// TODO: Is this actually an acceptable restriction?
 abstract class LayoutNode extends SizedNode {
+  final MVector2 _size = .zero();
+
   @override
-  final Vector2 size = .zero();
+  Vector2 get size => _size;
 
   LayoutNode({
     super.position,
@@ -36,7 +38,7 @@ abstract class LayoutNode extends SizedNode {
   /// Lays out this node under [constraints] and stores the result.
   @nonVirtual
   void layout(LayoutConstraints constraints) {
-    size.mutate().setFrom(constraints.satisfy(constrain(constraints)));
+    _size.setFrom(constraints.satisfy(constrain(constraints)));
   }
 
   /// Lays this node out under [constraints], then returns its resulting size.

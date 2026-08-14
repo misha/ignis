@@ -48,7 +48,7 @@ import 'package:ignis/ignis.dart';
 class GameNode extends TransformNode {
   final player = ShapeNode(
     shape: Shape.circle(16),
-    anchor: Anchor.center(),
+    anchor: Anchor.center,
     paint: Paint()..color = Colors.orange,
   );
 
@@ -58,7 +58,7 @@ class GameNode extends TransformNode {
 
   @override
   void tick(double dt) {
-    player.position.mutate().x += 40 * dt;
+    player.position.x += 40 * dt;
   }
 }
 
@@ -95,7 +95,7 @@ class Ship extends TransformNode {
 
   @override
   void tick(double dt) {
-    position.mutate().addScaled(velocity, dt);
+    position.addScaled(velocity, dt);
   }
 }
 ```
@@ -190,14 +190,18 @@ final controller = EffectController.duration(1.5);
 
 ### Concept: Math
 
-Math types such as `Vector2`, `Matrix3`, and `Aabb2` come from Ignis' companion [`ivector_math`](https://pub.dev/packages/ivector_math) package. `ivector_math` is a re-implementation of `vector_math` with additional semantics for controlled mutability.
+Math types such as `Vector2`, `Matrix3`, and `Aabb2` come from Ignis' companion [`ivector_math`](https://pub.dev/packages/ivector_math) package.
 
-Unlike `vector_math`, types in `ivector_math` are immutable by default. In order to modify one, call `mutate()` to obtain a scoped, mutable view for in-place updates.
+Unlike `vector_math`, every `ivector_math` type comes as a pair: an immutable base type (`Vector2`, `Matrix3`, `Aabb2`) with no mutating method of any kind, and a mutable sibling (`MVector2`, `MMatrix3`, `MAabb2`) that always `implements` it.
+
+A value typed `Vector2` is simply a fact; nothing is capable of changing it. Similarly, a value typed `MVector2` can always be mutated by whoever holds it, no ceremony required.
 
 ```dart
-final position = Vector2.zero();
-position.mutate().addScaled(velocity, dt);
+final position = MVector2.zero();
+position.addScaled(velocity, dt);
 ```
+
+Because `MVector2` implements `Vector2`, a node can hold its own state as an `MVector2` internally while exposing it publicly as `Vector2`. This lets you control when those values are changed, if ever, at no performance cost.
 
 Although it was developed with Ignis in mind, `ivector_math` is otherwise generally applicable.
 
@@ -456,7 +460,7 @@ final drag = DragInput(shape: piece.shape);
 piece.add(drag);
 
 drag.onDragUpdate((event) {
-  piece.position.mutate().add(event.delta);
+  piece.position.add(event.delta);
 });
 ```
 

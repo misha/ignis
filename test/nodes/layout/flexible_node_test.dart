@@ -16,7 +16,7 @@ void main() {
       final child = ShapeNode(shape: Rectangle(.new(20, 10)));
       final node = FlexibleNode(children: [child]);
       node.layout(.tight(.new(100, 60)));
-      expect(child.position, Vector2.zero());
+      expect(child.position, Vector2.zero);
     });
 
     test('lays out a LayoutNode child with exactly the received constraints', () {
@@ -46,7 +46,7 @@ void main() {
     test('flex and fit are inert without a FlexNode ancestor', () {
       final child = ShapeNode(shape: Rectangle(.new(20, 10)));
       final node = FlexibleNode(fit: .tight, children: [child]);
-      node.layout(.new(min: .zero(), max: .all(200)));
+      node.layout(.new(min: .zero, max: .all(200)));
       expect((node.width, node.height), (20.0, 10.0));
     });
   });
