@@ -100,16 +100,24 @@ final class LayoutEngine {
     final fillCross = crossAxisAlignment == .stretch;
     final childCount = items.length;
 
-    assert(
-      canFlex ||
-          !items.any(
-            (item) =>
-                item.flex.factor > 0 && //
-                (mainAxisSize == .max || item.flex.fit == .tight),
-          ),
-      'Layout has an unbounded main axis with a flexible item that demands a tight or'
-      'max-forced space. Bound the axis, or use MainAxisSize.min with loose-fit items.',
-    );
+    // Flex divides whatever the main axis has left over, and an unbounded axis
+    // never has a leftover. Pass 1 measures flexed items at their natural size
+    // instead, which only holds up if nothing demanded to fill something.
+    if (!canFlex) {
+      assert(
+        !items.any((item) => item.flex.factor > 0) || mainAxisSize == .min,
+        'A flex with an unbounded main axis has no leftover space, so '
+        'MainAxisSize.max has nothing to fill. Bound the main axis, or use '
+        'MainAxisSize.min.',
+      );
+
+      assert(
+        items.every((item) => item.flex.factor <= 0 || item.flex.fit == .loose),
+        'A flex with an unbounded main axis has no share for FlexFit.tight to '
+        'fill. Bound the main axis, or use LayoutFlex.flexible instead of '
+        'LayoutFlex.expanded.',
+      );
+    }
 
     // Pass 1: lay out every non-flex item. If the main axis is unbounded,
     // every item (flex or not) is treated as non-flex here.
