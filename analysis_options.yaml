@@ -9,6 +9,13 @@ analyzer:
   exclude:
     - "**/*.g.dart"
     - test/*.pickled.dart
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
 linter:
   rules:
     avoid_print: false
