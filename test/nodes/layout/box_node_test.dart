@@ -120,10 +120,18 @@ void main() {
   });
 
   group('alignment', () {
-    test('sizes to the smallest constraint with no child', () {
+    test('fills the largest constraint with no child', () {
       final node = BoxNode(alignment: .center);
       node.layout(.new(min: .all(5), max: .all(50)));
-      expect((node.width, node.height), (5.0, 5.0));
+      expect((node.width, node.height), (50.0, 50.0));
+    });
+
+    test('fills a bounded axis rather than shrink-wrapping to the child', () {
+      final child = ShapeNode(shape: Rectangle(.new(20, 10)));
+      final node = BoxNode(alignment: .center, children: [child]);
+      node.layout(.loose(.all(100)));
+      expect((node.width, node.height), (100.0, 100.0));
+      expect(child.position, Vector2(40, 45));
     });
 
     test('centers a fixed-size leaf child', () {

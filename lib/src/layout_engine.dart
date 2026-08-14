@@ -55,8 +55,8 @@ abstract final class LayoutEngine {
   ///   1. Narrow the constraints. The padding leaves an 80x40 interior, and
   ///      aligning loosens it, so the item may come back smaller.
   ///   2. Measure every item against that. The item reports 20x20.
-  ///   3. Size the region. With no target it shrink-wraps to the largest item
-  ///      plus padding, 40x40, which its own constraints clamp up to 100x60.
+  ///   3. Size the region. Aligning asks for room to align within, so each
+  ///      bounded axis is taken whole, landing on 100x60.
   ///   4. Place every item. That leaves 60x20 of room inside the padding, and
   ///      half of it puts the item at (40, 20).
   static Vector2 box({
@@ -96,11 +96,13 @@ abstract final class LayoutEngine {
       largest.max(item.size);
     }
 
-    // Size. [region] is already tight on any targeted axis, so this lands on
-    // the target there and on the shrink-wrapped size everywhere else.
+    // Size. An alignment asks for room to align within, so it takes every
+    // bounded axis whole; an unbounded one has no room to ask for. [region] is
+    // already tight on any targeted axis, so a target still wins either way.
+    final fill = alignment != null;
     final size = region.constrain(
-      largest.x + padding.horizontal,
-      largest.y + padding.vertical,
+      fill && region.hasBoundedWidth ? region.max.x : largest.x + padding.horizontal,
+      fill && region.hasBoundedHeight ? region.max.y : largest.y + padding.vertical,
     );
 
     // Place. Nothing was kept from the measure pass: [LayoutItem] guarantees

@@ -17,12 +17,20 @@ void main() {
     expect(node.layouts, [LayoutConstraints.unbounded()]);
   });
 
-  test('lays out against tight scene-size constraints once resized', () {
+  test('lays out against loose scene-size constraints once resized', () {
     final node = TestLayoutNode();
     final scene = node.mount();
     scene.resize(100, 80);
     scene.update(0);
-    expect(node.layouts, [LayoutConstraints.tight(.new(100, 80))]);
+    expect(node.layouts, [LayoutConstraints.loose(.new(100, 80))]);
+  });
+
+  test('keeps a fixed size at the layout root', () {
+    final node = BoxNode(width: 40, height: 30);
+    final scene = node.mount();
+    scene.resize(100, 80);
+    scene.update(0);
+    expect((node.width, node.height), (40.0, 30.0));
   });
 
   test('recomputes against the new size after a later resize', () {
@@ -30,13 +38,13 @@ void main() {
     final scene = node.mount();
     scene.resize(100, 80);
     scene.update(0);
-    expect(node.layouts, [LayoutConstraints.tight(.new(100, 80))]);
+    expect(node.layouts, [LayoutConstraints.loose(.new(100, 80))]);
 
     scene.resize(50, 40);
     scene.update(0);
     expect(node.layouts, [
-      LayoutConstraints.tight(.new(100, 80)),
-      LayoutConstraints.tight(.new(50, 40)),
+      LayoutConstraints.loose(.new(100, 80)),
+      LayoutConstraints.loose(.new(50, 40)),
     ]);
   });
 
@@ -62,7 +70,7 @@ void main() {
     scene.update(0);
 
     expect(child.isLayoutRoot, isTrue);
-    expect(child.layouts, [LayoutConstraints.tight(.new(100, 80))]);
+    expect(child.layouts, [LayoutConstraints.loose(.new(100, 80))]);
   });
 
   test('a plain node hides its children from its layout parent', () {

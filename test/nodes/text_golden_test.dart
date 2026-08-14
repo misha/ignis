@@ -25,19 +25,12 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/text_wrapped.png',
-      // The scene's constraints are tight, so the inner box only gets to be
-      // 60 wide once something loosens them.
       BoxNode(
-        alignment: .topLeft,
+        width: 60,
         children: [
-          BoxNode(
-            width: 60,
-            children: [
-              TextNode(
-                text: 'Sally sells sea shells by the sea shore',
-                style: const TextStyle(color: BLACK, fontSize: 10),
-              ),
-            ],
+          TextNode(
+            text: 'Sally sells sea shells by the sea shore',
+            style: const TextStyle(color: BLACK, fontSize: 10),
           ),
         ],
       ),

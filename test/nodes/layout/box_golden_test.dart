@@ -11,22 +11,15 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/box_fixed_size.png',
-      // The scene's constraints are tight, so the fixed size only survives
-      // once something above loosens them.
-      BoxNode(
-        alignment: .topLeft,
+      BoxNode.square(
+        size: 40,
         children: [
-          BoxNode.square(
-            size: 40,
+          BoxNode(
+            alignment: .bottomRight,
             children: [
-              BoxNode(
-                alignment: .bottomRight,
-                children: [
-                  ShapeNode(
-                    shape: .square(10),
-                    paint: Paint()..color = BLACK,
-                  ),
-                ],
+              ShapeNode(
+                shape: .square(10),
+                paint: Paint()..color = BLACK,
               ),
             ],
           ),

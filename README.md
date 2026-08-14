@@ -16,6 +16,7 @@ What is this? See [Motivation](#motivation).
   - [Time](#concept-time)
   - [Math](#concept-math)
 - [Nodes](#nodes)
+- [Layout](#layout)
 - [Effects](#effects)
 - [Sprites](#sprites)
 - [Palettes](#palettes)
@@ -35,6 +36,7 @@ What is this? See [Motivation](#motivation).
 - **Completely synchronous.** Nodes are instantiated, updated, and rendered in a completely synchronous loop. Errors are reported at the source.
 - **Signals, not callbacks.** The `Signal`, a lightweight event emitter, powers everything from animations to collisions.
 - **Embedded in Flutter.** Any node can be rendered in the widget tree via `SceneWidget`. Ignis runs wherever Flutter runs (I think).
+- **Flutter's layout, on nodes.** `RowNode`, `ColumnNode`, and `BoxNode` behave like the widgets you already know.
 - **Asset preloading.** `Preload` concurrently loads assets with `Loader`s for images, shaders, or custom resource types.
 
 ## Quick Start
@@ -219,13 +221,79 @@ Ignis comes with the following nodes.
 | `EffectNode`             | Base node for time-driven effects. See [Effects](#effects).      | `onFinish`                           |
 | `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.             | `onUpdate`                           |
 | `InputNode`              | Base hit area for gestures. See [Inputs](#inputs).               | -                                    |
+| `LayoutNode`             | Base node for laid-out nodes. See [Layout](#layout).             | -                                    |
 | `PaintedNode`            | Base node using `Paint`. See [Palettes](#palettes).              | -                                    |
 | `ShapeNode`              | Draws a `Shape`.                                                 | -                                    |
 | `SizedNode`              | Base node with a size, used for shapes, sprites, and more.       | -                                    |
 | `SpriteNode`             | Animates a `Spritesheet`. See [Sprites](#sprites).               | `onFrame`, `onLoop`, `onFinish`      |
-| `TextNode`               | Draws text with `TextPainter`.                                   | -                                    |
+| `TextNode`               | Draws text with `TextPainter`, wrapping to fit.                  | -                                    |
 | `TimerNode`              | Tracks time to power its signal.                                 | `onTrigger`                          |
 | `TransformNode`          | Base spatial node with a `position`, `scale`, and `angle`.       | -                                    |
+
+## Layout
+
+`LayoutNode` is a node whose size is decided by its parent rather than by its own content.
+
+Ignis lays these out the way Flutter lays out widgets. In general, if you know the widget, you know the node.
+
+Ignis comes with the following layout nodes.
+
+| Layout Node  | Purpose                                           | Flutter     |
+|--------------|---------------------------------------------------|-------------|
+| `BoxNode`    | Sizes a region and places its children inside it. | `Container` |
+| `FlexNode`   | Lays children out along a given `Axis`.           | `Flex`      |
+| `RowNode`    | Lays children out horizontally.                   | `Row`       |
+| `ColumnNode` | Lays children out vertically.                     | `Column`    |
+
+The code below constructs a HUD entirely from layout nodes. (It is modestly contrived to show off as many parameters as possible.)
+
+```dart
+final hud = ColumnNode(
+  mainAxisSize: .min,
+  crossAxisAlignment: .stretch,
+  spacing: 6,
+  children: [
+    RowNode(
+      mainAxisAlignment: .spaceBetween,
+      children: [
+        TextNode(text: 'Floor 7'),
+        TextNode(text: '1200'),
+      ],
+    ),
+    BoxNode(
+      height: 10,
+      padding: .all(2),
+      alignment: .centerLeft,
+      children: [
+        ShapeNode(
+          shape: .rectangle(Vector2(48, 6)),
+          paint: Paint()..color = const Color(0xFFC0FFEE),
+        ),
+      ],
+    ),
+  ],
+);
+```
+
+> :warning: Layout only flows from a layout node to its direct children. Put a plain node in between and the layout node underneath it starts over, sizing itself against the scene.
+
+### Ignis-Flutter Cheatsheet
+
+Many Flutter layout features can be expressed in Ignis nodes. The table below spells out some of the more common type translations.
+
+| Flutter          | Ignis                                        |
+|------------------|----------------------------------------------|
+| `Align`          | `BoxNode`, set an `alignment`                |
+| `Center`         | `BoxNode`, set `alignment` to `.center`      |
+| `Padding`        | `BoxNode`, set a `padding`                   |
+| `SizedBox`       | `BoxNode`, set a `width` and/or `height`     |
+| `Stack`          | `BoxNode`, with more than one child          |
+| `Expanded`       | Any layout node, set `flex` to `.expanded()` |
+| `Flexible`       | Any layout node, set `flex` to `.flexible()` |
+| `Spacer`         | `BoxNode`, set `flex` to `.expanded()`       |
+| `Text`           | `TextNode`                                   |
+| `Alignment`      | `Anchor`                                     |
+| `BoxConstraints` | `LayoutConstraints`                          |
 
 ## Effects
 

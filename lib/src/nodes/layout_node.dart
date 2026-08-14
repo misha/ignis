@@ -80,9 +80,12 @@ abstract class LayoutNode extends SizedNode {
     layout(_rootConstraints());
   }
 
+  /// A layout root is given the scene loosely, not tightly, so a node that
+  /// asks for a size gets it. Filling is opt-in: set an `alignment`, a
+  /// `mainAxisSize`, or a `crossAxisAlignment` that asks for the room.
   LayoutConstraints _rootConstraints() {
     if (!isMounted || !scene.hasSize) return .unbounded();
-    return .tight(scene.size);
+    return .loose(scene.size);
   }
 
   @override
