@@ -234,12 +234,11 @@ packages:
   ivector_math:
     dependency: transitive
     description:
-      path: "."
-      ref: rewrite
-      resolved-ref: "0d8f973f7a3ce9c3a25246dde2a9aa8ec29a872e"
-      url: "https://github.com/misha/dart_ivector_math"
-    source: git
-    version: "0.0.5"
+      name: ivector_math
+      sha256: "540645b9fcd290ae22736f1c5ce2a6100f6459acd605bf82d414dff1a1125c61"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.0"
   leak_tracker:
     dependency: transitive
     description:
