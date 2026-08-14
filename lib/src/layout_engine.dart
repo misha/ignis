@@ -8,9 +8,7 @@ import 'package:ignis/src/layout_constraints.dart';
 import 'package:ignis/src/math.dart';
 
 /// A standalone set of layout algorithms, operating on [LayoutItem] items.
-final class LayoutEngine {
-  const LayoutEngine._();
-
+abstract final class LayoutEngine {
   /// Sizes a region to [targetWidth]/[targetHeight] - or to its largest item
   /// plus [padding] where either is null - then places every item inside it
   /// at [alignment].
