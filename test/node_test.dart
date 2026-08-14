@@ -638,6 +638,85 @@ void main() {
       expect(() => b.read<int>(), throwsStateError);
     });
   });
+
+  group('query', () {
+    test('returns only the direct children of the queried type', () {
+      final matching = TestNode('a', TestLog());
+      final other = Node();
+      final node = Node(children: [matching, other]);
+
+      expect(node.query<TestNode>(), [matching]);
+    });
+
+    test('does not descend past a direct child', () {
+      final buried = TestNode('a', TestLog());
+      final node = Node(
+        children: [
+          Node(children: [buried]),
+        ],
+      );
+
+      expect(node.query<TestNode>(), isEmpty);
+    });
+
+    test('matches by subtype, not exact runtime type', () {
+      final node = Node(children: [TestNode('a', TestLog())]);
+      expect(node.query<Node>().length, 1);
+    });
+
+    test('picks up a child added after the first call', () {
+      final node = Node();
+      expect(node.query<TestNode>(), isEmpty);
+
+      final added = TestNode('a', TestLog());
+      node.add(added);
+      expect(node.query<TestNode>(), [added]);
+    });
+
+    test('drops a child removed after the first call', () {
+      final removed = TestNode('a', TestLog());
+      final node = Node(children: [removed]);
+      expect(node.query<TestNode>(), [removed]);
+
+      node.remove(removed);
+      expect(node.query<TestNode>(), isEmpty);
+    });
+
+    test('keeps results in priority order as children are added', () {
+      final log = TestLog();
+      final last = TestNode('last', log)..priority = 10;
+      final first = TestNode('first', log)..priority = -10;
+      final node = Node(children: [last]);
+
+      // Registers the query before the lower-priority child exists, so an
+      // append-only cache would put them in the wrong order.
+      expect(node.query<TestNode>(), [last]);
+
+      node.add(first);
+      expect(node.query<TestNode>(), [first, last]);
+    });
+
+    test('reorders results when a child changes priority', () {
+      final log = TestLog();
+      final a = TestNode('a', log);
+      final b = TestNode('b', log);
+      final node = Node(children: [a, b]);
+      expect(node.query<TestNode>(), [a, b]);
+
+      b.priority = -1;
+      expect(node.query<TestNode>(), [b, a]);
+    });
+
+    test('returns the same live view on every call', () {
+      final node = Node();
+      final first = node.query<TestNode>();
+      final added = TestNode('a', TestLog());
+
+      node.add(added);
+      expect(first, [added]);
+      expect(node.query<TestNode>(), same(first));
+    });
+  });
 }
 
 void _render(Node node) {

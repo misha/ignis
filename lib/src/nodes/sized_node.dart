@@ -81,11 +81,6 @@ abstract class SizedNode extends TransformNode implements Measurable, AnchorOwne
     return bounds;
   }
 
-  /// A [SizedNode] is itself a layout item, so a layout ancestor never looks
-  /// past it at its children. Nothing above needs to hear about them.
-  @override
-  bool absorbStructuralChange() => true;
-
   @override
   void renderTransformed(Canvas canvas) {
     final offsetX = -anchor.x * width;

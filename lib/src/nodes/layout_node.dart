@@ -12,14 +12,16 @@ import 'package:ignis/src/nodes/sized_node.dart';
 /// A [SizedNode] whose size is computed via constraint propagation, rather
 /// than being intrinsic to its content.
 ///
-/// A [LayoutNode] no other [LayoutNode] claims is a layout root: it lays
-/// itself out from [tick], every frame, against the scene's size. A claimed
-/// one is laid out by its claimer instead, via a direct [layout] call inside
-/// that node's [constrain].
+/// A [LayoutNode] whose parent is a [LayoutNode] is laid out by that parent,
+/// via a direct [layout] call inside its [constrain]. Any other one is a
+/// layout root: it lays itself out from [tick], every frame, against the
+/// scene's size.
+///
+/// Layout only ever flows from a [LayoutNode] to its direct children, so a
+/// plain node in between doesn't pass constraints through - it starts a fresh
+/// layout root underneath instead.
 abstract class LayoutNode extends SizedNode {
   final MVector2 _size = .zero();
-  final List<Measurable> _layoutChildren = [];
-  bool _layoutChildrenDirty = true;
 
   @override
   Vector2 get size => _size;
@@ -40,53 +42,21 @@ abstract class LayoutNode extends SizedNode {
     super.children,
   }) : flex = flex ?? .none;
 
-  /// The items this node lays out: every nearest [Measurable] descendant,
-  /// found by descending through the plain nodes between them.
+  /// The items this node lays out: its direct [SizedNode] children.
   ///
-  /// Resolved once and reused until a structural change invalidates it, so
-  /// this is a cheap read on a stable tree. The returned list is owned by
-  /// this node, and must not be retained or modified.
+  /// Queried as [SizedNode] rather than [Measurable] because that is what a
+  /// layout item is *in the tree* - [Measurable] exists so `LayoutEngine` can
+  /// work on things that aren't nodes at all.
+  ///
+  /// [Node.query] hands back live storage that is maintained in place rather
+  /// than replaced, so the reference is resolved once and kept; later adds and
+  /// removals show up through it.
   @protected
-  List<Measurable> get layoutChildren {
-    if (_layoutChildrenDirty) {
-      _layoutChildren.clear();
-      _collect(this, _layoutChildren);
-      _layoutChildrenDirty = false;
-    }
+  late final Iterable<Measurable> layoutChildren = query<SizedNode>();
 
-    return _layoutChildren;
-  }
-
-  static void _collect(Node node, List<Measurable> items) {
-    for (final child in node.children) {
-      if (child case final Measurable item) {
-        items.add(item);
-      } else {
-        _collect(child, items);
-      }
-    }
-  }
-
-  @override
-  bool absorbStructuralChange() {
-    _layoutChildrenDirty = true;
-    return true;
-  }
-
-  /// Whether no [LayoutNode] claims this node, leaving it to lay itself out
+  /// Whether no [LayoutNode] lays this node out, leaving it to lay itself out
   /// against the scene every frame.
-  ///
-  /// Mirrors how [layoutChildren] descends, so the two always agree on who
-  /// lays out whom.
-  bool get isLayoutRoot {
-    var node = parent;
-
-    while (node != null && node is! Measurable) {
-      node = node.parent;
-    }
-
-    return node is! LayoutNode;
-  }
+  bool get isLayoutRoot => parent is! LayoutNode;
 
   /// Lays out this node under [constraints] and stores the result.
   @nonVirtual

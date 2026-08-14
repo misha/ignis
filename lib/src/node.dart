@@ -2,6 +2,7 @@ import 'dart:collection';
 import 'dart:ui' hide Scene;
 
 import 'package:flutter/foundation.dart';
+import 'package:ignis/src/egg.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/signal.dart';
 
@@ -79,7 +80,7 @@ class Node {
     if (!_enabled) return;
     tick(dt);
 
-    final children = _children;
+    final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
@@ -90,7 +91,7 @@ class Node {
   /// Renders this node and its children to [canvas].
   @mustCallSuper
   void render(Canvas canvas) {
-    final children = _children;
+    final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
@@ -108,7 +109,7 @@ class Node {
   /// method is called, so implementations are welcome to reuse cached values
   /// to make debug rendering as cheap as possible.
   void debugRender(Canvas canvas) {
-    final children = _children;
+    final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
@@ -178,7 +179,7 @@ class Node {
   // #region Tree
 
   Scene? _scene;
-  List<Node>? _children;
+  Egg? _egg;
   Node? _parent;
   Node? _pendingParent;
   bool _pendingRemoval = false;
@@ -193,7 +194,17 @@ class Node {
   bool get isMounted => _scene != null;
 
   /// This node's direct children.
-  Iterable<Node> get children => _children ?? const [];
+  Iterable<Node> get children => _egg?.nodes ?? const [];
+
+  /// This node's direct children of type [T], in [priority] order.
+  ///
+  /// The result is kept up to date as children come and go, so repeated calls
+  /// cost nothing and allocate nothing. The first call for a given [T] pays
+  /// one pass over [children] to build it.
+  ///
+  /// Returned as an [Iterable] over this node's live storage, so it reflects
+  /// later changes but cannot be mutated through its interface.
+  Iterable<T> query<T extends Node>() => (_egg ??= Egg()).query<T>();
 
   /// The parent that owns this node, or null when it is parentless.
   Node? get parent => _parent;
@@ -239,10 +250,9 @@ class Node {
   }
 
   void _own(Node node) {
-    _insert(node);
+    (_egg ??= Egg()).add(node);
     node._parent = this;
     node._pendingParent = null;
-    _notifyStructuralChange();
     final scene = _scene;
     if (scene != null) node._mount(scene);
   }
@@ -251,57 +261,13 @@ class Node {
     try {
       if (node.isMounted) node._unmount();
     } finally {
-      _children?.remove(node);
+      _egg?.remove(node);
       node._parent = null;
       node._pendingRemoval = false;
-      _notifyStructuralChange();
     }
   }
 
-  void _reposition(Node node) {
-    final children = _children;
-    if (children == null) return;
-    final removed = children.remove(node);
-    if (!removed) return;
-    _insert(node);
-    _notifyStructuralChange();
-  }
-
-  /// Whether this node absorbs a structural change at or below itself, rather
-  /// than letting it bubble further up to [parent].
-  ///
-  /// Nodes caching anything about their descendants override this to drop
-  /// that cache and stop the bubble. Defaults to false, so a plain node is
-  /// transparent and passes the change straight through.
-  @internal
-  @visibleForOverriding
-  bool absorbStructuralChange() => false;
-
-  void _notifyStructuralChange() {
-    Node? node = this;
-
-    while (node != null && !node.absorbStructuralChange()) {
-      node = node._parent;
-    }
-  }
-
-  void _insert(Node node) {
-    final children = _children ??= [];
-    var low = 0;
-    var high = children.length;
-
-    while (low < high) {
-      final middle = (low + high) >> 1;
-
-      if (children[middle].priority <= node.priority) {
-        low = middle + 1;
-      } else {
-        high = middle;
-      }
-    }
-
-    children.insert(low, node);
-  }
+  void _reposition(Node node) => _egg?.reorder(node);
 
   // #endregion
 
@@ -311,7 +277,7 @@ class Node {
     // TODO: Assert null _scene?
     _scene = scene;
     onMount.emit();
-    final children = _children;
+    final children = _egg?.nodes;
 
     if (children != null && children.isNotEmpty) {
       for (final child in children) {
@@ -322,7 +288,7 @@ class Node {
 
   void _unmount() {
     // TODO: Assert non-null _scene?
-    final children = _children;
+    final children = _egg?.nodes;
 
     if (children != null && children.isNotEmpty) {
       for (final child in children) {
@@ -402,7 +368,7 @@ class Node {
 
   /// Removes all children.
   void removeAll() {
-    var children = _children;
+    Iterable<Node>? children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
     // While mounted, removal is deferred to the next flush, so it's safe to
@@ -432,7 +398,7 @@ class Node {
   @nonVirtual
   Iterable<Node> hitTest(Vector2 point) sync* {
     if (!enabled) return;
-    final children = _children;
+    final children = _egg?.nodes;
 
     if (children != null && children.isNotEmpty) {
       for (final child in children.reversed) {

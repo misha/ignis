@@ -44,7 +44,7 @@ final class LayoutEngine {
   /// Measures every item against the same [childConstraints], tracks the
   /// largest extent, then places each item via [computeOffset].
   static Vector2 stack({
-    required List<Measurable> items,
+    required Iterable<Measurable> items,
     required LayoutConstraints childConstraints,
     required Vector2 Function(int childCount, Vector2 largestChildSize) computeSelfSize,
     required Vector2 Function(Vector2 selfSize, Vector2 childSize) computeOffset,
@@ -58,10 +58,12 @@ final class LayoutEngine {
       largest.max(size);
     }
 
-    final selfSize = computeSelfSize(items.length, largest);
+    final selfSize = computeSelfSize(sizes.length, largest);
+    var index = 0;
 
-    for (var i = 0; i < items.length; i++) {
-      place(items[i], computeOffset(selfSize, sizes[i]));
+    for (final item in items) {
+      place(item, computeOffset(selfSize, sizes[index]));
+      index += 1;
     }
 
     return selfSize;
@@ -94,7 +96,7 @@ final class LayoutEngine {
   static Vector2 flex({
     required Axis direction,
     required LayoutConstraints constraints,
-    required List<Measurable> items,
+    required Iterable<Measurable> items,
     required MainAxisAlignment mainAxisAlignment,
     required CrossAxisAlignment crossAxisAlignment,
     required MainAxisSize mainAxisSize,
@@ -143,42 +145,47 @@ final class LayoutEngine {
       max: direction.toVector2(main: double.infinity, cross: crossMax),
     );
 
-    for (var i = 0; i < childCount; i++) {
-      final item = items[i];
+    var index = 0;
 
+    for (final item in items) {
       if (canFlex && item.flex.factor > 0) {
         totalFlex += item.flex.factor;
-        continue;
+      } else {
+        final size = item.measure(looseConstraints);
+        mains[index] = size.axis(direction);
+        crosses[index] = size.axis(crossAxis);
+        consumedMain += mains[index];
+        maxCross = math.max(maxCross, crosses[index]);
       }
 
-      final size = item.measure(looseConstraints);
-      mains[i] = size.axis(direction);
-      crosses[i] = size.axis(crossAxis);
-      consumedMain += mains[i];
-      maxCross = math.max(maxCross, crosses[i]);
+      index += 1;
     }
 
     // Pass 2: distribute remaining main-axis space to flex items.
     if (canFlex && totalFlex > 0) {
       final spacePerFlex = math.max(0.0, maxMain - consumedMain) / totalFlex;
 
-      for (var i = 0; i < childCount; i++) {
-        final item = items[i];
+      index = 0;
+
+      for (final item in items) {
         final flex = item.flex;
-        if (flex.factor <= 0) continue;
 
-        final maxExtent = spacePerFlex * flex.factor;
-        final minExtent = flex.fit == .tight ? maxExtent : 0.0;
-        final childConstraints = LayoutConstraints(
-          min: direction.toVector2(main: minExtent, cross: fillCross ? crossMax : 0),
-          max: direction.toVector2(main: maxExtent, cross: crossMax),
-        );
+        if (flex.factor > 0) {
+          final maxExtent = spacePerFlex * flex.factor;
+          final minExtent = flex.fit == .tight ? maxExtent : 0.0;
+          final childConstraints = LayoutConstraints(
+            min: direction.toVector2(main: minExtent, cross: fillCross ? crossMax : 0),
+            max: direction.toVector2(main: maxExtent, cross: crossMax),
+          );
 
-        final size = item.measure(childConstraints);
-        mains[i] = size.axis(direction);
-        crosses[i] = size.axis(crossAxis);
-        consumedMain += mains[i];
-        maxCross = math.max(maxCross, crosses[i]);
+          final size = item.measure(childConstraints);
+          mains[index] = size.axis(direction);
+          crosses[index] = size.axis(crossAxis);
+          consumedMain += mains[index];
+          maxCross = math.max(maxCross, crosses[index]);
+        }
+
+        index += 1;
       }
     }
 
@@ -196,10 +203,13 @@ final class LayoutEngine {
 
     var cursor = leading;
 
-    for (var i = 0; i < childCount; i++) {
-      final crossOffset = crossAxisOffset(crossAxisAlignment, selfCross - crosses[i]);
-      place(items[i], direction.toVector2(main: cursor, cross: crossOffset));
-      cursor += mains[i] + spacing + between;
+    index = 0;
+
+    for (final item in items) {
+      final crossOffset = crossAxisOffset(crossAxisAlignment, selfCross - crosses[index]);
+      place(item, direction.toVector2(main: cursor, cross: crossOffset));
+      cursor += mains[index] + spacing + between;
+      index += 1;
     }
 
     return selfSize;

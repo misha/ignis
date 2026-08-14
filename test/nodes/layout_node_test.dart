@@ -50,35 +50,23 @@ void main() {
     expect(child.layouts.length, 1);
   });
 
-  test('a LayoutNode behind a plain node is still laid out by its ancestor', () {
-    final child = TestLayoutNode();
-    final wrapper = Node(children: [child]);
-    final parent = TestLayoutNode(children: [wrapper]);
-    final scene = parent.mount();
-    scene.resize(100, 80);
-    scene.update(0);
-    expect(child.layouts.length, 1);
-  });
-
-  test('a LayoutNode behind several plain nodes is still laid out by its ancestor', () {
+  test('a LayoutNode behind a plain node becomes its own layout root', () {
     final child = TestLayoutNode();
     final parent = TestLayoutNode(
       children: [
-        Node(
-          children: [
-            Node(children: [child]),
-          ],
-        ),
+        Node(children: [child]),
       ],
     );
 
     final scene = parent.mount();
     scene.resize(100, 80);
     scene.update(0);
-    expect(child.layouts.length, 1);
+
+    expect(child.isLayoutRoot, isTrue);
+    expect(child.layouts, [LayoutConstraints.tight(.new(100, 80))]);
   });
 
-  test('every item a plain node holds is spliced into its layout parent', () {
+  test('a plain node hides its children from its layout parent', () {
     final node = RowNode(
       mainAxisSize: .min,
       children: [
@@ -92,7 +80,7 @@ void main() {
     );
 
     node.layout(.loose(.all(200)));
-    expect(node.width, 30);
+    expect(node.width, 0);
   });
 
   test('a LayoutNode behind a fixed-size leaf roots itself instead', () {
@@ -118,7 +106,7 @@ void main() {
       expect(child.isLayoutRoot, isFalse);
     });
 
-    test('is false under a LayoutNode behind a plain node', () {
+    test('is true under a LayoutNode behind a plain node', () {
       final child = TestLayoutNode();
       TestLayoutNode(
         children: [
@@ -126,7 +114,7 @@ void main() {
         ],
       );
 
-      expect(child.isLayoutRoot, isFalse);
+      expect(child.isLayoutRoot, isTrue);
     });
 
     test('is true under a plain node with no LayoutNode above it', () {
@@ -169,16 +157,16 @@ void main() {
       expect(node.width, 10);
     });
 
-    test('re-resolves after a change behind a plain node', () {
+    test('ignores a change behind a plain node, which is not its child', () {
       final wrapper = Node(children: [ShapeNode(shape: Rectangle.square(10))]);
       final node = RowNode(mainAxisSize: .min, children: [wrapper]);
 
       node.layout(.loose(.all(200)));
-      expect(node.width, 10);
+      expect(node.width, 0);
 
       wrapper.add(ShapeNode(shape: Rectangle.square(20)));
       node.layout(.loose(.all(200)));
-      expect(node.width, 30);
+      expect(node.width, 0);
     });
 
     test('re-resolves after a reorder by priority', () {
