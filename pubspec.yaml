@@ -7,7 +7,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  ivector_math: ^0.1.0
+  ivector_math: ^0.1.1
   pool: ^1.5.2
 dev_dependencies:
   flutter_test:

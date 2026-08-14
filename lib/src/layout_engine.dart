@@ -69,77 +69,62 @@ final class LayoutEngine {
     required EdgeInsets padding,
     required Anchor? alignment,
   }) {
-    final requestedX = targetWidth?.clamp(constraints.min.x, constraints.max.x).toDouble();
-    final requestedY = targetHeight?.clamp(constraints.min.y, constraints.max.y).toDouble();
+    final LayoutConstraints region;
 
-    // Each of these narrows what items are measured against, and each rebuilds
-    // a whole [LayoutConstraints] to do it. A region with no target, no
-    // padding and no alignment hands its own constraints straight down, so
-    // every step is skipped where it would only rebuild what it was given.
-    var childConstraints = constraints;
-
-    if (requestedX != null || requestedY != null) {
-      childConstraints = LayoutConstraints(
-        min: .new(requestedX ?? constraints.min.x, requestedY ?? constraints.min.y),
-        max: .new(requestedX ?? constraints.max.x, requestedY ?? constraints.max.y),
-      );
+    if (targetWidth != null || targetHeight != null) {
+      region = LayoutConstraints(
+        min: .new(targetWidth ?? 0, targetHeight ?? 0),
+        max: .new(targetWidth ?? double.infinity, targetHeight ?? double.infinity),
+      ).enforce(constraints);
+    } else {
+      region = constraints;
     }
 
+    var itemConstraints = region;
+
     if (padding != .zero) {
-      childConstraints = childConstraints.deflate(padding);
+      itemConstraints = itemConstraints.deflate(padding);
     }
 
     if (alignment != null) {
-      childConstraints = childConstraints.loosen();
+      itemConstraints = itemConstraints.loosen();
     }
 
+    // Measure.
     final largest = MVector2.zero();
 
-    if (alignment == null) {
-      final offset = Vector2(padding.left, padding.top);
-
-      for (final item in items) {
-        item.layout(childConstraints);
-        largest.max(item.size);
-        place(item, offset);
-      }
-
-      return constraints.satisfy(
-        requestedX ?? (largest.x + padding.horizontal),
-        requestedY ?? (largest.y + padding.vertical),
-      );
-    }
-
-    // Aligning needs the region's own size, which isn't known until every item
-    // has been measured. Nothing is kept between the two passes: [LayoutItem]
-    // guarantees an item still reports the size it just measured at, so the
-    // second pass reads it back off the item.
     for (final item in items) {
-      item.layout(childConstraints);
+      item.layout(itemConstraints);
       largest.max(item.size);
     }
 
-    final selfSize = constraints.satisfy(
-      requestedX ?? (largest.x + padding.horizontal),
-      requestedY ?? (largest.y + padding.vertical),
+    // Size. [region] is already tight on any targeted axis, so this lands on
+    // the target there and on the shrink-wrapped size everywhere else.
+    final size = region.constrain(
+      largest.x + padding.horizontal,
+      largest.y + padding.vertical,
     );
 
-    final innerWidth = selfSize.x - padding.horizontal;
-    final innerHeight = selfSize.y - padding.vertical;
+    // Place. Nothing was kept from the measure pass: [LayoutItem] guarantees
+    // an item still reports the size it just measured at. An unaligned item
+    // multiplies the leftover room by zero, landing on the padded origin.
+    final anchor = alignment ?? .topLeft;
+    final innerWidth = size.x - padding.horizontal;
+    final innerHeight = size.y - padding.vertical;
 
     for (final item in items) {
-      final size = item.size;
+      final itemSize = item.size;
 
       place(
         item,
         .new(
-          padding.left + (innerWidth - size.x) * alignment.x,
-          padding.top + (innerHeight - size.y) * alignment.y,
+          padding.left + (innerWidth - itemSize.x) * anchor.x,
+          padding.top + (innerHeight - itemSize.y) * anchor.y,
         ),
       );
     }
 
-    return selfSize;
+    return size;
   }
 
   /// Measures non-flex items, distributes remaining main-axis space to flex
@@ -266,8 +251,8 @@ final class LayoutEngine {
 
     final idealMain = mainAxisSize == .max && canFlex ? maxMain : consumedMain;
     final selfSize = switch (direction) {
-      .horizontal => constraints.satisfy(idealMain, maxCross),
-      .vertical => constraints.satisfy(maxCross, idealMain),
+      .horizontal => constraints.constrain(idealMain, maxCross),
+      .vertical => constraints.constrain(maxCross, idealMain),
     };
 
     // Pass 3: position every item.

@@ -28,22 +28,57 @@ void main() {
     });
   });
 
-  group('satisfy', () {
+  group('constrain', () {
     test('clamps a size within min and max', () {
       final constraints = LayoutConstraints(min: .all(10), max: .all(50));
 
-      expect(constraints.satisfy(5, 100), Vector2(10, 50));
-      expect(constraints.satisfy(20, 20), Vector2(20, 20));
+      expect(constraints.constrain(5, 100), Vector2(10, 50));
+      expect(constraints.constrain(20, 20), Vector2(20, 20));
     });
 
     test('clamps an infinite size down to a finite max', () {
       final constraints = LayoutConstraints(min: .zero, max: .new(50, 30));
-      expect(constraints.satisfy(double.infinity, double.infinity), Vector2(50, 30));
+      expect(constraints.constrain(double.infinity, double.infinity), Vector2(50, 30));
     });
 
     test('leaves an infinite max unbounded', () {
       final constraints = LayoutConstraints.unbounded();
-      expect(constraints.satisfy(50, 30), Vector2(50, 30));
+      expect(constraints.constrain(50, 30), Vector2(50, 30));
+    });
+  });
+
+  group('enforce', () {
+    test('leaves constraints that already fit inside the other alone', () {
+      final constraints = LayoutConstraints(min: .all(20), max: .all(40));
+      final enforced = constraints.enforce(LayoutConstraints(min: .zero, max: .all(100)));
+
+      expect(enforced.min, Vector2(20, 20));
+      expect(enforced.max, Vector2(40, 40));
+    });
+
+    test('pulls both bounds into the other range', () {
+      final constraints = LayoutConstraints(min: .all(5), max: .all(500));
+      final enforced = constraints.enforce(LayoutConstraints(min: .all(10), max: .all(100)));
+
+      expect(enforced.min, Vector2(10, 10));
+      expect(enforced.max, Vector2(100, 100));
+    });
+
+    test('a tight other wins outright, leaving nothing of these behind', () {
+      final constraints = LayoutConstraints(min: .all(40), max: .all(40));
+      final enforced = constraints.enforce(LayoutConstraints.tight(.all(100)));
+
+      expect(enforced.min, Vector2(100, 100));
+      expect(enforced.max, Vector2(100, 100));
+    });
+
+    test('zero to infinity passes the other straight through', () {
+      final unbounded = LayoutConstraints.unbounded();
+      final other = LayoutConstraints(min: .new(10, 20), max: .new(30, 40));
+      final enforced = unbounded.enforce(other);
+
+      expect(enforced.min, other.min);
+      expect(enforced.max, other.max);
     });
   });
 

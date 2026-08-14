@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/painting.dart' show EdgeInsets;
 import 'package:ignis/src/math.dart';
 
@@ -46,12 +48,21 @@ final class LayoutConstraints {
       max = size;
 
   /// No minimum; unbounded maximum, in both axes.
-  const LayoutConstraints.unbounded() : min = .zero, max = const .all(double.infinity);
+  const LayoutConstraints.unbounded() : min = .zero, max = .infinity;
 
   /// The size closest to ([x], [y]) that satisfies these constraints.
-  Vector2 satisfy(double x, double y) => .new(
+  Vector2 constrain(double x, double y) => .new(
     x.clamp(min.x, max.x).toDouble(),
     y.clamp(min.y, max.y).toDouble(),
+  );
+
+  /// These constraints, pulled inside [other].
+  ///
+  /// Every bound is clamped into [other]'s range, so [other] always wins - a
+  /// tight [other] leaves nothing of these behind.
+  LayoutConstraints enforce(LayoutConstraints other) => .new(
+    min: min.clampedBetween(other.min, other.max),
+    max: max.clampedBetween(other.min, other.max),
   );
 
   /// Whether [max]'s x component is finite.
@@ -70,17 +81,16 @@ final class LayoutConstraints {
   /// clamping both so neither drops below zero and [max] never ends up
   /// below the deflated [min].
   LayoutConstraints deflate(EdgeInsets padding) {
-    final deflatedMin = MVector2.copy(min)
-      ..x -= padding.horizontal
-      ..y -= padding.vertical
-      ..max(.zero);
+    final minX = math.max(0.0, min.x - padding.horizontal);
+    final minY = math.max(0.0, min.y - padding.vertical);
 
-    final deflatedMax = MVector2.copy(max)
-      ..x -= padding.horizontal
-      ..y -= padding.vertical
-      ..max(deflatedMin);
-
-    return .new(min: .copy(deflatedMin), max: .copy(deflatedMax));
+    return .new(
+      min: .new(minX, minY),
+      max: .new(
+        math.max(minX, max.x - padding.horizontal),
+        math.max(minY, max.y - padding.vertical),
+      ),
+    );
   }
 
   @override

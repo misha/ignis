@@ -63,7 +63,7 @@ abstract class LayoutNode extends SizedNode {
   @override
   void layout(LayoutConstraints constraints) {
     final size = constrain(constraints);
-    _size.setFrom(constraints.satisfy(size.x, size.y));
+    _size.setFrom(constraints.constrain(size.x, size.y));
   }
 
   /// Computes and returns this node's size under [constraints], laying out
