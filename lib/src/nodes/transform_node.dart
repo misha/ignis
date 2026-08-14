@@ -137,7 +137,7 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
     return closest;
   }
 
-  final Float64List _lastRenderTransform = Float64List(16)
+  final _lastRenderTransform = Float64List(16)
     ..[10] = 1
     ..[15] = 1;
 
