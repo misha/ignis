@@ -45,7 +45,7 @@ abstract class IntersectionBenchmark extends AsyncBenchmarkBase {
 
   /// A random point within `[-range / 2, range / 2)` on both axes.
   Vector2 randomCenter(Random random, double range) {
-    final point = MVector2.copy(RandomVector2.random(random))
+    final point = MVector2(random.nextDouble(), random.nextDouble())
       ..subtract(.all(0.5))
       ..scale(range);
 
