@@ -116,7 +116,6 @@ class TextNode extends SizedNode {
   }
 
   @override
-  @mustCallSuper
   void render(Canvas canvas) {
     // Laid out here, before the size is used for rendering.
     _reflow();

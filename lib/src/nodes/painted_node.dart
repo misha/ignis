@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/palette.dart';
 
@@ -36,6 +35,5 @@ abstract class PaintedNode extends SizedNode {
   }
 
   /// Called once for each paint in the [palette].
-  @visibleForOverriding
   void renderPainted(Canvas canvas, Paint paint);
 }

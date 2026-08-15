@@ -83,7 +83,6 @@ class Node {
   }
 
   /// Renders this node and its children to [canvas].
-  @mustCallSuper
   void render(Canvas canvas) {
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;

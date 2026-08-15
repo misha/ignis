@@ -164,7 +164,6 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
   }
 
   @override
-  @mustCallSuper
   void render(Canvas canvas) {
     canvas.save();
     canvas.transform(renderTransform);
@@ -174,13 +173,11 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
   }
 
   /// Draws this node's visuals, in a coordinate space where (0, 0) is [position].
-  @visibleForOverriding
   void renderTransformed(Canvas canvas) {
     // Nothing to do.
   }
 
   @override
-  @mustCallSuper
   void debugRender(Canvas canvas) {
     canvas.save();
     canvas.transform(renderTransform);
@@ -195,7 +192,6 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
   /// The default implementation draws a 2-pixel cross marking [position].
   /// Override to customize or replace it; call `super` to keep the cross
   /// alongside your own drawing.
-  @visibleForOverriding
   void debugRenderTransformed(Canvas canvas) {
     canvas.drawLine(.new(-1, 0), .new(1, 0), DEBUG_TRANSFORM_PAINT);
     canvas.drawLine(.new(0, -1), .new(0, 1), DEBUG_TRANSFORM_PAINT);

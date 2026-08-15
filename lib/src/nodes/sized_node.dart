@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/layout/layout_constraints.dart';
 import 'package:ignis/src/layout/layout_flex.dart';
@@ -87,7 +86,6 @@ abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwne
 
   /// Draws this node's visuals, in a coordinate space where (0, 0) is
   /// [width]/[height]'s [anchor]-adjusted top-left corner.
-  @visibleForOverriding
   void renderAnchored(Canvas canvas) {
     // Nothing to do.
   }
@@ -104,7 +102,6 @@ abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwne
 
   /// Draws this node's debug visuals, in the same coordinate space as
   /// [renderAnchored].
-  @visibleForOverriding
   void debugRenderAnchored(Canvas canvas) {
     // Nothing to do.
   }
