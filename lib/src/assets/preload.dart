@@ -2,10 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:ignis/src/assets/cache.dart';
 import 'package:ignis/src/assets/loader.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:pool/pool.dart';
+
+const _CONCURRENCY = 10;
+const _TIMEOUT = Duration(seconds: 10);
 
 /// A registry of [Loader]s, and the pool that runs them.
 ///
@@ -16,13 +18,12 @@ import 'package:pool/pool.dart';
 ///
 /// ```dart
 /// Ignis.preload
-///   ..loader(Loader.image()..extensions(['.png']))
-///   ..loader(Loader.json()..extensions(['.json']));
+///   ..register(Loader.image()..extensions(['.png']))
+///   ..register(Loader.json()..extensions(['.json']));
 ///
 /// await Ignis.preload.load(manifest: true);
 /// ```
 class Preload {
-  final Cache cache;
   final int concurrency;
   final Duration timeout;
 
@@ -32,30 +33,74 @@ class Preload {
   /// The loaders every loaded asset is fed through.
   Iterable<Loader> get loaders => _loaders;
 
-  /// Creates a new preload for the given [cache].
+  /// Creates a new preload.
   ///
-  /// If no cache is provided, the default cache at [Ignis.cache] is used.
-  /// Assets always come from [Ignis.bundle], resolved at load time so a bundle
-  /// installed after configuration still applies.
+  /// Assets are read from [Ignis.bundle] into [Ignis.cache], both resolved at
+  /// load time so a bundle installed after configuration still applies.
   ///
   /// A pool is allocated to manage loading in parallel, subject to the target
   /// [concurrency] and a per-request [timeout]. By default, the pool permits
   /// 10 concurrent requests with a timeout of 10 seconds.
   Preload({
-    Cache? cache,
-    this.concurrency = 10,
-    this.timeout = const Duration(seconds: 10),
-  }) : cache = cache ?? Ignis.cache,
-       _pool = Pool(concurrency, timeout: timeout);
+    this.concurrency = _CONCURRENCY,
+    this.timeout = _TIMEOUT,
+  }) : _pool = Pool(concurrency, timeout: timeout);
+
+  /// Runs one load through a throwaway preload built from [loaders].
+  ///
+  /// Everything it creates is released once the load finishes, the returned
+  /// request included, so this is for loads with nothing to keep around:
+  ///
+  /// ```dart
+  /// await Preload.run([Loader.image()], manifest: true);
+  /// ```
+  ///
+  /// The request is still returned, so progress is available for as long as the
+  /// load is running. Unlike [load], do not dispose it yourself, and do not
+  /// listen to it after it completes.
+  static PreloadRequest run(
+    List<Loader> loaders, {
+    Iterable<String>? paths,
+    bool? manifest,
+    int concurrency = _CONCURRENCY,
+    Duration timeout = _TIMEOUT,
+  }) {
+    final preload = Preload(
+      concurrency: concurrency,
+      timeout: timeout,
+    );
+
+    for (final loader in loaders) {
+      preload.register(loader);
+    }
+
+    final request = preload.load(
+      manifest: manifest,
+      paths: paths,
+    );
+
+    // Listeners get their last notification before this runs, since the request
+    // reports itself done on the way out of the load.
+    request
+        .whenComplete(() async {
+          request.dispose();
+          await preload.dispose();
+        })
+        // The caller awaits the request itself; this branch must not surface a
+        // second, unhandled copy of the same failure.
+        .ignore();
+
+    return request;
+  }
 
   /// Registers a [loader] to feed every loaded asset through.
-  Preload loader(Loader loader) {
+  Preload register(Loader loader) {
     _loaders.add(loader);
     return this;
   }
 
-  /// Loads assets through the registered loaders, replacing whatever the
-  /// [cache] already holds for them.
+  /// Loads assets through the registered loaders, replacing whatever
+  /// [Ignis.cache] already holds for them.
   ///
   /// Name them with [manifest] to take everything in the [Ignis.bundle]
   /// manifest, and [paths] for named ones. Each loader's own filters decide
@@ -69,7 +114,6 @@ class Preload {
   }) {
     return PreloadRequest._(
       _pool,
-      cache,
       // Snapshotted, so registering a loader mid-load cannot half-apply it.
       [..._loaders],
       manifest ?? false,
@@ -94,7 +138,6 @@ class Preload {
 /// ```
 class PreloadRequest extends ChangeNotifier implements Future<void> {
   final Pool _pool;
-  final Cache _cache;
   final List<Loader> _loaders;
 
   late final Future<void> _future;
@@ -122,7 +165,6 @@ class PreloadRequest extends ChangeNotifier implements Future<void> {
 
   PreloadRequest._(
     this._pool,
-    this._cache,
     this._loaders,
     bool manifest,
     List<String> assets,
@@ -159,7 +201,7 @@ class PreloadRequest extends ChangeNotifier implements Future<void> {
     try {
       await _pool.withResource(() async {
         final context = LoadingContext(
-          cache: _cache,
+          cache: Ignis.cache,
           bundle: Ignis.bundle,
           asset: asset,
         );

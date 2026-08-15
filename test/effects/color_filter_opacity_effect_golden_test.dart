@@ -7,12 +7,7 @@ import '../support/expect.dart';
 void main() {
   setUpAll(() async {
     Ignis.cache.clear();
-    final preload = Preload();
-    preload.loader(.image());
-    final request = preload.load(paths: ['test/assets/fire.png']);
-    await request;
-    request.dispose();
-    await preload.dispose();
+    await Preload.run([.image()], paths: ['test/assets/fire.png']);
   });
 
   testWidgets(

@@ -78,7 +78,7 @@ flutter:
 
     live = LiveAssetBundle(root: root.path);
     Ignis.bundle = live;
-    Ignis.preload = Preload()..loader(.image()..extensions(['.png']));
+    Ignis.preload = Preload()..register(.image()..extensions(['.png']));
   });
 
   tearDown(() async {

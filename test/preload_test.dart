@@ -18,7 +18,7 @@ void main() {
 
   test('loads a single asset with the registered loader', () async {
     final preload = Preload();
-    preload.loader(.image());
+    preload.register(.image());
     final request = preload.load(paths: ['test/assets/fire.png']);
     await request;
 
@@ -32,7 +32,7 @@ void main() {
 
   test('loads multiple assets from paths', () async {
     final preload = Preload();
-    preload.loader(.image());
+    preload.register(.image());
 
     final request = preload.load(
       paths: [
@@ -57,7 +57,7 @@ void main() {
     ]);
 
     final preload = Preload();
-    preload.loader(.image());
+    preload.register(.image());
     final request = preload.load(manifest: true);
     await request;
 
@@ -71,7 +71,7 @@ void main() {
     Ignis.bundle = TestBundle(['test/assets/fire.png']);
 
     final preload = Preload();
-    preload.loader(.image());
+    preload.register(.image());
 
     final request = preload.load(
       manifest: true,
@@ -88,7 +88,7 @@ void main() {
 
   test('decodes JSON assets into the cache', () async {
     final preload = Preload();
-    preload.loader(.json());
+    preload.register(.json());
     final request = preload.load(paths: ['test/assets/data.json']);
     await request;
 
@@ -99,7 +99,7 @@ void main() {
   test('routes assets to matching loaders using prefix and extension filters', () async {
     final preload = Preload();
 
-    preload.loader(
+    preload.register(
       ImageLoader()
         ..prefix('test/')
         ..extensions(['png']),
@@ -121,8 +121,8 @@ void main() {
 
   test('feeds each asset through every registered loader', () async {
     final preload = Preload();
-    preload.loader(.image()..extensions(['.png']));
-    preload.loader(.json()..extensions(['.json']));
+    preload.register(.image()..extensions(['.png']));
+    preload.register(.json()..extensions(['.json']));
 
     final request = preload.load(
       paths: [
@@ -140,7 +140,7 @@ void main() {
 
   test('notifies its listeners as assets complete', () async {
     final preload = Preload();
-    preload.loader(.image());
+    preload.register(.image());
 
     final request = preload.load(
       paths: [
@@ -170,7 +170,7 @@ void main() {
     ]);
 
     final preload = Preload();
-    preload.loader(.image());
+    preload.register(.image());
 
     final request = preload.load(manifest: true);
     expect(request.total, 0);
@@ -186,7 +186,7 @@ void main() {
 
   test('stops notifying once disposed mid-load', () async {
     final preload = Preload();
-    preload.loader(.image());
+    preload.register(.image());
 
     final request = preload.load(
       paths: [
@@ -204,21 +204,9 @@ void main() {
     expect(request.done, isTrue);
   });
 
-  test('loads into a custom cache instead of the global one', () async {
-    final cache = Cache();
-    final preload = Preload(cache: cache);
-    preload.loader(.image());
-    final request = preload.load(paths: ['test/assets/fire.png']);
-    await request;
-
-    expect(cache.contains('test/assets/fire.png'), isTrue);
-    expect(Ignis.cache.contains('test/assets/fire.png'), isFalse);
-    request.dispose();
-  });
-
   test('runs overlapping requests without contention', () async {
     final preload = Preload();
-    preload.loader(.image());
+    preload.register(.image());
 
     final first = preload.load(paths: ['test/assets/fire.png']);
     final second = preload.load(paths: ['test/assets/fire.gif']);
@@ -239,7 +227,7 @@ void main() {
 
   test('replaces a cached asset on a later request', () async {
     final preload = Preload();
-    preload.loader(.image());
+    preload.register(.image());
     final first = preload.load(paths: ['test/assets/fire.png']);
     await first;
 
@@ -255,7 +243,7 @@ void main() {
 
   test('leaves an asset the loaders reject alone', () async {
     final preload = Preload();
-    preload.loader(.image()..extensions(['.png']));
+    preload.register(.image()..extensions(['.png']));
     final request = preload.load(paths: ['test/assets/data.json']);
     await request;
 
@@ -266,18 +254,57 @@ void main() {
 
   test('applies only the loaders registered when the request started', () async {
     final preload = Preload();
-    preload.loader(.image()..extensions(['.png']));
+    preload.register(.image()..extensions(['.png']));
     final request = preload.load(paths: ['test/assets/data.json']);
-    preload.loader(.json());
+    preload.register(.json());
     await request;
 
     expect(Ignis.cache.contains('test/assets/data.json'), isFalse);
     request.dispose();
   });
 
+  test('runs a one-off load and releases everything', () async {
+    final request = Preload.run(
+      [
+        .image()..extensions(['.png']),
+      ],
+      paths: [
+        'test/assets/fire.png',
+        'test/assets/data.json',
+      ],
+    );
+
+    await request;
+
+    expect(Ignis.cache.retrieve('test/assets/fire.png'), isA<Image>());
+    expect(Ignis.cache.contains('test/assets/data.json'), isFalse);
+    expect(request.total, 2);
+    expect(request.done, isTrue);
+
+    // The request disposed itself on the way out, so listening now throws.
+    expect(() => request.addListener(() {}), throwsFlutterError);
+  });
+
+  test('reports progress on a one-off load while it runs', () async {
+    final request = Preload.run([.image()], paths: ['test/assets/fire.png']);
+
+    final updates = <double>[];
+    request.addListener(() => updates.add(request.progress));
+    await request;
+
+    expect(updates, isNotEmpty);
+    expect(updates.last, 1);
+  });
+
+  test('surfaces a one-off failure exactly once', () async {
+    // JSON fed to the image loader, so decoding blows up.
+    final request = Preload.run([.image()], paths: ['test/assets/data.json']);
+    await expectLater(request, throwsA(isA<Exception>()));
+  });
+
   test('rejects loading once disposed', () async {
     final preload = Preload();
-    preload.loader(.image());
+    preload.register(.image());
     await preload.dispose();
 
     final request = preload.load(paths: ['test/assets/fire.png']);
@@ -291,7 +318,7 @@ void main() {
     LeakTracking.start();
 
     final preload = Preload();
-    preload.loader(.noop());
+    preload.register(.noop());
     final request = preload.load(paths: ['test/assets/fire.png']);
     // A listener is what registers the notifier with the tracker, so an
     // undisposed request only shows up as a leak once something listens.
