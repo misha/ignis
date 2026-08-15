@@ -17,7 +17,7 @@ import 'support/images.dart';
 /// disk drives the whole chain, exactly as it would in a running game.
 ///
 ///   write assets/hero.png
-///     -> AssetWatcher matches it against the pubspec manifest
+///     -> PubspecWatcher matches it against the pubspec manifest
 ///     -> LiveAssetBundle reads the new bytes off disk
 ///     -> Preload runs them through the image loader
 ///     -> Cache.add replaces the image and evicts the sheets cut from it
@@ -261,6 +261,56 @@ flutter:
     expect(request.completed, 2);
     expect(request.accepted, 1);
     request.dispose();
+  });
+
+  test('watches every asset root the manifest declares', () async {
+    await File(p.join(root.path, 'pubspec.yaml')).writeAsString('''
+name: game
+flutter:
+  assets:
+    - assets/
+    - art/exported/
+''');
+
+    await write(['art', 'exported', 'villain.png'], await solidImage(2, 1, RED));
+    await start(['assets/hero.png', 'art/exported/villain.png']);
+
+    final original = cached('art/exported/villain.png')!;
+    await write(['art', 'exported', 'villain.png'], await solidImage(4, 1, BLUE));
+
+    await eventually(
+      () => !identical(cached('art/exported/villain.png'), original),
+      'the second asset root was never watched',
+    );
+
+    expect(cached('art/exported/villain.png')!.width, 4);
+  });
+
+  test('re-targets its watchers when the manifest changes', () async {
+    await start();
+
+    // A directory the manifest does not mention yet.
+    await write(['art', 'villain.png'], await solidImage(2, 1, RED));
+
+    await File(p.join(root.path, 'pubspec.yaml')).writeAsString('''
+name: game
+flutter:
+  assets:
+    - assets/
+    - art/
+''');
+
+    await eventually(
+      () => live.watching.contains('art'),
+      'the watcher never picked up the new manifest entry',
+    );
+
+    await write(['art', 'villain.png'], await solidImage(4, 1, BLUE));
+
+    await eventually(
+      () => Ignis.cache.contains('art/villain.png'),
+      'the newly declared directory was never watched',
+    );
   });
 
   test('picks up an asset that did not exist at startup', () async {

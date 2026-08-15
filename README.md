@@ -657,7 +657,7 @@ Invalidation follows dependencies. Replacing an image evicts every `Spritesheet`
 By default the project root is the running process's working directory. Point it elsewhere when that isn't your project:
 
 ```dart
-final live = LiveAssetBundle(root: '/path/to/project', assets: 'art/exported');
+final live = LiveAssetBundle(root: '/path/to/project');
 ```
 
 `LiveAssetBundle` only works when `kDebugMode` is enabled, so shipping it is harmless. In release and web builds, every asset load goes safely through to the base bundle.

@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:ignis/src/assets/watcher.dart';
+import 'package:ignis/src/assets/watchers/pubspec_watcher.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:path/path.dart' as p;
 
@@ -24,32 +24,29 @@ class LiveAssetBundle extends CachingAssetBundle {
   /// The project directory asset keys are resolved against.
   final String root;
 
-  final AssetWatcher _watcher;
+  final PubspecWatcher _watcher;
 
-  StreamSubscription<AssetUpdate>? _updates;
+  StreamSubscription<String>? _updates;
 
   /// Whether live reloading is currently active.
   bool get isRunning => _watcher.isRunning;
 
+  /// The manifest entries currently being watched, relative to [root].
+  ///
+  /// Derived from the project's `pubspec.yaml`, so this is the answer to why a
+  /// given asset is or is not reloading.
+  Iterable<String> get watching => _watcher.watching;
+
   /// Creates a live bundle rooted at [root], defaulting to the working
   /// directory of the running process.
-  ///
-  /// [pubspec] and [assets] default to `pubspec.yaml` and `assets` inside
-  /// [root]. Assets not found under [root], such as package assets and the
-  /// compiled manifest, fall through to [rootBundle].
   factory LiveAssetBundle({
     String? root,
-    String? pubspec,
-    String? assets,
   }) {
     final directory = root ?? Directory.current.path;
 
     return LiveAssetBundle._(
       directory,
-      .new(
-        pubspecPath: pubspec ?? p.join(directory, 'pubspec.yaml'),
-        assetsPath: assets ?? p.join(directory, 'assets'),
-      ),
+      .new(pubspecPath: p.join(directory, 'pubspec.yaml')),
     );
   }
 
@@ -94,9 +91,7 @@ class LiveAssetBundle extends CachingAssetBundle {
     return rootBundle.load(key);
   }
 
-  Future<void> _update(AssetUpdate update) async {
-    // The watcher already emits project-relative paths, which are asset keys.
-    final key = update.path;
+  Future<void> _update(String key) async {
     evict(key);
 
     final request = Ignis.preload.load(paths: [key]);

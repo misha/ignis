@@ -12,10 +12,11 @@ class LiveAssetBundle extends CachingAssetBundle {
   /// Whether live reloading is currently active. Always false here.
   bool get isRunning => false;
 
+  /// The manifest entries being watched. Always empty here.
+  Iterable<String> get watching => const [];
+
   LiveAssetBundle({
     String? root,
-    String? pubspec,
-    String? assets,
   }) : root = root ?? '';
 
   /// Does nothing, and reports that live reloading did not start.
