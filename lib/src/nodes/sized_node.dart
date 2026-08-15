@@ -35,13 +35,6 @@ abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwne
   @override
   LayoutFlex get flex => .none;
 
-  /// A plain [SizedNode] can't lay itself out, so its [size] stands whatever
-  /// [constraints] say.
-  @override
-  void layout(LayoutConstraints constraints) {
-    // Nothing to do.
-  }
-
   SizedNode({
     Anchor? anchor,
     super.position,
@@ -113,6 +106,13 @@ abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwne
   /// [renderAnchored].
   @visibleForOverriding
   void debugRenderAnchored(Canvas canvas) {
+    // Nothing to do.
+  }
+
+  /// A plain [SizedNode] can't lay itself out, so its [size] stands whatever
+  /// [constraints] say.
+  @override
+  void layout(LayoutConstraints constraints) {
     // Nothing to do.
   }
 }
