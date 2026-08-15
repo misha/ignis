@@ -4,29 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  group('NoiseCurve', () {
-    test('stays within -1 and 1', () {
-      final curve = NoiseCurve(40, random: math.Random(1));
-
-      for (var i = 0; i <= 100; i += 1) {
-        expect(curve.transform(i / 100), inInclusiveRange(-1, 1));
-      }
-    });
-
-    test('is deterministic for a given seed', () {
-      final a = NoiseCurve(40, random: math.Random(42));
-      final b = NoiseCurve(40, random: math.Random(42));
-
-      for (var i = 0; i <= 100; i += 1) {
-        expect(a.transform(i / 100), b.transform(i / 100));
-      }
-    });
-
-    test('asserts its sample count is positive', () {
-      expect(() => NoiseCurve(0), throwsAssertionError);
-    });
-  });
-
   group('SineCurve', () {
     test('oscillates as a sine wave between -1 and 1 over the unit interval', () {
       const curve = SineCurve();

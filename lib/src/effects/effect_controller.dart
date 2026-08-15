@@ -1,7 +1,4 @@
-import 'dart:math';
-
 import 'package:flutter/animation.dart';
-import 'package:ignis/src/curves.dart';
 import 'package:ignis/src/effects/controllers/duration_effect_controller.dart';
 import 'package:ignis/src/effects/controllers/infinite_effect_controller.dart';
 import 'package:ignis/src/effects/controllers/once_effect_controller.dart';
@@ -63,8 +60,6 @@ abstract class EffectController {
   // dart format off
   factory EffectController.duration(double duration, [Curve? curve]) = DurationEffectController;
   factory EffectController.infinite(EffectController child) = InfiniteEffectController;
-  factory EffectController.noise(double duration, [double? frequency, Random? random]) =>
-      DurationEffectController(duration, NoiseCurve((duration * (frequency ?? 1)).ceil(), random: random));
   factory EffectController.once(EffectController child) = OnceEffectController;
   factory EffectController.repeat(EffectController child, int times) = RepeatEffectController;
   factory EffectController.roundtrip(EffectController child) = RoundtripEffectController;

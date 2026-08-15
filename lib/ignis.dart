@@ -15,7 +15,6 @@ export 'src/math.dart';
 export 'src/nodes.dart';
 export 'src/owners.dart';
 export 'src/palette.dart';
-export 'src/rng.dart';
 export 'src/signal.dart';
 export 'src/shape.dart';
 export 'src/spritesheet.dart';
