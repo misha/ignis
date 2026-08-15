@@ -13,7 +13,7 @@ import 'package:ignis/src/shape.dart';
 /// A [TransformNode] with a [size], defining an area for shapes,
 /// hit-testing, rendering, and other systems to work against.
 abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwner {
-  /// This node's size, as a [Vector2].
+  /// This node's size.
   @override
   Vector2 get size;
 
