@@ -104,7 +104,7 @@ class LiveAssetBundle extends CachingAssetBundle {
     try {
       await request;
     } catch (error) {
-      debugPrint('Ignis: failed to reload "$key". $error');
+      debugPrint('[IGNIS] Failed to reload "$key". ($error)');
       return;
     } finally {
       request.dispose();
@@ -114,10 +114,10 @@ class LiveAssetBundle extends CachingAssetBundle {
       // Either nothing is registered on Ignis.preload, or every loader filtered
       // this out. Common for editor scratch files that land in the assets
       // directory, but it also catches loaders registered on the wrong preload.
-      debugPrint('Ignis: no loader accepted "$key".');
+      debugPrint('[IGNIS] No loader accepted "$key".');
       return;
     }
 
-    debugPrint('Ignis: reloaded "$key".');
+    debugPrint('[IGNIS] Reloaded "$key".');
   }
 }
