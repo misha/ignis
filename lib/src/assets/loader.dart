@@ -40,9 +40,6 @@ abstract class Loader {
   /// The built-in loader for images.
   factory Loader.image() => ImageLoader();
 
-  /// A loader that runs each of [loaders].
-  factory Loader.multiple(List<Loader> loaders) => MultipleLoader(loaders);
-
   final List<LoadingFilter> _filters = [];
 
   Loader();
@@ -67,19 +64,6 @@ class NoopLoader extends Loader {
   @override
   void load(LoadingContext context) {
     // Nothing to do.
-  }
-}
-
-class MultipleLoader extends Loader {
-  final List<Loader> loaders;
-
-  MultipleLoader(this.loaders);
-
-  @override
-  Future<void> load(LoadingContext context) async {
-    for (final loader in loaders) {
-      await loader.run(context);
-    }
   }
 }
 
