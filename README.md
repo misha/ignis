@@ -37,7 +37,7 @@ What is this? See [Motivation](#motivation).
 - **Signals, not callbacks.** The `Signal`, a lightweight event emitter, powers everything from animations to collisions.
 - **Embedded in Flutter.** Any node can be rendered in the widget tree via `SceneWidget`. Ignis runs wherever Flutter runs (I think).
 - **Flutter's layout, on nodes.** `RowNode`, `ColumnNode`, and `BoxNode` behave like the widgets you already know.
-- **Asset preloading.** `Preload` concurrently loads assets with `Loader`s for images, shaders, or custom resource types.
+- **Asset preloading.** `Preload` concurrently loads assets with `Loader`s for images, data, or custom resource types.
 
 ## Quick Start
 
@@ -536,7 +536,7 @@ drag.onDragUpdate((event) {
 
 In Ignis, all assets must be loaded to the `Cache` in order to be accessible in nodes. The entrypoint for loading is `Preload`.
 
-A preload loads assets into a cache in parallel, driven by pluggable `Loader`s. Ignis ships with a few loaders for common asset types like images and shaders, but it's easy to write your own, too.
+A preload loads assets into a cache in parallel, driven by pluggable `Loader`s. Ignis ships with a few loaders for common asset types like images and JSON, but it's easy to write your own, too.
 
 ```dart
 // Set up a new preload.

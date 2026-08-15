@@ -63,13 +63,6 @@ void main() {
     expect(Ignis.cache.retrieve('test/assets/data.json'), {'hello': 'world'});
   });
 
-  test('compiles shader assets into the cache', () async {
-    final preload = Preload();
-    preload.path(.shader(), 'test/shaders/sample.frag');
-    await preload.run();
-    expect(Ignis.cache.retrieve('test/shaders/sample.frag'), isA<FragmentProgram>());
-  });
-
   test('routes assets to matching loaders using prefix and extension filters', () async {
     final preload = Preload();
     final loader = ImageLoader()
@@ -79,13 +72,11 @@ void main() {
     preload.paths(loader, [
       'test/assets/fire.png',
       'test/assets/data.json',
-      'test/shaders/sample.frag',
     ]);
 
     await preload.run();
     expect(Ignis.cache.contains('test/assets/fire.png'), isTrue);
     expect(Ignis.cache.contains('test/assets/data.json'), isFalse);
-    expect(Ignis.cache.contains('test/shaders/sample.frag'), isFalse);
   });
 
   test('reports incremental progress as assets complete', () async {

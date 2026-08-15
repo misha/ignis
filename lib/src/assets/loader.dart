@@ -40,9 +40,6 @@ abstract class Loader {
   /// The built-in loader for images.
   factory Loader.image() => ImageLoader();
 
-  /// The built-in loader for shaders.
-  factory Loader.shader() => ShaderLoader();
-
   /// A loader that runs each of [loaders].
   factory Loader.multiple(List<Loader> loaders) => MultipleLoader(loaders);
 
@@ -101,14 +98,6 @@ class ImageLoader extends Loader {
     final bytes = Uint8List.view(data.buffer);
     final image = await decodeImageFromList(bytes);
     context.cache.add<Image>(context.asset, image);
-  }
-}
-
-class ShaderLoader extends Loader {
-  @override
-  Future<void> load(LoadingContext context) async {
-    final program = await FragmentProgram.fromAsset(context.asset);
-    context.cache.add<FragmentProgram>(context.asset, program);
   }
 }
 

@@ -28,5 +28,3 @@ scripts:
 flutter:
   assets:
     - test/assets/
-  shaders:
-    - test/shaders/sample.frag
