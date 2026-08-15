@@ -23,6 +23,7 @@ What is this? See [Motivation](#motivation).
 - [Collision Detection](#collision-detection)
 - [Inputs](#inputs)
 - [Assets](#assets)
+- [Live Assets](#live-assets)
 - [Globals](#globals)
 - [Dependency Injection](#dependency-injection)
 - [Motivation](#motivation)
@@ -38,6 +39,7 @@ What is this? See [Motivation](#motivation).
 - **Embedded in Flutter.** Any node can be rendered in the widget tree via `SceneWidget`. Ignis runs wherever Flutter runs (I think).
 - **Flutter's layout, on nodes.** `RowNode`, `ColumnNode`, and `BoxNode` behave like the widgets you already know.
 - **Asset preloading.** `Preload` concurrently loads assets with `Loader`s for images, data, or custom resource types.
+- **Live assets.** When developing on the host machine, `LiveAssetBundle` instantly reloads assets into running scenes, no hot reload necessary.
 
 ## Quick Start
 
@@ -536,58 +538,59 @@ drag.onDragUpdate((event) {
 
 In Ignis, all assets must be loaded to the `Cache` in order to be accessible in nodes. The entrypoint for loading is `Preload`.
 
-A preload loads assets into a cache in parallel, driven by pluggable `Loader`s. Ignis ships with a few loaders for common asset types like images and JSON, but it's easy to write your own, too.
+A preload is two separate things: a registry of pluggable `Loader`s that decide *how* an asset is read, and a `load` call that names *which* assets to read. Ignis ships with a few loaders for common asset types like images and JSON, but it's easy to write your own, too.
 
 ```dart
-// Set up a new preload.
-final preload = Preload();
-
-// Load assets from the root bundle's `AssetManifest`.
-preload.manifest(
+// Register the loaders once. Every asset is offered to each of them, and their
+// own filters decide which ones they actually apply to.
+Ignis.preload
   
-  // Try each of these loaders for every asset found.
-  Loader.multiple([
-    
-    // Load images, detected by extension.
+  // Load images, detected by extension.
+  ..register(
     Loader.image()
       ..extensions(['png', 'jpg', 'gif']),
-    
-    // Load the game's JSON level files, detected by prefix and extension.
+  )
+  
+  // Load the game's JSON level files, detected by prefix and extension.
+  ..register(
     Loader.json()
       ..prefix('assets/levels/')
-      ..extensions(['json'])
-  ])
-);
+      ..extensions(['json']),
+  );
 
-// Returns a future that resolves when this preload is done.
-await preload.run();
+// Load everything in the bundle's `AssetManifest`. Returns a `PreloadRequest` future.
+await Ignis.preload.load(manifest: true);
 
 // Retrieve assets by looking into the cache.
 final level1 = Ignis.cache.retrieve<Map>('assets/levels/level1.json');
 ```
 
-`Preload` is also a `ChangeNotifier` with fields that track loading progress. A typical implementation pattern is to declare a single `Preload`, then animate its loading in a widget.
+Loading is not one-time. The same registry serves a game's startup load and every load after it, so a level transition just names the assets it needs:
 
-Below is a common pattern using [`riverpod`](https://pub.dev/packages/riverpod) and [`flutter_hooks`](https://pub.dev/packages/flutter_hooks) which sets up a game's one-time `Preload`, then watches it from a loading page:
+```dart
+await Ignis.preload.load(paths: ['assets/levels/level2.json']);
+```
+
+Preload calls may overlap freely. Internally, it uses a worker pool that bounds its concurrency and prevents loading from overloading the application.
+
+### Animating a Preload
+
+A `PreloadRequest` is a `ChangeNotifier` that tracks `total`, `completed`, and `progress`, so a loading screen can animate off it directly.
+
+Below is a common pattern using [`riverpod`](https://pub.dev/packages/riverpod) and [`flutter_hooks`](https://pub.dev/packages/flutter_hooks) which kicks off a game's startup load, then watches it from a loading page:
 
 ```dart
 final preloadPod = Provider((ref) {
-  return Preload().manifest(
-    .multiple([
-      .image()
-        ..extensions(['png', 'jpg', 'gif']),
-      .json()
-        ..prefix('assets/levels/')
-        ..extensions(['json']),
-    ]),
-  );
+  final request = Ignis.preload.load(manifest: true);
+  ref.onDispose(request.dispose);
+  return request;
 });
 
 class LoadingPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final preload = useListenable(ref.watch(preloadPod));
-    final progress = preload.progress;
+    final request = useListenable(ref.watch(preloadPod));
+    final progress = request.progress;
 
     useEffect(() {
       if (progress >= 1) {
@@ -607,27 +610,73 @@ class LoadingPage extends HookConsumerWidget {
 }
 ```
 
+For a load with nothing to keep around, `Preload.run` builds a throwaway preload and releases everything once it finishes.
+
+```dart
+await Preload.run(
+  loaders: [Loader.image()..extensions(['png'])],
+  manifest: true,
+);
+```
+
 > :question: **Why preload at all?** Since nodes are synchronous, they cannot retrieve assets asynchronously. But even if they could, what do you render while the asset is loading? Rather than resolving this concern with a complex API, Ignis protects the visual fidelity of your game by simply requiring preloading, and making it easy to configure and animate, too.
 
-> :warning: For games with many assets, you may want to set up ad-hoc `Preload` objects based on the assets needed for the next level. In this situation, remember to `dispose` each `Preload` when finished to avoid leaking `ChangeNotifier` resources.
+> :warning: A `PreloadRequest` is a `ChangeNotifier`, so `dispose` it once you are done with it. `Preload.run` is the exception: it owns the whole lifetime, and disposes the request for you.
+
+## Live Assets
+
+If you develop locally, Ignis provides a `LiveAssetBundle` to instantly update assets in live scenes during development.
+
+For example, you can save an image in your art program and the running scene will pick it up on the next frame, no hot reload involved. The bundle works by detecting updated paths and pushing them to `Ignis.preload`, reusing the exact same asset pipeline as your production code.
+
+`LiveAssetBundle` is optional and opt-in. Install it as `Ignis.bundle` when your application starts:
+
+```dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Live reloading feeds changed assets back through `Ignis.preload`,
+  // so the loaders have to be registered there.
+  Ignis.preload.register(Loader.image()..extensions(['png']));
+
+  final live = LiveAssetBundle();
+  Ignis.bundle = live;
+  await live.start(); // Make sure to start it!
+  
+  // Preload as usual.
+  await Ignis.preload.load(manifest: true);
+
+  runApp(MyGameApp());
+}
+```
+
+`LiveAssetBundle` reads the pubspec's `assets` manifest to decide what to watch, exactly how Flutter builds your bundle. Changes are served from the project directory rather than the compiled bundle, so a simple file save is sufficient to trigger an update.
+
+Invalidation follows dependencies. Replacing an image evicts every `Spritesheet` cut from it, and any `SpriteNode` drawing that sheet re-resolves on its next frame, resizing itself if the new art has different dimensions.
+
+By default the project root is the running process's working directory. Point it elsewhere when that isn't your project:
+
+```dart
+final live = LiveAssetBundle(root: '/path/to/project', assets: 'art/exported');
+```
+
+`LiveAssetBundle` only works when `kDebugMode` is enabled, so shipping it is harmless. In release and web builds, every asset load goes safely through to the base bundle.
+
+> :warning: **Live assets only work on the machine hosting the project.** The bundle reads files straight off disk with `dart:io`, so it needs the running app and the project source to share a filesystem. That means desktop and the local simulator only.
 
 ## Globals
 
-The `Ignis` namespace holds the global instances of the `AssetBundle` and `Cache`. Most games will not need to modify them directly.
+The `Ignis` namespace holds the global `AssetBundle`, `Cache`, and `Preload`. Most games will only touch `Ignis.preload`, to register their loaders.
 
-By default, `Preload` and `Spritesheet` automatically access `Ignis.cache` when storing and retrieving assets.
+Every preload reads from `Ignis.bundle` into `Ignis.cache`. Similarly, `Spritesheet` retrieves from `Ignis.cache`.
 
 ```dart
-// The following preloads are equivalent:
-final preload1 = Preload();
-final preload2 = Preload(cache: Ignis.cache);
-
 // The following spritesheets are equivalent:
 final sheet1 = Spritesheet.asset('assets/ship.png');
 final sheet2 = Spritesheet(Ignis.cache.retrieve('assets/ship.png'));
 ```
 
-> :warning: `Ignis.cache` and `Ignis.bundle` are mutable static fields, not constants. Swap them out for tests or when running multiple, isolated games in one application.
+> :warning: `Ignis.cache`, `Ignis.bundle`, and `Ignis.preload` are mutable static members, not constants. Swap them out for tests or when running multiple, isolated games in one application.
 
 ## Dependency Injection
 
