@@ -49,9 +49,14 @@ abstract class Loader {
     _filters.add(filter);
   }
 
+  /// Whether every filter accepts the asset specified by [context].
+  bool accepts(LoadingContext context) {
+    return _filters.every((filter) => filter(context));
+  }
+
   /// Loads the asset specified by [context] if filtering passes.
   FutureOr<void> run(LoadingContext context) {
-    if (_filters.every((filter) => filter(context))) {
+    if (accepts(context)) {
       return load(context);
     }
   }

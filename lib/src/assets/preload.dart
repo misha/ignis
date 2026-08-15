@@ -144,6 +144,7 @@ class PreloadRequest extends ChangeNotifier implements Future<void> {
 
   int _total = 0;
   int _completed = 0;
+  int _accepted = 0;
   bool _done = false;
   bool _disposed = false;
 
@@ -152,6 +153,13 @@ class PreloadRequest extends ChangeNotifier implements Future<void> {
 
   /// How many of them have finished.
   int get completed => _completed;
+
+  /// How many of them at least one loader accepted.
+  ///
+  /// The rest were filtered out, so nothing was cached for them. A load where
+  /// this stays zero did no work at all, usually because no loader was
+  /// registered for that kind of asset.
+  int get accepted => _accepted;
 
   /// Whether the load has finished, successfully or not.
   bool get done => _done;
@@ -206,9 +214,15 @@ class PreloadRequest extends ChangeNotifier implements Future<void> {
           asset: asset,
         );
 
+        var handled = false;
+
         for (final loader in _loaders) {
-          await loader.run(context);
+          if (!loader.accepts(context)) continue;
+          handled = true;
+          await loader.load(context);
         }
+
+        if (handled) _accepted += 1;
       });
     } finally {
       _completed += 1;

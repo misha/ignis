@@ -230,6 +230,39 @@ flutter:
     expect(Ignis.cache.contains('assets/notes.txt'), isFalse);
   });
 
+  test('caches nothing when no loader is registered on the global preload', () async {
+    // The trap: loaders registered on some other Preload instance leave
+    // Ignis.preload empty, and live reloading only ever goes through that one.
+    await start();
+    Ignis.preload = Preload();
+
+    await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
+
+    final request = Ignis.preload.load(paths: ['assets/hero.png']);
+    await request;
+
+    expect(request.completed, 1);
+    expect(request.accepted, 0, reason: 'a bare preload cannot load anything');
+    request.dispose();
+  });
+
+  test('reports how many assets its loaders actually accepted', () async {
+    await start();
+
+    // Watched and readable, but the image loader only accepts `.png`.
+    await File(p.join(root.path, 'assets', 'notes.txt')).writeAsString('hello');
+
+    final request = Ignis.preload.load(
+      paths: ['assets/hero.png', 'assets/notes.txt'],
+    );
+
+    await request;
+
+    expect(request.completed, 2);
+    expect(request.accepted, 1);
+    request.dispose();
+  });
+
   test('picks up an asset that did not exist at startup', () async {
     await start();
 
