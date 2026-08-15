@@ -8,7 +8,6 @@ import 'support/images.dart';
 void main() {
   setUp(() {
     Ignis.cache.clear();
-    Spritesheet.clearCache();
   });
 
   test('uses the whole image as one frame by default', () async {

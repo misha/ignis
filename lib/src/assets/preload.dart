@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:ignis/src/assets/cache.dart';
@@ -5,33 +7,36 @@ import 'package:ignis/src/assets/loader.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:pool/pool.dart';
 
-/// Loads assets into a cache with bounded concurrency.
+/// A registry of [Loader]s, and the pool that runs them.
 ///
-/// Add [manifest]s, [paths], or a one-off [path], then call [load].
+/// Register loaders once, then [load] whatever you need, whenever you need it.
+/// Each call names its own assets and hands back a [PreloadRequest] to watch.
+/// There is no difference between filling the cache at startup and replacing
+/// one entry later; both go through the same loaders.
 ///
-/// A preload runs exactly once. Its resources are released when [run] finishes.
-class Preload extends ChangeNotifier {
+/// ```dart
+/// Ignis.preload
+///   ..loader(Loader.image()..extensions(['.png']))
+///   ..loader(Loader.json()..extensions(['.json']));
+///
+/// await Ignis.preload.load(manifest: true);
+/// ```
+class Preload {
   final Cache cache;
   final int concurrency;
   final Duration timeout;
 
   final Pool _pool;
-  final List<_Request> _requests = [];
+  final List<Loader> _loaders = [];
 
-  int _total = 0;
-  int _completed = 0;
-  double _progress = 0;
-  bool _started = false;
-  bool _done = false;
-
-  int get total => _total;
-  int get completed => _completed;
-  double get progress => _progress;
-  bool get done => _done;
+  /// The loaders every loaded asset is fed through.
+  Iterable<Loader> get loaders => _loaders;
 
   /// Creates a new preload for the given [cache].
   ///
   /// If no cache is provided, the default cache at [Ignis.cache] is used.
+  /// Assets always come from [Ignis.bundle], resolved at load time so a bundle
+  /// installed after configuration still applies.
   ///
   /// A pool is allocated to manage loading in parallel, subject to the target
   /// [concurrency] and a per-request [timeout]. By default, the pool permits
@@ -43,185 +48,160 @@ class Preload extends ChangeNotifier {
   }) : cache = cache ?? Ignis.cache,
        _pool = Pool(concurrency, timeout: timeout);
 
-  /// Adds the assets from the [bundle]'s manifest to this preload, loaded
-  /// using [loader].
-  ///
-  /// If the [bundle] is not supplied, the global bundle from the [Ignis]
-  /// class is used instead.
-  Preload manifest(
-    Loader loader, {
-    AssetBundle? bundle,
-  }) {
-    _checkNotStarted();
-
-    _requests.add(
-      _ManifestRequest(
-        bundle ?? Ignis.bundle,
-        loader,
-      ),
-    );
-
+  /// Registers a [loader] to feed every loaded asset through.
+  Preload loader(Loader loader) {
+    _loaders.add(loader);
     return this;
   }
 
-  /// Adds a collection of [paths] to this preload, loaded using [loader].
+  /// Loads assets through the registered loaders, replacing whatever the
+  /// [cache] already holds for them.
   ///
-  /// If the [bundle] is not supplied, the global bundle from the [Ignis]
-  /// class is used instead.
-  Preload paths(
-    Loader loader,
-    Iterable<String> paths, {
-    AssetBundle? bundle,
+  /// Name them with [manifest] to take everything in the [Ignis.bundle]
+  /// manifest, and [paths] for named ones. Each loader's own filters decide
+  /// which of them it actually applies to.
+  ///
+  /// The result reports progress and completes as a [Future]. Calls may overlap
+  /// freely, since the pool is what bounds the work.
+  PreloadRequest load({
+    bool? manifest,
+    Iterable<String>? paths,
   }) {
-    _checkNotStarted();
-
-    _requests.add(
-      _PathsRequest(
-        bundle ?? Ignis.bundle,
-        loader,
-        .unmodifiable(paths),
-      ),
+    return PreloadRequest._(
+      _pool,
+      cache,
+      // Snapshotted, so registering a loader mid-load cannot half-apply it.
+      [..._loaders],
+      manifest ?? false,
+      [...?paths],
     );
-
-    return this;
   }
 
-  /// Adds a single [path] to this preload, loaded using [loader].
-  ///
-  /// If the [bundle] is not supplied, the global bundle from the [Ignis]
-  /// class is used instead.
-  Preload path(
-    Loader loader,
-    String path, {
-    AssetBundle? bundle,
-  }) {
-    _checkNotStarted();
+  /// Releases the worker pool. Loading afterwards throws.
+  Future<void> dispose() => _pool.close();
+}
 
-    _requests.add(
-      _PathRequest(
-        bundle ?? Ignis.bundle,
-        loader,
-        path,
-      ),
-    );
+/// A single [Preload.load] in flight.
+///
+/// It carries [progress], it notifies its listeners as assets land, and it
+/// completes as a [Future]. Dispose it once you are done with it:
+///
+/// ```dart
+/// final request = Ignis.preload.load(manifest: true);
+/// // ...drive a progress bar from `request`...
+/// await request;
+/// request.dispose();
+/// ```
+class PreloadRequest extends ChangeNotifier implements Future<void> {
+  final Pool _pool;
+  final Cache _cache;
+  final List<Loader> _loaders;
 
-    return this;
+  late final Future<void> _future;
+
+  int _total = 0;
+  int _completed = 0;
+  bool _done = false;
+  bool _disposed = false;
+
+  /// How many assets this load covers. Grows once a manifest is read.
+  int get total => _total;
+
+  /// How many of them have finished.
+  int get completed => _completed;
+
+  /// Whether the load has finished, successfully or not.
+  bool get done => _done;
+
+  /// How far along the load is, from 0 to 1.
+  double get progress {
+    if (_done) return 1;
+    if (_total == 0) return 0;
+    return _completed / _total;
   }
 
-  /// Loads all scheduled assets and releases this preload's resources.
-  ///
-  /// The returned future completes when preloading is [done].
-  ///
-  /// Internally, the worker pool is released once the future is completed. To
-  /// complete disposal of this object and deactivate the [Listenable]
-  /// implementation too, you must also call [dispose] afterwards. This is
-  /// recommended for applications with multiple preloads.
-  Future<void> run() async {
-    _checkNotStarted();
-    _started = true;
+  PreloadRequest._(
+    this._pool,
+    this._cache,
+    this._loaders,
+    bool manifest,
+    List<String> assets,
+  ) {
+    _future = _run(manifest, assets);
+  }
 
-    for (final request in _requests) {
-      switch (request) {
-        case _ManifestRequest(:final bundle, :final loader):
-          await _scheduleManifest(bundle, loader);
-
-        case _PathsRequest(:final bundle, :final loader, paths: final assets):
-          for (final asset in assets) {
-            _scheduleAsset(bundle, loader, asset);
-          }
-
-        case _PathRequest(:final bundle, :final loader, path: final asset):
-          _scheduleAsset(bundle, loader, asset);
-      }
-    }
+  Future<void> _run(bool manifest, List<String> assets) async {
+    _total = assets.length;
 
     try {
-      await _pool.close();
+      if (manifest) {
+        final listing = await _pool.withResource(() {
+          return AssetManifest.loadFromAssetBundle(Ignis.bundle);
+        });
+
+        final discovered = listing.listAssets();
+        assets.addAll(discovered);
+        _total += discovered.length;
+        _notify();
+      }
+
+      await Future.wait([
+        for (final asset in assets) //
+          _load(asset),
+      ]);
     } finally {
-      _progress = 1;
       _done = true;
-      notifyListeners();
+      _notify();
     }
   }
 
-  Future<void> _scheduleManifest(AssetBundle bundle, Loader loader) async {
-    _total += 1;
-
+  Future<void> _load(String asset) async {
     try {
-      final manifest = await _pool.withResource(() {
-        return AssetManifest.loadFromAssetBundle(bundle);
-      });
-
-      for (final asset in manifest.listAssets()) {
-        _scheduleAsset(bundle, loader, asset);
-      }
-    } finally {
-      _completed += 1;
-      _progress = _completed / _total;
-      notifyListeners();
-    }
-  }
-
-  void _scheduleAsset(AssetBundle bundle, Loader loader, String asset) async {
-    _total += 1;
-
-    try {
-      await _pool.withResource(() {
-        return loader.run(
-          .new(
-            cache: cache,
-            bundle: bundle,
-            asset: asset,
-          ),
+      await _pool.withResource(() async {
+        final context = LoadingContext(
+          cache: _cache,
+          bundle: Ignis.bundle,
+          asset: asset,
         );
+
+        for (final loader in _loaders) {
+          await loader.run(context);
+        }
       });
     } finally {
       _completed += 1;
-      _progress = _completed / _total;
-      notifyListeners();
+      _notify();
     }
   }
 
-  void _checkNotStarted() {
-    if (_started) {
-      throw StateError('Preload has already started.');
-    }
+  /// Notifies unless this was disposed mid-load, which is fair game for a load
+  /// the game gave up on.
+  void _notify() {
+    if (_disposed) return;
+    notifyListeners();
   }
 
-  /// Waits for the preload to finish, then releases [Listenable] resources.
   @override
-  Future<void> dispose() async {
-    try {
-      await _pool.close();
-    } finally {
-      super.dispose();
-    }
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
-}
 
-sealed class _Request {
-  const _Request();
-}
+  @override
+  Stream<void> asStream() => _future.asStream();
 
-class _ManifestRequest extends _Request {
-  final AssetBundle bundle;
-  final Loader loader;
+  @override
+  Future<void> catchError(Function onError, {bool Function(Object)? test}) =>
+      _future.catchError(onError, test: test);
 
-  const _ManifestRequest(this.bundle, this.loader);
-}
+  @override
+  Future<R> then<R>(FutureOr<R> Function(void) onValue, {Function? onError}) =>
+      _future.then(onValue, onError: onError);
 
-class _PathsRequest extends _Request {
-  final AssetBundle bundle;
-  final Loader loader;
-  final List<String> paths;
+  @override
+  Future<void> timeout(Duration limit, {FutureOr<void> Function()? onTimeout}) =>
+      _future.timeout(limit, onTimeout: onTimeout);
 
-  const _PathsRequest(this.bundle, this.loader, this.paths);
-}
-
-class _PathRequest extends _Request {
-  final AssetBundle bundle;
-  final Loader loader;
-  final String path;
-
-  const _PathRequest(this.bundle, this.loader, this.path);
+  @override
+  Future<void> whenComplete(FutureOr<void> Function() action) => _future.whenComplete(action);
 }

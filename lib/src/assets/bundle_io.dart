@@ -1,0 +1,115 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
+import 'package:ignis/src/assets/watcher.dart';
+import 'package:ignis/src/globals.dart';
+import 'package:path/path.dart' as p;
+
+/// Serves assets straight off the developer's disk, and pushes changes back
+/// through [Ignis.preload] so the cache follows along.
+///
+/// Install it over [Ignis.bundle], then [start] it:
+///
+/// ```dart
+/// final live = LiveAssetBundle();
+/// Ignis.bundle = live;
+/// await live.start();
+/// ```
+///
+/// Outside [kDebugMode] this is inert: [start] does nothing and every load
+/// delegates to [rootBundle], so it is safe to install unconditionally.
+class LiveAssetBundle extends CachingAssetBundle {
+  /// The project directory asset keys are resolved against.
+  final String root;
+
+  final AssetWatcher _watcher;
+
+  StreamSubscription<AssetUpdate>? _updates;
+
+  /// Whether live reloading is currently active.
+  bool get isRunning => _watcher.isRunning;
+
+  /// Creates a live bundle rooted at [root], defaulting to the working
+  /// directory of the running process.
+  ///
+  /// [pubspec] and [assets] default to `pubspec.yaml` and `assets` inside
+  /// [root]. Assets not found under [root], such as package assets and the
+  /// compiled manifest, fall through to [rootBundle].
+  factory LiveAssetBundle({
+    String? root,
+    String? pubspec,
+    String? assets,
+  }) {
+    final directory = root ?? Directory.current.path;
+
+    return LiveAssetBundle._(
+      directory,
+      .new(
+        pubspecPath: pubspec ?? p.join(directory, 'pubspec.yaml'),
+        assetsPath: assets ?? p.join(directory, 'assets'),
+      ),
+    );
+  }
+
+  LiveAssetBundle._(this.root, this._watcher);
+
+  /// Starts watching for asset changes, returning whether it succeeded.
+  ///
+  /// Always false outside [kDebugMode].
+  Future<bool> start() async {
+    if (!kDebugMode) return false;
+    _updates ??= _watcher.updates.listen(_update);
+    return _watcher.start();
+  }
+
+  /// Stops watching for asset changes.
+  Future<void> stop() async {
+    try {
+      await Future.wait([
+        ?_updates?.cancel(),
+        _watcher.stop(),
+      ]);
+    } finally {
+      _updates = null;
+    }
+  }
+
+  Future<void> dispose() async {
+    await stop();
+    await _watcher.dispose();
+  }
+
+  @override
+  Future<ByteData> load(String key) async {
+    if (kDebugMode) {
+      final file = File(p.join(root, key));
+
+      if (await file.exists()) {
+        return .sublistView(await file.readAsBytes());
+      }
+    }
+
+    return rootBundle.load(key);
+  }
+
+  Future<void> _update(AssetUpdate update) async {
+    // The watcher already emits project-relative paths, which are asset keys.
+    final key = update.path;
+    evict(key);
+
+    final request = Ignis.preload.load(paths: [key]);
+
+    try {
+      await request;
+    } catch (error) {
+      debugPrint('Ignis: failed to reload "$key". $error');
+      return;
+    } finally {
+      request.dispose();
+    }
+
+    debugPrint('Ignis: reloaded "$key".');
+  }
+}

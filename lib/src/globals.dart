@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:ignis/src/assets/cache.dart';
+import 'package:ignis/src/assets/preload.dart';
 
 /// Namespace for global Ignis objects.
 abstract final class Ignis {
@@ -8,4 +9,7 @@ abstract final class Ignis {
 
   /// Asset cache used by various Ignis nodes.
   static Cache cache = Cache();
+
+  /// Asset preload used to fill the [cache], both at startup and on demand.
+  static Preload preload = Preload();
 }

@@ -1,34 +1,62 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
+import 'package:ignis/src/assets/cache.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 
-// TODO: Document usage and properties.
-// TODO: Keep cache in `Ignis.cache`, perhaps in a format like `$PATH#$WIDTH,$HEIGHT`.
-class Spritesheet {
-  static final Map<(String, double?, double?), Spritesheet> _cache = {};
-  static void clearCache() => _cache.clear();
+/// The cache entry a [Spritesheet] was derived from.
+final class SpritesheetSource {
+  /// The key of the image in the cache.
+  final String asset;
 
+  /// The frame size originally requested, or null for the image's own size.
+  final Vector2? size;
+
+  const SpritesheetSource(this.asset, this.size);
+}
+
+// TODO: Document usage and properties.
+class Spritesheet {
   final Image image;
   late final Vector2 size;
   late final int rows;
   late final int columns;
   late final int frames;
 
+  /// Where this sheet came from, or null when built from an image directly.
+  final SpritesheetSource? source;
+
   late final List<Rect> _rects;
 
+  /// Cuts the image cached at [key] into frames of the given [size].
+  ///
+  /// The sheet itself is cached under a key derived from [key] and the frame
+  /// size, so replacing the image evicts every sheet cut out of it.
   factory Spritesheet.asset(
     String key, {
     Vector2? size,
   }) {
-    return _cache.putIfAbsent((key, size?.x, size?.y), () {
-      return Spritesheet(Ignis.cache.retrieve(key), size: size);
-    });
+    final cache = Ignis.cache;
+    final image = cache.retrieve<Image>(key);
+    final frame = size ?? Vector2.cast(image.width, image.height);
+    final derived = Cache.derive(key, '${frame.x},${frame.y}');
+    if (cache.contains(derived)) return cache.retrieve<Spritesheet>(derived);
+
+    final sheet = Spritesheet(
+      image,
+      size: frame,
+      source: .new(key, size),
+    );
+
+    cache.add(derived, sheet);
+    return sheet;
   }
 
   Spritesheet(
     this.image, {
     Vector2? size,
+    this.source,
   }) {
     this.size = (size ?? .cast(image.width, image.height)).clone();
     final width = this.size.x;
@@ -88,4 +116,18 @@ class Spritesheet {
   }
 
   Rect operator [](int frame) => _rects[frame];
+
+  /// This sheet, re-resolved against [Ignis.cache].
+  ///
+  /// Returns this unless the image it was cut from has since been replaced, so
+  /// the common case costs one lookup and an identity check. Only live in debug
+  /// builds, since only live asset reloading replaces a cached image.
+  Spritesheet get current {
+    if (!kDebugMode) return this;
+    final source = this.source;
+    if (source == null) return this;
+    final image = Ignis.cache.retrieve<Image>(source.asset);
+    if (identical(image, this.image)) return this;
+    return Spritesheet.asset(source.asset, size: source.size);
+  }
 }
