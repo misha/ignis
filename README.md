@@ -1,6 +1,4 @@
-<div align="end">
 [![Tests](https://github.com/misha/ignis/actions/workflows/ci.yml/badge.svg)](https://github.com/misha/ignis/actions/workflows/ci.yml)
-</div>
 
 <div align="center">
   <img src="logo_light.png#gh-light-mode-only" alt="Light Mode Logo">
@@ -9,6 +7,8 @@
   Ignis is a Flutter game engine built around two primitives, nodes and signals.
   <br>
   What is this? See [Motivation](#motivation).
+  <br>
+  <i>Logo art by [Mewyn](https://mewyn.itch.io/).</i>
 </div>
 
 - [Features](#features)
