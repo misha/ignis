@@ -8,11 +8,6 @@ import 'package:ignis/src/signal.dart';
 import 'package:ignis/src/spritesheet.dart';
 
 class SpriteNode extends PaintedNode {
-  /// The size this sprite renders at. Defaults to the first sheet's native
-  /// frame size, but may be mutated to stretch or squash the frame.
-  @override
-  final MVector2 size;
-
   /// The frames per second to use when animating this sprite.
   ///
   /// Defaults to 0, or no animation. Must be >= 0.
@@ -47,9 +42,11 @@ class SpriteNode extends PaintedNode {
   int get frame => _frame.floor();
   bool get isFinished => _finished;
 
+  @override
+  Vector2 get size => sheet.size;
+
   SpriteNode({
     required Spritesheet sheet,
-    Vector2? size,
     num? fps,
     bool? loop,
     bool? cleanup,
@@ -62,14 +59,12 @@ class SpriteNode extends PaintedNode {
     super.priority,
     super.children,
   }) : _sheets = .of([sheet], growable: false),
-       size = .copy(size ?? sheet.size),
        fps = fps ?? 0,
        loop = loop ?? true,
        cleanup = cleanup ?? false;
 
   SpriteNode.split({
     required Iterable<Spritesheet> sheets,
-    Vector2? size,
     num? fps,
     bool? loop,
     bool? cleanup,
@@ -83,7 +78,6 @@ class SpriteNode extends PaintedNode {
     super.children,
   }) : assert(sheets.isNotEmpty),
        _sheets = .of(sheets, growable: false),
-       size = .copy(size ?? sheets.first.size),
        fps = fps ?? 0,
        loop = loop ?? true,
        cleanup = cleanup ?? false;
@@ -193,6 +187,7 @@ class SpriteNode extends PaintedNode {
 
   @override
   void render(Canvas canvas) {
+    // TODO: Make just one of these, whenever the spritesheet changes.
     _dest = .fromLTWH(0, 0, width, height);
     super.render(canvas);
   }

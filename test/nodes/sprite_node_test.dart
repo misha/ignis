@@ -36,16 +36,6 @@ void main() {
     expect(node.frame, 7);
   });
 
-  test('switching sheets does not change size', () async {
-    final first = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
-    final second = Spritesheet(await solidImage(6, 6, BLUE), size: .all(2));
-    final node = SpriteNode.split(sheets: [first, second]);
-
-    node.play(sheet: 1);
-
-    expect((node.width, node.height), (4.0, 4.0)); // Still the first sheet's size.
-  });
-
   test("width and height default to the first sheet's native size", () async {
     final sheet = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
     final node = SpriteNode(sheet: sheet);
@@ -55,20 +45,16 @@ void main() {
     expect((node.width, node.height), (4.0, 4.0));
   });
 
-  test('a custom size can be provided', () async {
-    final sheet = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
-    final node = SpriteNode(sheet: sheet, size: .new(10, 20));
+  test('size follows the active sheet', () async {
+    final first = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
+    final second = Spritesheet(await solidImage(6, 6, BLUE), size: .all(2));
+    final node = SpriteNode.split(sheets: [first, second]);
 
-    expect((node.width, node.height), (10.0, 20.0));
-  });
+    expect(node.size, Vector2.all(4));
 
-  test('size can be mutated after construction', () async {
-    final sheet = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
-    final node = SpriteNode(sheet: sheet);
+    node.play(sheet: 1);
 
-    node.size.setValues(10, 20);
-
-    expect((node.width, node.height), (10.0, 20.0));
+    expect(node.size, Vector2.all(2));
   });
 
   test('renders the active sheet', () async {
