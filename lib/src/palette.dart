@@ -1,4 +1,3 @@
-import 'dart:collection';
 import 'dart:ui';
 
 import 'package:ignis/src/math.dart';
@@ -55,15 +54,20 @@ class PaletteEntry {
 /// A [Palette] always holds at least one paint: the default, reached via
 /// [paint]. Additional paints may be registered with [add], each with its own
 /// offset and priority, letting a single node configure any number of paints.
-class Palette with IterableMixin<PaletteEntry> {
+class Palette {
   late final PaletteEntry _default;
   final List<PaletteEntry> _paints = [];
   final Map<String, PaletteEntry> _index = {};
 
-  /// Iterates all registered paints, including the default, in ascending
-  /// priority order. Includes disabled paints.
-  @override
-  Iterator<PaletteEntry> get iterator => _paints.iterator;
+  /// The default paint. Always present.
+  Paint get paint => _default.paint;
+
+  /// The paint registered under [name].
+  Paint operator [](String name) => entry(name).paint;
+
+  /// All registered paints, including the default, in ascending priority
+  /// order. Includes disabled paints.
+  Iterable<PaletteEntry> get entries => _paints;
 
   Palette({
     Paint? paint,
@@ -72,12 +76,6 @@ class Palette with IterableMixin<PaletteEntry> {
     _default._palette = this;
     _paints.add(_default);
   }
-
-  /// The default paint. Always present.
-  Paint get paint => _default.paint;
-
-  /// The paint registered under [name].
-  Paint operator [](String name) => entry(name).paint;
 
   /// The entry registered under [name], or the default entry if null.
   PaletteEntry entry([String? name]) {

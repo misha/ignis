@@ -24,7 +24,7 @@ abstract class PaintedNode extends SizedNode {
 
   @override
   void renderAnchored(Canvas canvas) {
-    for (final entry in palette) {
+    for (final entry in palette.entries) {
       if (!entry.enabled) continue;
       final offset = entry.offset;
       // TODO: Profile the different ways to do this.

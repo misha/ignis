@@ -7,9 +7,9 @@ void main() {
     final palette = Palette(paint: paint);
 
     expect(palette.paint, same(paint));
-    expect(palette, hasLength(1));
+    expect(palette.entries, hasLength(1));
 
-    final entry = palette.single;
+    final entry = palette.entries.single;
     expect(entry.name, isNull);
     expect(entry.paint, same(paint));
     expect(entry.offset.isZero, isTrue);
@@ -73,38 +73,38 @@ void main() {
   test('the default paint has no name, and cannot be removed', () {
     final palette = Palette();
 
-    expect(palette.single.name, isNull);
+    expect(palette.entries.single.name, isNull);
     expect(palette.remove('default'), isFalse);
-    expect(palette, hasLength(1));
+    expect(palette.entries, hasLength(1));
   });
 
   test('orders entries by priority while preserving insertion order for ties', () {
     final palette = Palette();
-    final first = palette.single;
+    final first = palette.entries.single;
     final b = palette.add(.new('b', Paint(), priority: 1));
     final c = palette.add(.new('c', Paint(), priority: -1));
     final d = palette.add(.new('d', Paint(), priority: 1));
 
-    expect(palette, [c, first, b, d]);
+    expect(palette.entries, [c, first, b, d]);
   });
 
   test('reorders entries when their priority changes', () {
     final palette = Palette();
-    final first = palette.single;
+    final first = palette.entries.single;
     final b = palette.add(.new('b', Paint()));
     final c = palette.add(.new('c', Paint()));
     final d = palette.add(.new('d', Paint()));
 
     c.priority = 1;
-    expect(palette, [first, b, d, c]);
+    expect(palette.entries, [first, b, d, c]);
 
     c.priority = 0;
-    expect(palette, [first, b, d, c]);
+    expect(palette.entries, [first, b, d, c]);
   });
 
   test('entry() returns the default entry, or the entry registered under a name', () {
     final palette = Palette();
-    final first = palette.single;
+    final first = palette.entries.single;
     final glow = palette.add(.new('glow', Paint()));
 
     expect(palette.entry(), same(first));
