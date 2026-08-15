@@ -2,9 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/anchor.dart';
-import 'package:ignis/src/layout_constraints.dart';
-import 'package:ignis/src/layout_item.dart';
-import 'package:ignis/src/layout_flex.dart';
+import 'package:ignis/src/layout/layout_constraints.dart';
+import 'package:ignis/src/layout/layout_flex.dart';
+import 'package:ignis/src/layout/layout_item.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 import 'package:ignis/src/owners/anchor_owner.dart';

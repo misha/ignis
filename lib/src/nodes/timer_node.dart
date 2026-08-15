@@ -1,4 +1,4 @@
-import 'package:ignis/src/node.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/signal.dart';
 
 /// A node that emits [onTrigger] every [interval] seconds.

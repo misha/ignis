@@ -1,5 +1,5 @@
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/node.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 
 extension NearestTransformNode<T extends TransformNode> on Iterable<T> {

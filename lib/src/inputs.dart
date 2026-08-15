@@ -1,3 +1,3 @@
-export 'inputs/drag_input.dart';
-export 'inputs/hover_input.dart';
-export 'inputs/tap_input.dart';
+export 'inputs/nodes/drag_input.dart';
+export 'inputs/nodes/hover_input.dart';
+export 'inputs/nodes/tap_input.dart';

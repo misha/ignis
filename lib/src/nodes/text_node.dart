@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:ignis/src/extensions.dart';
-import 'package:ignis/src/layout_constraints.dart';
+import 'package:ignis/src/layout/layout_constraints.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 

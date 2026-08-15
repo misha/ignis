@@ -2,8 +2,8 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/debug.dart';
-import 'package:ignis/src/node.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/angle_owner.dart';
 import 'package:ignis/src/owners/position_owner.dart';

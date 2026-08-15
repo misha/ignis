@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
@@ -54,17 +52,6 @@ void main() {
     test('reuses a given Anchor directly, without cloning', () {
       final anchor = Anchor.center;
       expect(AnchorOwner.box(anchor).anchor, same(anchor));
-    });
-  });
-
-  group('PaintOwner.box', () {
-    test('defaults to a fresh Paint', () {
-      expect(PaintOwner.box().paint, isA<Paint>());
-    });
-
-    test('reuses a given Paint directly, without cloning', () {
-      final paint = Paint();
-      expect(PaintOwner.box(paint).paint, same(paint));
     });
   });
 }

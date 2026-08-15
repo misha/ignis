@@ -1,12 +1,12 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/debug.dart';
-import 'package:ignis/src/layout_constraints.dart';
-import 'package:ignis/src/layout_item.dart';
-import 'package:ignis/src/layout_flex.dart';
+import 'package:ignis/src/layout/layout_constraints.dart';
+import 'package:ignis/src/layout/layout_flex.dart';
+import 'package:ignis/src/layout/layout_item.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/node.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 
 /// A [SizedNode] whose size is computed via constraint propagation, rather

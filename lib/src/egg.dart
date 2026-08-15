@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:ignis/src/node.dart';
+import 'package:ignis/src/core.dart';
 
 /// A [Node]'s children: a flat list kept in [Node.priority] order, alongside
 /// an index per queried type.

@@ -1,4 +1,4 @@
-import 'package:ignis/src/node.dart';
+import 'package:ignis/src/core.dart';
 
 /// Resolves to the nearest ancestor implementing [T], once [host] is mounted;
 /// null before that, and after [host] is unmounted.
