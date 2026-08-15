@@ -18,10 +18,10 @@ const _TIMEOUT = Duration(seconds: 10);
 ///
 /// ```dart
 /// Ignis.preload
-///   ..register(Loader.image()..extensions(['.png']))
-///   ..register(Loader.json()..extensions(['.json']));
+///   ..register(.image()..extensions(['.png']))
+///   ..register(.json()..extensions(['.json']));
 ///
-/// await Ignis.preload.load(manifest: true);
+/// final request = await Ignis.preload.load(manifest: true);
 /// ```
 class Preload {
   final int concurrency;
@@ -52,16 +52,16 @@ class Preload {
   /// request included, so this is for loads with nothing to keep around:
   ///
   /// ```dart
-  /// await Preload.run([Loader.image()], manifest: true);
+  /// await Preload.run(loaders: [Loader.image()], manifest: true);
   /// ```
   ///
   /// The request is still returned, so progress is available for as long as the
   /// load is running. Unlike [load], do not dispose it yourself, and do not
   /// listen to it after it completes.
-  static PreloadRequest run(
-    List<Loader> loaders, {
-    Iterable<String>? paths,
-    bool? manifest,
+  static PreloadRequest run({
+    required Iterable<Loader> loaders,
+    Iterable<String> paths = const [],
+    bool manifest = false,
     int concurrency = _CONCURRENCY,
     Duration timeout = _TIMEOUT,
   }) {
@@ -102,22 +102,21 @@ class Preload {
   /// Loads assets through the registered loaders, replacing whatever
   /// [Ignis.cache] already holds for them.
   ///
-  /// Name them with [manifest] to take everything in the [Ignis.bundle]
-  /// manifest, and [paths] for named ones. Each loader's own filters decide
-  /// which of them it actually applies to.
+  /// Enabling [manifest] loads everything in the [Ignis.bundle] manifest,
+  /// while [paths] can be used for a more targeted preload. Each loader's own
+  /// filters decide which of them it actually applies to.
   ///
   /// The result reports progress and completes as a [Future]. Calls may overlap
   /// freely, since the pool is what bounds the work.
   PreloadRequest load({
-    bool? manifest,
-    Iterable<String>? paths,
+    Iterable<String> paths = const [],
+    bool manifest = false,
   }) {
     return PreloadRequest._(
       _pool,
-      // Snapshotted, so registering a loader mid-load cannot half-apply it.
-      [..._loaders],
-      manifest ?? false,
-      [...?paths],
+      .of(_loaders),
+      manifest,
+      .of(paths),
     );
   }
 

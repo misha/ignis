@@ -265,7 +265,7 @@ void main() {
 
   test('runs a one-off load and releases everything', () async {
     final request = Preload.run(
-      [
+      loaders: [
         .image()..extensions(['.png']),
       ],
       paths: [
@@ -286,7 +286,7 @@ void main() {
   });
 
   test('reports progress on a one-off load while it runs', () async {
-    final request = Preload.run([.image()], paths: ['test/assets/fire.png']);
+    final request = Preload.run(loaders: [.image()], paths: ['test/assets/fire.png']);
 
     final updates = <double>[];
     request.addListener(() => updates.add(request.progress));
@@ -298,7 +298,7 @@ void main() {
 
   test('surfaces a one-off failure exactly once', () async {
     // JSON fed to the image loader, so decoding blows up.
-    final request = Preload.run([.image()], paths: ['test/assets/data.json']);
+    final request = Preload.run(loaders: [.image()], paths: ['test/assets/data.json']);
     await expectLater(request, throwsA(isA<Exception>()));
   });
 
