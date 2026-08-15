@@ -120,6 +120,7 @@ class SceneRenderBox extends RenderBox {
   }
 
   void _detachScene() {
+    _scene.destroy();
     renderLoop?.dispose();
     renderLoop = null;
   }
