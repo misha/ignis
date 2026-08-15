@@ -779,6 +779,7 @@ Until `1.0.0`, Ignis will change frequently and dramatically.
 
 I'm currently working on the following:
 
+- Live reload
 - Camera
 - Audio
 - Particles
