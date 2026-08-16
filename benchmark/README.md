@@ -21,9 +21,10 @@ each.
 
 | Benchmark      | Test        | Release     |
 |----------------|-------------|-------------|
-| Update         | 18388.16 us | 39367.81 us |
-| Update Count   | 46582.12 us | 67267.77 us |
-| Update Count 2 | 59658.82 us | 77017.95 us |
+| Update         | 20715.21 us | 41885.01 us |
+| Update Count   | 46395.72 us | 65717.91 us |
+| Update Count 2 | 59720.64 us | 74960.27 us |
+| Update Count 3 | 73136.88 us | 86225.11 us |
 
 System details:
 
