@@ -69,6 +69,9 @@ class _SceneWidgetState extends State<SceneWidget> {
 
   @override
   Widget build(context) {
+    // Hidden UI disables its tickers. Follow suit so a covered scene stops.
+    final muted = !TickerMode.valuesOf(context).enabled;
+
     return Focus(
       focusNode: _focusNode,
       autofocus: widget.autofocus,
@@ -91,7 +94,7 @@ class _SceneWidgetState extends State<SceneWidget> {
 
             return RenderSceneWidget(
               scene: widget.scene,
-              paused: widget.paused,
+              paused: widget.paused || muted,
               debug: widget.debug,
               addRepaintBoundary: widget.addRepaintBoundary,
             );

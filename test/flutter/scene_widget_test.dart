@@ -91,6 +91,37 @@ void main() {
     expect(scene.node.updates, 1);
   });
 
+  testWidgets('auto-pauses while its tickers are disabled', (tester) async {
+    final scene = TestNode().mount();
+
+    Widget harness({required bool enabled}) {
+      return TickerMode(
+        enabled: enabled,
+        child: SizedBox.square(
+          dimension: 100,
+          child: SceneWidget(scene),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(harness(enabled: true));
+    await tester.pump(const Duration(milliseconds: 16));
+    expect(scene.node.updates, greaterThanOrEqualTo(1));
+
+    await tester.pumpWidget(harness(enabled: false));
+    await tester.pump(const Duration(milliseconds: 16));
+    final coveredUpdates = scene.node.updates;
+
+    await tester.pump(const Duration(milliseconds: 16));
+    expect(scene.node.updates, coveredUpdates);
+
+    await tester.pumpWidget(harness(enabled: true));
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 16));
+
+    expect(scene.node.updates, greaterThan(coveredUpdates));
+  });
+
   testWidgets('survives a transiently empty layout', (tester) async {
     final scene = TestNode().mount();
 
