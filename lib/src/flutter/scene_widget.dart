@@ -29,6 +29,7 @@ class SceneWidget extends StatefulWidget {
 class _SceneWidgetState extends State<SceneWidget> {
   late FocusNode _focusNode;
   late Cache _cache;
+  bool _primed = false;
 
   @override
   void initState() {
@@ -42,7 +43,10 @@ class _SceneWidgetState extends State<SceneWidget> {
   @override
   void didUpdateWidget(SceneWidget old) {
     super.didUpdateWidget(old);
-    if (!identical(old.scene, widget.scene)) old.scene.destroy();
+    if (!identical(old.scene, widget.scene)) {
+      old.scene.destroy();
+      _primed = false;
+    }
   }
 
   @override
@@ -80,7 +84,10 @@ class _SceneWidgetState extends State<SceneWidget> {
             // Primes the tree with an initial update before the first real
             // frame tick, so the first paint reflects update()-driven setup
             // rather than one frame of stale state.
-            widget.scene.update(0);
+            if (!_primed) {
+              _primed = true;
+              widget.scene.update(0);
+            }
 
             return RenderSceneWidget(
               scene: widget.scene,

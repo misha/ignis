@@ -76,6 +76,21 @@ void main() {
     expect(scene.node.unmounts, 0);
   });
 
+  testWidgets('primes the scene exactly once, not on every layout', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(100, 80));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final scene = TestNode().mount();
+    await tester.pumpWidget(SceneWidget(scene, paused: true));
+    expect(scene.node.updates, 1);
+
+    await tester.pumpWidget(SceneWidget(scene, paused: true));
+    await tester.binding.setSurfaceSize(const Size(200, 80));
+    await tester.pump();
+
+    expect(scene.node.updates, 1);
+  });
+
   testWidgets('survives a transiently empty layout', (tester) async {
     final scene = TestNode().mount();
 
