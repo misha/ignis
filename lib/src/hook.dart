@@ -102,9 +102,9 @@ abstract class HookState<R, T extends Hook<R>> {
 // #region Effect
 
 final class _EffectHook extends Hook<void> {
-  final Cleanup? Function() effect;
+  final Cleanup Function() effect;
 
-  const _EffectHook(this.effect, {super.keys});
+  const _EffectHook(this.effect);
 
   @override
   _EffectHookState createState() => .new();
@@ -118,9 +118,6 @@ final class _EffectHookState extends HookState<void, _EffectHook> {
 
   @override
   void didUpdateHook(_EffectHook previous) {
-    // Keyed effects are preserved on purpose; a state that survives its keys
-    // is a state that should not re-run.
-    if (hook.keys != null) return;
     _cleanup?.call();
     _cleanup = hook.effect();
   }

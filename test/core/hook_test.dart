@@ -18,6 +18,27 @@ final class _Node extends Node {
   }
 }
 
+/// A hook that logs its [name] when disposed, kept alive by empty keys.
+final class _LogHook extends Hook<void> {
+  final List<String> log;
+  final String name;
+
+  const _LogHook(this.log, this.name) : super(keys: const []);
+
+  @override
+  _LogHookState createState() => .new();
+}
+
+final class _LogHookState extends HookState<void, _LogHook> {
+  @override
+  void build() {
+    // Nothing to do.
+  }
+
+  @override
+  void dispose() => hook.log.add(hook.name);
+}
+
 /// Runs [body] with error reporting captured instead of presented.
 List<FlutterErrorDetails> _reported(void Function() body) {
   final reported = <FlutterErrorDetails>[];
@@ -58,67 +79,14 @@ void main() {
     });
   });
 
-  group('onEffect', () {
-    test('cleans up and re-runs on every reassembly', () {
-      final log = <String>[];
-
-      final scene = _Node((node) {
-        node.onEffect(() {
-          log.add('run');
-          return () => log.add('clean');
-        });
-      }).mount();
-
-      scene.reassemble(.reload);
-
-      expect(log, ['run', 'clean', 'run']);
-    });
-
-    test('runs once when keyed on nothing', () {
-      final log = <String>[];
-
-      final scene = _Node((node) {
-        node.onEffect(() {
-          log.add('run');
-          return null;
-        }, const []);
-      }).mount();
-
-      scene.reassemble(.reload);
-
-      expect(log, ['run']);
-    });
-
-    test('cleans up at unmount', () {
-      final log = <String>[];
-
-      final scene = _Node((node) {
-        node.onEffect(() {
-          return () => log.add('clean');
-        });
-      }).mount();
-
-      scene.destroy();
-
-      expect(log, ['clean']);
-    });
-  });
-
   group('shape', () {
     test('a pass declaring fewer hooks disposes the rest', () {
       final log = <String>[];
       var both = true;
 
       final node = _Node((node) {
-        node.onEffect(() {
-          return () => log.add('first');
-        }, const []);
-
-        if (both) {
-          node.onEffect(() {
-            return () => log.add('second');
-          }, const []);
-        }
+        node.on(_LogHook(log, 'first'));
+        if (both) node.on(_LogHook(log, 'second'));
       });
 
       final scene = node.mount();
@@ -132,15 +100,9 @@ void main() {
       final log = <String>[];
 
       final scene = _Node((node) {
-        node.onEffect(() {
-          return () => log.add('a');
-        }, const []);
-        node.onEffect(() {
-          return () => log.add('b');
-        }, const []);
-        node.onEffect(() {
-          return () => log.add('c');
-        }, const []);
+        node.on(_LogHook(log, 'a'));
+        node.on(_LogHook(log, 'b'));
+        node.on(_LogHook(log, 'c'));
       }).mount();
 
       scene.destroy();
@@ -150,7 +112,7 @@ void main() {
 
     test('a reload may change which hooks a pass declares', () {
       String? value;
-      final node = _Node((node) => node.onEffect(() => null, const []));
+      final node = _Node((node) => node.on(_LogHook([], 'x')));
       final scene = node.mount();
       node.builder = (node) => value = node.child(Node.new).toString();
 
@@ -161,7 +123,7 @@ void main() {
     });
 
     test('an asset refresh may not, since code cannot have changed', () {
-      final node = _Node((node) => node.onEffect(() => null, const []));
+      final node = _Node((node) => node.on(_LogHook([], 'x')));
       final scene = node.mount();
       node.builder = (node) => node.child(Node.new);
 
@@ -308,6 +270,26 @@ void main() {
       signal.emit(2);
 
       expect(log, ['old 1', 'new 2']);
+    });
+
+    test('onMount subscribed in build hears the mount that ran it', () {
+      var mounted = 0;
+      final node = _Node((node) => node.onMount(() => mounted += 1));
+
+      node.mount();
+
+      expect(mounted, 1);
+    });
+
+    test('onUnmount subscribed in build fires once, at unmount', () {
+      var unmounted = 0;
+      final node = _Node((node) => node.onUnmount(() => unmounted += 1));
+      final scene = node.mount();
+
+      scene.reassemble(.reload);
+      scene.destroy();
+
+      expect(unmounted, 1);
     });
 
     test('outside a pass, the caller owns the subscription', () {

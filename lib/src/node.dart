@@ -492,29 +492,6 @@ class Node {
 
   // #region Standard Hooks
 
-  /// Runs [effect] now, and again on every later pass.
-  ///
-  /// Whatever [effect] returns is called before the next run and once more at
-  /// teardown, so an effect cleans up after itself:
-  ///
-  /// ```dart
-  /// onEffect(() => painter.dispose);
-  /// ```
-  ///
-  /// Re-running is the point. The closure handed in was built by the pass that
-  /// runs it, so after a hot reload it is the edited code running, and the
-  /// code it replaced has already been cleaned up.
-  ///
-  /// Pass [keys] to opt out: the effect then re-runs only when they stop
-  /// comparing equal, and an empty list means it runs exactly once.
-  @nonVirtual
-  void onEffect(
-    Cleanup? Function() effect, [
-    List<Object?>? keys,
-  ]) {
-    on(_EffectHook(effect, keys: keys));
-  }
-
   /// Calls [update] with the elapsed seconds on every frame, for as long as
   /// this node keeps declaring it.
   ///

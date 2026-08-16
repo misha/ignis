@@ -46,22 +46,17 @@ class GameNode extends Node {
 
   @override
   void build() {
-    // Construction is state, so a reload preserves it. Keying on _SIZE opts
-    // back out: editing it builds a new square, and the old one's angle with
-    // it. Nothing else about this constructor reloads.
-    final square = child(
-      () => ShapeNode(
+    // Construction is state, so a reload preserves it.
+    // Thus, changing _SIZE has no effect on the existing square.
+    final square = child(() {
+      return ShapeNode(
         shape: .square(_SIZE),
         anchor: .center,
-      ),
-      [_SIZE],
-    );
-
-    // Re-applied by every pass, so editing _COLOR is the edit.
-    onEffect(() {
-      square.paint.color = _COLOR;
-      return null;
+      );
     });
+
+    // Build runs on every pass, so editing _COLOR does persist.
+    square.paint.color = _COLOR;
 
     scene.onResize((size) {
       square.position.setFrom(size / 2);
@@ -72,13 +67,13 @@ class GameNode extends Node {
     });
 
     // Delete this block and save: the dot detaches and its tick stops.
-    final dot = child(
-      () => ShapeNode(
+    final dot = child(() {
+      return ShapeNode(
         shape: .circle(10),
         anchor: .center,
         paint: .new()..color = Colors.white,
-      ),
-    );
+      );
+    });
 
     onUpdate((dt) {
       phase += _ORBIT_SPEED * dt;

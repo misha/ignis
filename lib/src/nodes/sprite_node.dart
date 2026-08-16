@@ -129,19 +129,13 @@ class SpriteNode extends PaintedNode {
   @override
   @mustCallSuper
   void build() {
-    // Re-resolves every sheet, so a replaced asset is picked up even on a
-    // sheet this sprite is not currently [play]ing.
-    onEffect(() {
-      for (var index = 0; index < _sheets.length; index += 1) {
-        final sheet = _sheets[index];
-        final current = sheet.current;
-        if (identical(current, sheet)) continue;
-        _sheets[index] = current;
-      }
+    // Resolve the spritesheets again, in case they got swapped out.
+    for (var index = 0; index < _sheets.length; index += 1) {
+      _sheets[index] = _sheets[index].current;
+    }
 
-      // Clamp the current frame if the replacement is shorter.
-      if (_frame >= sheet.frames) _frame = 0;
-    });
+    // Clamp the current frame if the replacement is shorter.
+    if (_frame >= sheet.frames) _frame = 0;
 
     // Advances the animation, which is the whole of what a sprite does with a
     // frame.
