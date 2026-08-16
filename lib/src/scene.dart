@@ -27,6 +27,7 @@ class Scene<T extends Node> {
   }
 
   void update(double dt) {
+    assert(_mounted, 'Cannot update a destroyed scene.');
     _tree.flush();
     node.update(dt);
   }
@@ -37,6 +38,7 @@ class Scene<T extends Node> {
   /// The flush is what makes a reassembly land in full without waiting for an
   /// [update], so a paused scene reassembles just like a running one.
   void reassemble(BuildCause cause) {
+    assert(_mounted, 'Cannot reassemble a destroyed scene.');
     if (_reassembling) return;
     _reassembling = true;
 
@@ -55,12 +57,15 @@ class Scene<T extends Node> {
     Canvas canvas, {
     bool debug = false,
   }) {
+    assert(_mounted, 'Cannot render a destroyed scene.');
     if (!node.enabled) return;
     node.render(canvas);
     if (debug) node.debugRender(canvas);
   }
 
   void resize(double width, double height) {
+    assert(_mounted, 'Cannot resize a destroyed scene.');
+
     if (_sized && //
         _size.x == width &&
         _size.y == height) {
@@ -72,8 +77,9 @@ class Scene<T extends Node> {
     node._resize(size);
   }
 
+  /// Unmounts the tree, permanently. Idempotent; every other way of driving
+  /// this scene asserts once it has been destroyed.
   void destroy() {
-    // TODO: Actually destroy?
     if (!_mounted) return;
     _mounted = false;
     node._unmount();

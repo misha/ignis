@@ -52,6 +52,16 @@ void main() {
     expect(heard, Vector2(100, 80));
   });
 
+  test('a destroyed scene refuses to be driven', () {
+    final scene = Node().mount();
+    scene.destroy();
+
+    expect(() => scene.update(0), throwsAssertionError);
+    expect(() => scene.reassemble(.reload), throwsAssertionError);
+    expect(() => scene.resize(100, 80), throwsAssertionError);
+    expect(scene.destroy, returnsNormally);
+  });
+
   test('keeps the given node parentless once loaded', () {
     final node = Node();
     final scene = node.mount();
