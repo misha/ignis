@@ -116,9 +116,6 @@ class SceneRenderBox extends RenderBox {
   }
 
   void _renderLoopCallback(double dt) {
-    // TODO: Probably one of these is extraneous.
-    assert(attached);
-    if (!attached) return;
     scene.update(dt);
     markNeedsPaint();
   }
