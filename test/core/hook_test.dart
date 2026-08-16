@@ -39,6 +39,31 @@ final class _LogHookState extends HookState<void, _LogHook> {
   void dispose() => hook.log.add(hook.name);
 }
 
+/// A node that subscribes from its constructor, as most engine nodes do.
+final class _Subscriber extends Node {
+  _Subscriber(Signal0 signal, void Function() handle) {
+    signal(handle);
+  }
+}
+
+/// A hook that declares another hook while its own slot is still being filled.
+final class _NestingHook extends Hook<void> {
+  const _NestingHook() : super(keys: const []);
+
+  @override
+  _NestingHookState createState() => .new();
+}
+
+final class _NestingHookState extends HookState<void, _NestingHook> {
+  @override
+  void initHook() => node.on(const _NestingHook());
+
+  @override
+  void build() {
+    // Nothing to do.
+  }
+}
+
 /// Runs [body] with error reporting captured instead of presented.
 List<FlutterErrorDetails> _reported(void Function() body) {
   final reported = <FlutterErrorDetails>[];
@@ -148,6 +173,15 @@ void main() {
       expect(reported.single.exception, isStateError);
       expect(b.builds, 2, reason: 'the walk carried on past the bad node');
     });
+
+    test('a hook declared from inside another one is refused', () {
+      final node = _Node((node) => node.on(const _NestingHook()));
+
+      final reported = _reported(() => node.mount());
+
+      expect(reported, hasLength(1));
+      expect(reported.single.exception, isStateError);
+    });
   });
 
   group('onUpdate', () {
@@ -237,6 +271,24 @@ void main() {
       scene.destroy();
 
       expect(child.isMounted, isFalse);
+    });
+
+    test('a child keeps its constructor subscriptions to itself', () {
+      final signal = Signal0();
+      var emissions = 0;
+
+      final node = _Node((node) {
+        node.child(() => _Subscriber(signal, () => emissions += 1));
+        node.on(_LogHook([], 'tail'));
+      });
+
+      final scene = node.mount();
+      final reported = _reported(() => scene.reassemble(.assets));
+
+      signal.emit();
+
+      expect(reported, isEmpty, reason: 'the slots kept their declared order');
+      expect(emissions, 1);
     });
   });
 

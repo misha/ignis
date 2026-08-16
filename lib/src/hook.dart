@@ -167,7 +167,17 @@ final class _ChildHookState<T extends Node> extends HookState<T, _ChildHook<T>> 
 
   @override
   void initHook() {
-    child = hook.create();
+    // A child's constructor is not one of this pass's declarations, so it runs
+    // with no pass active and owns whatever it subscribes to.
+    final builder = Node._builder;
+    Node._builder = null;
+
+    try {
+      child = hook.create();
+    } finally {
+      Node._builder = builder;
+    }
+
     node.add(child);
   }
 

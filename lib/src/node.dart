@@ -351,6 +351,10 @@ class Node {
   /// The slot [on] is about to fill, or -1 while no pass is running.
   int _cursor = -1;
 
+  /// True while [on] is filling a slot, so a hook declared from inside another
+  /// one is caught rather than taking the slot the outer one is still filling.
+  bool _declaring = false;
+
   /// Why the pass currently running was started. Only ever read by [on], and
   /// only to decide whether a change in hook shape is legitimate.
   static BuildCause? _cause;
@@ -387,6 +391,24 @@ class Node {
       throw StateError('Hooks are only available inside Node.build.');
     }
 
+    if (_declaring) {
+      throw StateError(
+        'A hook was declared while another one was still being declared. '
+        'Always declare hooks directly inside from build(), never inside '
+        'another hook or a constructor that runs in another hook.',
+      );
+    }
+
+    _declaring = true;
+
+    try {
+      return _declare(hook);
+    } finally {
+      _declaring = false;
+    }
+  }
+
+  R _declare<R>(Hook<R> hook) {
     final hooks = _hooks ??= [];
     if (_cursor == hooks.length) return _append(hook);
 
@@ -396,9 +418,9 @@ class Node {
     if (previous.runtimeType != hook.runtimeType) {
       if (_cause != BuildCause.reload) {
         throw StateError(
-          'Hook shape changed without a hot reload: slot $_cursor held a '
-          '${previous.runtimeType} and now holds a ${hook.runtimeType}. '
-          'Hooks must be used unconditionally, in the same order every pass.',
+          'The hooks declared by build() changed without a hot reload. '
+          'Declare them unconditionally and in the same order every pass, '
+          'never inside an if, a loop, or a closure.',
         );
       }
 
