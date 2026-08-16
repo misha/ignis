@@ -22,13 +22,9 @@ class LocalAssetBundle extends CachingAssetBundle {
   /// Does nothing, and reports that live reloading did not start.
   Future<bool> start() async => false;
 
-  Future<void> stop() async {
-    // Nothing to do.
-  }
+  Future<void> stop() async {}
 
-  Future<void> dispose() async {
-    // Nothing to do.
-  }
+  Future<void> dispose() async {}
 
   @override
   Future<ByteData> load(String key) => rootBundle.load(key);

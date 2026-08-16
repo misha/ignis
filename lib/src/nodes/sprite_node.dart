@@ -1,9 +1,9 @@
 import 'dart:ui';
 
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/painted_node.dart';
-import 'package:ignis/src/signal.dart';
 import 'package:ignis/src/spritesheet.dart';
 
 class SpriteNode extends PaintedNode {
@@ -81,6 +81,64 @@ class SpriteNode extends PaintedNode {
        loop = loop ?? true,
        cleanup = cleanup ?? false;
 
+  @override
+  void build() {
+    super.build();
+    onUpdate((dt) {
+      if (_finished) return;
+      final amount = fps * dt;
+      if (amount <= 0 || !amount.isFinite) return;
+
+      final row = frame ~/ sheet.columns;
+      final start = row * sheet.columns;
+      final column = _frame - start;
+      final next = column + amount;
+      var advanced = next.floor() - column.floor();
+
+      if (!loop && next >= sheet.columns) {
+        advanced = sheet.columns - 1 - column.floor();
+        _finished = true;
+      }
+
+      var current = column.floor();
+
+      while (advanced-- > 0) {
+        current += 1;
+
+        if (current == sheet.columns) {
+          current = 0;
+          final frame = _frame = start;
+          onFrame.emit(frame);
+          onLoop.emit();
+        } else {
+          final frame = _frame = start + current;
+          onFrame.emit(frame);
+        }
+      }
+
+      if (_finished) {
+        _frame = start + sheet.columns - 1;
+        onFinish.emit();
+
+        if (cleanup) {
+          detach();
+        }
+      } else {
+        _frame = start + next % sheet.columns;
+      }
+    });
+  }
+
+  @override
+  void reassemble() {
+    for (var index = 0; index < _sheets.length; index += 1) {
+      _sheets[index] = _sheets[index].current;
+    }
+
+    // Clamp the current frame if the replacement is shorter.
+    if (_frame >= sheet.frames) _frame = 0;
+  }
+
   void play({
     int sheet = 0,
     int row = 0,
@@ -123,67 +181,6 @@ class SpriteNode extends PaintedNode {
     _sheet = sheet;
     _frame = row * selected.columns + column;
     _finished = false;
-  }
-
-  /// Re-resolves every sheet, so a replaced asset is picked up even on a sheet
-  /// this sprite is not currently [play]ing.
-  @override
-  void reassemble() {
-    for (var index = 0; index < _sheets.length; index += 1) {
-      final sheet = _sheets[index];
-      final current = sheet.current;
-      if (identical(current, sheet)) continue;
-      _sheets[index] = current;
-    }
-
-    // Clamp the current frame if the replacement is shorter.
-    if (_frame >= sheet.frames) _frame = 0;
-    super.reassemble();
-  }
-
-  @override
-  void tick(double dt) {
-    if (_finished) return;
-    final amount = fps * dt;
-    if (amount <= 0 || !amount.isFinite) return;
-
-    final row = frame ~/ sheet.columns;
-    final start = row * sheet.columns;
-    final column = _frame - start;
-    final next = column + amount;
-    var advanced = next.floor() - column.floor();
-
-    if (!loop && next >= sheet.columns) {
-      advanced = sheet.columns - 1 - column.floor();
-      _finished = true;
-    }
-
-    var current = column.floor();
-
-    while (advanced-- > 0) {
-      current += 1;
-
-      if (current == sheet.columns) {
-        current = 0;
-        final frame = _frame = start;
-        onFrame.emit(frame);
-        onLoop.emit();
-      } else {
-        final frame = _frame = start + current;
-        onFrame.emit(frame);
-      }
-    }
-
-    if (_finished) {
-      _frame = start + sheet.columns - 1;
-      onFinish.emit();
-
-      if (cleanup) {
-        detach();
-      }
-    } else {
-      _frame = start + next % sheet.columns;
-    }
   }
 
   late Rect _dest;

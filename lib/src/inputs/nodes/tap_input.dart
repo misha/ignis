@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/input_node.dart';
-import 'package:ignis/src/signal.dart';
 
 /// A hit area that recognizes taps by delegating to a [MultiTapGestureRecognizer].
 class TapInput extends InputNode {
@@ -23,19 +23,23 @@ class TapInput extends InputNode {
     super.enabled,
     super.priority,
     super.children,
-  }) {
-    onMount(() {
-      _recognizer = .new()
-        ..onTapDown = _handleTapDown
-        ..onTapUp = _handleTapUp
-        ..onTap = _handleTap
-        ..onTapCancel = _handleTapCancel;
-    });
+  });
 
-    onUnmount(() {
-      _recognizer?.dispose();
+  @override
+  void build() {
+    super.build();
+    final recognizer = _recognizer = MultiTapGestureRecognizer()
+      ..onTapDown = _handleTapDown
+      ..onTapUp = _handleTapUp
+      ..onTap = _handleTap
+      ..onTapCancel = _handleTapCancel;
+
+    void dispose() {
+      recognizer.dispose();
       _recognizer = null;
-    });
+    }
+
+    trash << dispose;
   }
 
   @override

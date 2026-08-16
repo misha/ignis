@@ -23,12 +23,15 @@ class SpinEffect extends EffectNode implements SpeedOwner {
   }
 
   @override
-  void tick(double dt) {
-    target!.angle += speed * dt;
+  void build() {
+    super.build();
+    _target.resolve();
+
+    onUpdate((dt) {
+      target!.angle += speed * dt;
+    });
   }
 
   @override
-  void reset() {
-    // Nothing to do.
-  }
+  void reset() {}
 }

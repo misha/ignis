@@ -24,6 +24,11 @@ class TextNode extends SizedNode {
   @override
   Vector2 get size => _size;
 
+  String _text;
+  TextStyle _style;
+  TextAlign _textAlign;
+  TextDirection _textDirection;
+
   TextNode({
     String? text,
     TextStyle? style,
@@ -36,52 +41,57 @@ class TextNode extends SizedNode {
     super.enabled,
     super.priority,
     super.children,
-  }) {
-    onMount(() {
-      painter = .new(
-        text: TextSpan(text: text, style: style ?? DEFAULT_STYLE),
-        textAlign: textAlign ?? .start,
-        textDirection: textDirection ?? .ltr,
-      );
+  }) : _text = text ?? '',
+       _style = style ?? DEFAULT_STYLE,
+       _textAlign = textAlign ?? .start,
+       _textDirection = textDirection ?? .ltr;
 
-      // A remount builds a fresh painter, which has yet to be laid out.
-      _dirty = true;
-    });
+  @override
+  void build() {
+    super.build();
+    final painter = this.painter = TextPainter(
+      text: TextSpan(text: _text, style: _style),
+      textAlign: _textAlign,
+      textDirection: _textDirection,
+    );
 
-    onUnmount(() {
-      painter.dispose();
-    });
+    trash << painter.dispose;
+    _dirty = true;
   }
 
   /// The text to draw.
-  String get text => painter.plainText;
+  String get text => _text;
+
   set text(String text) {
-    if (this.text == text) return;
-    painter.text = TextSpan(text: text, style: style);
+    if (_text == text) return;
+    _text = text;
     _dirty = true;
   }
 
   /// The style used to draw the text.
-  TextStyle get style => painter.text?.style ?? DEFAULT_STYLE;
+  TextStyle get style => _style;
+
   set style(TextStyle style) {
-    if (this.style == style) return;
-    painter.text = TextSpan(text: text, style: style);
+    if (_style == style) return;
+    _style = style;
     _dirty = true;
   }
 
   /// How each line of text is aligned horizontally.
-  TextAlign get textAlign => painter.textAlign;
+  TextAlign get textAlign => _textAlign;
+
   set textAlign(TextAlign textAlign) {
-    if (this.textAlign == textAlign) return;
-    painter.textAlign = textAlign;
+    if (_textAlign == textAlign) return;
+    _textAlign = textAlign;
     _dirty = true;
   }
 
   /// The direction in which the text flows.
-  TextDirection get textDirection => painter.textDirection ?? .ltr;
+  TextDirection get textDirection => _textDirection;
+
   set textDirection(TextDirection textDirection) {
-    if (this.textDirection == textDirection) return;
-    painter.textDirection = textDirection;
+    if (_textDirection == textDirection) return;
+    _textDirection = textDirection;
     _dirty = true;
   }
 

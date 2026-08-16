@@ -35,6 +35,12 @@ abstract class RotateEffect extends ControlledEffect implements MeasurableEffect
   }) {
     _target = EffectTarget<AngleOwner>(this);
   }
+
+  @override
+  void build() {
+    super.build();
+    _target.resolve();
+  }
 }
 
 class _RotateByEffect extends RotateEffect {
@@ -45,7 +51,11 @@ class _RotateByEffect extends RotateEffect {
     required super.controller,
     super.cleanup,
     super.enabled,
-  }) : super._() {
+  }) : super._();
+
+  @override
+  void build() {
+    super.build();
     onProgress((progress) {
       target!.angle += _angle * (progress - previousProgress);
     });
@@ -65,10 +75,12 @@ class _RotateToEffect extends RotateEffect {
     super.cleanup,
     super.enabled,
   }) : _destination = angle,
-       super._() {
-    onMount(() {
-      _offset = _destination - target!.angle;
-    });
+       super._();
+
+  @override
+  void build() {
+    super.build();
+    _offset = _destination - target!.angle;
 
     onProgress((progress) {
       target!.angle += _offset * (progress - previousProgress);

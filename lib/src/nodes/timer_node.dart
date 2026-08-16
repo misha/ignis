@@ -1,5 +1,4 @@
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/signal.dart';
 
 /// A node that emits [onTrigger] every [interval] seconds.
 class TimerNode extends Node {
@@ -58,22 +57,25 @@ class TimerNode extends Node {
   }
 
   @override
-  void tick(double dt) {
-    if (_finished) return;
-    _elapsed += dt;
+  void build() {
+    super.build();
+    onUpdate((dt) {
+      if (_finished) return;
+      _elapsed += dt;
 
-    while (_elapsed >= interval) {
-      _elapsed -= interval;
-      onTrigger.emit();
-      if (repeat) continue;
+      while (_elapsed >= interval) {
+        _elapsed -= interval;
+        onTrigger.emit();
+        if (repeat) continue;
 
-      _triggers += 1;
-      if (_triggers < count) continue;
+        _triggers += 1;
+        if (_triggers < count) continue;
 
-      _finished = true;
-      _elapsed = 0;
-      if (cleanup) detach();
-      return;
-    }
+        _finished = true;
+        _elapsed = 0;
+        if (cleanup) detach();
+        return;
+      }
+    });
   }
 }

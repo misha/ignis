@@ -44,6 +44,7 @@ void main() {
     final sequence = SequentialEffect(effects: [first, second]);
     node.add(sequence);
 
+    scene.update(0);
     expect(sequence.children, [first]);
 
     scene.update(1);

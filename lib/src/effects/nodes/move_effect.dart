@@ -36,6 +36,12 @@ abstract class MoveEffect extends ControlledEffect implements MeasurableEffect {
   }) {
     _target = EffectTarget<PositionOwner>(this);
   }
+
+  @override
+  void build() {
+    super.build();
+    _target.resolve();
+  }
 }
 
 class _MoveByEffect extends MoveEffect {
@@ -47,7 +53,11 @@ class _MoveByEffect extends MoveEffect {
     super.cleanup,
     super.enabled,
   }) : _offset = offset.clone(),
-       super._() {
+       super._();
+
+  @override
+  void build() {
+    super.build();
     onProgress((progress) {
       target!.position.addScaled(_offset, progress - previousProgress);
     });
@@ -67,12 +77,14 @@ class _MoveToEffect extends MoveEffect {
     super.cleanup,
     super.enabled,
   }) : _destination = destination.clone(),
-       super._() {
-    onMount(() {
-      _offset
-        ..setFrom(_destination)
-        ..subtract(target!.position);
-    });
+       super._();
+
+  @override
+  void build() {
+    super.build();
+    _offset
+      ..setFrom(_destination)
+      ..subtract(target!.position);
 
     onProgress((progress) {
       target!.position.addScaled(_offset, progress - previousProgress);

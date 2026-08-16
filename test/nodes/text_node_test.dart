@@ -6,33 +6,56 @@ import '../support/colors.dart';
 import '../support/images.dart';
 
 void main() {
-  test('setting text writes through to the painter', () {
+  test('setting text reaches the painter on the next reflow', () {
     final node = TextNode(text: 'I');
     node.mount();
     node.text = 'Ignis';
+
+    expect(node.text, 'Ignis');
+    node.layout(.unbounded());
     expect(node.painter.plainText, 'Ignis');
   });
 
-  test('setting style writes through to the painter', () {
+  test('setting style reaches the painter on the next reflow', () {
     final node = TextNode(text: 'I');
     node.mount();
     const style = TextStyle(color: RED, fontSize: 30);
     node.style = style;
+
+    expect(node.style, style);
+    node.layout(.unbounded());
     expect(node.painter.text?.style, style);
   });
 
-  test('setting textAlign writes through to the painter', () {
+  test('setting textAlign reaches the painter on the next reflow', () {
     final node = TextNode(text: 'I');
     node.mount();
     node.textAlign = .center;
+
+    expect(node.textAlign, TextAlign.center);
+    node.layout(.unbounded());
     expect(node.painter.textAlign, TextAlign.center);
   });
 
-  test('setting textDirection writes through to the painter', () {
+  test('setting textDirection reaches the painter on the next reflow', () {
     final node = TextNode(text: 'I');
     node.mount();
     node.textDirection = .rtl;
+
+    expect(node.textDirection, TextDirection.rtl);
+    node.layout(.unbounded());
     expect(node.painter.textDirection, TextDirection.rtl);
+  });
+
+  test('a rebuild replaces the painter and keeps the text', () {
+    final node = TextNode(text: 'Ignis');
+    node.mount();
+    final first = node.painter;
+
+    node.rebuild();
+
+    expect(node.painter, isNot(same(first)));
+    expect(node.text, 'Ignis');
   });
 
   test('updates its layout when text changes', () {

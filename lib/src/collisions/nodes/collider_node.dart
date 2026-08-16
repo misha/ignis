@@ -2,11 +2,11 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/collisions/nodes/collision_detection_node.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/shape.dart';
-import 'package:ignis/src/signal.dart';
 
 /// A hitbox that reports overlaps against other colliders registered to the
 /// same [CollisionDetectionNode].
@@ -54,18 +54,21 @@ class ColliderNode extends SizedNode {
     super.priority,
     super.children,
   }) : layer = layer ?? -1,
-       mask = mask ?? -1 {
-    onMount(() {
-      cd = ancestors.whereType<CollisionDetectionNode>().firstOrNull;
-      cd?.register(this);
-    });
+       mask = mask ?? -1;
 
-    onUnmount(() {
+  @override
+  void build() {
+    super.build();
+    cd = ancestors.whereType<CollisionDetectionNode>().firstOrNull;
+    cd?.register(this);
+
+    void unregister() {
       cd?.unregister(this);
       cd = null;
       _active.clear();
-    });
+    }
 
+    trash << unregister;
     onCollisionStart(_active.add);
     onCollisionEnd(_active.remove);
   }

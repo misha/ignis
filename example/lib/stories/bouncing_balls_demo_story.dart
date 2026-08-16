@@ -49,13 +49,14 @@ class BouncingBallsDemoStory extends HookWidget {
     final balls$ = useState(0);
 
     final version = version$.value;
-    final node = useMemoized(() => _DemoNode(), [version]);
+    final scene = useMemoized(() => _DemoNode().mount(), [version]);
+    final node = scene.node;
     final paused = paused$.value;
     final debug = debug$.value;
     final fps = fps$.value;
     final balls = balls$.value;
 
-    useSignal1(node.fps.onUpdate, (value) => fps$.value = value);
+    useSignal1(node.fps.onFpsChange, (value) => fps$.value = value);
     useSignal1(node.onBalls, (value) => balls$.value = value);
 
     return SizedBox(
@@ -97,7 +98,7 @@ class BouncingBallsDemoStory extends HookWidget {
             AspectRatio(
               aspectRatio: 1,
               child: SceneWidget(
-                node.mount(),
+                scene,
                 paused: paused,
                 debug: debug,
               ),
@@ -115,10 +116,10 @@ class BouncingBallsDemoStory extends HookWidget {
 }
 
 class _DemoNode extends Node {
-  late final FpsNode fps;
-  late final CollisionDetectionNode cd;
-  late final _BoxNode box;
-  late final TimerNode spawner;
+  late FpsNode fps;
+  late CollisionDetectionNode cd;
+  late _BoxNode box;
+  late TimerNode spawner;
 
   /// The number of balls in the demo.
   int balls = 0;
@@ -126,7 +127,10 @@ class _DemoNode extends Node {
   /// Emitted with the new ball count whenever a ball spawns.
   final onBalls = Signal1<int>();
 
-  _DemoNode() {
+  @override
+  void build() {
+    super.build();
+
     addAll([
       fps = FpsNode(),
       cd = CollisionDetectionNode(
@@ -139,6 +143,8 @@ class _DemoNode extends Node {
         repeat: true,
       ),
     ]);
+
+    balls = 0;
 
     spawner.onTrigger(() {
       final angle = _RNG.nextDouble() * 2 * pi;
@@ -170,7 +176,12 @@ class _BoxNode extends ShapeNode {
           ..style = .stroke
           ..strokeWidth = _WALL_THICKNESS
           ..color = _WALL_COLOR,
-      ) {
+      );
+
+  @override
+  void build() {
+    super.build();
+
     addAll([
       _WallNode(
         axis: .y,
@@ -221,42 +232,48 @@ class _BallNode extends ShapeNode {
          shape: .circle(_BALL_RADIUS),
          anchor: .center,
          paint: Paint()..color = _BALL_COLOR,
-       ) {
-    add(
-      ColliderNode(
-          shape: shape,
-          anchor: anchor,
-          layer: _BALL_LAYER,
-          mask: _WALL_LAYER | _BALL_LAYER,
-        )
-        ..onCollisionStart((other) {
-          switch (other) {
-            case _WallNode(:final axis):
-              switch (axis) {
-                case .x:
-                  velocity.x *= -1;
-
-                case .y:
-                  velocity.y *= -1;
-              }
-
-            case ColliderNode(parent: _BallNode()):
-              collisions += 1;
-              paint.color = _COLLIDING_BALL_COLOR;
-          }
-        })
-        ..onCollisionEnd((other) {
-          switch (other) {
-            case ColliderNode(parent: _BallNode()):
-              collisions -= 1;
-              if (collisions <= 0) paint.color = _BALL_COLOR;
-          }
-        }),
-    );
-  }
+       );
 
   @override
-  void tick(double dt) {
-    position.addScaled(velocity, dt);
+  void build() {
+    super.build();
+
+    final collider = add(
+      ColliderNode(
+        shape: shape,
+        anchor: anchor,
+        layer: _BALL_LAYER,
+        mask: _WALL_LAYER | _BALL_LAYER,
+      ),
+    );
+
+    collider
+      ..onCollisionStart((other) {
+        switch (other) {
+          case _WallNode(:final axis):
+            switch (axis) {
+              case .x:
+                velocity.x *= -1;
+
+              case .y:
+                velocity.y *= -1;
+            }
+
+          case ColliderNode(parent: _BallNode()):
+            collisions += 1;
+            paint.color = _COLLIDING_BALL_COLOR;
+        }
+      })
+      ..onCollisionEnd((other) {
+        switch (other) {
+          case ColliderNode(parent: _BallNode()):
+            collisions -= 1;
+            if (collisions <= 0) paint.color = _BALL_COLOR;
+        }
+      });
+
+    onUpdate((dt) {
+      position.addScaled(velocity, dt);
+    });
   }
 }

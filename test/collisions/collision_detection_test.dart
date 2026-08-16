@@ -188,8 +188,9 @@ void main() {
 
   group('active / isColliding', () {
     test('adds the other collider to active while overlapping', () {
-      final a = ColliderNode(shape: .square(10));
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      // Mounted, because tracking `active` is declared in build.
+      final a = ColliderNode(shape: .square(10))..mount();
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0))..mount();
 
       arena
         ..add(a)

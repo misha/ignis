@@ -73,11 +73,13 @@ abstract class LayoutNode extends SizedNode {
   @visibleForOverriding
   Vector2 constrain(LayoutConstraints constraints);
 
-  @nonVirtual
   @override
-  void tick(double dt) {
-    if (!isLayoutRoot) return;
-    layout(_rootConstraints());
+  void build() {
+    super.build();
+    onUpdate((_) {
+      if (!isLayoutRoot) return;
+      layout(_rootConstraints());
+    });
   }
 
   /// A layout root is given the scene loosely, not tightly, so a node that

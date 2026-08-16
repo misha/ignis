@@ -6,7 +6,6 @@ import 'package:ignis/src/flutter/scene_render_box.dart';
 import 'package:ignis/src/inputs/nodes/hover_input.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/input_node.dart';
-import 'package:ignis/src/signal.dart';
 
 /// Resolves raw pointer events against a [Scene]'s tree and hands off to
 /// whichever [InputNode]s claim them, per [InputNode.behavior].
@@ -51,8 +50,8 @@ class InputRouter {
 
     _hovered[pointer] = _Hover(
       node: target,
-      // Arm an unwatch in case the node is unmounted mid-hover.
-      unwatch: target.onUnmount(() => _exit(pointer, hover)),
+      // Arm a cleanup in case the node is unmounted mid-hover.
+      cleanup: target.onUnmount(() => _exit(pointer, hover)),
     );
 
     if (target is HoverInput) target.onHoverEnter.emit(hover);
@@ -62,7 +61,7 @@ class InputRouter {
   void _exit(int pointer, HoverEvent event) {
     final hovered = _hovered.remove(pointer);
     if (hovered == null) return;
-    hovered.unwatch();
+    hovered.cleanup();
     final node = hovered.node;
     if (node is HoverInput && node.isMounted) node.onHoverExit.emit(event);
   }
@@ -96,10 +95,10 @@ class InputRouter {
 /// A pointer's current hover, and the subscription arming its exit on unmount.
 final class _Hover {
   final InputNode node;
-  final Unwatch unwatch;
+  final Cleanup cleanup;
 
   const _Hover({
     required this.node,
-    required this.unwatch,
+    required this.cleanup,
   });
 }

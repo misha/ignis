@@ -6,7 +6,7 @@ import 'package:ignis/ignis.dart';
 import 'runner.dart';
 
 /// Steady-state [Signal1.emit] cost against a pool of watchers, with
-/// occasional watch/unwatch churn mixed in.
+/// occasional subscription churn mixed in.
 class SignalEmissionsBenchmark extends AsyncBenchmarkBase {
   final int seed;
   final int watchers;
@@ -15,7 +15,7 @@ class SignalEmissionsBenchmark extends AsyncBenchmarkBase {
   final Random random;
 
   late final Signal1<int> _signal;
-  late final List<Unwatch> _unwatches;
+  late final List<Cleanup> _cleanups;
   int _sum = 0;
 
   SignalEmissionsBenchmark({
@@ -26,21 +26,21 @@ class SignalEmissionsBenchmark extends AsyncBenchmarkBase {
   }) : random = Random(seed),
        super('Signal Emissions');
 
-  Unwatch _watch() => _signal((a) => _sum += a);
+  Cleanup _watch() => _signal((a) => _sum += a);
 
   @override
   Future<void> setup() async {
     _signal = Signal1<int>();
-    _unwatches = List.generate(watchers, (_) => _watch());
+    _cleanups = List.generate(watchers, (_) => _watch());
   }
 
   @override
   Future<void> run() async {
     for (var i = 0; i < emissions; i += 1) {
       for (var c = 0; c < churnPerEmission; c += 1) {
-        final index = random.nextInt(_unwatches.length);
-        _unwatches[index]();
-        _unwatches[index] = _watch();
+        final index = random.nextInt(_cleanups.length);
+        _cleanups[index]();
+        _cleanups[index] = _watch();
       }
 
       _signal.emit(i);

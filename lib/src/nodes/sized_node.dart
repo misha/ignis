@@ -86,9 +86,7 @@ abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwne
 
   /// Draws this node's visuals, in a coordinate space where (0, 0) is
   /// [width]/[height]'s [anchor]-adjusted top-left corner.
-  void renderAnchored(Canvas canvas) {
-    // Nothing to do.
-  }
+  void renderAnchored(Canvas canvas) {}
 
   @override
   void debugRenderTransformed(Canvas canvas) {
@@ -102,14 +100,10 @@ abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwne
 
   /// Draws this node's debug visuals, in the same coordinate space as
   /// [renderAnchored].
-  void debugRenderAnchored(Canvas canvas) {
-    // Nothing to do.
-  }
+  void debugRenderAnchored(Canvas canvas) {}
 
   /// A plain [SizedNode] can't lay itself out, so its [size] stands whatever
   /// [constraints] say.
   @override
-  void layout(LayoutConstraints constraints) {
-    // Nothing to do.
-  }
+  void layout(LayoutConstraints constraints) {}
 }

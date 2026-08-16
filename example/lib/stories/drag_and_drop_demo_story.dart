@@ -43,7 +43,8 @@ class DragAndDropDemoStory extends HookWidget {
     final version = version$.value;
     final debug = debug$.value;
     final status = status$.value;
-    final node = useMemoized(() => _DemoNode(), [version]);
+    final scene = useMemoized(() => _DemoNode().mount(), [version]);
+    final node = scene.node;
     useSignal1(node.onStatus, (value) => status$.value = value);
 
     return SizedBox(
@@ -76,7 +77,7 @@ class DragAndDropDemoStory extends HookWidget {
             SizedBox(
               width: _BOARD_SIZE,
               height: _BOARD_SIZE,
-              child: SceneWidget(node.mount(), debug: debug),
+              child: SceneWidget(scene, debug: debug),
             ),
             Text('q=${debug ? 'debug off' : 'debug on'} | r=restart'),
           ],
@@ -89,7 +90,9 @@ class DragAndDropDemoStory extends HookWidget {
 class _DemoNode extends Node {
   final onStatus = Signal1<String>();
 
-  _DemoNode() {
+  @override
+  void build() {
+    super.build();
     late final _PieceNode piece;
 
     addAll([
@@ -134,7 +137,12 @@ class _DropZoneNode extends ShapeNode {
          shape: .square(_ZONE_SIZE),
          anchor: .center,
          paint: Paint()..color = _ZONE_COLOR,
-       ) {
+       );
+
+  @override
+  void build() {
+    super.build();
+
     add(
       ColliderNode(
         shape: shape,
@@ -167,27 +175,32 @@ class _PieceNode extends ShapeNode {
          shape: .square(_PIECE_SIZE),
          anchor: .center,
          paint: Paint()..color = _PIECE_COLOR,
-       ) {
-    late final DragInput drags;
-    late final ColliderNode collider;
+       );
 
-    addAll([
-      drags = DragInput(
+  @override
+  void build() {
+    super.build();
+
+    final drags = add(
+      DragInput(
         shape: .square(shape.width + _PIECE_HIT_PADDING * 2),
         anchor: anchor,
       ),
-      collider = ColliderNode(
-        shape: shape,
-        anchor: anchor,
-        layer: _PIECE_LAYER,
-        mask: _ZONE_LAYER,
-      ),
-    ]);
+    );
 
     drags
       ..onDragUpdate((event) => position.add(event.delta))
       ..onDragEnd((_) => drop())
       ..onDragCancel(drop);
+
+    final collider = add(
+      ColliderNode(
+        shape: shape,
+        anchor: anchor,
+        layer: _PIECE_LAYER,
+        mask: _ZONE_LAYER,
+      ),
+    );
 
     collider
       ..onCollisionStart((other) {

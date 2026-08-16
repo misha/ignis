@@ -11,8 +11,9 @@ void main() {
 
     cd
       ..register(a)
-      ..register(b)
-      ..tick(0);
+      ..register(b);
+
+    cd.mount().update(0);
 
     expect(aStarted, [b]);
   });

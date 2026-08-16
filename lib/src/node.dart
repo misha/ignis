@@ -5,8 +5,13 @@ part of 'core.dart';
 /// **Overview**
 ///
 /// Nodes are organized in an acyclic, directed tree with children ordered by
-/// [priority]. A node is usually initialized once in its constructor, after
-/// which it may be added and removed to other nodes repeatedly.
+/// [priority].
+///
+/// TODO: Write these docs.
+///
+/// **Building**
+///
+/// TODO: Write these docs.
 ///
 /// **Signals**
 ///
@@ -28,8 +33,8 @@ part of 'core.dart';
 /// **Tree**
 ///
 /// Before being mounted, the [add], [remove], and [priority] tree operations
-/// take effect immediately, allowing constructors to freely assemble a subtree
-/// long before it goes live.
+/// take effect immediately, allowing a subtree to be freely assembled long
+/// before it goes live.
 ///
 /// Once mounted, however, the same calls are instead merely enqueued. The
 /// scene applies pending changes right before the next [update]. As a result,
@@ -47,13 +52,16 @@ part of 'core.dart';
 /// **Reassembly**
 ///
 /// When the world changes out from under a live tree, the scene walks it
-/// emitting [reassemble]. Unlike [update] and [render], the walk ignores the
-/// [enabled] flag, so even disabled nodes will be notified.
+/// calling [reassemble]. Unlike [update] and [render], the walk ignores the
+/// [enabled] flag, so even disabled nodes are asked.
 ///
-/// Currently, [reassemble] is called in two, distinct situations:
+/// Currently, the walk runs in two, distinct situations:
 ///
 ///   - Whenever the `SceneWidget` reassembles in the Flutter tree.
 ///   - Whenever [Ignis.cache] changes, such as via the local asset bundle.
+///
+/// Each node answers for itself, and the default answer is nothing, so a save
+/// leaves a running game exactly as it was.
 class Node {
   /// Creates a new node.
   ///
@@ -73,17 +81,17 @@ class Node {
     addAll(children);
   }
 
-  /// Updates this node by [dt] seconds.
-  @visibleForOverriding
-  void tick(double dt) {
-    // Nothing to do.
-  }
-
   /// Updates this node and its children by [dt] seconds.
   @nonVirtual
   void update(double dt) {
     if (!_enabled) return;
-    tick(dt);
+    final updates = _updates;
+
+    if (updates != null) {
+      for (var i = 0; i < updates.length; i += 1) {
+        updates[i](dt);
+      }
+    }
 
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
@@ -107,17 +115,39 @@ class Node {
     }
   }
 
-  /// Reassembles this node and its children.
+  /// TODO: Review these docs.
+  /// What this node does when the tree is reassembled.
   ///
-  /// Override to re-resolve anything this node captured from outside itself,
-  /// such as an asset it pulled out of the cache.
-  void reassemble() {
+  /// Nothing, by default: a hot reload leaves a running scene alone. Override
+  /// it to answer for this node, either refreshing whatever the change
+  /// touched:
+  ///
+  /// ```dart
+  /// @override
+  /// void reassemble() => _resolve();
+  /// ```
+  ///
+  /// or [rebuild]ing outright, which re-runs [build] and so picks up every
+  /// edit made to it:
+  ///
+  /// ```dart
+  /// @override
+  /// void reassemble() => rebuild();
+  /// ```
+  @visibleForOverriding
+  void reassemble() {}
+
+  /// Asks this node and its children what to do about a reassembly, top down.
+  void _reassemble() {
+    reassemble();
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
-      // TODO: Guard this?
-      child.reassemble();
+      // A rebuild above queued this one's removal, so it is already gone. Its
+      // replacement built against the current code and is not in this list.
+      if (child._pendingRemoval) continue;
+      child._reassemble();
     }
   }
 
@@ -142,6 +172,148 @@ class Node {
       child._resize(size);
     }
   }
+
+  // #region Building
+
+  /// The node whose [build] is currently running, or null between builds.
+  ///
+  /// How a [Signal] subscribed inside a [build] finds the node that owns it.
+  static Node? _builder;
+
+  /// Declares this node's children and behavior.
+  ///
+  /// Runs once on mount, and again on every [rebuild].
+  ///
+  /// `super.build()` is required, as skipping it drops whatever the superclass
+  /// declared.
+  @mustCallSuper
+  @visibleForOverriding
+  void build() {}
+
+  /// Re-derives this node by running [build] again over the wreckage of the
+  /// last one.
+  ///
+  /// Everything the previous [build] made is thrown away:
+  ///
+  ///   - All children it [add]ed are removed.
+  ///   - All [onUpdate] closures are removed.
+  ///   - Its [trash] is processed and cleared.
+  ///
+  /// Then, the body runs again from the top, so constructor arguments are
+  /// re-evaluated exactly like a statement is. What survives is this node
+  /// itself: its members, its position, and anything added to it imperatively.
+  ///
+  /// Call this inside [reassemble] when your node knows how to reboot itself
+  /// directly from its instance members to witness *true* live reload.
+  @nonVirtual
+  void rebuild() {
+    _discardDeclared();
+
+    // Dropped rather than cleared, so a rebuild from inside an [onUpdate]
+    // leaves the list that call is being iterated from intact. Its remaining
+    // closures run out the frame; the new build installs its own for the next.
+    _updates = null;
+    _emptyTrash();
+    final builder = _builder;
+    _builder = this;
+
+    try {
+      build();
+      final scene = _scene;
+
+      if (scene != null && scene.hasSize) {
+        onSceneResize.emit(scene.size);
+      }
+    } catch (exception, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: exception,
+          stack: stack,
+          library: 'ignis',
+          context: ErrorDescription('while building $runtimeType'),
+        ),
+      );
+    } finally {
+      _builder = builder;
+    }
+  }
+
+  /// The children this node's [build] added, in declaration order.
+  ///
+  /// Separate from [children], which also holds whatever was added imperatively.
+  List<Node>? _declared;
+
+  /// Detaches every child the last [build] declared.
+  void _discardDeclared() {
+    final declared = _declared;
+    if (declared == null || declared.isEmpty) return;
+
+    for (var i = declared.length - 1; i >= 0; i -= 1) {
+      declared[i].detach();
+    }
+
+    declared.clear();
+  }
+
+  // #endregion
+
+  // #region Updates
+
+  List<void Function(double dt)>? _updates;
+
+  /// Calls [update] with the elapsed seconds on every frame.
+  ///
+  /// ```dart
+  /// onUpdate((dt) {
+  ///   shape.angle += pi / 4 * dt;
+  /// });
+  /// ```
+  @nonVirtual
+  void onUpdate(void Function(double dt) update) {
+    (_updates ??= []).add(update);
+  }
+
+  // #endregion
+
+  // #region Trash
+
+  List<Cleanup>? _trash;
+
+  /// Whatever this [build] has to release when it stops being current.
+  ///
+  /// Emptied right before every rebuild and once at unmount, so each build
+  /// cleans up after the one it replaced:
+  ///
+  /// ```dart
+  /// painter = TextPainter(text: span);
+  /// trash << painter.dispose;
+  /// ```
+  @nonVirtual
+  Trash get trash => Trash(this);
+
+  /// Runs every deferred cleanup, most recently thrown in first.
+  void _emptyTrash() {
+    final cleanups = _trash;
+    if (cleanups == null || cleanups.isEmpty) return;
+    _trash = null;
+
+    for (var i = cleanups.length - 1; i >= 0; i -= 1) {
+      try {
+        cleanups[i]();
+      } catch (exception, stack) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: exception,
+            stack: stack,
+            library: 'ignis',
+            context: ErrorDescription('while emptying the trash'),
+          ),
+        );
+      }
+    }
+  }
+
+  // #endregion
 
   // #region Enabled
 
@@ -192,14 +364,13 @@ class Node {
 
   // #region Signals
 
-  /// Emitted when this node is added to a [Scene].
+  /// Emitted when this node is added to a scene.
   final onMount = Signal0();
 
-  /// Emitted when this node is removed from a [Scene].
+  /// Emitted when this node is removed from a scene.
   final onUnmount = Signal0();
 
-  /// Emitted when the scene resizes, and once at mount if the scene already
-  /// has a size, so every node hears the current size.
+  /// Emitted when the scene resizes, and once at mount.
   final onSceneResize = Signal1<Vector2>();
 
   // #endregion
@@ -304,8 +475,8 @@ class Node {
   void _mount(Scene scene) {
     // TODO: Assert null _scene?
     _scene = scene;
+    rebuild();
     onMount.emit();
-    if (scene.hasSize) onSceneResize.emit(scene.size);
     final children = _egg?.nodes;
 
     if (children != null && children.isNotEmpty) {
@@ -326,6 +497,9 @@ class Node {
     }
 
     onUnmount.emit();
+    _emptyTrash();
+    _updates = null;
+    _declared = null;
     _scene = null;
     _dependencies = null;
   }
@@ -338,7 +512,13 @@ class Node {
   ///
   /// Nodes cannot be added to themselves or their descendants. Adding a child
   /// to its current parent is a no-op.
+  ///
+  /// Called from this node's own [build], the child is additionally recorded
+  /// as declared, so the next rebuild destroys it before running the body
+  /// again. The node handed in is always the node handed back.
   T add<T extends Node>(T node) {
+    if (identical(_builder, this)) (_declared ??= []).add(node);
+
     if (owns(node)) {
       return node;
     }

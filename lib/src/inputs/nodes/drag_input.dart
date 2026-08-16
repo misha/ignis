@@ -1,8 +1,8 @@
 import 'package:flutter/gestures.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/input_node.dart';
-import 'package:ignis/src/signal.dart';
 
 /// A hit area that recognizes drags by delegating to an [ImmediateMultiDragGestureRecognizer].
 class DragInput extends InputNode {
@@ -47,20 +47,23 @@ class DragInput extends InputNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : endOnCancel = endOnCancel ?? false {
-    onMount(() {
-      _recognizer = .new()..onStart = _handleStart;
-    });
+  }) : endOnCancel = endOnCancel ?? false;
 
-    onUnmount(() {
-      _drag?.cancel();
-      _recognizer?.dispose();
-      _recognizer = null;
-    });
-
+  @override
+  void build() {
+    super.build();
     onDragStart((_) => _dragging = true);
     onDragEnd((_) => _dragging = false);
     onDragCancel(() => _dragging = false);
+    final recognizer = _recognizer = ImmediateMultiDragGestureRecognizer()..onStart = _handleStart;
+
+    void dispose() {
+      _drag?.cancel();
+      recognizer.dispose();
+      _recognizer = null;
+    }
+
+    trash << dispose;
   }
 
   @override

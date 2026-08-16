@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/input_node.dart';
-import 'package:ignis/src/signal.dart';
 
 /// A hit area that recognizes mouse hover.
 class HoverInput extends InputNode {
@@ -26,7 +26,11 @@ class HoverInput extends InputNode {
     super.enabled,
     super.priority,
     super.children,
-  }) {
+  });
+
+  @override
+  void build() {
+    super.build();
     onHoverEnter((_) => _hovering = true);
     onHoverExit((_) => _hovering = false);
   }

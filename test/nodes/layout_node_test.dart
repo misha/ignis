@@ -4,12 +4,6 @@ import 'package:ignis/ignis.dart';
 import '../support/test_layout_node.dart';
 
 void main() {
-  test('lays out against unbounded constraints when unmounted', () {
-    final node = TestLayoutNode();
-    node.tick(0);
-    expect(node.layouts, [LayoutConstraints.unbounded()]);
-  });
-
   test('lays out against unbounded constraints when mounted but not yet resized', () {
     final node = TestLayoutNode();
     final scene = node.mount();

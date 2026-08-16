@@ -14,7 +14,7 @@ void main() {
   test('listeners added during emission run on the next emission', () {
     for (final signal in _signals()) {
       final seen = <Object?>[];
-      late Unwatch bootstrap;
+      late Cleanup bootstrap;
 
       bootstrap = signal.watch(() {
         bootstrap();
@@ -34,14 +34,14 @@ void main() {
       final seen1 = <Object?>[];
       final seen2 = <Object?>[];
 
-      late Unwatch unwatch1;
-      late Unwatch unwatch2;
+      late Cleanup cleanup1;
+      late Cleanup cleanup2;
 
-      unwatch1 = watch(signal, seen1, () => unwatch2());
-      unwatch2 = watch(signal, seen2);
+      cleanup1 = watch(signal, seen1, () => cleanup2());
+      cleanup2 = watch(signal, seen2);
 
       emit(signal, 1);
-      unwatch1();
+      cleanup1();
       emit(signal, 2);
 
       expect(seen1, [emission(signal, 1)]);
@@ -76,9 +76,9 @@ void main() {
   test('listeners can disconnect', () {
     for (final signal in _signals()) {
       final seen = <Object?>[];
-      final unwatch = watch(signal, seen);
+      final cleanup = watch(signal, seen);
       emit(signal, 1);
-      unwatch();
+      cleanup();
       emit(signal, 2);
 
       expect(seen, [emission(signal, 1)]);
@@ -119,7 +119,7 @@ List<Signal> _signals() {
   ];
 }
 
-Unwatch watch(Signal signal, List<Object?> sink, [void Function()? then]) {
+Cleanup watch(Signal signal, List<Object?> sink, [void Function()? then]) {
   switch (signal) {
     case Signal0():
       return signal(() {

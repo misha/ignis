@@ -62,13 +62,14 @@ class SnakeGameStory extends HookWidget {
     final status$ = useState('');
 
     final game = game$.value;
-    final node = useMemoized(() => _GameNode(game), [game]);
+    final scene = useMemoized(() => _GameNode(game).mount(), [game]);
+    final node = scene.node;
     final paused = paused$.value;
     final debug = debug$.value;
     final fps = fps$.value;
     final status = status$.value;
 
-    useSignal1(node.fps.onUpdate, (value) {
+    useSignal1(node.fps.onFpsChange, (value) {
       fps$.value = value;
     });
 
@@ -141,7 +142,7 @@ class SnakeGameStory extends HookWidget {
             AspectRatio(
               aspectRatio: 1,
               child: SceneWidget(
-                node.mount(),
+                scene,
                 paused: paused,
                 debug: debug,
               ),
@@ -163,10 +164,15 @@ class SnakeGameStory extends HookWidget {
 class _GameNode extends Node {
   final SnakeGame game;
 
-  late final CollisionDetectionNode board;
-  late final FpsNode fps;
+  late CollisionDetectionNode board;
+  late FpsNode fps;
 
-  _GameNode(this.game) {
+  _GameNode(this.game);
+
+  @override
+  void build() {
+    super.build();
+
     addAll([
       board = CollisionDetectionNode(
         children: [
@@ -203,11 +209,10 @@ class _GameNode extends Node {
         default:
       }
     });
-  }
 
-  @override
-  void tick(double dt) {
-    game.update(dt);
+    onUpdate((dt) {
+      game.update(dt);
+    });
   }
 }
 
@@ -218,7 +223,12 @@ class _WallNode extends ShapeNode {
   }) : super(
          anchor: .center,
          paint: Paint()..color = _WALL_COLOR,
-       ) {
+       );
+
+  @override
+  void build() {
+    super.build();
+
     add(
       ColliderNode(
         shape: shape,
@@ -242,30 +252,36 @@ class _SegmentNode extends ShapeNode {
         shape: .circle(_SNAKE_SIZE / 2),
         anchor: .center,
         position: .copy(segment.tile.position),
-      ) {
+      );
+
+  @override
+  void build() {
+    super.build();
     paint.color = isHead ? _SNAKE_HEAD_COLOR : _SNAKE_COLOR;
 
-    add(
+    final collider = add(
       ColliderNode(
         shape: shape,
         anchor: .center,
         layer: _SNAKE_LAYER,
         mask: _SNAKE_LAYER | _FOOD_LAYER | _WALL_LAYER,
-      )..onCollisionStart((other) {
-        switch (other.parent) {
-          case _SegmentNode(:final index):
-            // Don't collide adjacent nodes, as they can touch while turning.
-            if ((this.index - index).abs() <= 1) break;
-            game.collide();
-
-          case _FoodNode(:final food):
-            game.eat(food);
-
-          case _WallNode():
-            game.collide();
-        }
-      }),
+      ),
     );
+
+    collider.onCollisionStart((other) {
+      switch (other.parent) {
+        case _SegmentNode(:final index):
+          // Don't collide adjacent nodes, as they can touch while turning.
+          if ((this.index - index).abs() <= 1) break;
+          game.collide();
+
+        case _FoodNode(:final food):
+          game.eat(food);
+
+        case _WallNode():
+          game.collide();
+      }
+    });
 
     game.onEvent((event) {
       switch (event) {
@@ -304,7 +320,12 @@ class _FoodNode extends ShapeNode {
         anchor: .center,
         position: .copy(food.tile.position),
         paint: Paint()..color = _FOOD_COLOR,
-      ) {
+      );
+
+  @override
+  void build() {
+    super.build();
+
     add(
       ColliderNode(
         shape: shape,

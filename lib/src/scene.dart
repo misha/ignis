@@ -38,7 +38,7 @@ class Scene<T extends Node> {
     _reassembling = true;
 
     try {
-      node.reassemble();
+      node._reassemble();
     } finally {
       _reassembling = false;
     }

@@ -1,5 +1,4 @@
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/signal.dart';
 
 /// A [Node] with a concept of being finished. Also called `effect`.
 ///
@@ -21,9 +20,13 @@ abstract class EffectNode extends Node {
     super.enabled,
     super.priority,
     super.children,
-  }) : cleanup = cleanup ?? false {
+  }) : cleanup = cleanup ?? false;
+
+  @override
+  void build() {
+    super.build();
     onFinish(() {
-      if (this.cleanup) detach();
+      if (cleanup) detach();
     });
   }
 }

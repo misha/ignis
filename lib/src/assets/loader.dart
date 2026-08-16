@@ -67,9 +67,7 @@ abstract class Loader {
 
 class NoopLoader extends Loader {
   @override
-  void load(LoadingContext context) {
-    // Nothing to do.
-  }
+  void load(LoadingContext context) {}
 }
 
 class JsonLoader extends Loader {

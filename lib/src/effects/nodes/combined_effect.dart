@@ -15,7 +15,11 @@ class CombinedEffect extends EffectNode {
     super.priority,
   }) : assert(effects.isNotEmpty, 'At least 1 effect is required.'),
        _remaining = effects.length,
-       super(children: effects) {
+       super(children: effects);
+
+  @override
+  void build() {
+    super.build();
     for (final effect in effects) {
       effect.onFinish(_track);
     }

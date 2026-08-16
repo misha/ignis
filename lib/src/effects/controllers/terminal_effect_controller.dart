@@ -6,9 +6,7 @@ class TerminalEffectController extends EffectController {
   const TerminalEffectController() : super.empty();
 
   @override
-  void attach(ControlledEffect effect) {
-    // Nothing to do.
-  }
+  void attach(ControlledEffect effect) {}
 
   @override
   double? get duration => 0;
@@ -29,12 +27,8 @@ class TerminalEffectController extends EffectController {
   double recede(double dt) => dt;
 
   @override
-  void setToStart() {
-    // Nothing to do.
-  }
+  void setToStart() {}
 
   @override
-  void setToEnd() {
-    // Nothing to do.
-  }
+  void setToEnd() {}
 }

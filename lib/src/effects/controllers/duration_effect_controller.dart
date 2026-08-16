@@ -20,9 +20,7 @@ class DurationEffectController extends EffectController {
       super.empty();
 
   @override
-  void attach(ControlledEffect effect) {
-    // Nothing to do.
-  }
+  void attach(ControlledEffect effect) {}
 
   @override
   bool get hasStarted => true;

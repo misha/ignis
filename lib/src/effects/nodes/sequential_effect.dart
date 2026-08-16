@@ -13,7 +13,11 @@ class SequentialEffect extends EffectNode {
     super.cleanup,
     super.enabled,
     super.priority,
-  }) : assert(effects.isNotEmpty, 'At least 1 effect is required.') {
+  }) : assert(effects.isNotEmpty, 'At least 1 effect is required.');
+
+  @override
+  void build() {
+    super.build();
     for (var i = 0; i < effects.length; i += 1) {
       effects[i].onFinish(() => _track(i));
     }

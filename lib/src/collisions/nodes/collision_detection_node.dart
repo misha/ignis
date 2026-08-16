@@ -16,8 +16,11 @@ class CollisionDetectionNode extends Node {
   }) : _arena = arena ?? CollisionDetection();
 
   @override
-  void tick(double dt) {
-    _arena.process();
+  void build() {
+    super.build();
+    onUpdate((_) {
+      _arena.process();
+    });
   }
 
   void register(ColliderNode collider) {

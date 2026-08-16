@@ -164,13 +164,13 @@ By convention, signals are prefixed with `on` so subscriptions read naturally in
 final onCollision = Signal1<ColliderNode>();
 
 // Call a signal with a function argument to watch it.
-final unwatch = onCollision((other) => print('Hit $other!'));
+final cleanup = onCollision((other) => print('Hit $other!'));
 
 // Sends a type-safe message to all watchers.
 onCollision.emit(someCollider);
 
 // Stop watching the signal.
-unwatch();
+cleanup();
 ```
 
 Although nodes are driven by signals, `Signal` is a standalone utility class and may be used anywhere. Notably, signals can easily be used to implement communication between your Flutter app and your Ignis game. Here's an example integration using [`flutter_hooks`](https://pub.dev/packages/flutter_hooks).
@@ -178,13 +178,9 @@ Although nodes are driven by signals, `Signal` is a standalone utility class and
 ```dart
 /// Calls [handle] whenever [signal] is emitted.
 void useSignal0(Signal0 signal, void Function() handle) {
-  useEffect(() {
-    return signal(handle);
-  }, [signal, handle]);
+  useEffect(() => signal(handle), [signal, handle]);
 }
 ```
-
-> :warning: When using signals in nodes, prefer to listen to signals that belong to your children. By doing so, the signals will not leak when the node goes out of use. However, when watching global signals or signals belonging to parent and sibling nodes, remember to `unwatch` them or the signal will leak a reference to the watching node. In practice, `unwatch` is almost never required.
 
 ### Concept: Time
 

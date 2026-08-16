@@ -36,6 +36,12 @@ abstract class AnchorEffect extends ControlledEffect {
   }) {
     _target = EffectTarget<AnchorOwner>(this);
   }
+
+  @override
+  void build() {
+    super.build();
+    _target.resolve();
+  }
 }
 
 class _AnchorByEffect extends AnchorEffect {
@@ -47,7 +53,11 @@ class _AnchorByEffect extends AnchorEffect {
     super.cleanup,
     super.enabled,
   }) : _offset = offset.clone(),
-       super._() {
+       super._();
+
+  @override
+  void build() {
+    super.build();
     onProgress((progress) {
       final delta = _offset.scaled(progress - previousProgress);
       final next = target!.anchor + delta;
@@ -66,12 +76,14 @@ class _AnchorToEffect extends AnchorEffect {
     super.cleanup,
     super.enabled,
   }) : _destination = destination.clone(),
-       super._() {
-    onMount(() {
-      _offset
-        ..setFrom(_destination)
-        ..subtract(target!.anchor);
-    });
+       super._();
+
+  @override
+  void build() {
+    super.build();
+    _offset
+      ..setFrom(_destination)
+      ..subtract(target!.anchor);
 
     onProgress((progress) {
       final delta = _offset.scaled(progress - previousProgress);

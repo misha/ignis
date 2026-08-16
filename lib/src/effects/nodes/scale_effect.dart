@@ -36,6 +36,12 @@ abstract class ScaleEffect extends ControlledEffect implements MeasurableEffect 
   }) {
     _target = EffectTarget<ScaleOwner>(this);
   }
+
+  @override
+  void build() {
+    super.build();
+    _target.resolve();
+  }
 }
 
 class _ScaleByEffect extends ScaleEffect {
@@ -47,7 +53,11 @@ class _ScaleByEffect extends ScaleEffect {
     super.cleanup,
     super.enabled,
   }) : _offset = offset.clone(),
-       super._() {
+       super._();
+
+  @override
+  void build() {
+    super.build();
     onProgress((progress) {
       target!.scale.addScaled(_offset, progress - previousProgress);
     });
@@ -67,12 +77,14 @@ class _ScaleToEffect extends ScaleEffect {
     super.cleanup,
     super.enabled,
   }) : _destination = destination.clone(),
-       super._() {
-    onMount(() {
-      _offset
-        ..setFrom(_destination)
-        ..subtract(target!.scale);
-    });
+       super._();
+
+  @override
+  void build() {
+    super.build();
+    _offset
+      ..setFrom(_destination)
+      ..subtract(target!.scale);
 
     onProgress((progress) {
       target!.scale.addScaled(_offset, progress - previousProgress);

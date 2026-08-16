@@ -35,23 +35,28 @@ class FollowEffect extends EffectNode {
   }
 
   @override
-  void tick(double dt) {
-    final position = target!.position;
-    final offset = destination - position;
-    final distance = offset.length;
-    final step = speed * dt;
+  void build() {
+    super.build();
+    _target.resolve();
 
-    if (distance <= step) {
-      position.setFrom(destination);
+    onUpdate((dt) {
+      final position = target!.position;
+      final offset = destination - position;
+      final distance = offset.length;
+      final step = speed * dt;
 
-      if (!_arrived) {
-        _arrived = true;
-        onFinish.emit();
+      if (distance <= step) {
+        position.setFrom(destination);
+
+        if (!_arrived) {
+          _arrived = true;
+          onFinish.emit();
+        }
+      } else {
+        position.addScaled(offset, step / distance);
+        _arrived = false;
       }
-    } else {
-      position.addScaled(offset, step / distance);
-      _arrived = false;
-    }
+    });
   }
 
   @override

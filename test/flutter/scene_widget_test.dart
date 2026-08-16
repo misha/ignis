@@ -206,13 +206,13 @@ void main() {
       ),
     );
 
-    expect(scene.node.reassembles, 0);
+    expect(scene.node.builds, 1, reason: 'the build on mount');
 
     Ignis.cache.add('hero.png', 1);
-    expect(scene.node.reassembles, 1);
+    expect(scene.node.builds, 2);
 
     Ignis.cache.evict('hero.png');
-    expect(scene.node.reassembles, 2);
+    expect(scene.node.builds, 3);
   });
 
   testWidgets('stops reassembling once removed from the tree', (tester) async {
@@ -229,7 +229,7 @@ void main() {
     await tester.pumpWidget(const SizedBox.square(dimension: 100));
 
     Ignis.cache.add('hero.png', 1);
-    expect(scene.node.reassembles, 0);
+    expect(scene.node.builds, 1, reason: 'the build on mount, and nothing since');
   });
 
   testWidgets('reassembles the scene on hot reload', (tester) async {
@@ -246,7 +246,7 @@ void main() {
     unawaited(tester.binding.reassembleApplication());
     await tester.pump();
 
-    expect(scene.node.reassembles, 1);
+    expect(scene.node.builds, 2);
   });
 
   testWidgets('paints against the given background color', (tester) async {

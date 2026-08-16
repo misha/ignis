@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
-import 'package:ignis/src/signal.dart';
 
 /// An effect driven by an [EffectController].
 class ControlledEffect extends EffectNode {
@@ -78,46 +78,49 @@ class ControlledEffect extends EffectNode {
   }
 
   @override
-  void tick(double dt) {
-    if (_forward) {
-      controller.advance(dt);
-    } else {
-      controller.recede(dt);
-    }
+  void build() {
+    super.build();
+    onUpdate((dt) {
+      if (_forward) {
+        controller.advance(dt);
+      } else {
+        controller.recede(dt);
+      }
 
-    if (!controller.hasStarted) {
-      _started = false;
-      return;
-    }
+      if (!controller.hasStarted) {
+        _started = false;
+        return;
+      }
 
-    if (!_started) {
-      _started = true;
-      onStart.emit();
-    }
+      if (!_started) {
+        _started = true;
+        onStart.emit();
+      }
 
-    final progress = controller.progress;
+      final progress = controller.progress;
 
-    if (progress == 1 && _previousProgress != 1) {
-      onMax.emit();
-    }
+      if (progress == 1 && _previousProgress != 1) {
+        onMax.emit();
+      }
 
-    if (progress == 0 && _previousProgress != 0) {
-      onMin.emit();
-    }
+      if (progress == 0 && _previousProgress != 0) {
+        onMin.emit();
+      }
 
-    onProgress.emit(progress);
-    _previousProgress = progress;
+      onProgress.emit(progress);
+      _previousProgress = progress;
 
-    if (!controller.isFinished) {
-      _finished = false;
-      return;
-    }
+      if (!controller.isFinished) {
+        _finished = false;
+        return;
+      }
 
-    if (_finished) {
-      return;
-    }
+      if (_finished) {
+        return;
+      }
 
-    _finished = true;
-    onFinish.emit();
+      _finished = true;
+      onFinish.emit();
+    });
   }
 }

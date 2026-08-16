@@ -173,9 +173,7 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
   }
 
   /// Draws this node's visuals, in a coordinate space where (0, 0) is [position].
-  void renderTransformed(Canvas canvas) {
-    // Nothing to do.
-  }
+  void renderTransformed(Canvas canvas) {}
 
   @override
   void debugRender(Canvas canvas) {
