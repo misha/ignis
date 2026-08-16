@@ -25,7 +25,7 @@ sealed class Signal {
     final builder = Node._builder;
     if (builder == null) return watch();
 
-    builder.fuse(_EffectHook(watch));
+    builder.on(_EffectHook(watch));
     return _noop;
   }
 

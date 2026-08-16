@@ -128,7 +128,7 @@ void main() {
     late Node child;
 
     node.buildAction = () {
-      child = node.onChild(Node.new);
+      child = node.child(Node.new);
       node.onUpdate((_) => log.add(edited ? 'new' : 'old'));
     };
 
@@ -151,7 +151,7 @@ void main() {
     log.clear();
     scene.update(0);
 
-    expect(child, same(first), reason: 'onChild survives the reload');
+    expect(child, same(first), reason: 'child survives the reload');
     expect(log, ['new'], reason: 'the tick closure around it does not');
   });
 

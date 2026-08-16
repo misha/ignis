@@ -333,10 +333,10 @@ class Node {
   List<HookState<Object?, Hook<Object?>>>? _hooks;
   List<void Function(double)>? _updates;
 
-  /// The slot [fuse] is about to fill, or -1 while no pass is running.
+  /// The slot [on] is about to fill, or -1 while no pass is running.
   int _cursor = -1;
 
-  /// Why the pass currently running was started. Only ever read by [use], and
+  /// Why the pass currently running was started. Only ever read by [on], and
   /// only to decide whether a change in hook shape is legitimate.
   static BuildCause? _cause;
 
@@ -367,7 +367,7 @@ class Node {
   /// This is the primitive every `on*` hook is built out of; reach for it
   /// directly only when writing a [Hook] of your own.
   @nonVirtual
-  R fuse<R>(Hook<R> hook) {
+  R on<R>(Hook<R> hook) {
     if (_cursor < 0) {
       throw StateError('Hooks are only available inside Node.build.');
     }
@@ -512,7 +512,7 @@ class Node {
     Cleanup? Function() effect, [
     List<Object?>? keys,
   ]) {
-    fuse(_EffectHook(effect, keys: keys));
+    on(_EffectHook(effect, keys: keys));
   }
 
   /// Calls [update] with the elapsed seconds on every frame, for as long as
@@ -524,16 +524,16 @@ class Node {
   /// reads at the site it is declared.
   ///
   /// ```dart
-  /// onUpdate((dt) => shape.angle += _SPIN * dt);
+  /// onUpdate((dt) => shape.angle += pi / 4 * dt);
   /// ```
   @nonVirtual
-  void onUpdate(void Function(double dt) update) => fuse(_UpdateHook(update));
+  void onUpdate(void Function(double dt) update) => on(_UpdateHook(update));
 
   /// Builds a child with [create], adds it, and returns the same one on every
   /// later pass.
   ///
   /// ```dart
-  /// final shape = onChild(() => ShapeNode(shape: .square(100)));
+  /// final shape = child(() => ShapeNode(shape: .square(100)));
   /// ```
   ///
   /// The child is built once and kept, so its constructor arguments are state
@@ -544,11 +544,11 @@ class Node {
   /// declared it stops doing so. Like every tree operation on a mounted node,
   /// both are enqueued rather than immediate.
   @nonVirtual
-  T onChild<T extends Node>(
+  T child<T extends Node>(
     T Function() create, [
     List<Object?> keys = const [],
   ]) {
-    return fuse(_ChildHook<T>(create, keys: keys));
+    return on(_ChildHook<T>(create, keys: keys));
   }
 
   // #endregion

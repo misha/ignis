@@ -54,7 +54,7 @@ void main() {
     test('hooks are unavailable outside a pass', () {
       final node = _Node((_) {});
 
-      expect(() => node.onChild(Node.new), throwsStateError);
+      expect(() => node.child(Node.new), throwsStateError);
     });
   });
 
@@ -152,7 +152,7 @@ void main() {
       String? value;
       final node = _Node((node) => node.onEffect(() => null, const []));
       final scene = node.mount();
-      node.builder = (node) => value = node.onChild(Node.new).toString();
+      node.builder = (node) => value = node.child(Node.new).toString();
 
       final reported = _reported(() => scene.reassemble(.reload));
 
@@ -163,7 +163,7 @@ void main() {
     test('an asset refresh may not, since code cannot have changed', () {
       final node = _Node((node) => node.onEffect(() => null, const []));
       final scene = node.mount();
-      node.builder = (node) => node.onChild(Node.new);
+      node.builder = (node) => node.child(Node.new);
 
       final reported = _reported(() => scene.reassemble(.assets));
 
@@ -231,9 +231,9 @@ void main() {
     });
   });
 
-  group('onChild', () {
+  group('child', () {
     test('adds its child, enqueued like any other mounted tree operation', () {
-      final node = _Node((node) => node.onChild(Node.new));
+      final node = _Node((node) => node.child(Node.new));
       final scene = node.mount();
       expect(node.children, isEmpty);
 
@@ -244,7 +244,7 @@ void main() {
     });
 
     test('keeps the same child across a reassembly', () {
-      final node = _Node((node) => node.onChild(Node.new));
+      final node = _Node((node) => node.child(Node.new));
       final scene = node.mount()..update(0);
       final child = node.children.single;
 
@@ -255,7 +255,7 @@ void main() {
 
     test('replaces its child when its keys change', () {
       var key = 'a';
-      final node = _Node((node) => node.onChild(Node.new, [key]));
+      final node = _Node((node) => node.child(Node.new, [key]));
       final scene = node.mount()..update(0);
       final child = node.children.single;
 
@@ -268,7 +268,7 @@ void main() {
     });
 
     test('removes its child at unmount', () {
-      final node = _Node((node) => node.onChild(Node.new));
+      final node = _Node((node) => node.child(Node.new));
       final scene = node.mount()..update(0);
       final child = node.children.single;
 

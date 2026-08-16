@@ -49,7 +49,7 @@ class GameNode extends Node {
     // Construction is state, so a reload preserves it. Keying on _SIZE opts
     // back out: editing it builds a new square, and the old one's angle with
     // it. Nothing else about this constructor reloads.
-    final square = onChild(
+    final square = child(
       () => ShapeNode(
         shape: .square(_SIZE),
         anchor: .center,
@@ -72,7 +72,7 @@ class GameNode extends Node {
     });
 
     // Delete this block and save: the dot detaches and its tick stops.
-    final dot = onChild(
+    final dot = child(
       () => ShapeNode(
         shape: .circle(10),
         anchor: .center,
