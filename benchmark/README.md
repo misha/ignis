@@ -20,9 +20,9 @@ Measured with `flutter test` on 2026/08/16, average of 3 or more runs.
 
 | Benchmark      | Runtime     |
 |----------------|-------------|
-| Update         | 20553.39 us |
-| Update Count   | 22735.98 us |
-| Update Count 2 | 21717.44 us |
+| Update         | 19821.51 us |
+| Update Count   | 47065.32 us |
+| Update Count 2 | 59245.41 us |
 
 System details:
 
