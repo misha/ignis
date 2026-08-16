@@ -1,17 +1,37 @@
-/// Call to stop watching.
-typedef Unwatch = void Function();
+part of 'core.dart';
 
 /// A named, type-safe message emitter.
 ///
 /// A subscription outlives the statement that made it and freezes the handler
 /// it was given, so it both leaks and goes stale unless something owns it.
-/// Nodes hand that ownership to `onSignal0` through `onSignal3` inside
-/// their `build`, but widgets must do it themselves, e.g. with `flutter_hooks`.
+///
+/// Subscribing during a [Node.build] pass hands that ownership to the pass:
+/// the call inserts itself into the building node as a hook, so the handler
+/// is resubscribed fresh by every pass and torn down with the node. The
+/// returned [Cleanup] is a no-op there, and the usual hook rules apply:
+/// subscribe unconditionally, in the same order every pass.
+///
+/// Everywhere else the caller owns the subscription: keep the [Cleanup] and
+/// call it, e.g. from `flutter_hooks`.
 sealed class Signal {
   const Signal();
 
   /// Subscribes to this signal, ignoring data.
-  Unwatch watch(void Function() watcher);
+  Cleanup watch(void Function() watcher);
+
+  /// Runs [watch] now, or fuses it into the building node when a [Node.build]
+  /// pass is active, so the pass owns the subscription.
+  Cleanup _register(Cleanup Function() watch) {
+    final builder = Node._builder;
+    if (builder == null) return watch();
+
+    builder.fuse(_EffectHook(watch));
+    return _noop;
+  }
+
+  static void _noop() {
+    // Nothing to do.
+  }
 }
 
 /// A primitive that sends messages to watchers.
@@ -31,14 +51,18 @@ class Signal0 extends Signal {
   int _depth = 0;
   bool _dirty = false;
 
-  /// Subscribes to this signal, receiving data.
-  Unwatch call(void Function() watcher) {
+  /// Subscribes to this signal.
+  Cleanup call(void Function() watcher) {
+    return _register(() => _watch(watcher));
+  }
+
+  Cleanup _watch(void Function() watcher) {
     (_watchers ??= []).add(watcher);
     return () => _remove(watcher);
   }
 
   @override
-  Unwatch watch(void Function() watcher) {
+  Cleanup watch(void Function() watcher) {
     return call(watcher);
   }
 
@@ -90,13 +114,17 @@ class Signal1<A> extends Signal {
   bool _dirty = false;
 
   /// Subscribes to this signal.
-  Unwatch call(void Function(A) watcher) {
+  Cleanup call(void Function(A) watcher) {
+    return _register(() => _watch(watcher));
+  }
+
+  Cleanup _watch(void Function(A) watcher) {
     (_watchers ??= []).add(watcher);
     return () => _remove(watcher);
   }
 
   @override
-  Unwatch watch(void Function() watcher) {
+  Cleanup watch(void Function() watcher) {
     return call((A _) => watcher());
   }
 
@@ -148,13 +176,17 @@ class Signal2<A, B> extends Signal {
   bool _dirty = false;
 
   /// Subscribes to this signal.
-  Unwatch call(void Function(A, B) watcher) {
+  Cleanup call(void Function(A, B) watcher) {
+    return _register(() => _watch(watcher));
+  }
+
+  Cleanup _watch(void Function(A, B) watcher) {
     (_watchers ??= []).add(watcher);
     return () => _remove(watcher);
   }
 
   @override
-  Unwatch watch(void Function() watcher) {
+  Cleanup watch(void Function() watcher) {
     return call((A _, B _) => watcher());
   }
 
@@ -206,13 +238,17 @@ class Signal3<A, B, C> extends Signal {
   bool _dirty = false;
 
   /// Subscribes to this signal.
-  Unwatch call(void Function(A, B, C) watcher) {
+  Cleanup call(void Function(A, B, C) watcher) {
+    return _register(() => _watch(watcher));
+  }
+
+  Cleanup _watch(void Function(A, B, C) watcher) {
     (_watchers ??= []).add(watcher);
     return () => _remove(watcher);
   }
 
   @override
-  Unwatch watch(void Function() watcher) {
+  Cleanup watch(void Function() watcher) {
     return call((A _, B _, C _) => watcher());
   }
 

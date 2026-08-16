@@ -340,6 +340,11 @@ class Node {
   /// only to decide whether a change in hook shape is legitimate.
   static BuildCause? _cause;
 
+  /// The node whose [build] pass is currently running, or null between passes.
+  ///
+  /// How a [Signal] subscribed mid-pass finds the node to insert itself into.
+  static Node? _builder;
+
   /// Declares this node's state and behavior.
   ///
   /// Runs once on mount and again on every [reassemble], so anything declared
@@ -423,7 +428,9 @@ class Node {
   void _rebuild(BuildCause cause) {
     _updates?.clear();
     final previous = _cause;
+    final builder = _builder;
     _cause = cause;
+    _builder = this;
     _cursor = 0;
 
     try {
@@ -441,6 +448,7 @@ class Node {
       _disposeFrom(_cursor);
       _cursor = -1;
       _cause = previous;
+      _builder = builder;
     }
   }
 
@@ -541,34 +549,6 @@ class Node {
     List<Object?> keys = const [],
   ]) {
     return fuse(_ChildHook<T>(create, keys: keys));
-  }
-
-  /// Calls [handler] whenever [signal] is emitted.
-  ///
-  /// The only way a node subscribes to anything, and deliberately so: the
-  /// handler is unsubscribed and resubscribed by every pass, so it cannot
-  /// outlive this node and cannot keep running code you already edited.
-  @nonVirtual
-  void onSignal0(Signal0 signal, void Function() handler) {
-    onEffect(() => signal(handler));
-  }
-
-  /// Calls [handler] whenever [signal] is emitted. See [onSignal0].
-  @nonVirtual
-  void onSignal1<A>(Signal1<A> signal, void Function(A) handler) {
-    onEffect(() => signal(handler));
-  }
-
-  /// Calls [handler] whenever [signal] is emitted. See [onSignal0].
-  @nonVirtual
-  void onSignal2<A, B>(Signal2<A, B> signal, void Function(A, B) handler) {
-    onEffect(() => signal(handler));
-  }
-
-  /// Calls [handler] whenever [signal] is emitted. See [onSignal0].
-  @nonVirtual
-  void onSignal3<A, B, C>(Signal3<A, B, C> signal, void Function(A, B, C) handler) {
-    onEffect(() => signal(handler));
   }
 
   // #endregion

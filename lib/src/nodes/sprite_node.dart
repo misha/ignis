@@ -1,10 +1,10 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/painted_node.dart';
-import 'package:ignis/src/signal.dart';
 import 'package:ignis/src/spritesheet.dart';
 
 class SpriteNode extends PaintedNode {

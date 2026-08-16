@@ -1,6 +1,6 @@
 part of 'core.dart';
 
-/// Call to undo whatever a hook set up.
+/// Call to undo whatever was set up.
 typedef Cleanup = void Function();
 
 /// Why a [Node.build] pass is running.

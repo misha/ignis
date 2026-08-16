@@ -63,7 +63,7 @@ class GameNode extends Node {
       return null;
     });
 
-    onSignal1(scene.onResize, (size) {
+    scene.onResize((size) {
       square.position.setFrom(size / 2);
     });
 

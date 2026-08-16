@@ -278,11 +278,11 @@ void main() {
     });
   });
 
-  group('onSignal', () {
-    test('subscribes for the life of the node', () {
+  group('signals', () {
+    test('a subscription made in build lives and dies with the node', () {
       final signal = Signal0();
       var emissions = 0;
-      final node = _Node((node) => node.onSignal0(signal, () => emissions += 1));
+      final node = _Node((_) => signal(() => emissions += 1));
       final scene = node.mount();
 
       signal.emit();
@@ -297,8 +297,8 @@ void main() {
       final log = <String>[];
       var edited = false;
 
-      final node = _Node((node) {
-        node.onSignal1(signal, (value) => log.add('${edited ? 'new' : 'old'} $value'));
+      final node = _Node((_) {
+        signal((value) => log.add('${edited ? 'new' : 'old'} $value'));
       });
 
       final scene = node.mount();
@@ -308,6 +308,18 @@ void main() {
       signal.emit(2);
 
       expect(log, ['old 1', 'new 2']);
+    });
+
+    test('outside a pass, the caller owns the subscription', () {
+      final signal = Signal0();
+      var emissions = 0;
+      final unwatch = signal(() => emissions += 1);
+
+      signal.emit();
+      unwatch();
+      signal.emit();
+
+      expect(emissions, 1);
     });
   });
 }
