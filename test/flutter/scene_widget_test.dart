@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
@@ -61,6 +63,60 @@ void main() {
     expect(scene.node.mounts, 1);
     expect(scene.node.updates, 1);
     expect(scene.node.elapsed, 0);
+  });
+
+  testWidgets('reassembles the scene when the cache changes', (tester) async {
+    addTearDown(Ignis.cache.clear);
+    final scene = TestNode().mount();
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(scene),
+      ),
+    );
+
+    expect(scene.node.reassembles, 0);
+
+    Ignis.cache.add('hero.png', 1);
+    expect(scene.node.reassembles, 1);
+
+    Ignis.cache.evict('hero.png');
+    expect(scene.node.reassembles, 2);
+  });
+
+  testWidgets('stops reassembling once removed from the tree', (tester) async {
+    addTearDown(Ignis.cache.clear);
+    final scene = TestNode().mount();
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(scene),
+      ),
+    );
+
+    await tester.pumpWidget(const SizedBox.square(dimension: 100));
+
+    Ignis.cache.add('hero.png', 1);
+    expect(scene.node.reassembles, 0);
+  });
+
+  testWidgets('reassembles the scene on hot reload', (tester) async {
+    final scene = TestNode().mount();
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(scene),
+      ),
+    );
+
+    // Never awaited directly: it locks events until the tree is pumped.
+    unawaited(tester.binding.reassembleApplication());
+    await tester.pump();
+
+    expect(scene.node.reassembles, 1);
   });
 
   testWidgets('paints against the given background color', (tester) async {

@@ -10,6 +10,7 @@ class Scene<T extends Node> {
   final _tree = _Tree();
   bool _mounted = true;
   bool _sized = false;
+  bool _reassembling = false;
 
   Vector2 _size = .zero;
 
@@ -31,6 +32,17 @@ class Scene<T extends Node> {
   void update(double dt) {
     _tree.flush();
     node.update(dt);
+  }
+
+  void reassemble() {
+    if (_reassembling) return;
+    _reassembling = true;
+
+    try {
+      node.reassemble();
+    } finally {
+      _reassembling = false;
+    }
   }
 
   /// Renders this scene to [canvas].

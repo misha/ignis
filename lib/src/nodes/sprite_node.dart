@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/painted_node.dart';
@@ -95,7 +94,7 @@ class SpriteNode extends PaintedNode {
       throw ArgumentError.value(sheet, 'sheet', 'Only $sheets sheets available.');
     }
 
-    final selected = _refresh(sheet);
+    final selected = _sheets[sheet];
 
     if (row < 0) {
       throw ArgumentError.value(row, 'row', 'Cannot be negative.');
@@ -126,20 +125,24 @@ class SpriteNode extends PaintedNode {
     _finished = false;
   }
 
-  /// Re-resolves the sheet at [index] against the cache, so a live asset
-  /// change is picked up on the next frame.
-  Spritesheet _refresh(int index) {
-    final sheet = _sheets[index];
-    final current = sheet.current;
-    if (identical(current, sheet)) return sheet;
-    _sheets[index] = current;
-    if (index == _sheet && _frame >= current.frames) _frame = 0;
-    return current;
+  /// Re-resolves every sheet, so a replaced asset is picked up even on a sheet
+  /// this sprite is not currently [play]ing.
+  @override
+  void reassemble() {
+    for (var index = 0; index < _sheets.length; index += 1) {
+      final sheet = _sheets[index];
+      final current = sheet.current;
+      if (identical(current, sheet)) continue;
+      _sheets[index] = current;
+    }
+
+    /// Clamp the current frame if the replacement is shorter.
+    if (_frame >= sheet.frames) _frame = 0;
+    super.reassemble();
   }
 
   @override
   void tick(double dt) {
-    if (kDebugMode) _refresh(_sheet);
     if (_finished) return;
     final amount = fps * dt;
     if (amount <= 0 || !amount.isFinite) return;

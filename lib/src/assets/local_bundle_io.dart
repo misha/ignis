@@ -10,17 +10,20 @@ import 'package:path/path.dart' as p;
 /// Serves assets straight off the developer's disk, and pushes changes back
 /// through [Ignis.preload] so the cache follows along.
 ///
+/// Local, as in the app and the project source must share a filesystem: the
+/// machine hosting the project, and nowhere else.
+///
 /// Install it over [Ignis.bundle], then [start] it:
 ///
 /// ```dart
-/// final live = LiveAssetBundle();
-/// Ignis.bundle = live;
-/// await live.start();
+/// final local = LocalAssetBundle();
+/// Ignis.bundle = local;
+/// await local.start();
 /// ```
 ///
-/// Outside [kDebugMode] this is inert: [start] does nothing and every load
-/// delegates to [rootBundle], so it is safe to install unconditionally.
-class LiveAssetBundle extends CachingAssetBundle {
+/// Outside [kDebugMode], this is inert. [start] does nothing and every load
+/// delegates to [rootBundle], making it is safe to install unconditionally.
+class LocalAssetBundle extends CachingAssetBundle {
   /// The project directory asset keys are resolved against.
   final String root;
 
@@ -37,20 +40,20 @@ class LiveAssetBundle extends CachingAssetBundle {
   /// given asset is or is not reloading.
   Iterable<String> get watching => _watcher.watching;
 
-  /// Creates a live bundle rooted at [root], defaulting to the working
+  /// Creates a local bundle rooted at [root], defaulting to the working
   /// directory of the running process.
-  factory LiveAssetBundle({
+  factory LocalAssetBundle({
     String? root,
   }) {
     final directory = root ?? Directory.current.path;
 
-    return LiveAssetBundle._(
+    return LocalAssetBundle._(
       directory,
       .new(pubspecPath: p.join(directory, 'pubspec.yaml')),
     );
   }
 
-  LiveAssetBundle._(this.root, this._watcher);
+  LocalAssetBundle._(this.root, this._watcher);
 
   /// Starts watching for asset changes, returning whether it succeeded.
   ///

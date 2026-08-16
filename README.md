@@ -38,7 +38,7 @@
 - [Collision Detection](#collision-detection)
 - [Inputs](#inputs)
 - [Assets](#assets)
-- [Live Assets](#live-assets)
+- [Live Reload](#live-reload)
 - [Globals](#globals)
 - [Dependency Injection](#dependency-injection)
 - [Motivation](#motivation)
@@ -54,7 +54,7 @@
 - **Embedded in Flutter.** Any node can be rendered in the widget tree via `SceneWidget`. Ignis runs wherever Flutter runs (I think).
 - **Flutter's layout, on nodes.** `RowNode`, `ColumnNode`, and `BoxNode` behave like the widgets you already know.
 - **Asset preloading.** `Preload` concurrently loads assets with `Loader`s for images, data, or custom resource types.
-- **Live assets.** When developing on the host machine, `LiveAssetBundle` instantly reloads assets into running scenes, no hot reload necessary.
+- **Live assets.** When developing on the host machine, `LocalAssetBundle` instantly reloads assets into the global cache.
 
 ## Quick Start
 
@@ -97,6 +97,8 @@ void main() {
 A node is set up just once, in its constructor. Node constructors can wire up children, subscribe to signals, retrieve cached assets - there are no restrictions.
 
 Nodes can override `tick(dt)` to run per-frame logic and `render(canvas)` to use the canvas. These are called in separate passes, once per frame, by the game loop.
+
+A third pass, `reassemble()`, runs only when the world changes out from under the tree: on hot reload or whenever `Ignis.cache` changes. Override it to re-resolve anything the node captured from outside itself. See [Live Reload](#live-reload).
 
 Node comes with two signals, `onMount` and `onUnmount`, which are emitted when that instance enters and exits a scene. Other nodes expose additional signals based on their specific purpose.
 
@@ -638,25 +640,61 @@ await Preload.run(
 
 > :warning: A `PreloadRequest` is a `ChangeNotifier`, so `dispose` it once you are done with it. `Preload.run` is the exception: it owns the whole lifetime, and disposes the request for you.
 
-## Live Assets
+## Live Reload
 
-If you develop locally, Ignis provides a `LiveAssetBundle` to instantly update assets in live scenes during development.
+A running scene captures things from outside itself: assets pulled out of the cache, values read at construction. When one of those changes while the game is running, the scene has to be told. That's `reassemble()`.
 
-For example, you can save an image in your art program and the running scene will pick it up on the next frame, no hot reload involved. The bundle works by detecting updated paths and pushing them to `Ignis.preload`, reusing the exact same asset pipeline as your production code.
+`SceneWidget` walks its scene from the root, calling `reassemble()` on every node. Unlike `tick` and `render`, the walk ignores `enabled`, so a disabled node never sits on something stale until the moment it comes back.
 
-`LiveAssetBundle` is optional and opt-in. Install it as `Ignis.bundle` when your application starts:
+Two things trigger the walk:
+
+| Trigger        | Source                                                                |
+|----------------|-----------------------------------------------------------------------|
+| Hot reload     | Flutter reassembles `SceneWidget` in the widget tree.                 |
+| A cache change | `Ignis.cache` is a `ChangeNotifier`, and `SceneWidget` listens to it. |
+
+Override `reassemble()` on any node to re-read whatever it captured.
+
+```dart
+class LevelNode extends Node {
+  static const PATH = 'assets/levels/level1.json';
+
+  Map level = Ignis.cache.retrieve(PATH);
+
+  @override
+  void reassemble() {
+    level = Ignis.cache.retrieve(PATH);
+    // Reset the level, etc.
+    super.reassemble();
+  }
+}
+```
+
+Some Ignis nodes implement `reassemble` by default. The table below enumerates their behavior.
+
+| Node         | Reassembles                                                  |
+|--------------|--------------------------------------------------------------|
+| `SpriteNode` | Every `Spritesheet` it holds, re-cut from the current image. |
+
+### Local Asset Bundle
+
+If you develop locally, Ignis provides a `LocalAssetBundle` to update assets in live scenes during development.
+
+It works by watching the asset manifest and pushing changes to `Ignis.preload`, reusing the exact same asset pipeline as your production code. The resulting cache change drives the `reassemble()` walk described above.
+
+`LocalAssetBundle` is opt-in. Install it as `Ignis.bundle` when your application starts:
 
 ```dart
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Live reloading feeds changed assets back through `Ignis.preload`,
+  // The bundle feeds changed assets back through `Ignis.preload`,
   // so the loaders have to be registered there.
   Ignis.preload.register(Loader.image()..extensions(['png']));
 
-  final live = LiveAssetBundle();
-  Ignis.bundle = live;
-  await live.start(); // Make sure to start it!
+  final local = LocalAssetBundle();
+  Ignis.bundle = local;
+  await local.start(); // Make sure to start it!
   
   // Preload as usual.
   await Ignis.preload.load(manifest: true);
@@ -665,19 +703,17 @@ void main() async {
 }
 ```
 
-`LiveAssetBundle` reads the pubspec's `assets` manifest to decide what to watch, exactly how Flutter builds your bundle. Changes are served from the project directory rather than the compiled bundle, so a simple file save is sufficient to trigger an update.
-
-Invalidation follows dependencies. Replacing an image evicts every `Spritesheet` cut from it, and any `SpriteNode` drawing that sheet re-resolves on its next frame, resizing itself if the new art has different dimensions.
+`LocalAssetBundle` reads the pubspec's `assets` manifest to decide what to watch, exactly how Flutter builds your bundle. Changes are served from the project directory rather than the compiled bundle, so a simple file save is sufficient to trigger an update. Additionally, this *completely* bypasses the usual Flutter restriction preventing the access of completely new assets and directories to an active application.
 
 By default the project root is the running process's working directory. Point it elsewhere when that isn't your project:
 
 ```dart
-final live = LiveAssetBundle(root: '/path/to/project');
+final local = LocalAssetBundle(root: '/path/to/project');
 ```
 
-`LiveAssetBundle` only works when `kDebugMode` is enabled, so shipping it is harmless. In release and web builds, every asset load goes safely through to the base bundle.
+`LocalAssetBundle` only functions when `kDebugMode` is enabled, so shipping it is harmless. In release and web builds, every asset load goes safely through to the base bundle.
 
-> :warning: **Live assets only work on the machine hosting the project.** The bundle reads files straight off disk with `dart:io`, so it needs the running app and the project source to share a filesystem. That means desktop and the local simulator only.
+> :warning: **Live assets only work on the machine hosting the project.** The bundle reads files straight off disk with `dart:io`. The running app and the project source **must** share a filesystem. That means desktop and the local simulator only.
 
 ## Globals
 
@@ -685,13 +721,15 @@ The `Ignis` namespace holds the global `AssetBundle`, `Cache`, and `Preload`. Mo
 
 Every preload reads from `Ignis.bundle` into `Ignis.cache`. Similarly, `Spritesheet` retrieves from `Ignis.cache`.
 
+`Cache` is a `ChangeNotifier`, and every mutation notifies exactly once. That is how [Live Reload](#live-reload) works, and you can listen to it yourself for anything outside the scene that holds onto what it retrieved.
+
 ```dart
 // The following spritesheets are equivalent:
 final sheet1 = Spritesheet.asset('assets/ship.png');
 final sheet2 = Spritesheet(Ignis.cache.retrieve('assets/ship.png'));
 ```
 
-> :warning: `Ignis.cache`, `Ignis.bundle`, and `Ignis.preload` are mutable static members, not constants. Swap them out for tests or when running multiple, isolated games in one application.
+> :warning: `Ignis.cache`, `Ignis.bundle`, and `Ignis.preload` are mutable static members, not constants. Swap them out for tests or when running multiple, isolated games in one application. Installing a `Cache` or a `Preload` automatically disposes the previous one.
 
 ## Dependency Injection
 

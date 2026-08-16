@@ -108,6 +108,38 @@ void main() {
     expect(log.renders, ['A', 'C', 'B', 'D']);
   });
 
+  test('reassembles children in priority order', () {
+    final log = TestLog();
+    final a = TestNode('A', log);
+    final b = TestNode('B', log);
+    final c = TestNode('C', log);
+    final d = TestNode('D', log);
+    b.priority = 1;
+    c.priority = -1;
+    a.add(b);
+    a.add(c);
+    b.add(d);
+    a.mount();
+
+    a.reassemble();
+    expect(log.reassembles, ['A', 'C', 'B', 'D']);
+  });
+
+  test('reassembles disabled nodes, unlike update and render', () {
+    final a = TestNode('A');
+    final b = TestNode('B');
+    final c = TestNode('C');
+    a.add(b);
+    b.add(c);
+    a.mount();
+    b.enabled = false;
+
+    a.reassemble();
+
+    expect(b.reassembles, 1);
+    expect(c.reassembles, 1, reason: 'the walk stopped at a disabled node');
+  });
+
   test('a disabled root skips update and render for itself and its subtree', () {
     final a = TestNode('A');
     final b = TestNode('B');

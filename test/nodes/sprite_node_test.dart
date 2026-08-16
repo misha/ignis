@@ -90,6 +90,29 @@ void main() {
     expect(await pixelAt(image, 0, 0), WHITE);
   });
 
+  test('reassemble re-resolves every sheet, not just the active one', () async {
+    addTearDown(Ignis.cache.clear);
+
+    Ignis.cache
+      ..add('first.png', await solidImage(8, 4, RED))
+      ..add('second.png', await solidImage(6, 6, BLUE));
+
+    final node = SpriteNode.split(
+      sheets: [
+        Spritesheet.asset('first.png', size: .all(4)),
+        Spritesheet.asset('second.png', size: .all(2)),
+      ],
+    );
+
+    // Twice as wide, on the sheet the sprite is not playing.
+    Ignis.cache.add('second.png', await solidImage(12, 6, BLUE));
+
+    node.reassemble();
+    node.play(sheet: 1);
+
+    expect(node.sheet.columns, 6);
+  });
+
   test('split asserts at least one sheet', () {
     expect(() => SpriteNode.split(sheets: []), throwsAssertionError);
   });

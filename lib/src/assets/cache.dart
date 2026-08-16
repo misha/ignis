@@ -1,10 +1,15 @@
+import 'package:flutter/foundation.dart';
+
 /// Storage for arbitrary assets.
 ///
 /// A key may be *derived* from another, as in `hero.png#32,32` for a
 /// spritesheet cut out of `hero.png`. Replacing the value at a key evicts
 /// everything derived from it, so live asset changes invalidate the entries
 /// built on top of them.
-class Cache {
+///
+/// Every mutation notifies listeners exactly once, so consumers holding on to
+/// what they retrieved can re-resolve it.
+class Cache extends ChangeNotifier {
   /// Separates a base key from the parameters of a key derived from it.
   static const String separator = '#';
 
@@ -20,7 +25,8 @@ class Cache {
   void add<T>(String key, T value) {
     final replaced = contains(key);
     _entries[key] = value;
-    if (replaced) evictDerived(key);
+    if (replaced) _evictDerived(key);
+    notifyListeners();
   }
 
   T retrieve<T>(String key) {
@@ -43,11 +49,18 @@ class Cache {
   bool evict(String key) {
     final contained = contains(key);
     _entries.remove(key);
+    if (contained) notifyListeners();
     return contained;
   }
 
   /// Evicts every entry derived from [key], returning how many were removed.
   int evictDerived(String key) {
+    final evicted = _evictDerived(key);
+    if (evicted > 0) notifyListeners();
+    return evicted;
+  }
+
+  int _evictDerived(String key) {
     final prefix = '$key$separator';
 
     final derived = [
@@ -64,6 +77,8 @@ class Cache {
   }
 
   void clear() {
+    if (_entries.isEmpty) return;
     _entries.clear();
+    notifyListeners();
   }
 }

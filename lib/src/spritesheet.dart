@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:ignis/src/assets/cache.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
@@ -119,11 +118,8 @@ class Spritesheet {
 
   /// This sheet, re-resolved against [Ignis.cache].
   ///
-  /// Returns this unless the image it was cut from has since been replaced, so
-  /// the common case costs one lookup and an identity check. Only live in debug
-  /// builds, since only live asset reloading replaces a cached image.
+  /// Returns this unless the image it was cut from has since been replaced.
   Spritesheet get current {
-    if (!kDebugMode) return this;
     final source = this.source;
     if (source == null) return this;
     final image = Ignis.cache.retrieve<Image>(source.asset);

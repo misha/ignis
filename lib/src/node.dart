@@ -43,6 +43,17 @@ part of 'core.dart';
 /// A node may [provide] a value to its entire subtree, keyed by its type.
 /// [read] resolves the nearest match, checking the node itself before its
 /// [ancestors].
+///
+/// **Reassembly**
+///
+/// When the world changes out from under a live tree, the scene walks it
+/// emitting [reassemble]. Unlike [update] and [render], the walk ignores the
+/// [enabled] flag, so even disabled nodes will be notified.
+///
+/// Currently, [reassemble] is called in two, distinct situations:
+///
+///   - Whenever the `SceneWidget` reassembles in the Flutter tree.
+///   - Whenever [Ignis.cache] changes, such as via the local asset bundle.
 class Node {
   /// Creates a new node.
   ///
@@ -93,6 +104,20 @@ class Node {
       if (child._enabled) {
         child.render(canvas);
       }
+    }
+  }
+
+  /// Reassembles this node and its children.
+  ///
+  /// Override to re-resolve anything this node captured from outside itself,
+  /// such as an asset it pulled out of the cache.
+  void reassemble() {
+    final children = _egg?.nodes;
+    if (children == null || children.isEmpty) return;
+
+    for (final child in children) {
+      // TODO: Guard this?
+      child.reassemble();
     }
   }
 

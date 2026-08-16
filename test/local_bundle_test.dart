@@ -9,19 +9,19 @@ import 'package:path/path.dart' as p;
 import 'support/colors.dart';
 import 'support/images.dart';
 
-/// End-to-end coverage for live asset reloading.
+/// End-to-end coverage for local asset reloading.
 ///
 /// Each test builds a throwaway Flutter project in a temp directory: a pubspec
 /// with nothing but an assets manifest, and an `assets/` directory the test
-/// writes real PNGs into. A [LiveAssetBundle] is pointed at it, so a write to
+/// writes real PNGs into. A [LocalAssetBundle] is pointed at it, so a write to
 /// disk drives the whole chain, exactly as it would in a running game.
 ///
 ///   write assets/hero.png
 ///     -> PubspecWatcher matches it against the pubspec manifest
-///     -> LiveAssetBundle reads the new bytes off disk
+///     -> LocalAssetBundle reads the new bytes off disk
 ///     -> Preload runs them through the image loader
 ///     -> Cache.add replaces the image and evicts the sheets cut from it
-///     -> SpriteNode re-resolves on its next update
+///     -> SpriteNode re-resolves when the tree is reassembled
 ///
 /// Nothing here waits a fixed duration. Filesystem events have no guaranteed
 /// latency, so the tests wait on the outcome instead; the timeout is only ever
@@ -30,9 +30,8 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late Directory root;
-  late LiveAssetBundle live;
+  late LocalAssetBundle local;
   late AssetBundle bundle;
-  late Preload preload;
 
   /// Writes [image] to [parts] joined under the project root.
   Future<void> write(List<String> parts, Image image) async {
@@ -60,7 +59,6 @@ void main() {
 
   setUp(() async {
     bundle = Ignis.bundle;
-    preload = Ignis.preload;
     Ignis.cache.clear();
 
     root = await Directory.systemTemp.createTemp('ignis-live');
@@ -76,17 +74,16 @@ flutter:
     // Two 1x1 frames, red.
     await write(['assets', 'hero.png'], await solidImage(2, 1, RED));
 
-    live = LiveAssetBundle(root: root.path);
-    Ignis.bundle = live;
+    local = LocalAssetBundle(root: root.path);
+    Ignis.bundle = local;
     Ignis.preload = Preload()..register(.image()..extensions(['.png']));
   });
 
   tearDown(() async {
-    await live.dispose();
+    await local.dispose();
     await Ignis.preload.dispose();
     await root.delete(recursive: true);
     Ignis.bundle = bundle;
-    Ignis.preload = preload;
     Ignis.cache.clear();
   });
 
@@ -99,7 +96,7 @@ flutter:
     final request = Ignis.preload.load(paths: paths);
     await request;
     request.dispose();
-    expect(await live.start(), isTrue, reason: 'the watcher failed to start');
+    expect(await local.start(), isTrue, reason: 'the watcher failed to start');
   }
 
   test('serves an asset off disk rather than the compiled bundle', () async {
@@ -113,7 +110,7 @@ flutter:
 
   test('falls through to the delegate bundle for anything not under the root', () async {
     // Lives in this package's own assets, not the temp project.
-    final data = await live.load('test/assets/fire.png');
+    final data = await local.load('test/assets/fire.png');
     expect(data.lengthInBytes, greaterThan(0));
   });
 
@@ -153,7 +150,7 @@ flutter:
     expect(current.image, same(cached('assets/hero.png')));
   });
 
-  test('carries a live change into a SpriteNode on its next update', () async {
+  test('carries a live change into a SpriteNode when it is reassembled', () async {
     await start();
 
     final node = SpriteNode(sheet: Spritesheet.asset('assets/hero.png', size: .all(1)));
@@ -166,7 +163,7 @@ flutter:
       'the changed asset never reached the cache',
     );
 
-    node.update(0);
+    node.reassemble();
 
     expect(node.sheet.frames, 4, reason: 'the node did not re-read the cache');
     expect(node.sheet.image, same(cached('assets/hero.png')));
@@ -189,7 +186,7 @@ flutter:
       'the changed asset never reached the cache',
     );
 
-    node.update(0);
+    node.reassemble();
 
     expect(node.sheet.frames, 2);
     expect(node.frame, 0, reason: 'the stale frame index was not clamped');
@@ -301,7 +298,7 @@ flutter:
 ''');
 
     await eventually(
-      () => live.watching.contains('art'),
+      () => local.watching.contains('art'),
       'the watcher never picked up the new manifest entry',
     );
 

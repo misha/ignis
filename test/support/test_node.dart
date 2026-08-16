@@ -5,6 +5,7 @@ final class TestLog {
   final unmounts = <String>[];
   final updates = <String>[];
   final renders = <String>[];
+  final reassembles = <String>[];
 }
 
 final class TestNode extends Node {
@@ -15,6 +16,7 @@ final class TestNode extends Node {
   double elapsed = 0;
   int updates = 0;
   int renders = 0;
+  int reassembles = 0;
   void Function()? action;
 
   TestNode([this.name = 'test', this.log]) {
@@ -42,5 +44,13 @@ final class TestNode extends Node {
     renders += 1;
     log?.renders.add(name);
     super.render(canvas);
+  }
+
+  @override
+  void reassemble() {
+    reassembles += 1;
+    log?.reassembles.add(name);
+    action?.call();
+    super.reassemble();
   }
 }
