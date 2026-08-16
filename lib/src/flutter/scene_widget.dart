@@ -60,7 +60,14 @@ class _SceneWidgetState extends State<SceneWidget> {
   @override
   void reassemble() {
     super.reassemble();
-    widget.scene.reassemble();
+    final changed = Ignis.sources?.changed();
+
+    // An empty set means the tracker saw nothing, which is far more likely to
+    // mean it was out-run than that the reload was for nothing. Rebuild the
+    // lot: over-rebuilding is visible, under-rebuilding is silent.
+    widget.scene.reassemble(
+      changed == null || changed.isEmpty ? null : changed,
+    );
   }
 
   void _reassembleAssets() {

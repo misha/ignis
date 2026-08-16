@@ -32,18 +32,19 @@ class Scene<T extends Node> {
     node.update(dt);
   }
 
-  /// Re-runs every node's [Node.build], then applies whatever the walk
-  /// enqueued.
+  /// Rebuilds every node whose [Node.build] is written in one of the [changed]
+  /// files, then applies whatever the walk enqueued.
   ///
-  /// The flush is what makes a reassembly land in full without waiting for an
-  /// [update], so a paused scene reassembles just like a running one.
-  void reassemble() {
+  /// Pass null to rebuild the whole tree. The flush is what makes a reassembly
+  /// land in full without waiting for an [update], so a paused scene
+  /// reassembles just like a running one.
+  void reassemble([Set<String>? changed]) {
     assert(_mounted, 'Cannot reassemble a destroyed scene.');
     if (_reassembling) return;
     _reassembling = true;
 
     try {
-      node.reassemble();
+      node.reassemble(changed);
       _tree.flush();
     } finally {
       _reassembling = false;

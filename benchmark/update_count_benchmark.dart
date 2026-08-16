@@ -57,9 +57,9 @@ class CounterNode extends Node {
 
   @override
   void build() {
-    tick << (_) {
+    onUpdate((_) {
       count += 1;
-    };
+    });
 
     super.build();
   }

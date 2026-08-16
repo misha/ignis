@@ -4,7 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:ignis/ignis.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Without this the scene still reloads, it just reloads all of it. With it,
+  // only the nodes whose file you edited are rebuilt.
+  final sources = LocalSources();
+  Ignis.sources = sources;
+  await sources.start();
+
   runApp(const LiveReloadApp());
 }
 
@@ -36,7 +44,7 @@ class GamePage extends HookWidget {
 }
 
 const _SIZE = 100.0;
-const _COLOR = Colors.blue;
+const _COLOR = Colors.green;
 const _SPIN = pi / 4;
 const _ORBIT = 90.0;
 const _ORBIT_SPEED = 1.0;
@@ -48,16 +56,15 @@ class GameNode extends Node {
 
   @override
   void build() {
-    // A declaration, matched by position. This ShapeNode is rebuilt on every
-    // pass and thrown away again - the one already standing here is what
-    // survives. Keyed on _SIZE, so editing that replaces it; drop the key and
-    // the square keeps whatever size it was born with.
+    // Editing _SIZE works now. A reload destroys everything this build made
+    // and runs it again, so the constructor argument is re-evaluated exactly
+    // like the statement below it. Nothing is preserved, nothing is matched,
+    // and add hands back the node it was given.
     final square = add(
       ShapeNode(
         shape: .square(_SIZE),
         anchor: .center,
       ),
-      [_SIZE],
     );
 
     // Build runs on every pass, so editing _COLOR does persist.
@@ -69,16 +76,16 @@ class GameNode extends Node {
       square.position.setFrom(size / 2);
     });
 
-    tick << (dt) {
+    onUpdate((dt) {
       square.angle += _SPIN * dt;
-    };
+    });
 
-    // Delete this block and save: the dot is truncated away and detached, and
-    // its tick stops.
+    // Delete this block and save: the dot goes with it. Insert a declaration
+    // above it and save: nothing shifts, because nothing is being matched up.
     //
-    // Now add a declaration *above* it and save: this one shifts down a
-    // position, finds the square's slot instead of its own, and gets replaced.
-    // That is what positional identity costs.
+    // The cost is the other way round now. `phase` survives a reload because
+    // it is a field on this node, which nobody rebuilt - but anything held by
+    // a node this build *made* is gone, because it was made again.
     final dot = add(
       ShapeNode(
         shape: .circle(10),
@@ -87,14 +94,14 @@ class GameNode extends Node {
       ),
     );
 
-    tick << (dt) {
+    onUpdate((dt) {
       phase += _ORBIT_SPEED * dt;
 
       dot.position.setValues(
         square.position.x + cos(phase) * _ORBIT,
         square.position.y + sin(phase) * _ORBIT,
       );
-    };
+    });
 
     super.build();
   }

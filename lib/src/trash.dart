@@ -15,7 +15,7 @@ typedef Cleanup = void Function();
 /// trash << painter.dispose;
 /// ```
 ///
-/// Like [Tick] and unlike [live], the bag has no identity. It is emptied and
+/// The bag has no identity of any kind. It is emptied and
 /// refilled by every pass, so it may be filled from inside an `if`, a loop, or
 /// a helper.
 ///

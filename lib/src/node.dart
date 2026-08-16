@@ -81,11 +81,11 @@ class Node {
   @nonVirtual
   void update(double dt) {
     if (!_enabled) return;
-    final ticks = _ticks;
+    final updates = _updates;
 
-    if (ticks != null) {
-      for (var i = 0; i < ticks.length; i += 1) {
-        ticks[i](dt);
+    if (updates != null) {
+      for (var i = 0; i < updates.length; i += 1) {
+        updates[i](dt);
       }
     }
 
@@ -113,18 +113,24 @@ class Node {
 
   /// Reassembles this node and its children, top down.
   ///
-  /// Every node re-runs its [build], which is the only place to re-resolve
-  /// what a node captured from outside itself. Tree operations the pass
-  /// enqueues are flushed once the whole walk is done.
+  /// A node rebuilds only if its [build] is written in one of the [changed]
+  /// files, so editing one node restarts that node's subtree and leaves the
+  /// rest of the scene running. Pass null to rebuild everything, which is the
+  /// right answer whenever the changed set is unknown or covers code no node
+  /// claims - a shared constant, a data file, an enum.
+  ///
+  /// The walk itself always continues, since a child may be declared in a file
+  /// its parent is not.
   @nonVirtual
-  void reassemble() {
-    _rebuild();
+  void reassemble([Set<String>? changed]) {
+    if (changed == null || _declaredIn(changed)) _rebuild();
 
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
-    for (final child in children) {
-      child.reassemble();
+    // Snapshotted: a rebuild above may have replaced this list wholesale.
+    for (final child in children.toList(growable: false)) {
+      if (child.isMounted) child.reassemble(changed);
     }
   }
 
@@ -205,8 +211,9 @@ class Node {
   /// Emitted when this node is removed from a [Scene].
   final onUnmount = Signal0();
 
-  /// Emitted when the scene resizes, and once at mount if the scene already
-  /// has a size, so every node hears the current size.
+  /// Emitted when the scene resizes, and again after every [build], so a
+  /// handler the pass just installed hears the current size rather than
+  /// waiting for a change that already happened.
   final onSceneResize = Signal1<Vector2>();
 
   // #endregion
@@ -313,7 +320,6 @@ class Node {
     _scene = scene;
     _rebuild();
     onMount.emit();
-    if (scene.hasSize) onSceneResize.emit(scene.size);
     final children = _egg?.nodes;
 
     if (children != null && children.isNotEmpty) {
@@ -335,7 +341,7 @@ class Node {
 
     onUnmount.emit();
     _emptyTrash();
-    _ticks = null;
+    _updates = null;
     _trash = null;
     _declared = null;
     _scene = null;
@@ -351,43 +357,45 @@ class Node {
   /// How [live] and a [Signal] subscribed mid-pass find the building node.
   static Node? _builder;
 
-  /// Declares this node's behavior.
+  /// Declares this node's children and behavior.
   ///
-  /// Runs once on mount and again on every [reassemble], so everything it
-  /// declares is refreshed when the world changes: handlers come back freshly
-  /// compiled, values are re-read, and whatever the previous pass registered
-  /// is torn down first.
+  /// Runs once on mount, and again in full whenever the code it is written in
+  /// changes. A rebuild throws away everything the previous pass made - the
+  /// children it added, its [tick] closures, its [trash] - and runs the body
+  /// again from the top, so a constructor argument is re-evaluated exactly
+  /// like a statement is.
   ///
-  /// A pass re-runs from the top, so anything with state worth keeping is
-  /// wrapped in [live] and named. Everything else - [tick] closures, [trash]
-  /// cleanups, plain configuration - is rebuilt wholesale, and none of it
-  /// cares where in the body it sits.
+  /// Nothing is preserved and nothing is matched up, so there are no rules
+  /// about where a declaration sits. What survives a rebuild is this node
+  /// itself: its fields, its position, and anything added to it imperatively.
   ///
   /// `super.build()` is required: skipping it drops whatever the superclass
-  /// declared.
+  /// declared, and the source tracking that decides when this node reloads.
   @mustCallSuper
   @visibleForOverriding
   void build() {
-    // Nothing to do.
+    assert(_recordSources(), 'unreachable');
   }
 
-  /// Runs one [build] pass and drops whatever the pass stopped declaring.
+  /// Runs one [build] pass, having destroyed whatever the last one made.
   ///
   /// Guarded, and the only guarded path in the engine: a node being edited
   /// throws routinely, and one bad node must not take the walk down with it.
-  /// A pass that throws sweeps nothing, since what it failed to reach is not
-  /// evidence that it was abandoned.
   void _rebuild() {
-    _ticks?.clear();
+    _discardDeclared();
+    _updates?.clear();
     _emptyTrash();
     final builder = _builder;
     _builder = this;
-    _cursor = 0;
-    var completed = false;
 
     try {
       build();
-      completed = true;
+
+      // The pass installed handlers that have never heard anything. A signal
+      // carrying a current value has to say it again, or the rebuilt body is
+      // left waiting for a change that already happened.
+      final scene = _scene;
+      if (scene != null && scene.hasSize) onSceneResize.emit(scene.size);
     } catch (exception, stack) {
       FlutterError.reportError(
         FlutterErrorDetails(
@@ -398,42 +406,109 @@ class Node {
         ),
       );
     } finally {
-      if (completed) _truncateDeclared();
-      _cursor = -1;
       _builder = builder;
     }
   }
 
-  /// The children this node's [build] declared, in declaration order.
+  /// The children this node's [build] added, in declaration order.
   ///
   /// Separate from [children], which also holds whatever was added
   /// imperatively - a runtime spawn is nobody's declaration and must survive
-  /// a pass that never mentions it.
-  List<_Slot>? _declared;
+  /// a rebuild that never mentions it.
+  List<Node>? _declared;
 
-  /// The position [add] is about to declare, or -1 while no pass is running.
-  int _cursor = -1;
+  /// Detaches every child the last pass declared.
+  void _discardDeclared() {
+    final declared = _declared;
+    if (declared == null || declared.isEmpty) return;
+
+    for (var i = declared.length - 1; i >= 0; i -= 1) {
+      declared[i].detach();
+    }
+
+    declared.clear();
+  }
 
   // #endregion
 
-  // #region Tick
+  // #region Sources
 
-  List<void Function(double dt)>? _ticks;
+  /// Where each node type's [build] is written, keyed by that type.
+  ///
+  /// A type's entry holds every file its build body spans, superclasses
+  /// included, so editing a base class reloads the nodes derived from it.
+  /// Debug-only: nothing reloads in a release build, so nothing records.
+  static final Map<Type, Set<String>> _sources = {};
 
-  /// What this node does every frame, for as long as the pass keeps declaring
-  /// it.
+  static final _frame = RegExp(r'^#\d+\s+(\S+)\s+\((\S+?):\d+:\d+\)$');
+
+  /// The files this node's [build] is written in.
+  ///
+  /// Empty until an instance of this type has built once, and empty in a
+  /// release build, where nothing reloads and so nothing is recorded.
+  @visibleForTesting
+  Set<String> get sources => _sources[runtimeType] ?? const {};
+
+  /// True if [build] runs in code drawn from any of [changed].
+  bool _declaredIn(Set<String> changed) {
+    final sources = _sources[runtimeType];
+    if (sources == null) return false;
+
+    for (final source in sources) {
+      if (changed.contains(source)) return true;
+    }
+
+    return false;
+  }
+
+  /// Records the files this node's [build] is written in, the first time an
+  /// instance of its type builds.
+  ///
+  /// The stack is the index: every `*.build` frame below this one belongs to
+  /// a class in the chain, and carries the file it was compiled from. Called
+  /// from inside an [assert] so it costs a release build nothing.
+  bool _recordSources() {
+    final type = runtimeType;
+    if (_sources.containsKey(type)) return true;
+    final sources = _sources[type] = {};
+
+    for (final line in StackTrace.current.toString().split('\n')) {
+      final match = _frame.firstMatch(line.trim());
+      if (match == null) continue;
+      final member = match.group(1)!;
+      if (!member.endsWith('.build')) continue;
+      sources.add(match.group(2)!);
+    }
+
+    return true;
+  }
+
+  // #endregion
+
+  // #region Updates
+
+  List<void Function(double dt)>? _updates;
+
+  /// Calls [update] with the elapsed seconds on every frame, for as long as
+  /// this node keeps declaring it.
+  ///
+  /// The only way a node runs per-frame code, and it reloads: the closure is
+  /// registered afresh by every pass, so an edited body is running the frame
+  /// after the save. Write it inline - the whole point is that the behavior
+  /// reads at the site it is declared.
   ///
   /// ```dart
-  /// tick << (dt) {
+  /// onUpdate((dt) {
   ///   square.angle += _SPIN * dt;
-  /// };
+  /// });
   /// ```
   ///
-  /// The bag is an extension type over this node, so it costs nothing: the
-  /// callbacks live in a field the frame path reads directly, and a node that
-  /// never ticks holds a null.
+  /// The list is cleared and refilled by every pass, so this may be called
+  /// from inside an `if`, a loop, or a helper.
   @nonVirtual
-  Tick get tick => Tick(this);
+  void onUpdate(void Function(double dt) update) {
+    (_updates ??= []).add(update);
+  }
 
   // #endregion
 
@@ -491,76 +566,12 @@ class Node {
   /// Nodes cannot be added to themselves or their descendants. Adding a child
   /// to its current parent is a no-op.
   ///
-  /// Inside this node's own [build] pass this is a *declaration* instead, and
-  /// the returned node is the one that survives - which on any pass after the
-  /// first is the one already standing there. See [_declare].
-  ///
-  /// Pass [keys] to tie the child to something, and a pass whose keys no
-  /// longer compare equal replaces it rather than keeping it:
-  ///
-  /// ```dart
-  /// final square = add(ShapeNode(shape: .square(_SIZE)), [_SIZE]);
-  /// ```
-  ///
-  /// Ignored outside a pass, where there is no previous child to compare to.
-  T add<T extends Node>(T node, [List<Object?> keys = const []]) {
-    if (_cursor >= 0 && identical(_builder, this)) return _declare(node, keys);
+  /// Called from this node's own [build], the child is additionally recorded
+  /// as declared, so the next rebuild destroys it before running the body
+  /// again. The node handed in is always the node handed back.
+  T add<T extends Node>(T node) {
+    if (identical(_builder, this)) (_declared ??= []).add(node);
     return _addNow(node);
-  }
-
-  /// Matches [node] against the child this pass declared in the same position
-  /// last time, and keeps whichever of the two should survive.
-  ///
-  /// A pass re-runs from the top, so `add(ShapeNode(...))` builds a fresh node
-  /// every time. The fresh one is a *description*: if the position already
-  /// holds a live node of the same type, the description is thrown away and
-  /// the standing node is returned, so its state survives the reload. Only a
-  /// change of type replaces it.
-  ///
-  /// Identity is the call's position among this pass's `add`s, so inserting a
-  /// declaration shifts every one after it. Append rather than insert, or the
-  /// nodes below shuffle down a slot and get replaced.
-  T _declare<T extends Node>(T node, List<Object?> keys) {
-    final declared = _declared ??= [];
-    final index = _cursor++;
-
-    if (index < declared.length) {
-      final standing = declared[index];
-
-      // A field or a `live` value, handed back to us as the same instance.
-      if (identical(standing.node, node)) {
-        if (!owns(node)) _addNow(node);
-        declared[index] = _Slot(node, keys);
-        return node;
-      }
-
-      // A node that detached itself, e.g. one built with `cleanup`, leaves its
-      // position to be filled again rather than held by a corpse.
-      if (standing.node.runtimeType == node.runtimeType &&
-          owns(standing.node) &&
-          _sameKeys(standing.keys, keys)) {
-        return standing.node as T;
-      }
-
-      standing.node.detach();
-      declared[index] = _Slot(node, keys);
-      return _addNow(node);
-    }
-
-    declared.add(_Slot(node, keys));
-    return _addNow(node);
-  }
-
-  /// Detaches every declared child the pass just finished stopped declaring.
-  void _truncateDeclared() {
-    final declared = _declared;
-    if (declared == null || _cursor >= declared.length) return;
-
-    for (var i = declared.length - 1; i >= _cursor; i -= 1) {
-      declared[i].node.detach();
-    }
-
-    declared.removeRange(_cursor, declared.length);
   }
 
   T _addNow<T extends Node>(T node) {
@@ -591,11 +602,10 @@ class Node {
     return node;
   }
 
-  /// Adds all [nodes] to this node, each taking its own declaration inside a
-  /// [build] pass. [keys] guard the whole run of them.
-  void addAll(Iterable<Node> nodes, [List<Object?> keys = const []]) {
+  /// Adds all [nodes] to this node.
+  void addAll(Iterable<Node> nodes) {
     for (final node in nodes) {
-      add(node, keys);
+      add(node);
     }
   }
 

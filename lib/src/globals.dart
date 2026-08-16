@@ -3,11 +3,16 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:ignis/src/assets/cache.dart';
 import 'package:ignis/src/assets/preload.dart';
+import 'package:ignis/src/sources.dart';
 
 /// Namespace for global Ignis objects.
 abstract final class Ignis {
   /// The asset bundle used across Ignis.
   static AssetBundle bundle = rootBundle;
+
+  /// Tracks which source files changed, so a hot reload rebuilds only the
+  /// nodes written in them. Null, or not started, reassembles everything.
+  static LocalSources? sources;
 
   static Cache _cache = Cache();
 

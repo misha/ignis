@@ -249,9 +249,7 @@ void main() {
     expect(scene.node.builds, 2);
   });
 
-  testWidgets('a hot reload replaces the body but keeps what it declared', (
-    tester,
-  ) async {
+  testWidgets('a hot reload rebuilds the body in full', (tester) async {
     final log = <String>[];
     var edited = false;
     final node = TestNode();
@@ -259,7 +257,7 @@ void main() {
 
     node.buildAction = () {
       kept = node.add(Node());
-      node.tick << (_) => log.add(edited ? 'new' : 'old');
+      node.onUpdate((_) => log.add(edited ? 'new' : 'old'));
     };
 
     final scene = node.mount();
@@ -281,8 +279,9 @@ void main() {
     log.clear();
     scene.update(0);
 
-    expect(kept, same(first), reason: 'the declared child survives the reload');
-    expect(log, ['new'], reason: 'the tick closure around it does not');
+    expect(kept, isNot(same(first)), reason: 'the declared child is remade');
+    expect(first.isMounted, isFalse, reason: 'and the old one is gone');
+    expect(log, ['new'], reason: 'so is the tick closure');
   });
 
   testWidgets('paints against the given background color', (tester) async {

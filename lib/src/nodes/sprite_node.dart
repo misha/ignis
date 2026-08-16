@@ -139,7 +139,7 @@ class SpriteNode extends PaintedNode {
 
     // Advances the animation, which is the whole of what a sprite does with a
     // frame.
-    tick << (dt) {
+    onUpdate((dt) {
       if (_finished) return;
       final amount = fps * dt;
       if (amount <= 0 || !amount.isFinite) return;
@@ -181,7 +181,7 @@ class SpriteNode extends PaintedNode {
       } else {
         _frame = start + next % sheet.columns;
       }
-    };
+    });
 
     super.build();
   }

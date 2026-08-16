@@ -18,10 +18,30 @@ final class _Node extends Node {
   }
 }
 
+/// A subclass whose build sits in a different frame from its base's.
+final class _Derived extends _Node {
+  int derivedBuilds = 0;
+
+  _Derived() : super((_) {});
+
+  @override
+  void build() {
+    derivedBuilds += 1;
+    super.build();
+  }
+}
+
 /// Two distinguishable node types, for watching a declaration change shape.
 final class _A extends Node {}
 
 final class _B extends Node {}
+
+/// A node configured entirely by its constructor, as a composed node is.
+final class _Sized extends Node {
+  final double size;
+
+  _Sized(this.size);
+}
 
 /// Runs [body] with error reporting captured instead of presented.
 List<FlutterErrorDetails> _reported(void Function() body) {
@@ -71,8 +91,95 @@ void main() {
     });
   });
 
+  group('sources', () {
+    test('a node knows the file its build is written in', () {
+      final node = _Node((_) {})..mount();
+
+      expect(node.sources, contains(endsWith('build_test.dart')));
+    });
+
+    test('a base class build counts as a source of the derived node', () {
+      final node = _Derived()..mount();
+
+      expect(node.sources, contains(endsWith('build_test.dart')));
+      expect(
+        node.sources,
+        contains(endsWith('node.dart')),
+        reason: "Node.build's own frame is in the chain",
+      );
+    });
+
+    test('rebuilds only the nodes declared in a changed file', () {
+      final a = _Node((_) {});
+      final b = _Node((_) {});
+      a.add(b);
+      final scene = a.mount();
+      final builds = b.builds;
+
+      scene.reassemble({'package:nothing/of/ours.dart'});
+
+      expect(a.builds, 1, reason: 'nothing it is written in changed');
+      expect(b.builds, builds);
+    });
+
+    test('rebuilds everything when the changed set is unknown', () {
+      final a = _Node((_) {});
+      final b = _Node((_) {});
+      a.add(b);
+      final scene = a.mount();
+
+      scene.reassemble();
+
+      expect(a.builds, 2);
+      expect(b.builds, 2);
+    });
+
+    test('rebuilds the whole subtree of the node whose file changed', () {
+      final node = _Node((_) {});
+      final scene = node.mount();
+      final source = node.sources.firstWhere((s) => s.endsWith('build_test.dart'));
+
+      scene.reassemble({source});
+
+      expect(node.builds, 2);
+    });
+  });
+
   group('declarations', () {
-    test('discards what a later pass builds for the child already standing', () {
+    test('re-runs constructor arguments, not just statements', () {
+      var size = 10.0;
+      final node = _Node((n) => n.add(_Sized(size)));
+      final scene = node.mount()..update(0);
+
+      expect((node.children.single as _Sized).size, 10);
+
+      size = 20.0;
+      scene.reassemble();
+      scene.update(0);
+
+      expect((node.children.single as _Sized).size, 20);
+    });
+
+    test('returns the node it was given, on every pass', () {
+      Node? given;
+      Node? returned;
+
+      final node = _Node((n) {
+        given = _A();
+        returned = n.add(given!);
+      });
+
+      final scene = node.mount()..update(0);
+      expect(returned, same(given));
+
+      scene.reassemble();
+      scene.update(0);
+
+      expect(returned, same(given), reason: 'the fresh one, never a standing one');
+      expect(node.children.single, same(given));
+    });
+
+    test('destroys the children the previous pass declared', () {
       final node = _Node((n) => n.add(_A()));
       final scene = node.mount()..update(0);
       final first = node.children.single;
@@ -80,60 +187,25 @@ void main() {
       scene.reassemble();
       scene.update(0);
 
-      expect(node.children, hasLength(1));
-      expect(node.children.single, same(first));
+      expect(first.isMounted, isFalse);
+      expect(node.children.single, isNot(same(first)));
     });
 
-    test('replaces the standing child when the type changes', () {
-      var first = true;
-      final node = _Node((n) => n.add(first ? _A() : _B()));
-      final scene = node.mount()..update(0);
-      final a = node.children.single;
-
-      first = false;
-      scene.reassemble();
-      scene.update(0);
-
-      expect(a.isMounted, isFalse);
-      expect(node.children.single, isA<_B>());
-    });
-
-    test('replaces the standing child when its keys change', () {
-      var size = 10.0;
-      final node = _Node((n) => n.add(_A(), [size]));
-      final scene = node.mount()..update(0);
-      final a = node.children.single;
-
-      scene.reassemble();
-      scene.update(0);
-      expect(node.children.single, same(a), reason: 'the key held');
-
-      size = 20.0;
-      scene.reassemble();
-      scene.update(0);
-
-      expect(a.isMounted, isFalse);
-      expect(node.children.single, isNot(same(a)));
-    });
-
-    test('truncates what a pass stops declaring', () {
-      var both = true;
+    test('a child that stops being declared does not come back', () {
+      var declared = true;
 
       final node = _Node((n) {
-        n.add(_A());
-        if (both) n.add(_B());
+        if (declared) n.add(_A());
       });
 
       final scene = node.mount()..update(0);
-      expect(node.children, hasLength(2));
-      final b = node.children.last;
+      expect(node.children, hasLength(1));
 
-      both = false;
+      declared = false;
       scene.reassemble();
       scene.update(0);
 
-      expect(node.children, hasLength(1));
-      expect(b.isMounted, isFalse);
+      expect(node.children, isEmpty);
     });
 
     test('leaves imperative additions alone', () {
@@ -148,47 +220,12 @@ void main() {
       expect(spawned.isMounted, isTrue, reason: 'no pass declared it');
       expect(node.children, hasLength(2));
     });
-
-    test('refills the position of a child that detached itself', () {
-      final node = _Node((n) => n.add(_A()));
-      final scene = node.mount()..update(0);
-      final a = node.children.single;
-
-      a.detach();
-      scene.update(0);
-      expect(node.children, isEmpty);
-
-      scene.reassemble();
-      scene.update(0);
-
-      expect(node.children, hasLength(1));
-      expect(node.children.single, isNot(same(a)));
-    });
-
-    test('shifts everything after a declaration inserted above it', () {
-      var inserted = false;
-
-      final node = _Node((n) {
-        if (inserted) n.add(_B());
-        n.add(_A());
-      });
-
-      final scene = node.mount()..update(0);
-      final a = node.children.single;
-
-      inserted = true;
-      scene.reassemble();
-      scene.update(0);
-
-      expect(a.isMounted, isFalse, reason: 'position 0 became the _B');
-      expect(node.children, hasLength(2));
-    });
   });
 
-  group('tick', () {
+  group('onUpdate', () {
     test('runs its callback every update', () {
       var elapsed = 0.0;
-      final scene = _Node((node) => node.tick << (dt) => elapsed += dt).mount();
+      final scene = _Node((node) => node.onUpdate((dt) => elapsed += dt)).mount();
 
       scene.update(0.5);
       scene.update(0.5);
@@ -199,7 +236,7 @@ void main() {
     test('a reassembly swaps in the callback the pass just built', () {
       final log = <String>[];
       var edited = false;
-      final node = _Node((n) => n.tick << (_) => log.add(edited ? 'new' : 'old'));
+      final node = _Node((n) => n.onUpdate((_) => log.add(edited ? 'new' : 'old')));
       final scene = node.mount();
 
       scene.update(0);
@@ -215,7 +252,7 @@ void main() {
       var declared = true;
 
       final node = _Node((n) {
-        if (declared) n.tick << (_) => ticks += 1;
+        if (declared) n.onUpdate((_) => ticks += 1);
       });
 
       final scene = node.mount();
@@ -329,6 +366,24 @@ void main() {
       scene.destroy();
 
       expect(unmounted, 1);
+    });
+
+    test('onSceneResize fires again for the handler a rebuild installed', () {
+      final scene = Node().mount()..resize(100, 80);
+      final sizes = <Vector2>[];
+      final node = _Node((n) => n.onSceneResize(sizes.add));
+
+      scene.node.add(node);
+      scene.update(0);
+      expect(sizes, [Vector2(100, 80)]);
+
+      scene.reassemble();
+
+      expect(
+        sizes,
+        [Vector2(100, 80), Vector2(100, 80)],
+        reason: 'the new handler had never heard it',
+      );
     });
 
     test('onSceneResize subscribed in build hears the mount emission', () {

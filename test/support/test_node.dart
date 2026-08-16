@@ -41,12 +41,12 @@ final class TestNode extends Node {
 
   @override
   void build() {
-    tick << (dt) {
+    onUpdate((dt) {
       elapsed += dt;
       updates += 1;
       log?.updates.add(name);
       action?.call();
-    };
+    });
 
     builds += 1;
     log?.builds.add(name);
