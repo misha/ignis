@@ -729,7 +729,7 @@ final sheet1 = Spritesheet.asset('assets/ship.png');
 final sheet2 = Spritesheet(Ignis.cache.retrieve('assets/ship.png'));
 ```
 
-> :warning: `Ignis.cache`, `Ignis.bundle`, and `Ignis.preload` are mutable static members, not constants. Swap them out for tests or when running multiple, isolated games in one application. Installing a `Cache` or a `Preload` automatically disposes the previous one.
+> :warning: `Ignis.cache`, `Ignis.bundle`, and `Ignis.preload` are mutable static members, not constants. Swap them out for tests. Installing a `Cache` or a `Preload` automatically disposes the previous one.
 
 ## Dependency Injection
 

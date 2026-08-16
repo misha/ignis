@@ -136,7 +136,7 @@ class SpriteNode extends PaintedNode {
       _sheets[index] = current;
     }
 
-    /// Clamp the current frame if the replacement is shorter.
+    // Clamp the current frame if the replacement is shorter.
     if (_frame >= sheet.frames) _frame = 0;
     super.reassemble();
   }
