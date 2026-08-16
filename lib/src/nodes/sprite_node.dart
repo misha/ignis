@@ -131,7 +131,7 @@ class SpriteNode extends PaintedNode {
   void build() {
     // Re-resolves every sheet, so a replaced asset is picked up even on a
     // sheet this sprite is not currently [play]ing.
-    fuseEffect(() {
+    onEffect(() {
       for (var index = 0; index < _sheets.length; index += 1) {
         final sheet = _sheets[index];
         final current = sheet.current;
@@ -145,7 +145,7 @@ class SpriteNode extends PaintedNode {
 
     // Advances the animation, which is the whole of what a sprite does with a
     // frame.
-    fuseUpdate((dt) {
+    onUpdate((dt) {
       if (_finished) return;
       final amount = fps * dt;
       if (amount <= 0 || !amount.isFinite) return;

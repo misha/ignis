@@ -359,7 +359,7 @@ class Node {
 
   /// Registers [hook] in the current [build] pass and returns its value.
   ///
-  /// This is the primitive every `fuse` function is built out of; reach for it
+  /// This is the primitive every `on*` hook is built out of; reach for it
   /// directly only when writing a [Hook] of your own.
   @nonVirtual
   R fuse<R>(Hook<R> hook) {
@@ -490,7 +490,7 @@ class Node {
   /// teardown, so an effect cleans up after itself:
   ///
   /// ```dart
-  /// fuseEffect(() => painter.dispose);
+  /// onEffect(() => painter.dispose);
   /// ```
   ///
   /// Re-running is the point. The closure handed in was built by the pass that
@@ -500,7 +500,7 @@ class Node {
   /// Pass [keys] to opt out: the effect then re-runs only when they stop
   /// comparing equal, and an empty list means it runs exactly once.
   @nonVirtual
-  void fuseEffect(
+  void onEffect(
     Cleanup? Function() effect, [
     List<Object?>? keys,
   ]) {
@@ -516,16 +516,16 @@ class Node {
   /// reads at the site it is declared.
   ///
   /// ```dart
-  /// fuseUpdate((dt) => shape.angle += _SPIN * dt);
+  /// onUpdate((dt) => shape.angle += _SPIN * dt);
   /// ```
   @nonVirtual
-  void fuseUpdate(void Function(double dt) update) => fuse(_UpdateHook(update));
+  void onUpdate(void Function(double dt) update) => fuse(_UpdateHook(update));
 
   /// Builds a child with [create], adds it, and returns the same one on every
   /// later pass.
   ///
   /// ```dart
-  /// final shape = fuseChild(() => ShapeNode(shape: .square(100)));
+  /// final shape = onChild(() => ShapeNode(shape: .square(100)));
   /// ```
   ///
   /// The child is built once and kept, so its constructor arguments are state
@@ -536,7 +536,7 @@ class Node {
   /// declared it stops doing so. Like every tree operation on a mounted node,
   /// both are enqueued rather than immediate.
   @nonVirtual
-  T fuseChild<T extends Node>(
+  T onChild<T extends Node>(
     T Function() create, [
     List<Object?> keys = const [],
   ]) {
@@ -549,26 +549,26 @@ class Node {
   /// handler is unsubscribed and resubscribed by every pass, so it cannot
   /// outlive this node and cannot keep running code you already edited.
   @nonVirtual
-  void fuseSignal0(Signal0 signal, void Function() handler) {
-    fuseEffect(() => signal(handler));
+  void onSignal0(Signal0 signal, void Function() handler) {
+    onEffect(() => signal(handler));
   }
 
-  /// Calls [handler] whenever [signal] is emitted. See [fuseSignal0].
+  /// Calls [handler] whenever [signal] is emitted. See [onSignal0].
   @nonVirtual
-  void fuseSignal1<A>(Signal1<A> signal, void Function(A) handler) {
-    fuseEffect(() => signal(handler));
+  void onSignal1<A>(Signal1<A> signal, void Function(A) handler) {
+    onEffect(() => signal(handler));
   }
 
-  /// Calls [handler] whenever [signal] is emitted. See [fuseSignal0].
+  /// Calls [handler] whenever [signal] is emitted. See [onSignal0].
   @nonVirtual
-  void fuseSignal2<A, B>(Signal2<A, B> signal, void Function(A, B) handler) {
-    fuseEffect(() => signal(handler));
+  void onSignal2<A, B>(Signal2<A, B> signal, void Function(A, B) handler) {
+    onEffect(() => signal(handler));
   }
 
-  /// Calls [handler] whenever [signal] is emitted. See [fuseSignal0].
+  /// Calls [handler] whenever [signal] is emitted. See [onSignal0].
   @nonVirtual
-  void fuseSignal3<A, B, C>(Signal3<A, B, C> signal, void Function(A, B, C) handler) {
-    fuseEffect(() => signal(handler));
+  void onSignal3<A, B, C>(Signal3<A, B, C> signal, void Function(A, B, C) handler) {
+    onEffect(() => signal(handler));
   }
 
   // #endregion

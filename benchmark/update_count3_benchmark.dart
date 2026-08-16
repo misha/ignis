@@ -8,7 +8,7 @@ import 'runner.dart';
 ///
 /// Doubling the hooks rather than the nodes is what separates a tick hook's
 /// one-time cost from its marginal one: whatever this scores over the
-/// two-counter run is what a third [Node.fuseUpdate] costs, per node, per
+/// two-counter run is what a third [Node.onUpdate] costs, per node, per
 /// tick.
 ///
 /// Keep parameters in sync with `FlameUpdateCount3Benchmark`.
@@ -60,9 +60,9 @@ class CounterNode extends Node {
 
   @override
   void build() {
-    fuseUpdate((_) => first += 1);
-    fuseUpdate((_) => second += 1);
-    fuseUpdate((_) => third += 1);
+    onUpdate((_) => first += 1);
+    onUpdate((_) => second += 1);
+    onUpdate((_) => third += 1);
     super.build();
   }
 }

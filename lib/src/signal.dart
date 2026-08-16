@@ -5,7 +5,7 @@ typedef Unwatch = void Function();
 ///
 /// A subscription outlives the statement that made it and freezes the handler
 /// it was given, so it both leaks and goes stale unless something owns it.
-/// Nodes hand that ownership to `fuseSignal0` through `fuseSignal3` inside
+/// Nodes hand that ownership to `onSignal0` through `onSignal3` inside
 /// their `build`, but widgets must do it themselves, e.g. with `flutter_hooks`.
 sealed class Signal {
   const Signal();

@@ -128,8 +128,8 @@ void main() {
     late Node child;
 
     node.buildAction = () {
-      child = node.fuseChild(Node.new);
-      node.fuseUpdate((_) => log.add(edited ? 'new' : 'old'));
+      child = node.onChild(Node.new);
+      node.onUpdate((_) => log.add(edited ? 'new' : 'old'));
     };
 
     final scene = node.mount();
@@ -151,7 +151,7 @@ void main() {
     log.clear();
     scene.update(0);
 
-    expect(child, same(first), reason: 'fuseChild survives the reload');
+    expect(child, same(first), reason: 'onChild survives the reload');
     expect(log, ['new'], reason: 'the tick closure around it does not');
   });
 

@@ -54,16 +54,16 @@ void main() {
     test('hooks are unavailable outside a pass', () {
       final node = _Node((_) {});
 
-      expect(() => node.fuseChild(Node.new), throwsStateError);
+      expect(() => node.onChild(Node.new), throwsStateError);
     });
   });
 
-  group('fuseEffect', () {
+  group('onEffect', () {
     test('cleans up and re-runs on every reassembly', () {
       final log = <String>[];
 
       final scene = _Node((node) {
-        node.fuseEffect(() {
+        node.onEffect(() {
           log.add('run');
           return () => log.add('clean');
         });
@@ -78,7 +78,7 @@ void main() {
       final log = <String>[];
 
       final scene = _Node((node) {
-        node.fuseEffect(() {
+        node.onEffect(() {
           log.add('run');
           return null;
         }, const []);
@@ -93,7 +93,7 @@ void main() {
       final log = <String>[];
 
       final scene = _Node((node) {
-        node.fuseEffect(() {
+        node.onEffect(() {
           return () => log.add('clean');
         });
       }).mount();
@@ -110,12 +110,12 @@ void main() {
       var both = true;
 
       final node = _Node((node) {
-        node.fuseEffect(() {
+        node.onEffect(() {
           return () => log.add('first');
         }, const []);
 
         if (both) {
-          node.fuseEffect(() {
+          node.onEffect(() {
             return () => log.add('second');
           }, const []);
         }
@@ -132,13 +132,13 @@ void main() {
       final log = <String>[];
 
       final scene = _Node((node) {
-        node.fuseEffect(() {
+        node.onEffect(() {
           return () => log.add('a');
         }, const []);
-        node.fuseEffect(() {
+        node.onEffect(() {
           return () => log.add('b');
         }, const []);
-        node.fuseEffect(() {
+        node.onEffect(() {
           return () => log.add('c');
         }, const []);
       }).mount();
@@ -150,9 +150,9 @@ void main() {
 
     test('a reload may change which hooks a pass declares', () {
       String? value;
-      final node = _Node((node) => node.fuseEffect(() => null, const []));
+      final node = _Node((node) => node.onEffect(() => null, const []));
       final scene = node.mount();
-      node.builder = (node) => value = node.fuseChild(Node.new).toString();
+      node.builder = (node) => value = node.onChild(Node.new).toString();
 
       final reported = _reported(() => scene.reassemble(.reload));
 
@@ -161,9 +161,9 @@ void main() {
     });
 
     test('an asset refresh may not, since code cannot have changed', () {
-      final node = _Node((node) => node.fuseEffect(() => null, const []));
+      final node = _Node((node) => node.onEffect(() => null, const []));
       final scene = node.mount();
-      node.builder = (node) => node.fuseChild(Node.new);
+      node.builder = (node) => node.onChild(Node.new);
 
       final reported = _reported(() => scene.reassemble(.assets));
 
@@ -188,10 +188,10 @@ void main() {
     });
   });
 
-  group('fuseUpdate', () {
+  group('onUpdate', () {
     test('runs its callback every update', () {
       var elapsed = 0.0;
-      final scene = _Node((node) => node.fuseUpdate((dt) => elapsed += dt)).mount();
+      final scene = _Node((node) => node.onUpdate((dt) => elapsed += dt)).mount();
 
       scene.update(0.5);
       scene.update(0.5);
@@ -202,7 +202,7 @@ void main() {
     test('a reassembly swaps in the callback the pass just built', () {
       final log = <String>[];
       var edited = false;
-      final node = _Node((node) => node.fuseUpdate((_) => log.add(edited ? 'new' : 'old')));
+      final node = _Node((node) => node.onUpdate((_) => log.add(edited ? 'new' : 'old')));
       final scene = node.mount();
 
       scene.update(0);
@@ -218,7 +218,7 @@ void main() {
       var declared = true;
 
       final node = _Node((node) {
-        if (declared) node.fuseUpdate((_) => ticks += 1);
+        if (declared) node.onUpdate((_) => ticks += 1);
       });
 
       final scene = node.mount();
@@ -231,9 +231,9 @@ void main() {
     });
   });
 
-  group('fuseChild', () {
+  group('onChild', () {
     test('adds its child, enqueued like any other mounted tree operation', () {
-      final node = _Node((node) => node.fuseChild(Node.new));
+      final node = _Node((node) => node.onChild(Node.new));
       final scene = node.mount();
       expect(node.children, isEmpty);
 
@@ -244,7 +244,7 @@ void main() {
     });
 
     test('keeps the same child across a reassembly', () {
-      final node = _Node((node) => node.fuseChild(Node.new));
+      final node = _Node((node) => node.onChild(Node.new));
       final scene = node.mount()..update(0);
       final child = node.children.single;
 
@@ -255,7 +255,7 @@ void main() {
 
     test('replaces its child when its keys change', () {
       var key = 'a';
-      final node = _Node((node) => node.fuseChild(Node.new, [key]));
+      final node = _Node((node) => node.onChild(Node.new, [key]));
       final scene = node.mount()..update(0);
       final child = node.children.single;
 
@@ -268,7 +268,7 @@ void main() {
     });
 
     test('removes its child at unmount', () {
-      final node = _Node((node) => node.fuseChild(Node.new));
+      final node = _Node((node) => node.onChild(Node.new));
       final scene = node.mount()..update(0);
       final child = node.children.single;
 
@@ -278,11 +278,11 @@ void main() {
     });
   });
 
-  group('fuseSignal', () {
+  group('onSignal', () {
     test('subscribes for the life of the node', () {
       final signal = Signal0();
       var emissions = 0;
-      final node = _Node((node) => node.fuseSignal0(signal, () => emissions += 1));
+      final node = _Node((node) => node.onSignal0(signal, () => emissions += 1));
       final scene = node.mount();
 
       signal.emit();
@@ -298,7 +298,7 @@ void main() {
       var edited = false;
 
       final node = _Node((node) {
-        node.fuseSignal1(signal, (value) => log.add('${edited ? 'new' : 'old'} $value'));
+        node.onSignal1(signal, (value) => log.add('${edited ? 'new' : 'old'} $value'));
       });
 
       final scene = node.mount();

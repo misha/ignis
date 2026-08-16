@@ -49,7 +49,7 @@ class GameNode extends Node {
     // Construction is state, so a reload preserves it. Keying on _SIZE opts
     // back out: editing it builds a new square, and the old one's angle with
     // it. Nothing else about this constructor reloads.
-    final square = fuseChild(
+    final square = onChild(
       () => ShapeNode(
         shape: .square(_SIZE),
         anchor: .center,
@@ -58,21 +58,21 @@ class GameNode extends Node {
     );
 
     // Re-applied by every pass, so editing _COLOR is the edit.
-    fuseEffect(() {
+    onEffect(() {
       square.paint.color = _COLOR;
       return null;
     });
 
-    fuseSignal1(scene.onResize, (size) {
+    onSignal1(scene.onResize, (size) {
       square.position.setFrom(size / 2);
     });
 
-    fuseUpdate((dt) {
+    onUpdate((dt) {
       square.angle += _SPIN * dt;
     });
 
     // Delete this block and save: the dot detaches and its tick stops.
-    final dot = fuseChild(
+    final dot = onChild(
       () => ShapeNode(
         shape: .circle(10),
         anchor: .center,
@@ -80,7 +80,7 @@ class GameNode extends Node {
       ),
     );
 
-    fuseUpdate((dt) {
+    onUpdate((dt) {
       phase += _ORBIT_SPEED * dt;
 
       dot.position.setValues(

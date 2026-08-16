@@ -41,7 +41,7 @@ final class TestNode extends Node {
 
   @override
   void build() {
-    fuseUpdate((dt) {
+    onUpdate((dt) {
       elapsed += dt;
       updates += 1;
       log?.updates.add(name);
