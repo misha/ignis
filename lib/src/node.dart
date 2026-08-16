@@ -492,37 +492,6 @@ class Node {
 
   // #region Standard Hooks
 
-  /// Runs [create] once and returns the same box on every later pass.
-  ///
-  /// This is the half of a [build] that a reload does *not* refresh, which is
-  /// exactly what makes it the place to keep state:
-  ///
-  /// ```dart
-  /// final elapsed = fuseState(() => 0.0);
-  /// fuseTick((dt) => elapsed.value += dt);
-  /// ```
-  ///
-  /// Pass [keys] to tie the state to something: when they stop comparing
-  /// equal, the old box is discarded and [create] runs again.
-  @nonVirtual
-  Ref<T> fuseState<T>(
-    T Function() create, [
-    List<Object?> keys = const [],
-  ]) {
-    return fuse(_StateHook<T>(create, keys: keys));
-  }
-
-  /// Runs [create] once and returns the same value for the life of this node.
-  ///
-  /// [fuseState] without the box, for state that already has an object of its
-  /// own to live in:
-  ///
-  /// ```dart
-  /// final velocity = fuseMemoized(() => MVector2(90, 0));
-  /// ```
-  @nonVirtual
-  R fuseMemoized<R>(R Function() create) => fuseState(create).value;
-
   /// Runs [effect] now, and again on every later pass.
   ///
   /// Whatever [effect] returns is called before the next run and once more at

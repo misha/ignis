@@ -42,6 +42,8 @@ const _ORBIT_SPEED = 1.0;
 /// The probe. Every constant above and every closure below is meant to be
 /// edited while the app is running.
 class GameNode extends Node {
+  double phase = 0;
+
   @override
   void build() {
     // Construction is state, so a reload preserves it. Keying on _SIZE opts
@@ -78,14 +80,12 @@ class GameNode extends Node {
       ),
     );
 
-    final phase = fuseState(() => 0.0);
-
     fuseTick((dt) {
-      phase.value += _ORBIT_SPEED * dt;
+      phase += _ORBIT_SPEED * dt;
 
       dot.position.setValues(
-        square.position.x + cos(phase.value) * _ORBIT,
-        square.position.y + sin(phase.value) * _ORBIT,
+        square.position.x + cos(phase) * _ORBIT,
+        square.position.y + sin(phase) * _ORBIT,
       );
     });
 

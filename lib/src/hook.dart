@@ -99,38 +99,6 @@ abstract class HookState<R, T extends Hook<R>> {
   }
 }
 
-/// A mutable box holding one value.
-class Ref<T> {
-  /// The value held.
-  T value;
-
-  /// Creates a box holding [value].
-  Ref(this.value);
-}
-
-// #region State
-
-final class _StateHook<T> extends Hook<Ref<T>> {
-  final T Function() create;
-
-  const _StateHook(this.create, {super.keys});
-
-  @override
-  _StateHookState<T> createState() => .new();
-}
-
-final class _StateHookState<T> extends HookState<Ref<T>, _StateHook<T>> {
-  late final Ref<T> ref;
-
-  @override
-  void initHook() => ref = Ref(hook.create());
-
-  @override
-  Ref<T> build() => ref;
-}
-
-// #endregion
-
 // #region Effect
 
 final class _EffectHook extends Hook<void> {

@@ -54,65 +54,7 @@ void main() {
     test('hooks are unavailable outside a pass', () {
       final node = _Node((_) {});
 
-      expect(() => node.fuseState(() => 0), throwsStateError);
-    });
-  });
-
-  group('fuseState', () {
-    test('holds its box across a reassembly', () {
-      Ref<Object>? state;
-      final node = _Node((node) => state = node.fuseState(Object.new));
-      final scene = node.mount();
-      final first = state;
-
-      scene.reassemble(.reload);
-
-      expect(state, same(first));
-    });
-
-    test('rebuilds when its keys change', () {
-      Ref<Object>? state;
-      var key = 'a';
-      final node = _Node((node) => state = node.fuseState(Object.new, [key]));
-      final scene = node.mount();
-      final first = state;
-
-      scene.reassemble(.reload);
-      expect(state, same(first));
-
-      key = 'b';
-      scene.reassemble(.reload);
-      expect(state, isNot(same(first)));
-    });
-
-    test('holds its box across keys that only look different', () {
-      Ref<Object>? state;
-      var key = double.nan;
-      final node = _Node((node) => state = node.fuseState(Object.new, [key]));
-      final scene = node.mount();
-      final first = state;
-
-      scene.reassemble(.reload);
-      expect(state, same(first), reason: 'NaN never equals itself');
-
-      key = -0.0;
-      scene.reassemble(.reload);
-      final second = state;
-
-      key = 0.0;
-      scene.reassemble(.reload);
-      expect(state, isNot(same(second)), reason: '-0.0 is not the same key as 0.0');
-    });
-
-    test('fuseMemoized holds its value for the life of the node', () {
-      Object? value;
-      final node = _Node((node) => value = node.fuseMemoized(Object.new));
-      final scene = node.mount();
-      final first = value;
-
-      scene.reassemble(.reload);
-
-      expect(value, same(first));
+      expect(() => node.fuseChild(Node.new), throwsStateError);
     });
   });
 
@@ -208,20 +150,20 @@ void main() {
 
     test('a reload may change which hooks a pass declares', () {
       String? value;
-      final node = _Node((node) => node.fuseState(() => 1));
+      final node = _Node((node) => node.fuseEffect(() => null, const []));
       final scene = node.mount();
-      node.builder = (node) => value = node.fuseMemoized(() => 'replaced');
+      node.builder = (node) => value = node.fuseChild(Node.new).toString();
 
       final reported = _reported(() => scene.reassemble(.reload));
 
       expect(reported, isEmpty);
-      expect(value, 'replaced');
+      expect(value, isNotNull);
     });
 
     test('an asset refresh may not, since code cannot have changed', () {
-      final node = _Node((node) => node.fuseState(() => 1));
+      final node = _Node((node) => node.fuseEffect(() => null, const []));
       final scene = node.mount();
-      node.builder = (node) => node.fuseMemoized(() => 'replaced');
+      node.builder = (node) => node.fuseChild(Node.new);
 
       final reported = _reported(() => scene.reassemble(.assets));
 

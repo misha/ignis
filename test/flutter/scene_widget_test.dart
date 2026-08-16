@@ -119,20 +119,21 @@ void main() {
     expect(scene.node.builds, 2);
   });
 
-  testWidgets('carries hook state through a hot reload, but not its closures', (tester) async {
+  testWidgets('a hot reload replaces the body but keeps what hooks own', (
+    tester,
+  ) async {
     final log = <String>[];
     var edited = false;
-    Object? memoized;
-
     final node = TestNode();
+    late Node child;
 
     node.buildAction = () {
-      memoized = node.fuseMemoized(Object.new);
+      child = node.fuseChild(Node.new);
       node.fuseTick((_) => log.add(edited ? 'new' : 'old'));
     };
 
     final scene = node.mount();
-    final first = memoized;
+    final first = child;
 
     await tester.pumpWidget(
       SizedBox.square(
@@ -150,8 +151,8 @@ void main() {
     log.clear();
     scene.update(0);
 
-    expect(memoized, same(first), reason: 'fuseMemoized is state');
-    expect(log, ['new'], reason: 'fuseTick is behavior');
+    expect(child, same(first), reason: 'fuseChild survives the reload');
+    expect(log, ['new'], reason: 'the tick closure around it does not');
   });
 
   testWidgets('paints against the given background color', (tester) async {
