@@ -1,26 +1,24 @@
 // ignore_for_file: invalid_use_of_internal_member
 
-import 'dart:ui';
-
 import 'package:benchmark_harness/benchmark_harness.dart';
 import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 
 import '../runner.dart';
 
-/// Flame version of `UpdateRenderBenchmark`, with matching parameters.
-class FlameUpdateRenderBenchmark extends AsyncBenchmarkBase {
+/// Flame version of `UpdateCount2Benchmark`, with matching parameters.
+class FlameUpdateCount2Benchmark extends AsyncBenchmarkBase {
   final int components;
   final int ticks;
   final int children;
 
   late final FlameGame game;
 
-  FlameUpdateRenderBenchmark({
-    this.components = 100,
-    this.ticks = 100,
+  FlameUpdateCount2Benchmark({
+    this.components = 1000,
+    this.ticks = 500,
     this.children = 10,
-  }) : super('(Flame) Update + Render');
+  }) : super('(Flame) Update Count 2');
 
   @override
   Future<void> setup() async {
@@ -31,10 +29,10 @@ class FlameUpdateRenderBenchmark extends AsyncBenchmarkBase {
     game.update(0);
 
     for (var i = 0; i < components; i += 1) {
-      final component = RectangleComponent(size: Vector2(2, 2));
+      final component = CounterComponent();
 
       for (var j = 0; j < children; j += 1) {
-        component.add(RectangleComponent(size: Vector2(2, 2)));
+        component.add(CounterComponent());
       }
 
       game.add(component);
@@ -47,13 +45,21 @@ class FlameUpdateRenderBenchmark extends AsyncBenchmarkBase {
   Future<void> run() async {
     for (var t = 0; t < ticks; t += 1) {
       game.update(1 / 60);
-      final recorder = PictureRecorder();
-      game.render(Canvas(recorder));
-      recorder.endRecording();
     }
   }
 }
 
+class CounterComponent extends Component {
+  int first = 0;
+  int second = 0;
+
+  @override
+  void update(double dt) {
+    first += 1;
+    second += 1;
+  }
+}
+
 Future<void> main() async {
-  await runBenchmark(FlameUpdateRenderBenchmark());
+  await runBenchmark(FlameUpdateCount2Benchmark());
 }

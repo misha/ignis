@@ -16,14 +16,13 @@ PROFILE=1 flutter test --enable-vmservice benchmark/update_benchmark.dart
 
 > :warning: This is not the performance tuning log and does not explain changes.
 
-Measured with `flutter test` on 2026/08/15, average of 3 or more runs.
+Measured with `flutter test` on 2026/08/16, average of 3 or more runs.
 
-| Benchmark        | Runtime     |
-|------------------|-------------|
-| Lifecycle Events | 47344.48 us |
-| Signal Emissions | 2545.72 us  |
-| Update           | 18608.55 us |
-| Update + Render  | 32807.71 us |
+| Benchmark      | Runtime     |
+|----------------|-------------|
+| Update         | 20484.34 us |
+| Update Count   | 51971.53 us |
+| Update Count 2 | 66363.36 us |
 
 System details:
 
