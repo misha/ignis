@@ -425,27 +425,6 @@ class Node {
     slots.removeRange(index, slots.length);
   }
 
-  /// Holds [initial] in a box that survives every later pass.
-  ///
-  /// The state half of a [tick]: the box is made once and handed back on every
-  /// frame thereafter, so the code around it can be replaced by a hot reload
-  /// without the value it operates on being reset.
-  ///
-  /// ```dart
-  /// final elapsed = fuseState(0.0);
-  /// elapsed.value += dt;
-  /// ```
-  @nonVirtual
-  Ref<T> fuseState<T>(T initial) {
-    final slot = _slot();
-    if (slot is _StateSlot<T>) {
-      _cursor += 1;
-      return slot.ref;
-    }
-
-    return _fill(_StateSlot<T>(initial)).ref;
-  }
-
   /// Runs [effect] on the next pass after a reassembly, and not on the frames
   /// in between.
   ///

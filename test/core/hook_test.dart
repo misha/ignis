@@ -69,62 +69,30 @@ void main() {
     test('hooks are unavailable outside a pass', () {
       final node = _Node((_, _) {});
 
-      expect(() => node.fuseState(0), throwsStateError);
+      expect(() => node.fuseChild(Node.new), throwsStateError);
     });
   });
 
-  group('fuseState', () {
-    test('holds its box across frames and reassemblies', () {
-      Ref<int>? state;
-      final node = _Node((node, _) => state = node.fuseState(0));
-      final scene = node.mount()..update(0);
-      final first = state;
-
-      scene.update(0);
-      expect(state, same(first));
-
-      scene.reassemble(.reload);
-      scene.update(0);
-      expect(state, same(first));
-    });
-
-    test('keeps its value while the body around it is replaced', () {
-      final node = _Node((node, _) => node.fuseState(0).value += 1);
-      final scene = node.mount()
-        ..update(0)
-        ..update(0);
-
-      node.body = (node, _) => node.fuseState(0).value += 10;
-      scene.reassemble(.reload);
-      scene.update(0);
-
-      Ref<int>? state;
-      node.body = (node, _) => state = node.fuseState(0);
-      scene.reassemble(.reload);
-      scene.update(0);
-
-      expect(state!.value, 12, reason: '1 + 1 from before the edit, 10 after');
-    });
-
-    test('a reload may change the slot it holds', () {
-      String? value;
-      final node = _Node((node, _) => node.fuseState(0));
+  group('slots', () {
+    test('a reload may change what a slot holds', () {
+      final node = _Node((node, _) => node.fuseEffect(() => null, const []));
       final scene = node.mount()..update(0);
 
-      node.body = (node, _) => value = node.fuseState('replaced').value;
+      Node? child;
+      node.body = (node, _) => child = node.fuseChild(Node.new);
       scene.reassemble(.reload);
 
       final reported = _reported(() => scene.update(0));
 
       expect(reported, isEmpty);
-      expect(value, 'replaced');
+      expect(child, isNotNull);
     });
 
     test('an asset refresh may not, since code cannot have changed', () {
-      final node = _Node((node, _) => node.fuseState(0));
+      final node = _Node((node, _) => node.fuseEffect(() => null, const []));
       final scene = node.mount()..update(0);
 
-      node.body = (node, _) => node.fuseState('replaced');
+      node.body = (node, _) => node.fuseChild(Node.new);
       scene.reassemble(.assets);
 
       final reported = _reported(() => scene.update(0));

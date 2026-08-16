@@ -125,20 +125,21 @@ void main() {
     expect(scene.node.passes, 2);
   });
 
-  testWidgets('carries hook state through a hot reload, but not its closures', (tester) async {
+  testWidgets('a hot reload replaces the tick body but keeps what hooks own', (
+    tester,
+  ) async {
     final log = <String>[];
     var edited = false;
-    Ref<Object>? state;
-
     final node = TestNode();
+    late Node child;
 
     node.action = () {
-      state = node.fuseState(Object());
+      child = node.fuseChild(Node.new);
       log.add(edited ? 'new' : 'old');
     };
 
     final scene = node.mount()..update(0);
-    final first = state;
+    final first = child;
 
     await tester.pumpWidget(
       SizedBox.square(
@@ -156,7 +157,7 @@ void main() {
     log.clear();
     scene.update(0);
 
-    expect(state, same(first), reason: 'fuseState survives the reload');
+    expect(child, same(first), reason: 'fuseChild survives the reload');
     expect(log, ['new'], reason: 'the tick body around it does not');
   });
 

@@ -6,9 +6,9 @@ import 'runner.dart';
 /// `UpdateBenchmark`'s tree (see `update_benchmark.dart`), except every node
 /// counts the ticks it sees.
 ///
-/// The smallest per-node work there is, with the count held in a
-/// [Node.fuseState] slot so the score carries one hook lookup per node per
-/// tick. The Flame version does the same count with a plain field.
+/// The smallest per-node work there is, held in an ordinary field. Whatever
+/// this scores over `UpdateBenchmark` is what one increment per node per tick
+/// costs, and nothing else.
 ///
 /// Keep parameters in sync with `FlameUpdateCountBenchmark`.
 class UpdateCountBenchmark extends AsyncBenchmarkBase {
@@ -53,10 +53,11 @@ class UpdateCountBenchmark extends AsyncBenchmarkBase {
 }
 
 class CounterNode extends Node {
+  int count = 0;
+
   @override
   void tick(double dt) {
-    final count = fuseState(0);
-    count.value += 1;
+    count += 1;
   }
 }
 

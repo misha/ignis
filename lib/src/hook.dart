@@ -15,29 +15,18 @@ enum BuildCause {
   assets,
 }
 
-/// A mutable box holding one value.
-class Ref<T> {
-  /// The value held.
-  T value;
-
-  /// Creates a box holding [value].
-  Ref(this.value);
-}
-
 /// One numbered position in a node's hook slots.
 ///
 /// Slots are matched by the order their hooks were called in, so a node's
 /// hooks must be used unconditionally and always in the same sequence.
+///
+/// Hooks own lifecycle, never values: a node's state lives in ordinary
+/// fields, which the rest of the tree can reach and a hot reload leaves
+/// alone on its own.
 sealed class _Slot {
   void dispose() {
     // Nothing to do.
   }
-}
-
-final class _StateSlot<T> extends _Slot {
-  final Ref<T> ref;
-
-  _StateSlot(T initial) : ref = .new(initial);
 }
 
 final class _EffectSlot extends _Slot {

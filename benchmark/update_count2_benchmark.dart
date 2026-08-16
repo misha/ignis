@@ -6,10 +6,8 @@ import 'runner.dart';
 /// `UpdateCountBenchmark`'s tree (see `update_count_benchmark.dart`), except
 /// every node counts twice over.
 ///
-/// Doubling the hooks rather than the nodes is what separates a hook's
-/// one-time cost from its marginal one: whatever this scores over the
-/// single-counter run is what a second [Node.fuseState] slot costs, per node,
-/// per tick.
+/// Doubling the work rather than the nodes: whatever this scores over the
+/// single-counter run is what a second increment costs, per node, per tick.
 ///
 /// Keep parameters in sync with `FlameUpdateCount2Benchmark`.
 class UpdateCount2Benchmark extends AsyncBenchmarkBase {
@@ -54,13 +52,13 @@ class UpdateCount2Benchmark extends AsyncBenchmarkBase {
 }
 
 class CounterNode extends Node {
+  int first = 0;
+  int second = 0;
+
   @override
   void tick(double dt) {
-    final first = fuseState(0);
-    first.value += 1;
-
-    final second = fuseState(0);
-    second.value += 1;
+    first += 1;
+    second += 1;
   }
 }
 
