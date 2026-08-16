@@ -76,6 +76,56 @@ void main() {
     expect(scene.node.unmounts, 0);
   });
 
+  testWidgets('survives a transiently empty layout', (tester) async {
+    final scene = TestNode().mount();
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(scene),
+      ),
+    );
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 0,
+        child: SceneWidget(scene),
+      ),
+    );
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(scene),
+      ),
+    );
+
+    expect(scene.node.isMounted, isTrue);
+    expect(scene.node.unmounts, 0);
+  });
+
+  testWidgets('destroys the scene when swapped for a different one', (tester) async {
+    final sceneA = Node().mount();
+    final sceneB = Node().mount();
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(sceneA),
+      ),
+    );
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(sceneB),
+      ),
+    );
+
+    expect(sceneA.node.isMounted, isFalse);
+    expect(sceneB.node.isMounted, isTrue);
+  });
+
   testWidgets('destroys the scene when disposed', (tester) async {
     final scene = TestNode().mount();
 

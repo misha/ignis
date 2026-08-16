@@ -40,9 +40,16 @@ class _SceneWidgetState extends State<SceneWidget> {
   }
 
   @override
+  void didUpdateWidget(SceneWidget old) {
+    super.didUpdateWidget(old);
+    if (!identical(old.scene, widget.scene)) old.scene.destroy();
+  }
+
+  @override
   void dispose() {
     _cache.removeListener(_reassembleAssets);
     _focusNode.dispose();
+    widget.scene.destroy();
     super.dispose();
   }
 

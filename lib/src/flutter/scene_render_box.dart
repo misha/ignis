@@ -63,7 +63,6 @@ class SceneRenderBox extends RenderBox {
 
   set scene(Scene value) {
     if (identical(_scene, value)) return;
-    _scene.destroy();
     _scene = value;
     markNeedsPaint();
   }
@@ -114,12 +113,6 @@ class SceneRenderBox extends RenderBox {
     super.detach();
     renderLoop?.dispose();
     renderLoop = null;
-  }
-
-  @override
-  void dispose() {
-    scene.destroy();
-    super.dispose();
   }
 
   void _renderLoopCallback(double dt) {
