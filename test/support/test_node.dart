@@ -33,14 +33,6 @@ final class TestNode extends Node {
   }
 
   @override
-  void tick(double dt) {
-    elapsed += dt;
-    updates += 1;
-    log?.updates.add(name);
-    action?.call();
-  }
-
-  @override
   void render(Canvas canvas) {
     renders += 1;
     log?.renders.add(name);
@@ -49,6 +41,13 @@ final class TestNode extends Node {
 
   @override
   void build() {
+    fuseTick((dt) {
+      elapsed += dt;
+      updates += 1;
+      log?.updates.add(name);
+      action?.call();
+    });
+
     builds += 1;
     log?.builds.add(name);
     buildAction?.call();

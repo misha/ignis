@@ -128,9 +128,9 @@ class SpriteNode extends PaintedNode {
 
   @override
   @mustCallSuper
-  /// Re-resolves every sheet, so a replaced asset is picked up even on a sheet
-  /// this sprite is not currently [play]ing.
   void build() {
+    // Re-resolves every sheet, so a replaced asset is picked up even on a
+    // sheet this sprite is not currently [play]ing.
     fuseEffect(() {
       for (var index = 0; index < _sheets.length; index += 1) {
         final sheet = _sheets[index];
@@ -143,52 +143,53 @@ class SpriteNode extends PaintedNode {
       if (_frame >= sheet.frames) _frame = 0;
     });
 
-    super.build();
-  }
+    // Advances the animation, which is the whole of what a sprite does with a
+    // frame.
+    fuseTick((dt) {
+      if (_finished) return;
+      final amount = fps * dt;
+      if (amount <= 0 || !amount.isFinite) return;
 
-  @override
-  void tick(double dt) {
-    if (_finished) return;
-    final amount = fps * dt;
-    if (amount <= 0 || !amount.isFinite) return;
+      final row = frame ~/ sheet.columns;
+      final start = row * sheet.columns;
+      final column = _frame - start;
+      final next = column + amount;
+      var advanced = next.floor() - column.floor();
 
-    final row = frame ~/ sheet.columns;
-    final start = row * sheet.columns;
-    final column = _frame - start;
-    final next = column + amount;
-    var advanced = next.floor() - column.floor();
+      if (!loop && next >= sheet.columns) {
+        advanced = sheet.columns - 1 - column.floor();
+        _finished = true;
+      }
 
-    if (!loop && next >= sheet.columns) {
-      advanced = sheet.columns - 1 - column.floor();
-      _finished = true;
-    }
+      var current = column.floor();
 
-    var current = column.floor();
+      while (advanced-- > 0) {
+        current += 1;
 
-    while (advanced-- > 0) {
-      current += 1;
+        if (current == sheet.columns) {
+          current = 0;
+          final frame = _frame = start;
+          onFrame.emit(frame);
+          onLoop.emit();
+        } else {
+          final frame = _frame = start + current;
+          onFrame.emit(frame);
+        }
+      }
 
-      if (current == sheet.columns) {
-        current = 0;
-        final frame = _frame = start;
-        onFrame.emit(frame);
-        onLoop.emit();
+      if (_finished) {
+        _frame = start + sheet.columns - 1;
+        onFinish.emit();
+
+        if (cleanup) {
+          detach();
+        }
       } else {
-        final frame = _frame = start + current;
-        onFrame.emit(frame);
+        _frame = start + next % sheet.columns;
       }
-    }
+    });
 
-    if (_finished) {
-      _frame = start + sheet.columns - 1;
-      onFinish.emit();
-
-      if (cleanup) {
-        detach();
-      }
-    } else {
-      _frame = start + next % sheet.columns;
-    }
+    super.build();
   }
 
   late Rect _dest;

@@ -77,18 +77,10 @@ class Node {
     addAll(children);
   }
 
-  /// Updates this node by [dt] seconds.
-  @visibleForOverriding
-  void tick(double dt) {
-    // Nothing to do.
-  }
-
   /// Updates this node and its children by [dt] seconds.
   @nonVirtual
   void update(double dt) {
     if (!_enabled) return;
-    tick(dt);
-
     final ticks = _ticks;
 
     if (ticks != null) {
