@@ -3,35 +3,36 @@ import 'package:ignis/ignis.dart';
 
 import 'runner.dart';
 
-/// `UpdateCountBenchmark`'s tree (see `update_count_benchmark.dart`), except
-/// every node counts twice over.
+/// `UpdateHook2Benchmark`'s tree (see `update_hook_benchmark.dart`), except
+/// every node declares two hooks rather than one.
 ///
-/// Doubling the work rather than the nodes: whatever this scores over the
-/// single-counter run is what a second increment costs, per node, per tick.
+/// Whatever this scores over the single-hook run is what a second slot check
+/// costs, per node, per frame — which is what separates a hook's one-time
+/// cost from its marginal one.
 ///
-/// Keep parameters in sync with `FlameUpdateCount2Benchmark`.
-class UpdateCount2Benchmark extends AsyncBenchmarkBase {
+/// Keep parameters in sync with `FlameUpdateHook2Benchmark`.
+class UpdateHook2Benchmark extends AsyncBenchmarkBase {
   final int nodes;
   final int ticks;
   final int children;
 
   late Scene<Node> scene;
 
-  UpdateCount2Benchmark({
+  UpdateHook2Benchmark({
     this.nodes = 1000,
     this.ticks = 500,
     this.children = 10,
-  }) : super('Update Count 2');
+  }) : super('Update Hook 2');
 
   @override
   Future<void> setup() async {
     final root = Node();
 
     for (var i = 0; i < nodes; i += 1) {
-      final node = CounterNode();
+      final node = HookNode();
 
       for (var j = 0; j < children; j += 1) {
-        node.add(CounterNode());
+        node.add(HookNode());
       }
 
       root.add(node);
@@ -51,17 +52,24 @@ class UpdateCount2Benchmark extends AsyncBenchmarkBase {
   Future<void> teardown() async => scene.destroy();
 }
 
-class CounterNode extends Node {
+class HookNode extends Node {
   int first = 0;
   int second = 0;
 
   @override
   void tick(double dt) {
-    first += 1;
-    second += 1;
+    fuseEffect(() {
+      first += 1;
+      return null;
+    }, const []);
+
+    fuseEffect(() {
+      second += 1;
+      return null;
+    }, const []);
   }
 }
 
 Future<void> main() async {
-  await runBenchmark(UpdateCount2Benchmark());
+  await runBenchmark(UpdateHook2Benchmark());
 }

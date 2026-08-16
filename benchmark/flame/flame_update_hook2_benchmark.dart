@@ -6,19 +6,23 @@ import 'package:flame/game.dart';
 
 import '../runner.dart';
 
-/// Flame version of `UpdateCountBenchmark`, with matching parameters.
-class FlameUpdateCountBenchmark extends AsyncBenchmarkBase {
+/// Flame version of `UpdateHook2Benchmark`, with matching parameters.
+///
+/// Flame has no per-frame declaration to check, so the same one-time work goes
+/// in `onMount` and this row is flat against `FlameUpdateBenchmark` by
+/// construction. That flatness is the comparison.
+class FlameUpdateHook2Benchmark extends AsyncBenchmarkBase {
   final int components;
   final int ticks;
   final int children;
 
   late final FlameGame game;
 
-  FlameUpdateCountBenchmark({
+  FlameUpdateHook2Benchmark({
     this.components = 1000,
     this.ticks = 500,
     this.children = 10,
-  }) : super('(Flame) Update Count');
+  }) : super('(Flame) Update Hook 2');
 
   @override
   Future<void> setup() async {
@@ -29,10 +33,10 @@ class FlameUpdateCountBenchmark extends AsyncBenchmarkBase {
     game.update(0);
 
     for (var i = 0; i < components; i += 1) {
-      final component = CounterComponent();
+      final component = HookComponent();
 
       for (var j = 0; j < children; j += 1) {
-        component.add(CounterComponent());
+        component.add(HookComponent());
       }
 
       game.add(component);
@@ -49,15 +53,17 @@ class FlameUpdateCountBenchmark extends AsyncBenchmarkBase {
   }
 }
 
-class CounterComponent extends Component {
-  int count = 0;
+class HookComponent extends Component {
+  int first = 0;
+  int second = 0;
 
   @override
-  void update(double dt) {
-    count += 1;
+  void onMount() {
+    first += 1;
+    second += 1;
   }
 }
 
 Future<void> main() async {
-  await runBenchmark(FlameUpdateCountBenchmark());
+  await runBenchmark(FlameUpdateHook2Benchmark());
 }

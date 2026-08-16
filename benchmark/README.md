@@ -18,11 +18,11 @@ PROFILE=1 flutter test --enable-vmservice benchmark/update_benchmark.dart
 
 Measured with `flutter test` on 2026/08/16, average of 3 or more runs.
 
-| Benchmark      | Runtime     |
-|----------------|-------------|
-| Update         | 29992.27 us |
-| Update Count   | 30939.94 us |
-| Update Count 2 | 31508.28 us |
+| Benchmark     | Runtime      |
+|---------------|--------------|
+| Update        | 29589.43 us  |
+| Update Hook   | 69213.45 us  |
+| Update Hook 2 | 106992.68 us |
 
 System details:
 

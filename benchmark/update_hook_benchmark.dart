@@ -4,35 +4,36 @@ import 'package:ignis/ignis.dart';
 import 'runner.dart';
 
 /// `UpdateBenchmark`'s tree (see `update_benchmark.dart`), except every node
-/// counts the ticks it sees.
+/// declares one hook that does its work once and nothing thereafter.
 ///
-/// The smallest per-node work there is, held in an ordinary field. Whatever
-/// this scores over `UpdateBenchmark` is what one increment per node per tick
-/// costs, and nothing else.
+/// The content of the hook is beside the point; what this prices is the
+/// *check* — walking a slot to keep the cursor aligned, on every node, on
+/// every frame, for a hook that has nothing left to do. Whatever this scores
+/// over `UpdateBenchmark` is that check.
 ///
-/// Keep parameters in sync with `FlameUpdateCountBenchmark`.
-class UpdateCountBenchmark extends AsyncBenchmarkBase {
+/// Keep parameters in sync with `FlameUpdateHookBenchmark`.
+class UpdateHookBenchmark extends AsyncBenchmarkBase {
   final int nodes;
   final int ticks;
   final int children;
 
   late Scene<Node> scene;
 
-  UpdateCountBenchmark({
+  UpdateHookBenchmark({
     this.nodes = 1000,
     this.ticks = 500,
     this.children = 10,
-  }) : super('Update Count');
+  }) : super('Update Hook');
 
   @override
   Future<void> setup() async {
     final root = Node();
 
     for (var i = 0; i < nodes; i += 1) {
-      final node = CounterNode();
+      final node = HookNode();
 
       for (var j = 0; j < children; j += 1) {
-        node.add(CounterNode());
+        node.add(HookNode());
       }
 
       root.add(node);
@@ -52,15 +53,18 @@ class UpdateCountBenchmark extends AsyncBenchmarkBase {
   Future<void> teardown() async => scene.destroy();
 }
 
-class CounterNode extends Node {
-  int count = 0;
+class HookNode extends Node {
+  int wired = 0;
 
   @override
   void tick(double dt) {
-    count += 1;
+    fuseEffect(() {
+      wired += 1;
+      return null;
+    }, const []);
   }
 }
 
 Future<void> main() async {
-  await runBenchmark(UpdateCountBenchmark());
+  await runBenchmark(UpdateHookBenchmark());
 }
