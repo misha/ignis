@@ -1,16 +1,16 @@
 ## Benchmarks
 
-Run a benchmark:
+Its own Flutter project, so a benchmark can be run three ways:
 
 ```bash
-flutter test benchmark/update_benchmark.dart
+./bench.sh                  # every benchmark, under `flutter test`
+./bench.sh update           # just that one
+./bench.sh -p update        # under the VM's CPU sampling profiler
+./bench.sh -r update        # compiled to a release binary, then run
+./bench.sh -r flame_update  # the Flame comparison, same way
 ```
 
-Run a specific benchmark with profiling enabled:
-
-```bash
-PROFILE=1 flutter test --enable-vmservice benchmark/update_benchmark.dart
-```
+A bare name resolves to `<name>_benchmark.dart`, or to the same under `flame/`.
 
 ## Measurements
 

@@ -65,9 +65,8 @@ class SceneRenderBox extends RenderBox {
 
   set scene(Scene value) {
     if (identical(_scene, value)) return;
-    if (attached) _detachScene();
     _scene = value;
-    if (attached) _attachScene();
+    markNeedsPaint();
   }
 
   set isPaused(bool value) {
@@ -105,36 +104,20 @@ class SceneRenderBox extends RenderBox {
   @override
   void attach(PipelineOwner owner) {
     super.attach(owner);
-    _attachScene();
-  }
-
-  void _attachScene() {
     final renderLoop = this.renderLoop = RenderLoop(_renderLoopCallback);
     if (!_isPaused) renderLoop.start();
   }
 
+  // Detach pairs with attach and can recur, e.g. on reparenting, so it only
+  // stops the loop. Destruction belongs to [SceneWidget] alone.
   @override
   void detach() {
     super.detach();
-    _detachScene();
-  }
-
-  void _detachScene() {
-    _scene.destroy();
     renderLoop?.dispose();
     renderLoop = null;
   }
 
-  @override
-  void dispose() {
-    scene.destroy();
-    super.dispose();
-  }
-
   void _renderLoopCallback(double dt) {
-    // TODO: Probably one of these is extraneous.
-    assert(attached);
-    if (!attached) return;
     scene.update(dt);
     markNeedsPaint();
   }

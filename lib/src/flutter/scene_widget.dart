@@ -29,6 +29,7 @@ class SceneWidget extends StatefulWidget {
 class _SceneWidgetState extends State<SceneWidget> {
   late FocusNode _focusNode;
   late Cache _cache;
+  bool _primed = false;
 
   @override
   void initState() {
@@ -40,9 +41,19 @@ class _SceneWidgetState extends State<SceneWidget> {
   }
 
   @override
+  void didUpdateWidget(SceneWidget old) {
+    super.didUpdateWidget(old);
+    if (!identical(old.scene, widget.scene)) {
+      old.scene.destroy();
+      _primed = false;
+    }
+  }
+
+  @override
   void dispose() {
     _cache.removeListener(_reassemble);
     _focusNode.dispose();
+    widget.scene.destroy();
     super.dispose();
   }
 
@@ -58,6 +69,9 @@ class _SceneWidgetState extends State<SceneWidget> {
 
   @override
   Widget build(context) {
+    // Hidden UI disables its tickers. Follow suit so a covered scene stops.
+    final muted = !TickerMode.valuesOf(context).enabled;
+
     return Focus(
       focusNode: _focusNode,
       autofocus: widget.autofocus,
@@ -73,11 +87,14 @@ class _SceneWidgetState extends State<SceneWidget> {
             // Primes the tree with an initial update before the first real
             // frame tick, so the first paint reflects update()-driven setup
             // rather than one frame of stale state.
-            widget.scene.update(0);
+            if (!_primed) {
+              _primed = true;
+              widget.scene.update(0);
+            }
 
             return RenderSceneWidget(
               scene: widget.scene,
-              paused: widget.paused,
+              paused: widget.paused || muted,
               debug: widget.debug,
               addRepaintBoundary: widget.addRepaintBoundary,
             );

@@ -20,9 +20,6 @@ class Scene<T extends Node> {
   /// Whether the scene has been [resize]d at least once.
   bool get hasSize => _sized;
 
-  /// Emitted whenever the size changes.
-  final onResize = Signal1<Vector2>();
-
   Scene._({
     required this.node,
   }) {
@@ -30,11 +27,13 @@ class Scene<T extends Node> {
   }
 
   void update(double dt) {
+    assert(_mounted, 'Cannot update a destroyed scene.');
     _tree.flush();
     node.update(dt);
   }
 
   void reassemble() {
+    assert(_mounted, 'Cannot reassemble a destroyed scene.');
     if (_reassembling) return;
     _reassembling = true;
 
@@ -52,19 +51,29 @@ class Scene<T extends Node> {
     Canvas canvas, {
     bool debug = false,
   }) {
+    assert(_mounted, 'Cannot render a destroyed scene.');
     if (!node.enabled) return;
     node.render(canvas);
     if (debug) node.debugRender(canvas);
   }
 
   void resize(double width, double height) {
+    assert(_mounted, 'Cannot resize a destroyed scene.');
+
+    if (_sized && //
+        _size.x == width &&
+        _size.y == height) {
+      return;
+    }
+
     _size = .new(width, height);
     _sized = true;
-    onResize.emit(size);
+    node._resize(size);
   }
 
+  /// Unmounts the tree, permanently. Idempotent; every other way of driving
+  /// this scene asserts once it has been destroyed.
   void destroy() {
-    // TODO: Actually destroy?
     if (!_mounted) return;
     _mounted = false;
     node._unmount();

@@ -88,7 +88,7 @@ void main() {
     expect(box.renderLoop?.isRunning, isFalse);
   });
 
-  testWidgets('unmounts the scene when permanently removed from the tree', (tester) async {
+  testWidgets('stops driving the scene when removed, but never destroys it', (tester) async {
     final scene = makeScene();
 
     await tester.pumpWidget(
@@ -102,7 +102,11 @@ void main() {
     expect(scene.node.isMounted, isTrue);
 
     await tester.pumpWidget(const SizedBox.shrink());
-    expect(scene.node.isMounted, isFalse);
+    final updates = scene.node.updates;
+    await tester.pump(const Duration(milliseconds: 16));
+
+    expect(scene.node.isMounted, isTrue, reason: 'destruction belongs to SceneWidget');
+    expect(scene.node.updates, updates);
   });
 
   testWidgets('detaches the old scene and attaches the new one on swap', (tester) async {

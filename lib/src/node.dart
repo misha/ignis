@@ -133,6 +133,16 @@ class Node {
     }
   }
 
+  void _resize(Vector2 size) {
+    onSceneResize.emit(size);
+    final children = _egg?.nodes;
+    if (children == null || children.isEmpty) return;
+
+    for (final child in children) {
+      child._resize(size);
+    }
+  }
+
   // #region Enabled
 
   bool _enabled;
@@ -187,6 +197,10 @@ class Node {
 
   /// Emitted when this node is removed from a [Scene].
   final onUnmount = Signal0();
+
+  /// Emitted when the scene resizes, and once at mount if the scene already
+  /// has a size, so every node hears the current size.
+  final onSceneResize = Signal1<Vector2>();
 
   // #endregion
 
@@ -291,6 +305,7 @@ class Node {
     // TODO: Assert null _scene?
     _scene = scene;
     onMount.emit();
+    if (scene.hasSize) onSceneResize.emit(scene.size);
     final children = _egg?.nodes;
 
     if (children != null && children.isNotEmpty) {

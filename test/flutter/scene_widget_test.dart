@@ -52,6 +52,136 @@ void main() {
     expect(tester.widget<RenderSceneWidget>(find.byType(RenderSceneWidget)).scene, same(sceneB));
   });
 
+  testWidgets('survives being reparented', (tester) async {
+    final key = GlobalKey();
+    final scene = TestNode().mount();
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(scene, key: key),
+      ),
+    );
+
+    await tester.pumpWidget(
+      Center(
+        child: SizedBox.square(
+          dimension: 100,
+          child: SceneWidget(scene, key: key),
+        ),
+      ),
+    );
+
+    expect(scene.node.isMounted, isTrue);
+    expect(scene.node.unmounts, 0);
+  });
+
+  testWidgets('survives a transiently empty layout', (tester) async {
+    final scene = TestNode().mount();
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(scene),
+      ),
+    );
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 0,
+        child: SceneWidget(scene),
+      ),
+    );
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(scene),
+      ),
+    );
+
+    expect(scene.node.isMounted, isTrue);
+    expect(scene.node.unmounts, 0);
+  });
+
+  testWidgets('primes the scene exactly once, not on every layout', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(100, 80));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    final scene = TestNode().mount();
+    await tester.pumpWidget(SceneWidget(scene, paused: true));
+    expect(scene.node.updates, 1);
+
+    await tester.pumpWidget(SceneWidget(scene, paused: true));
+    await tester.binding.setSurfaceSize(const Size(200, 80));
+    await tester.pump();
+
+    expect(scene.node.updates, 1);
+  });
+
+  testWidgets('auto-pauses while its tickers are disabled', (tester) async {
+    final scene = TestNode().mount();
+
+    Widget harness({required bool enabled}) {
+      return TickerMode(
+        enabled: enabled,
+        child: SizedBox.square(
+          dimension: 100,
+          child: SceneWidget(scene),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(harness(enabled: true));
+    await tester.pump(const Duration(milliseconds: 16));
+    expect(scene.node.updates, greaterThanOrEqualTo(1));
+
+    await tester.pumpWidget(harness(enabled: false));
+    await tester.pump(const Duration(milliseconds: 16));
+    final coveredUpdates = scene.node.updates;
+
+    await tester.pump(const Duration(milliseconds: 16));
+    expect(scene.node.updates, coveredUpdates);
+
+    await tester.pumpWidget(harness(enabled: true));
+    await tester.pump(const Duration(milliseconds: 16));
+    await tester.pump(const Duration(milliseconds: 16));
+
+    expect(scene.node.updates, greaterThan(coveredUpdates));
+  });
+
+  testWidgets('destroys the scene when swapped for a different one', (tester) async {
+    final sceneA = Node().mount();
+    final sceneB = Node().mount();
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(sceneA),
+      ),
+    );
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(sceneB),
+      ),
+    );
+
+    expect(sceneA.node.isMounted, isFalse);
+    expect(sceneB.node.isMounted, isTrue);
+  });
+
+  testWidgets('destroys the scene when disposed', (tester) async {
+    final scene = TestNode().mount();
+
+    await tester.pumpWidget(SceneWidget(scene));
+    await tester.pumpWidget(const SizedBox());
+
+    expect(scene.node.isMounted, isFalse);
+    expect(scene.node.unmounts, 1);
+  });
+
   testWidgets('resizes the node and performs an initial update', (tester) async {
     await tester.binding.setSurfaceSize(const Size(100, 80));
     addTearDown(() => tester.binding.setSurfaceSize(null));
