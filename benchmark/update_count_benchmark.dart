@@ -6,7 +6,7 @@ import 'runner.dart';
 /// `UpdateBenchmark`'s tree (see `update_benchmark.dart`), except every node
 /// counts the ticks it sees.
 ///
-/// The count is an ordinary field, and incrementing it is a [Node.fuseTick]
+/// The count is an ordinary field, and incrementing it is a [Node.fuseUpdate]
 /// closure, which is the only hook on the per-frame path. Whatever this scores
 /// over `UpdateBenchmark` is what one tick hook costs, per node, per tick.
 ///
@@ -57,7 +57,7 @@ class CounterNode extends Node {
 
   @override
   void build() {
-    fuseTick((_) => count += 1);
+    fuseUpdate((_) => count += 1);
     super.build();
   }
 }

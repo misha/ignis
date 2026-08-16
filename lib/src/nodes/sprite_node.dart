@@ -145,7 +145,7 @@ class SpriteNode extends PaintedNode {
 
     // Advances the animation, which is the whole of what a sprite does with a
     // frame.
-    fuseTick((dt) {
+    fuseUpdate((dt) {
       if (_finished) return;
       final amount = fps * dt;
       if (amount <= 0 || !amount.isFinite) return;

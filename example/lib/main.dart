@@ -67,7 +67,7 @@ class GameNode extends Node {
       square.position.setFrom(size / 2);
     });
 
-    fuseTick((dt) {
+    fuseUpdate((dt) {
       square.angle += _SPIN * dt;
     });
 
@@ -80,7 +80,7 @@ class GameNode extends Node {
       ),
     );
 
-    fuseTick((dt) {
+    fuseUpdate((dt) {
       phase += _ORBIT_SPEED * dt;
 
       dot.position.setValues(

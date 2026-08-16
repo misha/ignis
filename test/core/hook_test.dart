@@ -188,10 +188,10 @@ void main() {
     });
   });
 
-  group('fuseTick', () {
+  group('fuseUpdate', () {
     test('runs its callback every update', () {
       var elapsed = 0.0;
-      final scene = _Node((node) => node.fuseTick((dt) => elapsed += dt)).mount();
+      final scene = _Node((node) => node.fuseUpdate((dt) => elapsed += dt)).mount();
 
       scene.update(0.5);
       scene.update(0.5);
@@ -202,7 +202,7 @@ void main() {
     test('a reassembly swaps in the callback the pass just built', () {
       final log = <String>[];
       var edited = false;
-      final node = _Node((node) => node.fuseTick((_) => log.add(edited ? 'new' : 'old')));
+      final node = _Node((node) => node.fuseUpdate((_) => log.add(edited ? 'new' : 'old')));
       final scene = node.mount();
 
       scene.update(0);
@@ -218,7 +218,7 @@ void main() {
       var declared = true;
 
       final node = _Node((node) {
-        if (declared) node.fuseTick((_) => ticks += 1);
+        if (declared) node.fuseUpdate((_) => ticks += 1);
       });
 
       final scene = node.mount();

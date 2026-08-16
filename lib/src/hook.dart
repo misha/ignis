@@ -136,20 +136,20 @@ final class _EffectHookState extends HookState<void, _EffectHook> {
 
 // #endregion
 
-// #region Tick
+// #region Update
 
-final class _TickHook extends Hook<void> {
-  final void Function(double dt) tick;
+final class _UpdateHook extends Hook<void> {
+  final void Function(double dt) update;
 
-  const _TickHook(this.tick);
+  const _UpdateHook(this.update);
 
   @override
-  _TickHookState createState() => .new();
+  _UpdateHookState createState() => .new();
 }
 
-final class _TickHookState extends HookState<void, _TickHook> {
+final class _UpdateHookState extends HookState<void, _UpdateHook> {
   @override
-  void build() => node._addTick(hook.tick);
+  void build() => node._addUpdate(hook.update);
 }
 
 // #endregion

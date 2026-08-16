@@ -81,11 +81,11 @@ class Node {
   @nonVirtual
   void update(double dt) {
     if (!_enabled) return;
-    final ticks = _ticks;
+    final updates = _updates;
 
-    if (ticks != null) {
-      for (var i = 0; i < ticks.length; i += 1) {
-        ticks[i](dt);
+    if (updates != null) {
+      for (var i = 0; i < updates.length; i += 1) {
+        updates[i](dt);
       }
     }
 
@@ -321,7 +321,7 @@ class Node {
     onUnmount.emit();
     _disposeFrom(0);
     _hooks = null;
-    _ticks = null;
+    _updates = null;
     _scene = null;
     _dependencies = null;
   }
@@ -331,7 +331,7 @@ class Node {
   // #region Hooks
 
   List<HookState<Object?, Hook<Object?>>>? _hooks;
-  List<void Function(double)>? _ticks;
+  List<void Function(double)>? _updates;
 
   /// The slot [fuse] is about to fill, or -1 while no pass is running.
   int _cursor = -1;
@@ -421,7 +421,7 @@ class Node {
   /// Guarded, and the only guarded path in the engine: a node being edited
   /// throws routinely, and one bad node must not take the walk down with it.
   void _rebuild(BuildCause cause) {
-    _ticks?.clear();
+    _updates?.clear();
     final previous = _cause;
     _cause = cause;
     _cursor = 0;
@@ -472,12 +472,12 @@ class Node {
     }
   }
 
-  /// Registers [tick] to run every frame until the next [build] pass.
+  /// Registers [update] to run every frame until the next [build] pass.
   ///
-  /// Cleared at the top of every pass, so a hook that wants to keep ticking
+  /// Cleared at the top of every pass, so a hook that wants to keep running
   /// registers again from its [HookState.build].
-  void _addTick(void Function(double dt) tick) {
-    (_ticks ??= []).add(tick);
+  void _addUpdate(void Function(double dt) update) {
+    (_updates ??= []).add(update);
   }
 
   // #endregion
@@ -507,18 +507,19 @@ class Node {
     fuse(_EffectHook(effect, keys: keys));
   }
 
-  /// Calls [tick] with the elapsed seconds on every frame, for as long as this
-  /// node keeps declaring it.
+  /// Calls [update] with the elapsed seconds on every frame, for as long as
+  /// this node keeps declaring it.
   ///
-  /// The alternative to overriding [Node.tick], and the reloadable one: the
-  /// closure is registered afresh by every pass, so an edited body is running
-  /// the frame after the save.
+  /// The only way a node runs per-frame code, and it reloads: the closure is
+  /// registered afresh by every pass, so an edited body is running the frame
+  /// after the save. Write it inline — the whole point is that the behavior
+  /// reads at the site it is declared.
   ///
   /// ```dart
-  /// fuseTick((dt) => shape.angle += _SPIN * dt);
+  /// fuseUpdate((dt) => shape.angle += _SPIN * dt);
   /// ```
   @nonVirtual
-  void fuseTick(void Function(double dt) tick) => fuse(_TickHook(tick));
+  void fuseUpdate(void Function(double dt) update) => fuse(_UpdateHook(update));
 
   /// Builds a child with [create], adds it, and returns the same one on every
   /// later pass.

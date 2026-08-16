@@ -129,7 +129,7 @@ void main() {
 
     node.buildAction = () {
       child = node.fuseChild(Node.new);
-      node.fuseTick((_) => log.add(edited ? 'new' : 'old'));
+      node.fuseUpdate((_) => log.add(edited ? 'new' : 'old'));
     };
 
     final scene = node.mount();
