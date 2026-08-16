@@ -337,8 +337,7 @@ class Node {
     _emptyTrash();
     _ticks = null;
     _trash = null;
-    _kept = null;
-    _claimed = null;
+    _declared = null;
     _scene = null;
     _dependencies = null;
   }
@@ -383,6 +382,7 @@ class Node {
     _emptyTrash();
     final builder = _builder;
     _builder = this;
+    _cursor = 0;
     var completed = false;
 
     try {
@@ -398,60 +398,21 @@ class Node {
         ),
       );
     } finally {
-      if (completed) _sweep();
-      _claimed?.clear();
+      if (completed) _truncateDeclared();
+      _cursor = -1;
       _builder = builder;
     }
   }
 
-  /// Runs [create] with no pass active, so a node built inside one does not
-  /// hand its constructor's subscriptions to the node that built it.
-  static T _construct<T>(T Function() create) {
-    final builder = _builder;
-    _builder = null;
+  /// The children this node's [build] declared, in declaration order.
+  ///
+  /// Separate from [children], which also holds whatever was added
+  /// imperatively - a runtime spawn is nobody's declaration and must survive
+  /// a pass that never mentions it.
+  List<_Slot>? _declared;
 
-    try {
-      return create();
-    } finally {
-      _builder = builder;
-    }
-  }
-
-  // #endregion
-
-  // #region Live
-
-  Map<Symbol, _Kept>? _kept;
-  Set<Symbol>? _claimed;
-
-  /// Backs [live]. See it for the contract.
-  Object? _keep(Symbol name, Object? Function() create, List<Object?> keys) {
-    final claimed = _claimed ??= {};
-    final added = claimed.add(name);
-    assert(added, 'Two live() declarations in $runtimeType share $name.');
-    final kept = _kept ??= {};
-    final previous = kept[name];
-    if (previous != null && previous.matches(keys)) return previous.value;
-
-    // Whatever the keys replaced is as finished as one the pass dropped.
-    if (previous?.value case final Node stale) stale.detach();
-    final value = _construct(create);
-    kept[name] = _Kept(value, keys);
-    return value;
-  }
-
-  /// Drops everything the pass just finished stopped declaring.
-  void _sweep() {
-    final kept = _kept;
-    if (kept == null || kept.isEmpty) return;
-    final claimed = _claimed;
-
-    kept.removeWhere((name, entry) {
-      if (claimed != null && claimed.contains(name)) return false;
-      if (entry.value case final Node stale) stale.detach();
-      return true;
-    });
-  }
+  /// The position [add] is about to declare, or -1 while no pass is running.
+  int _cursor = -1;
 
   // #endregion
 
@@ -529,7 +490,80 @@ class Node {
   ///
   /// Nodes cannot be added to themselves or their descendants. Adding a child
   /// to its current parent is a no-op.
-  T add<T extends Node>(T node) {
+  ///
+  /// Inside this node's own [build] pass this is a *declaration* instead, and
+  /// the returned node is the one that survives - which on any pass after the
+  /// first is the one already standing there. See [_declare].
+  ///
+  /// Pass [keys] to tie the child to something, and a pass whose keys no
+  /// longer compare equal replaces it rather than keeping it:
+  ///
+  /// ```dart
+  /// final square = add(ShapeNode(shape: .square(_SIZE)), [_SIZE]);
+  /// ```
+  ///
+  /// Ignored outside a pass, where there is no previous child to compare to.
+  T add<T extends Node>(T node, [List<Object?> keys = const []]) {
+    if (_cursor >= 0 && identical(_builder, this)) return _declare(node, keys);
+    return _addNow(node);
+  }
+
+  /// Matches [node] against the child this pass declared in the same position
+  /// last time, and keeps whichever of the two should survive.
+  ///
+  /// A pass re-runs from the top, so `add(ShapeNode(...))` builds a fresh node
+  /// every time. The fresh one is a *description*: if the position already
+  /// holds a live node of the same type, the description is thrown away and
+  /// the standing node is returned, so its state survives the reload. Only a
+  /// change of type replaces it.
+  ///
+  /// Identity is the call's position among this pass's `add`s, so inserting a
+  /// declaration shifts every one after it. Append rather than insert, or the
+  /// nodes below shuffle down a slot and get replaced.
+  T _declare<T extends Node>(T node, List<Object?> keys) {
+    final declared = _declared ??= [];
+    final index = _cursor++;
+
+    if (index < declared.length) {
+      final standing = declared[index];
+
+      // A field or a `live` value, handed back to us as the same instance.
+      if (identical(standing.node, node)) {
+        if (!owns(node)) _addNow(node);
+        declared[index] = _Slot(node, keys);
+        return node;
+      }
+
+      // A node that detached itself, e.g. one built with `cleanup`, leaves its
+      // position to be filled again rather than held by a corpse.
+      if (standing.node.runtimeType == node.runtimeType &&
+          owns(standing.node) &&
+          _sameKeys(standing.keys, keys)) {
+        return standing.node as T;
+      }
+
+      standing.node.detach();
+      declared[index] = _Slot(node, keys);
+      return _addNow(node);
+    }
+
+    declared.add(_Slot(node, keys));
+    return _addNow(node);
+  }
+
+  /// Detaches every declared child the pass just finished stopped declaring.
+  void _truncateDeclared() {
+    final declared = _declared;
+    if (declared == null || _cursor >= declared.length) return;
+
+    for (var i = declared.length - 1; i >= _cursor; i -= 1) {
+      declared[i].node.detach();
+    }
+
+    declared.removeRange(_cursor, declared.length);
+  }
+
+  T _addNow<T extends Node>(T node) {
     if (owns(node)) {
       return node;
     }
@@ -557,8 +591,13 @@ class Node {
     return node;
   }
 
-  /// Adds all [nodes] to this node.
-  void addAll(Iterable<Node> nodes) => nodes.forEach(add);
+  /// Adds all [nodes] to this node, each taking its own declaration inside a
+  /// [build] pass. [keys] guard the whole run of them.
+  void addAll(Iterable<Node> nodes, [List<Object?> keys = const []]) {
+    for (final node in nodes) {
+      add(node, keys);
+    }
+  }
 
   /// Adds this node to the target [node].
   void attach(Node node) => node.add(this);

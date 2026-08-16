@@ -48,16 +48,16 @@ class GameNode extends Node {
 
   @override
   void build() {
-    // Named, so it is built once and survives every later pass - but keyed on
-    // _SIZE, so editing that rebuilds it. Drop the key and the square keeps
-    // whatever size it was born with.
+    // A declaration, matched by position. This ShapeNode is rebuilt on every
+    // pass and thrown away again - the one already standing here is what
+    // survives. Keyed on _SIZE, so editing that replaces it; drop the key and
+    // the square keeps whatever size it was born with.
     final square = add(
-      live(#square, () {
-        return ShapeNode(
-          shape: .square(_SIZE),
-          anchor: .center,
-        );
-      }, [_SIZE]),
+      ShapeNode(
+        shape: .square(_SIZE),
+        anchor: .center,
+      ),
+      [_SIZE],
     );
 
     // Build runs on every pass, so editing _COLOR does persist.
@@ -73,20 +73,18 @@ class GameNode extends Node {
       square.angle += _SPIN * dt;
     };
 
-    // Unkeyed, so this one is built once and never again. Editing its radius
-    // does nothing; renaming #dot replaces it; deleting the block sweeps it,
-    // detaches it, and stops its tick.
+    // Delete this block and save: the dot is truncated away and detached, and
+    // its tick stops.
     //
-    // Add a declaration *above* this one and save: the dot is untouched,
-    // because a name does not shift the way a slot would.
+    // Now add a declaration *above* it and save: this one shifts down a
+    // position, finds the square's slot instead of its own, and gets replaced.
+    // That is what positional identity costs.
     final dot = add(
-      live(#dot, () {
-        return ShapeNode(
-          shape: .circle(10),
-          anchor: .center,
-          paint: .new()..color = Colors.white,
-        );
-      }),
+      ShapeNode(
+        shape: .circle(10),
+        anchor: .center,
+        paint: .new()..color = Colors.white,
+      ),
     );
 
     tick << (dt) {

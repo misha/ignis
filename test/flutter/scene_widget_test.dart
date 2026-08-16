@@ -249,7 +249,7 @@ void main() {
     expect(scene.node.builds, 2);
   });
 
-  testWidgets('a hot reload replaces the body but keeps what live owns', (
+  testWidgets('a hot reload replaces the body but keeps what it declared', (
     tester,
   ) async {
     final log = <String>[];
@@ -258,7 +258,7 @@ void main() {
     late Node kept;
 
     node.buildAction = () {
-      kept = node.add(live(#kept, Node.new));
+      kept = node.add(Node());
       node.tick << (_) => log.add(edited ? 'new' : 'old');
     };
 
@@ -281,7 +281,7 @@ void main() {
     log.clear();
     scene.update(0);
 
-    expect(kept, same(first), reason: 'the named value survives the reload');
+    expect(kept, same(first), reason: 'the declared child survives the reload');
     expect(log, ['new'], reason: 'the tick closure around it does not');
   });
 

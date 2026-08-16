@@ -18,12 +18,10 @@ final class _Node extends Node {
   }
 }
 
-/// A node that subscribes from its constructor, as most engine nodes do.
-final class _Subscriber extends Node {
-  _Subscriber(Signal0 signal, void Function() handle) {
-    signal(handle);
-  }
-}
+/// Two distinguishable node types, for watching a declaration change shape.
+final class _A extends Node {}
+
+final class _B extends Node {}
 
 /// Runs [body] with error reporting captured instead of presented.
 List<FlutterErrorDetails> _reported(void Function() body) {
@@ -73,210 +71,117 @@ void main() {
     });
   });
 
-  group('live', () {
-    test('is unavailable outside a pass', () {
-      expect(() => live(#thing, Node.new), throwsStateError);
-    });
-
-    test('runs its closure once and keeps the result', () {
-      var creations = 0;
-
-      final node = _Node((_) {
-        live(#thing, () {
-          creations += 1;
-          return Node();
-        });
-      });
-
-      final scene = node.mount();
-      scene.reassemble();
-      scene.reassemble();
-
-      expect(creations, 1);
-    });
-
-    test('hands back the same value on every pass', () {
-      Object? kept;
-      final node = _Node((_) => kept = live(#thing, Node.new));
-      final scene = node.mount();
-      final first = kept;
-
-      scene.reassemble();
-
-      expect(kept, same(first));
-    });
-
-    test('survives declarations appearing above it', () {
-      Object? kept;
-      var expanded = false;
-
-      final node = _Node((_) {
-        if (expanded) live(#added, Node.new);
-        kept = live(#thing, Node.new);
-      });
-
-      final scene = node.mount();
-      final first = kept;
-      expanded = true;
-
-      final reported = _reported(scene.reassemble);
-
-      expect(reported, isEmpty);
-      expect(kept, same(first), reason: 'a name does not shift');
-    });
-
-    test('a new name is built, an abandoned one is dropped', () {
-      var which = #a;
-      final node = _Node((n) => n.add(live(which, Node.new)));
+  group('declarations', () {
+    test('discards what a later pass builds for the child already standing', () {
+      final node = _Node((n) => n.add(_A()));
       final scene = node.mount()..update(0);
       final first = node.children.single;
 
-      which = #b;
-      scene.reassemble();
-
-      expect(node.children.single, isNot(same(first)));
-      expect(first.isMounted, isFalse, reason: 'the old name was swept');
-    });
-
-    test('adds nothing to the tree by itself', () {
-      final node = _Node((_) => live(#thing, () => Node()));
-      node.mount();
-
-      expect(node.children, isEmpty);
-    });
-
-    test('a swept node is detached, wherever it was parented', () {
-      var declared = true;
-      late Node holder;
-
-      final node = _Node((n) {
-        holder = live(#holder, Node.new);
-        n.add(holder);
-        if (declared) holder.add(live(#leaf, Node.new));
-      });
-
-      final scene = node.mount()..update(0);
-      final leaf = holder.children.single;
-
-      declared = false;
       scene.reassemble();
       scene.update(0);
 
-      expect(leaf.isMounted, isFalse);
-      expect(holder.children, isEmpty);
+      expect(node.children, hasLength(1));
+      expect(node.children.single, same(first));
     });
 
-    test('a pass that throws sweeps nothing', () {
-      Object? kept;
-
-      final node = _Node((_) => kept = live(#thing, Node.new));
-      final scene = node.mount();
-      final first = kept;
-      node.builder = (_) => throw StateError('mid-edit');
-
-      _reported(scene.reassemble);
-      node.builder = (_) => kept = live(#thing, Node.new);
-      scene.reassemble();
-
-      expect(kept, same(first), reason: 'the failed pass kept its hands off');
-    });
-
-    test('two declarations sharing a name are caught', () {
-      final node = _Node((_) {
-        live(#thing, Node.new);
-        live(#thing, Node.new);
-      });
-
-      final reported = _reported(node.mount);
-
-      expect(reported, hasLength(1));
-      expect(reported.single.exception, isA<AssertionError>());
-    });
-
-    test('a value built in a pass keeps its subscriptions to itself', () {
-      final signal = Signal0();
-      var emissions = 0;
-
-      final node = _Node((_) {
-        live(#sub, () => _Subscriber(signal, () => emissions += 1));
-      });
-
-      final scene = node.mount();
-      scene.reassemble();
-      signal.emit();
-
-      expect(emissions, 1, reason: 'the parent pass never took it over');
-    });
-
-    test('keeps its value while its keys compare equal', () {
-      var size = 100.0;
-      var creations = 0;
-
-      final node = _Node((_) {
-        live(#thing, () {
-          creations += 1;
-          return Node();
-        }, [size]);
-      });
-
-      final scene = node.mount();
-      scene.reassemble();
-      expect(creations, 1);
-
-      size = 200.0;
-      scene.reassemble();
-
-      expect(creations, 2, reason: 'the key changed');
-    });
-
-    test('detaches the node its keys replaced', () {
-      var size = 100.0;
-      final node = _Node((n) => n.add(live(#thing, Node.new, [size])));
+    test('replaces the standing child when the type changes', () {
+      var first = true;
+      final node = _Node((n) => n.add(first ? _A() : _B()));
       final scene = node.mount()..update(0);
-      final first = node.children.single;
+      final a = node.children.single;
 
-      size = 200.0;
+      first = false;
       scene.reassemble();
+      scene.update(0);
 
-      expect(first.isMounted, isFalse);
-      expect(node.children.single, isNot(same(first)));
+      expect(a.isMounted, isFalse);
+      expect(node.children.single, isA<_B>());
     });
 
-    test('treats two NaN keys as equal, and 0.0 and -0.0 as different', () {
-      var key = double.nan;
-      var creations = 0;
+    test('replaces the standing child when its keys change', () {
+      var size = 10.0;
+      final node = _Node((n) => n.add(_A(), [size]));
+      final scene = node.mount()..update(0);
+      final a = node.children.single;
 
-      final node = _Node((_) {
-        live(#thing, () {
-          creations += 1;
-          return Node();
-        }, [key]);
+      scene.reassemble();
+      scene.update(0);
+      expect(node.children.single, same(a), reason: 'the key held');
+
+      size = 20.0;
+      scene.reassemble();
+      scene.update(0);
+
+      expect(a.isMounted, isFalse);
+      expect(node.children.single, isNot(same(a)));
+    });
+
+    test('truncates what a pass stops declaring', () {
+      var both = true;
+
+      final node = _Node((n) {
+        n.add(_A());
+        if (both) n.add(_B());
       });
 
-      final scene = node.mount();
-      key = double.nan;
-      scene.reassemble();
-      expect(creations, 1, reason: 'NaN would never equal itself');
+      final scene = node.mount()..update(0);
+      expect(node.children, hasLength(2));
+      final b = node.children.last;
 
-      key = 0.0;
+      both = false;
       scene.reassemble();
-      key = -0.0;
-      scene.reassemble();
+      scene.update(0);
 
-      expect(creations, 3, reason: 'equal, but not the same key');
+      expect(node.children, hasLength(1));
+      expect(b.isMounted, isFalse);
     });
 
-    test('keeps anything, not just nodes', () {
-      late List<int> kept;
-      final node = _Node((_) => kept = live(#list, () => <int>[]));
-      final scene = node.mount();
-      final first = kept;
-      kept.add(1);
+    test('leaves imperative additions alone', () {
+      final node = _Node((n) => n.add(_A()));
+      final scene = node.mount()..update(0);
+      final spawned = node.add(_B());
+      scene.update(0);
 
       scene.reassemble();
+      scene.update(0);
 
-      expect(kept, same(first));
-      expect(kept, [1]);
+      expect(spawned.isMounted, isTrue, reason: 'no pass declared it');
+      expect(node.children, hasLength(2));
+    });
+
+    test('refills the position of a child that detached itself', () {
+      final node = _Node((n) => n.add(_A()));
+      final scene = node.mount()..update(0);
+      final a = node.children.single;
+
+      a.detach();
+      scene.update(0);
+      expect(node.children, isEmpty);
+
+      scene.reassemble();
+      scene.update(0);
+
+      expect(node.children, hasLength(1));
+      expect(node.children.single, isNot(same(a)));
+    });
+
+    test('shifts everything after a declaration inserted above it', () {
+      var inserted = false;
+
+      final node = _Node((n) {
+        if (inserted) n.add(_B());
+        n.add(_A());
+      });
+
+      final scene = node.mount()..update(0);
+      final a = node.children.single;
+
+      inserted = true;
+      scene.reassemble();
+      scene.update(0);
+
+      expect(a.isMounted, isFalse, reason: 'position 0 became the _B');
+      expect(node.children, hasLength(2));
     });
   });
 
