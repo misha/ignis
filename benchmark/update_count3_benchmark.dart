@@ -6,10 +6,10 @@ import 'runner.dart';
 /// `UpdateCountBenchmark`'s tree (see `update_count_benchmark.dart`), except
 /// every node counts three times over.
 ///
-/// Doubling the hooks rather than the nodes is what separates a tick hook's
-/// one-time cost from its marginal one: whatever this scores over the
-/// two-counter run is what a third [Node.onUpdate] costs, per node, per
-/// tick.
+/// Tripling the closures rather than the nodes is what separates a tick
+/// closure's one-time cost from its marginal one: whatever this scores over
+/// the two-counter run is what a third [Node.tick] closure costs, per node,
+/// per tick.
 ///
 /// Keep parameters in sync with `FlameUpdateCount3Benchmark`.
 class UpdateCount3Benchmark extends AsyncBenchmarkBase {
@@ -60,9 +60,18 @@ class CounterNode extends Node {
 
   @override
   void build() {
-    onUpdate((_) => first += 1);
-    onUpdate((_) => second += 1);
-    onUpdate((_) => third += 1);
+    tick << (_) {
+      first += 1;
+    };
+
+    tick << (_) {
+      second += 1;
+    };
+
+    tick << (_) {
+      third += 1;
+    };
+
     super.build();
   }
 }

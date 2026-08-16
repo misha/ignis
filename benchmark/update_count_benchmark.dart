@@ -6,9 +6,9 @@ import 'runner.dart';
 /// `UpdateBenchmark`'s tree (see `update_benchmark.dart`), except every node
 /// counts the ticks it sees.
 ///
-/// The count is an ordinary field, and incrementing it is a [Node.onUpdate]
-/// closure, which is the only hook on the per-frame path. Whatever this scores
-/// over `UpdateBenchmark` is what one tick hook costs, per node, per tick.
+/// The count is an ordinary field, and incrementing it is a [Node.tick]
+/// closure, which is the whole of the per-frame path. Whatever this scores
+/// over `UpdateBenchmark` is what one tick closure costs, per node, per tick.
 ///
 /// Keep parameters in sync with `FlameUpdateCountBenchmark`.
 class UpdateCountBenchmark extends AsyncBenchmarkBase {
@@ -57,7 +57,10 @@ class CounterNode extends Node {
 
   @override
   void build() {
-    onUpdate((_) => count += 1);
+    tick << (_) {
+      count += 1;
+    };
+
     super.build();
   }
 }

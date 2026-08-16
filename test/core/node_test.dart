@@ -122,7 +122,7 @@ void main() {
     a.mount();
     log.builds.clear();
 
-    a.reassemble(.reload);
+    a.reassemble();
     expect(log.builds, ['A', 'C', 'B', 'D']);
   });
 
@@ -135,7 +135,7 @@ void main() {
     a.mount();
     b.enabled = false;
 
-    a.reassemble(.reload);
+    a.reassemble();
 
     expect(b.builds, 2);
     expect(c.builds, 2, reason: 'the walk stopped at a disabled node');

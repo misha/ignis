@@ -49,8 +49,8 @@ part of 'core.dart';
 /// Everything a node captures from outside itself - subscriptions, cached
 /// assets, derived values, per-frame behavior - is declared in [build], which
 /// runs on mount and is re-run whenever the world changes out from under the
-/// live tree. State declared with a hook survives the re-run; the closures
-/// around it do not, so they come back freshly compiled.
+/// live tree. The closures do not survive the re-run, so they come back
+/// freshly compiled; anything that should survive is named with [live].
 ///
 /// The re-run is a [reassemble] walk over the whole tree. Unlike [update] and
 /// [render], it ignores the [enabled] flag, so even disabled nodes rebuild.
@@ -81,11 +81,11 @@ class Node {
   @nonVirtual
   void update(double dt) {
     if (!_enabled) return;
-    final updates = _updates;
+    final ticks = _ticks;
 
-    if (updates != null) {
-      for (var i = 0; i < updates.length; i += 1) {
-        updates[i](dt);
+    if (ticks != null) {
+      for (var i = 0; i < ticks.length; i += 1) {
+        ticks[i](dt);
       }
     }
 
@@ -117,14 +117,14 @@ class Node {
   /// what a node captured from outside itself. Tree operations the pass
   /// enqueues are flushed once the whole walk is done.
   @nonVirtual
-  void reassemble(BuildCause cause) {
-    _rebuild(cause);
+  void reassemble() {
+    _rebuild();
 
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
-      child.reassemble(cause);
+      child.reassemble();
     }
   }
 
@@ -311,7 +311,7 @@ class Node {
   void _mount(Scene scene) {
     // TODO: Assert null _scene?
     _scene = scene;
-    _rebuild(.mount);
+    _rebuild();
     onMount.emit();
     if (scene.hasSize) onSceneResize.emit(scene.size);
     final children = _egg?.nodes;
@@ -334,146 +334,60 @@ class Node {
     }
 
     onUnmount.emit();
-    _trash?._empty();
-    _disposeFrom(0);
-    _hooks = null;
-    _updates = null;
+    _emptyTrash();
+    _ticks = null;
     _trash = null;
+    _kept = null;
+    _claimed = null;
     _scene = null;
     _dependencies = null;
   }
 
   // #endregion
 
-  // #region Hooks
-
-  List<HookState<Object?, Hook<Object?>>>? _hooks;
-
-  /// The slot [on] is about to fill, or -1 while no pass is running.
-  int _cursor = -1;
-
-  /// True while [on] is filling a slot, so a hook declared from inside another
-  /// one is caught rather than taking the slot the outer one is still filling.
-  bool _declaring = false;
-
-  /// Why the pass currently running was started. Only ever read by [on], and
-  /// only to decide whether a change in hook shape is legitimate.
-  static BuildCause? _cause;
+  // #region Building
 
   /// The node whose [build] pass is currently running, or null between passes.
   ///
-  /// How a [Signal] subscribed mid-pass finds the node to insert itself into.
+  /// How [live] and a [Signal] subscribed mid-pass find the building node.
   static Node? _builder;
 
-  /// Declares this node's state and behavior.
+  /// Declares this node's behavior.
   ///
-  /// Runs once on mount and again on every [reassemble], so anything declared
-  /// here with a hook is refreshed when the world changes: handlers come back
-  /// freshly compiled, values are re-read, and whatever the previous pass
-  /// registered is torn down first.
+  /// Runs once on mount and again on every [reassemble], so everything it
+  /// declares is refreshed when the world changes: handlers come back freshly
+  /// compiled, values are re-read, and whatever the previous pass registered
+  /// is torn down first.
   ///
-  /// Hooks are matched by call order across passes, so they must be used
-  /// unconditionally — never inside an `if`, a loop, or a closure. A whole
-  /// class hierarchy shares one set of slots, which is why `super.build()` is
-  /// required: skipping it drops whatever the superclass declared.
+  /// A pass re-runs from the top, so anything with state worth keeping is
+  /// wrapped in [live] and named. Everything else - [tick] closures, [trash]
+  /// cleanups, plain configuration - is rebuilt wholesale, and none of it
+  /// cares where in the body it sits.
+  ///
+  /// `super.build()` is required: skipping it drops whatever the superclass
+  /// declared.
   @mustCallSuper
   @visibleForOverriding
   void build() {
     // Nothing to do.
   }
 
-  /// Registers [hook] in the current [build] pass and returns its value.
-  ///
-  /// This is the primitive every `on*` hook is built out of; reach for it
-  /// directly only when writing a [Hook] of your own.
-  @nonVirtual
-  R on<R>(Hook<R> hook) {
-    if (_cursor < 0) {
-      throw StateError('Hooks are only available inside Node.build.');
-    }
-
-    if (_declaring) {
-      throw StateError(
-        'A hook was declared while another one was still being declared. '
-        'Always declare hooks directly inside from build(), never inside '
-        'another hook or a constructor that runs in another hook.',
-      );
-    }
-
-    _declaring = true;
-
-    try {
-      return _declare(hook);
-    } finally {
-      _declaring = false;
-    }
-  }
-
-  R _declare<R>(Hook<R> hook) {
-    final hooks = _hooks ??= [];
-    if (_cursor == hooks.length) return _append(hook);
-
-    final state = hooks[_cursor];
-    final previous = state.hook;
-
-    if (previous.runtimeType != hook.runtimeType) {
-      if (_cause != BuildCause.reload) {
-        throw StateError(
-          'The hooks declared by build() changed without a hot reload. '
-          'Declare them unconditionally and in the same order every pass, '
-          'never inside an if, a loop, or a closure.',
-        );
-      }
-
-      // The reload edited build() itself, so everything from here on is a
-      // fresh declaration and the old states have nothing left to describe.
-      _disposeFrom(_cursor);
-      return _append(hook);
-    }
-
-    if (Hook.shouldPreserveState(previous, hook)) {
-      state._hook = hook;
-      state.didUpdateHook(previous);
-    } else {
-      _dispose(state);
-
-      hooks[_cursor] = hook.createState()
-        .._node = this
-        .._hook = hook
-        ..initHook();
-    }
-
-    final value = hooks[_cursor].build() as R;
-    _cursor += 1;
-    return value;
-  }
-
-  R _append<R>(Hook<R> hook) {
-    final state = hook.createState()
-      .._node = this
-      .._hook = hook
-      ..initHook();
-
-    _hooks!.add(state);
-    _cursor += 1;
-    return state.build();
-  }
-
-  /// Runs one [build] pass, then discards whatever the pass left behind.
+  /// Runs one [build] pass and drops whatever the pass stopped declaring.
   ///
   /// Guarded, and the only guarded path in the engine: a node being edited
   /// throws routinely, and one bad node must not take the walk down with it.
-  void _rebuild(BuildCause cause) {
-    _updates?.clear();
-    _trash?._empty();
-    final previous = _cause;
+  /// A pass that throws sweeps nothing, since what it failed to reach is not
+  /// evidence that it was abandoned.
+  void _rebuild() {
+    _ticks?.clear();
+    _emptyTrash();
     final builder = _builder;
-    _cause = cause;
     _builder = this;
-    _cursor = 0;
+    var completed = false;
 
     try {
       build();
+      completed = true;
     } catch (exception, stack) {
       FlutterError.reportError(
         FlutterErrorDetails(
@@ -484,71 +398,87 @@ class Node {
         ),
       );
     } finally {
-      _disposeFrom(_cursor);
-      _cursor = -1;
-      _cause = previous;
+      if (completed) _sweep();
+      _claimed?.clear();
       _builder = builder;
     }
   }
 
-  /// Disposes every hook state from [index] on, in reverse order, and drops
-  /// them from the slots.
-  void _disposeFrom(int index) {
-    final hooks = _hooks;
-    if (hooks == null || index >= hooks.length) return;
+  /// Runs [create] with no pass active, so a node built inside one does not
+  /// hand its constructor's subscriptions to the node that built it.
+  static T _construct<T>(T Function() create) {
+    final builder = _builder;
+    _builder = null;
 
-    for (var i = hooks.length - 1; i >= index; i -= 1) {
-      _dispose(hooks[i]);
-    }
-
-    hooks.removeRange(index, hooks.length);
-  }
-
-  void _dispose(HookState<Object?, Hook<Object?>> state) {
     try {
-      state.dispose();
-    } catch (exception, stack) {
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: exception,
-          stack: stack,
-          library: 'ignis',
-          context: ErrorDescription('while disposing a ${state.runtimeType}'),
-        ),
-      );
+      return create();
+    } finally {
+      _builder = builder;
     }
   }
 
   // #endregion
 
-  // #region Updates
+  // #region Live
 
-  List<void Function(double)>? _updates;
+  Map<Symbol, _Kept>? _kept;
+  Set<Symbol>? _claimed;
 
-  /// Calls [update] with the elapsed seconds on every frame, for as long as
-  /// this node keeps declaring it.
-  ///
-  /// The only way a node runs per-frame code, and it reloads: the closure is
-  /// registered afresh by every pass, so an edited body is running the frame
-  /// after the save. Write it inline — the whole point is that the behavior
-  /// reads at the site it is declared.
+  /// Backs [live]. See it for the contract.
+  Object? _keep(Symbol name, Object? Function() create, List<Object?> keys) {
+    final claimed = _claimed ??= {};
+    final added = claimed.add(name);
+    assert(added, 'Two live() declarations in $runtimeType share $name.');
+    final kept = _kept ??= {};
+    final previous = kept[name];
+    if (previous != null && previous.matches(keys)) return previous.value;
+
+    // Whatever the keys replaced is as finished as one the pass dropped.
+    if (previous?.value case final Node stale) stale.detach();
+    final value = _construct(create);
+    kept[name] = _Kept(value, keys);
+    return value;
+  }
+
+  /// Drops everything the pass just finished stopped declaring.
+  void _sweep() {
+    final kept = _kept;
+    if (kept == null || kept.isEmpty) return;
+    final claimed = _claimed;
+
+    kept.removeWhere((name, entry) {
+      if (claimed != null && claimed.contains(name)) return false;
+      if (entry.value case final Node stale) stale.detach();
+      return true;
+    });
+  }
+
+  // #endregion
+
+  // #region Tick
+
+  List<void Function(double dt)>? _ticks;
+
+  /// What this node does every frame, for as long as the pass keeps declaring
+  /// it.
   ///
   /// ```dart
-  /// onUpdate((dt) => shape.angle += pi / 4 * dt);
+  /// tick << (dt) {
+  ///   square.angle += _SPIN * dt;
+  /// };
   /// ```
   ///
-  /// Not a hook. The list is emptied and refilled by every pass, so this may
-  /// be called from inside an `if`, a loop, or a helper.
+  /// The bag is an extension type over this node, so it costs nothing: the
+  /// callbacks live in a field the frame path reads directly, and a node that
+  /// never ticks holds a null.
   @nonVirtual
-  void onUpdate(void Function(double dt) update) {
-    (_updates ??= []).add(update);
-  }
+  Tick get tick => Tick(this);
 
   // #endregion
 
   // #region Trash
 
-  Trash? _trash;
+  List<Cleanup>? _trash;
 
   /// Whatever this [build] pass has to release when it stops being current.
   ///
@@ -560,35 +490,35 @@ class Node {
   /// trash << painter.dispose;
   /// ```
   ///
-  /// Lazily allocated, so a node that never defers anything pays a null field
-  /// rather than a bag.
+  /// The bag is an extension type over this node, so a node that never defers
+  /// anything holds a null rather than an object.
   @nonVirtual
-  Trash get trash => _trash ??= Trash();
+  Trash get trash => Trash(this);
 
-  // #endregion
+  /// Runs every deferred cleanup, most recently thrown in first.
+  ///
+  /// Guarded: one bad cleanup must not strand the rest of the bag. The list is
+  /// taken first, so a cleanup that defers more work fills a fresh bag rather
+  /// than one being emptied out from under it.
+  void _emptyTrash() {
+    final cleanups = _trash;
+    if (cleanups == null || cleanups.isEmpty) return;
+    _trash = null;
 
-  // #region Standard Hooks
-
-  /// Builds a child with [create], adds it, and returns the same one on every
-  /// later pass.
-  ///
-  /// ```dart
-  /// final shape = child(() => ShapeNode(shape: .square(100)));
-  /// ```
-  ///
-  /// The child is built once and kept, so its constructor arguments are state
-  /// and a reload leaves them alone. Pass [keys] to tie it to something: when
-  /// they stop comparing equal the child is removed and a new one built.
-  ///
-  /// The child is removed when this node unmounts, or when the pass that
-  /// declared it stops doing so. Like every tree operation on a mounted node,
-  /// both are enqueued rather than immediate.
-  @nonVirtual
-  T child<T extends Node>(
-    T Function() create, [
-    List<Object?> keys = const [],
-  ]) {
-    return on(_ChildHook<T>(create, keys: keys));
+    for (var i = cleanups.length - 1; i >= 0; i -= 1) {
+      try {
+        cleanups[i]();
+      } catch (exception, stack) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: exception,
+            stack: stack,
+            library: 'ignis',
+            context: ErrorDescription('while emptying the trash'),
+          ),
+        );
+      }
+    }
   }
 
   // #endregion

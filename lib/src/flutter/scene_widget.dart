@@ -60,11 +60,11 @@ class _SceneWidgetState extends State<SceneWidget> {
   @override
   void reassemble() {
     super.reassemble();
-    widget.scene.reassemble(.reload);
+    widget.scene.reassemble();
   }
 
   void _reassembleAssets() {
-    widget.scene.reassemble(.assets);
+    widget.scene.reassemble();
   }
 
   @override

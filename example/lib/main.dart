@@ -25,7 +25,9 @@ class GamePage extends HookWidget {
 
   @override
   Widget build(context) {
-    final game = useMemoized(() => GameNode());
+    final game = useMemoized(() {
+      return GameNode();
+    });
 
     return Scaffold(
       body: SceneWidget(game.mount()),
@@ -46,43 +48,55 @@ class GameNode extends Node {
 
   @override
   void build() {
-    // Construction is state, so a reload preserves it.
-    // Thus, changing _SIZE has no effect on the existing square.
-    final square = child(() {
-      return ShapeNode(
-        shape: .square(_SIZE),
-        anchor: .center,
-      );
-    });
+    // Named, so it is built once and survives every later pass - but keyed on
+    // _SIZE, so editing that rebuilds it. Drop the key and the square keeps
+    // whatever size it was born with.
+    final square = add(
+      live(#square, () {
+        return ShapeNode(
+          shape: .square(_SIZE),
+          anchor: .center,
+        );
+      }, [_SIZE]),
+    );
 
     // Build runs on every pass, so editing _COLOR does persist.
     square.paint.color = _COLOR;
 
+    // Signals subscribed in a pass are owned by it, and re-subscribed by the
+    // next one. No bookkeeping.
     onSceneResize((size) {
       square.position.setFrom(size / 2);
     });
 
-    onUpdate((dt) {
+    tick << (dt) {
       square.angle += _SPIN * dt;
-    });
+    };
 
-    // Delete this block and save: the dot detaches and its tick stops.
-    final dot = child(() {
-      return ShapeNode(
-        shape: .circle(10),
-        anchor: .center,
-        paint: .new()..color = Colors.white,
-      );
-    });
+    // Unkeyed, so this one is built once and never again. Editing its radius
+    // does nothing; renaming #dot replaces it; deleting the block sweeps it,
+    // detaches it, and stops its tick.
+    //
+    // Add a declaration *above* this one and save: the dot is untouched,
+    // because a name does not shift the way a slot would.
+    final dot = add(
+      live(#dot, () {
+        return ShapeNode(
+          shape: .circle(10),
+          anchor: .center,
+          paint: .new()..color = Colors.white,
+        );
+      }),
+    );
 
-    onUpdate((dt) {
+    tick << (dt) {
       phase += _ORBIT_SPEED * dt;
 
       dot.position.setValues(
         square.position.x + cos(phase) * _ORBIT,
         square.position.y + sin(phase) * _ORBIT,
       );
-    });
+    };
 
     super.build();
   }

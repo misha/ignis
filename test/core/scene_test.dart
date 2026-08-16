@@ -57,7 +57,7 @@ void main() {
     scene.destroy();
 
     expect(() => scene.update(0), throwsAssertionError);
-    expect(() => scene.reassemble(.reload), throwsAssertionError);
+    expect(() => scene.reassemble(), throwsAssertionError);
     expect(() => scene.resize(100, 80), throwsAssertionError);
     expect(scene.destroy, returnsNormally);
   });
@@ -75,7 +75,7 @@ void main() {
     a.add(b);
     final scene = a.mount();
 
-    scene.reassemble(.reload);
+    scene.reassemble();
 
     expect(a.builds, 2, reason: 'once on mount, once on the walk');
     expect(b.builds, 2);
@@ -84,9 +84,9 @@ void main() {
   test('drops a reassemble triggered from inside a reassemble', () {
     final node = TestNode();
     final scene = node.mount();
-    node.buildAction = () => scene.reassemble(.reload);
+    node.buildAction = () => scene.reassemble();
 
-    scene.reassemble(.reload);
+    scene.reassemble();
 
     expect(node.builds, 2);
   });
@@ -97,7 +97,7 @@ void main() {
     final scene = node.mount();
     node.buildAction = () => node.add(child);
 
-    scene.reassemble(.reload);
+    scene.reassemble();
 
     expect(node.children, [child]);
     expect(child.isMounted, isTrue);

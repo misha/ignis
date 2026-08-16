@@ -37,13 +37,13 @@ class Scene<T extends Node> {
   ///
   /// The flush is what makes a reassembly land in full without waiting for an
   /// [update], so a paused scene reassembles just like a running one.
-  void reassemble(BuildCause cause) {
+  void reassemble() {
     assert(_mounted, 'Cannot reassemble a destroyed scene.');
     if (_reassembling) return;
     _reassembling = true;
 
     try {
-      node.reassemble(cause);
+      node.reassemble();
       _tree.flush();
     } finally {
       _reassembling = false;

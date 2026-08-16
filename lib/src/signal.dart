@@ -18,8 +18,8 @@ sealed class Signal {
   /// Subscribes to this signal, ignoring data.
   Cleanup watch(void Function() watcher);
 
-  /// Subscribes via [watch], handing the unwatch to the building node when a
-  /// [Node.build] pass is active, so the pass owns the subscription.
+  /// Subscribes via [watch], handing the unwatch to the building node's
+  /// [Node.trash] when a [Node.build] pass is active, so the pass owns it.
   Cleanup _register(Cleanup Function() watch) {
     final builder = Node._builder;
     if (builder == null) return watch();
