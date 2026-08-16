@@ -292,6 +292,18 @@ void main() {
       expect(unmounted, 1);
     });
 
+    test('onSceneResize subscribed in build hears the mount emission', () {
+      final scene = Node().mount();
+      scene.resize(100, 80);
+      Vector2? heard;
+      final node = _Node((node) => node.onSceneResize((size) => heard = size));
+
+      scene.node.add(node);
+      scene.update(0);
+
+      expect(heard, Vector2(100, 80));
+    });
+
     test('outside a pass, the caller owns the subscription', () {
       final signal = Signal0();
       var emissions = 0;

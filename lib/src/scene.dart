@@ -20,9 +20,6 @@ class Scene<T extends Node> {
   /// Whether the scene has been [resize]d at least once.
   bool get hasSize => _sized;
 
-  /// Emitted whenever the size changes.
-  final onResize = Signal1<Vector2>();
-
   Scene._({
     required this.node,
   }) {
@@ -64,9 +61,15 @@ class Scene<T extends Node> {
   }
 
   void resize(double width, double height) {
+    if (_sized && //
+        _size.x == width &&
+        _size.y == height) {
+      return;
+    }
+
     _size = .new(width, height);
     _sized = true;
-    onResize.emit(size);
+    node._resize(size);
   }
 
   void destroy() {

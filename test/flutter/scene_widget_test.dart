@@ -52,6 +52,40 @@ void main() {
     expect(tester.widget<RenderSceneWidget>(find.byType(RenderSceneWidget)).scene, same(sceneB));
   });
 
+  testWidgets('survives being reparented', (tester) async {
+    final key = GlobalKey();
+    final scene = TestNode().mount();
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(scene, key: key),
+      ),
+    );
+
+    await tester.pumpWidget(
+      Center(
+        child: SizedBox.square(
+          dimension: 100,
+          child: SceneWidget(scene, key: key),
+        ),
+      ),
+    );
+
+    expect(scene.node.isMounted, isTrue);
+    expect(scene.node.unmounts, 0);
+  });
+
+  testWidgets('destroys the scene when disposed', (tester) async {
+    final scene = TestNode().mount();
+
+    await tester.pumpWidget(SceneWidget(scene));
+    await tester.pumpWidget(const SizedBox());
+
+    expect(scene.node.isMounted, isFalse);
+    expect(scene.node.unmounts, 1);
+  });
+
   testWidgets('resizes the node and performs an initial update', (tester) async {
     await tester.binding.setSurfaceSize(const Size(100, 80));
     addTearDown(() => tester.binding.setSurfaceSize(null));

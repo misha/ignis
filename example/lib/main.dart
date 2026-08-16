@@ -58,7 +58,7 @@ class GameNode extends Node {
     // Build runs on every pass, so editing _COLOR does persist.
     square.paint.color = _COLOR;
 
-    scene.onResize((size) {
+    onSceneResize((size) {
       square.position.setFrom(size / 2);
     });
 
