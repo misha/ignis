@@ -29,4 +29,9 @@ Future<void> runBenchmark(AsyncBenchmarkBase benchmark) async {
   } else {
     await benchmark.report();
   }
+
+  // A compiled benchmark never starts an app, so Flutter's background threads
+  // keep the process alive with nothing to return to and it has to leave on
+  // its own. Under `flutter test` the same call would kill the test runner.
+  if (Platform.environment['FLUTTER_TEST'] != 'true') exit(0);
 }

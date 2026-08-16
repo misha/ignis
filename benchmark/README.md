@@ -24,6 +24,20 @@ Measured with `flutter test` on 2026/08/16, average of 3 or more runs.
 | Update Count   | 47065.32 us |
 | Update Count 2 | 59245.41 us |
 
+The same benchmarks built as a real app, run three times each:
+
+```bash
+cd example
+flutter build linux --release -t benchmark/main.update1.dart
+./build/linux/x64/release/bundle/example
+```
+
+| Benchmark      | Runtime     |
+|----------------|-------------|
+| Update         | 41816.69 us |
+| Update Count   | 65076.17 us |
+| Update Count 2 | 76200.32 us |
+
 System details:
 
 - CPU: AMD Ryzen 7 9700X (8 cores / 16 threads)

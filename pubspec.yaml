@@ -15,11 +15,8 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  benchmark_harness: ^2.3.1
-  flame: ^1.38.0
   flutter_lints: ^6.0.0
   leak_tracker: ^11.0.2
-  vm_service: ^15.2.0
 scripts:
   analyze: dart analyze
   coverage:
