@@ -4,6 +4,8 @@ linter:
   rules:
     constant_identifier_names: false
 analyzer:
+  errors:
+    body_might_complete_normally_nullable: ignore
   exclude:
     - build/**
     - android/**

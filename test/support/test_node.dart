@@ -5,7 +5,7 @@ final class TestLog {
   final unmounts = <String>[];
   final updates = <String>[];
   final renders = <String>[];
-  final builds = <String>[];
+  final passes = <String>[];
 }
 
 final class TestNode extends Node {
@@ -16,9 +16,9 @@ final class TestNode extends Node {
   double elapsed = 0;
   int updates = 0;
   int renders = 0;
-  int builds = 0;
+  int passes = 0;
   void Function()? action;
-  void Function()? buildAction;
+  void Function()? passAction;
 
   TestNode([this.name = 'test', this.log]) {
     onMount(() {
@@ -34,6 +34,14 @@ final class TestNode extends Node {
 
   @override
   void tick(double dt) {
+    // Only runs on a full pass, so it counts reassemblies rather than frames.
+    fuseEffect(() {
+      passes += 1;
+      log?.passes.add(name);
+      passAction?.call();
+      return null;
+    });
+
     elapsed += dt;
     updates += 1;
     log?.updates.add(name);
@@ -45,13 +53,5 @@ final class TestNode extends Node {
     renders += 1;
     log?.renders.add(name);
     super.render(canvas);
-  }
-
-  @override
-  void build() {
-    builds += 1;
-    log?.builds.add(name);
-    buildAction?.call();
-    super.build();
   }
 }

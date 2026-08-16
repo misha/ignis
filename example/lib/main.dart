@@ -39,56 +39,47 @@ const _SPIN = pi / 4;
 const _ORBIT = 90.0;
 const _ORBIT_SPEED = 1.0;
 
-/// The probe. Every constant above and every closure below is meant to be
-/// edited while the app is running.
+/// The probe. Every constant above and every line below is meant to be edited
+/// while the app is running.
 class GameNode extends Node {
   @override
-  void build() {
+  void tick(double dt) {
     // Construction is state, so a reload preserves it. Keying on _SIZE opts
     // back out: editing it builds a new square, and the old one's angle with
     // it. Nothing else about this constructor reloads.
-    final square = fuseChild(
-      () => ShapeNode(
+    final square = fuseChild(() {
+      return ShapeNode(
         shape: .square(_SIZE),
         anchor: .center,
-      ),
-      [_SIZE],
-    );
+      );
+    }, [_SIZE]);
 
-    // Re-applied by every pass, so editing _COLOR is the edit.
+    // Re-applied by every reassembly, so editing _COLOR is the edit.
     fuseEffect(() {
       square.paint.color = _COLOR;
-      return null;
     });
 
     fuseSignal1(scene.onResize, (size) {
       square.position.setFrom(size / 2);
     });
 
-    fuseTick((dt) {
-      square.angle += _SPIN * dt;
-    });
+    square.angle += _SPIN * dt;
 
-    // Delete this block and save: the dot detaches and its tick stops.
-    final dot = fuseChild(
-      () => ShapeNode(
+    // Delete this block and save: the dot detaches and stops orbiting.
+    final dot = fuseChild(() {
+      return ShapeNode(
         shape: .circle(10),
         anchor: .center,
         paint: .new()..color = Colors.white,
-      ),
-    );
-
-    final phase = fuseState(() => 0.0);
-
-    fuseTick((dt) {
-      phase.value += _ORBIT_SPEED * dt;
-
-      dot.position.setValues(
-        square.position.x + cos(phase.value) * _ORBIT,
-        square.position.y + sin(phase.value) * _ORBIT,
       );
     });
 
-    super.build();
+    final phase = fuseState(0.0);
+    phase.value += _ORBIT_SPEED * dt;
+
+    dot.position.setValues(
+      square.position.x + cos(phase.value) * _ORBIT,
+      square.position.y + sin(phase.value) * _ORBIT,
+    );
   }
 }

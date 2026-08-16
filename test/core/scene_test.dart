@@ -23,33 +23,30 @@ void main() {
     final a = TestNode('A');
     final b = TestNode('B');
     a.add(b);
-    final scene = a.mount();
+    final scene = a.mount()..update(0);
+
+    expect(a.passes, 1, reason: 'the first pass runs on the first update');
 
     scene.reassemble(.reload);
+    scene.update(0);
 
-    expect(a.builds, 2, reason: 'once on mount, once on the walk');
-    expect(b.builds, 2);
+    expect(a.passes, 2);
+    expect(b.passes, 2);
   });
 
-  test('drops a reassemble triggered from inside a reassemble', () {
+  test('costs exactly one full pass, not one per frame', () {
     final node = TestNode();
-    final scene = node.mount();
-    node.buildAction = () => scene.reassemble(.reload);
+    final scene = node.mount()
+      ..update(0)
+      ..update(0);
+
+    expect(node.passes, 1, reason: 'replay frames skip effects');
 
     scene.reassemble(.reload);
+    scene.update(0);
+    scene.update(0);
 
-    expect(node.builds, 2);
-  });
-
-  test('flushes what a reassemble enqueued, without an update', () {
-    final node = TestNode();
-    final child = TestNode('child');
-    final scene = node.mount();
-    node.buildAction = () => node.add(child);
-
-    scene.reassemble(.reload);
-
-    expect(node.children, [child]);
-    expect(child.isMounted, isTrue);
+    expect(node.passes, 2);
+    expect(node.updates, 4, reason: 'every frame still ticks');
   });
 }

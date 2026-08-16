@@ -119,26 +119,35 @@ void main() {
     a.add(b);
     a.add(c);
     b.add(d);
-    a.mount();
-    log.builds.clear();
+    final scene = a.mount()..update(0);
+    log.passes.clear();
 
     a.reassemble(.reload);
-    expect(log.builds, ['A', 'C', 'B', 'D']);
+    scene.update(0);
+
+    expect(log.passes, ['A', 'C', 'B', 'D']);
   });
 
-  test('reassembles disabled nodes, unlike update and render', () {
+  test('marks disabled nodes, which pass once they are enabled again', () {
     final a = TestNode('A');
     final b = TestNode('B');
     final c = TestNode('C');
     a.add(b);
     b.add(c);
-    a.mount();
+    final scene = a.mount()..update(0);
     b.enabled = false;
 
     a.reassemble(.reload);
+    scene.update(0);
 
-    expect(b.builds, 2);
-    expect(c.builds, 2, reason: 'the walk stopped at a disabled node');
+    expect(b.passes, 1, reason: 'a disabled node never ticks');
+    expect(c.passes, 1, reason: 'nor does its subtree');
+
+    b.enabled = true;
+    scene.update(0);
+
+    expect(b.passes, 2);
+    expect(c.passes, 2);
   });
 
   test('a disabled root skips update and render for itself and its subtree', () {
