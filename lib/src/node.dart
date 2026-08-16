@@ -44,13 +44,17 @@ part of 'core.dart';
 /// [read] resolves the nearest match, checking the node itself before its
 /// [ancestors].
 ///
-/// **Reassembly**
+/// **Building**
 ///
-/// When the world changes out from under a live tree, the scene walks it
-/// emitting [reassemble]. Unlike [update] and [render], the walk ignores the
-/// [enabled] flag, so even disabled nodes will be notified.
+/// Everything a node captures from outside itself - subscriptions, cached
+/// assets, derived values, per-frame behavior - is declared in [build], which
+/// runs on mount and is re-run whenever the world changes out from under the
+/// live tree. State declared with a hook survives the re-run; the closures
+/// around it do not, so they come back freshly compiled.
 ///
-/// Currently, [reassemble] is called in two, distinct situations:
+/// The re-run is a [reassemble] walk over the whole tree. Unlike [update] and
+/// [render], it ignores the [enabled] flag, so even disabled nodes rebuild.
+/// It happens in two, distinct situations:
 ///
 ///   - Whenever the `SceneWidget` reassembles in the Flutter tree.
 ///   - Whenever [Ignis.cache] changes, such as via the local asset bundle.
@@ -85,6 +89,14 @@ class Node {
     if (!_enabled) return;
     tick(dt);
 
+    final ticks = _ticks;
+
+    if (ticks != null) {
+      for (var i = 0; i < ticks.length; i += 1) {
+        ticks[i](dt);
+      }
+    }
+
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
@@ -107,17 +119,20 @@ class Node {
     }
   }
 
-  /// Reassembles this node and its children.
+  /// Reassembles this node and its children, top down.
   ///
-  /// Override to re-resolve anything this node captured from outside itself,
-  /// such as an asset it pulled out of the cache.
-  void reassemble() {
+  /// Every node re-runs its [build], which is the only place to re-resolve
+  /// what a node captured from outside itself. Tree operations the pass
+  /// enqueues are flushed once the whole walk is done.
+  @nonVirtual
+  void reassemble(BuildCause cause) {
+    _rebuild(cause);
+
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
-      // TODO: Guard this?
-      child.reassemble();
+      child.reassemble(cause);
     }
   }
 
@@ -290,6 +305,7 @@ class Node {
   void _mount(Scene scene) {
     // TODO: Assert null _scene?
     _scene = scene;
+    _rebuild(.mount);
     onMount.emit();
     final children = _egg?.nodes;
 
@@ -311,8 +327,286 @@ class Node {
     }
 
     onUnmount.emit();
+    _disposeFrom(0);
+    _hooks = null;
+    _ticks = null;
     _scene = null;
     _dependencies = null;
+  }
+
+  // #endregion
+
+  // #region Hooks
+
+  List<HookState<Object?, Hook<Object?>>>? _hooks;
+  List<void Function(double)>? _ticks;
+
+  /// The slot [fuse] is about to fill, or -1 while no pass is running.
+  int _cursor = -1;
+
+  /// Why the pass currently running was started. Only ever read by [use], and
+  /// only to decide whether a change in hook shape is legitimate.
+  static BuildCause? _cause;
+
+  /// Declares this node's state and behavior.
+  ///
+  /// Runs once on mount and again on every [reassemble], so anything declared
+  /// here with a hook is refreshed when the world changes: handlers come back
+  /// freshly compiled, values are re-read, and whatever the previous pass
+  /// registered is torn down first.
+  ///
+  /// Hooks are matched by call order across passes, so they must be used
+  /// unconditionally — never inside an `if`, a loop, or a closure. A whole
+  /// class hierarchy shares one set of slots, which is why `super.build()` is
+  /// required: skipping it drops whatever the superclass declared.
+  @mustCallSuper
+  @visibleForOverriding
+  void build() {
+    // Nothing to do.
+  }
+
+  /// Registers [hook] in the current [build] pass and returns its value.
+  ///
+  /// This is the primitive every `fuse` function is built out of; reach for it
+  /// directly only when writing a [Hook] of your own.
+  @nonVirtual
+  R fuse<R>(Hook<R> hook) {
+    if (_cursor < 0) {
+      throw StateError('Hooks are only available inside Node.build.');
+    }
+
+    final hooks = _hooks ??= [];
+    if (_cursor == hooks.length) return _append(hook);
+
+    final state = hooks[_cursor];
+    final previous = state.hook;
+
+    if (previous.runtimeType != hook.runtimeType) {
+      if (_cause != BuildCause.reload) {
+        throw StateError(
+          'Hook shape changed without a hot reload: slot $_cursor held a '
+          '${previous.runtimeType} and now holds a ${hook.runtimeType}. '
+          'Hooks must be used unconditionally, in the same order every pass.',
+        );
+      }
+
+      // The reload edited build() itself, so everything from here on is a
+      // fresh declaration and the old states have nothing left to describe.
+      _disposeFrom(_cursor);
+      return _append(hook);
+    }
+
+    if (Hook.shouldPreserveState(previous, hook)) {
+      state._hook = hook;
+      state.didUpdateHook(previous);
+    } else {
+      _dispose(state);
+
+      hooks[_cursor] = hook.createState()
+        .._node = this
+        .._hook = hook
+        ..initHook();
+    }
+
+    final value = hooks[_cursor].build() as R;
+    _cursor += 1;
+    return value;
+  }
+
+  R _append<R>(Hook<R> hook) {
+    final state = hook.createState()
+      .._node = this
+      .._hook = hook
+      ..initHook();
+
+    _hooks!.add(state);
+    _cursor += 1;
+    return state.build();
+  }
+
+  /// Runs one [build] pass, then discards whatever the pass left behind.
+  ///
+  /// Guarded, and the only guarded path in the engine: a node being edited
+  /// throws routinely, and one bad node must not take the walk down with it.
+  void _rebuild(BuildCause cause) {
+    _ticks?.clear();
+    final previous = _cause;
+    _cause = cause;
+    _cursor = 0;
+
+    try {
+      build();
+    } catch (exception, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: exception,
+          stack: stack,
+          library: 'ignis',
+          context: ErrorDescription('while building $runtimeType'),
+        ),
+      );
+    } finally {
+      _disposeFrom(_cursor);
+      _cursor = -1;
+      _cause = previous;
+    }
+  }
+
+  /// Disposes every hook state from [index] on, in reverse order, and drops
+  /// them from the slots.
+  void _disposeFrom(int index) {
+    final hooks = _hooks;
+    if (hooks == null || index >= hooks.length) return;
+
+    for (var i = hooks.length - 1; i >= index; i -= 1) {
+      _dispose(hooks[i]);
+    }
+
+    hooks.removeRange(index, hooks.length);
+  }
+
+  void _dispose(HookState<Object?, Hook<Object?>> state) {
+    try {
+      state.dispose();
+    } catch (exception, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: exception,
+          stack: stack,
+          library: 'ignis',
+          context: ErrorDescription('while disposing a ${state.runtimeType}'),
+        ),
+      );
+    }
+  }
+
+  /// Registers [tick] to run every frame until the next [build] pass.
+  ///
+  /// Cleared at the top of every pass, so a hook that wants to keep ticking
+  /// registers again from its [HookState.build].
+  void _addTick(void Function(double dt) tick) {
+    (_ticks ??= []).add(tick);
+  }
+
+  // #endregion
+
+  // #region Standard Hooks
+
+  /// Runs [create] once and returns the same box on every later pass.
+  ///
+  /// This is the half of a [build] that a reload does *not* refresh, which is
+  /// exactly what makes it the place to keep state:
+  ///
+  /// ```dart
+  /// final elapsed = fuseState(() => 0.0);
+  /// fuseTick((dt) => elapsed.value += dt);
+  /// ```
+  ///
+  /// Pass [keys] to tie the state to something: when they stop comparing
+  /// equal, the old box is discarded and [create] runs again.
+  @nonVirtual
+  Ref<T> fuseState<T>(
+    T Function() create, [
+    List<Object?> keys = const [],
+  ]) {
+    return fuse(_StateHook<T>(create, keys: keys));
+  }
+
+  /// Runs [create] once and returns the same value for the life of this node.
+  ///
+  /// [fuseState] without the box, for state that already has an object of its
+  /// own to live in:
+  ///
+  /// ```dart
+  /// final velocity = fuseMemoized(() => MVector2(90, 0));
+  /// ```
+  @nonVirtual
+  R fuseMemoized<R>(R Function() create) => fuseState(create).value;
+
+  /// Runs [effect] now, and again on every later pass.
+  ///
+  /// Whatever [effect] returns is called before the next run and once more at
+  /// teardown, so an effect cleans up after itself:
+  ///
+  /// ```dart
+  /// fuseEffect(() => painter.dispose);
+  /// ```
+  ///
+  /// Re-running is the point. The closure handed in was built by the pass that
+  /// runs it, so after a hot reload it is the edited code running, and the
+  /// code it replaced has already been cleaned up.
+  ///
+  /// Pass [keys] to opt out: the effect then re-runs only when they stop
+  /// comparing equal, and an empty list means it runs exactly once.
+  @nonVirtual
+  void fuseEffect(
+    Cleanup? Function() effect, [
+    List<Object?>? keys,
+  ]) {
+    fuse(_EffectHook(effect, keys: keys));
+  }
+
+  /// Calls [tick] with the elapsed seconds on every frame, for as long as this
+  /// node keeps declaring it.
+  ///
+  /// The alternative to overriding [Node.tick], and the reloadable one: the
+  /// closure is registered afresh by every pass, so an edited body is running
+  /// the frame after the save.
+  ///
+  /// ```dart
+  /// fuseTick((dt) => shape.angle += _SPIN * dt);
+  /// ```
+  @nonVirtual
+  void fuseTick(void Function(double dt) tick) => fuse(_TickHook(tick));
+
+  /// Builds a child with [create], adds it, and returns the same one on every
+  /// later pass.
+  ///
+  /// ```dart
+  /// final shape = fuseChild(() => ShapeNode(shape: .square(100)));
+  /// ```
+  ///
+  /// The child is built once and kept, so its constructor arguments are state
+  /// and a reload leaves them alone. Pass [keys] to tie it to something: when
+  /// they stop comparing equal the child is removed and a new one built.
+  ///
+  /// The child is removed when this node unmounts, or when the pass that
+  /// declared it stops doing so. Like every tree operation on a mounted node,
+  /// both are enqueued rather than immediate.
+  @nonVirtual
+  T fuseChild<T extends Node>(
+    T Function() create, [
+    List<Object?> keys = const [],
+  ]) {
+    return fuse(_ChildHook<T>(create, keys: keys));
+  }
+
+  /// Calls [handler] whenever [signal] is emitted.
+  ///
+  /// The only way a node subscribes to anything, and deliberately so: the
+  /// handler is unsubscribed and resubscribed by every pass, so it cannot
+  /// outlive this node and cannot keep running code you already edited.
+  @nonVirtual
+  void fuseSignal0(Signal0 signal, void Function() handler) {
+    fuseEffect(() => signal(handler));
+  }
+
+  /// Calls [handler] whenever [signal] is emitted. See [fuseSignal0].
+  @nonVirtual
+  void fuseSignal1<A>(Signal1<A> signal, void Function(A) handler) {
+    fuseEffect(() => signal(handler));
+  }
+
+  /// Calls [handler] whenever [signal] is emitted. See [fuseSignal0].
+  @nonVirtual
+  void fuseSignal2<A, B>(Signal2<A, B> signal, void Function(A, B) handler) {
+    fuseEffect(() => signal(handler));
+  }
+
+  /// Calls [handler] whenever [signal] is emitted. See [fuseSignal0].
+  @nonVirtual
+  void fuseSignal3<A, B, C>(Signal3<A, B, C> signal, void Function(A, B, C) handler) {
+    fuseEffect(() => signal(handler));
   }
 
   // #endregion

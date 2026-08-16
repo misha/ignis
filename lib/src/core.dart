@@ -6,6 +6,7 @@ import 'package:ignis/src/egg.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/signal.dart';
 
+part 'hook.dart';
 part 'node.dart';
 part 'scene.dart';
 part 'tree.dart';

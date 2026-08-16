@@ -34,12 +34,18 @@ class Scene<T extends Node> {
     node.update(dt);
   }
 
-  void reassemble() {
+  /// Re-runs every node's [Node.build], then applies whatever the walk
+  /// enqueued.
+  ///
+  /// The flush is what makes a reassembly land in full without waiting for an
+  /// [update], so a paused scene reassembles just like a running one.
+  void reassemble(BuildCause cause) {
     if (_reassembling) return;
     _reassembling = true;
 
     try {
-      node.reassemble();
+      node.reassemble(cause);
+      _tree.flush();
     } finally {
       _reassembling = false;
     }

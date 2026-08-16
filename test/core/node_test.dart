@@ -120,9 +120,10 @@ void main() {
     a.add(c);
     b.add(d);
     a.mount();
+    log.builds.clear();
 
-    a.reassemble();
-    expect(log.reassembles, ['A', 'C', 'B', 'D']);
+    a.reassemble(.reload);
+    expect(log.builds, ['A', 'C', 'B', 'D']);
   });
 
   test('reassembles disabled nodes, unlike update and render', () {
@@ -134,10 +135,10 @@ void main() {
     a.mount();
     b.enabled = false;
 
-    a.reassemble();
+    a.reassemble(.reload);
 
-    expect(b.reassembles, 1);
-    expect(c.reassembles, 1, reason: 'the walk stopped at a disabled node');
+    expect(b.builds, 2);
+    expect(c.builds, 2, reason: 'the walk stopped at a disabled node');
   });
 
   test('a disabled root skips update and render for itself and its subtree', () {

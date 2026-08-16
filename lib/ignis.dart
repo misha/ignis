@@ -2,7 +2,7 @@ export 'dart:ui' show Canvas, Paint;
 
 export 'src/anchor.dart';
 export 'src/assets.dart';
-export 'src/core.dart' show Node, Scene, Mount;
+export 'src/core.dart' show BuildCause, Cleanup, Hook, HookState, Mount, Node, Ref, Scene;
 export 'src/extensions.dart';
 export 'src/flutter/scene_widget.dart';
 export 'src/globals.dart';

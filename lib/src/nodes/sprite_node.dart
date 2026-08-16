@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/painted_node.dart';
@@ -125,20 +126,24 @@ class SpriteNode extends PaintedNode {
     _finished = false;
   }
 
+  @override
+  @mustCallSuper
   /// Re-resolves every sheet, so a replaced asset is picked up even on a sheet
   /// this sprite is not currently [play]ing.
-  @override
-  void reassemble() {
-    for (var index = 0; index < _sheets.length; index += 1) {
-      final sheet = _sheets[index];
-      final current = sheet.current;
-      if (identical(current, sheet)) continue;
-      _sheets[index] = current;
-    }
+  void build() {
+    fuseEffect(() {
+      for (var index = 0; index < _sheets.length; index += 1) {
+        final sheet = _sheets[index];
+        final current = sheet.current;
+        if (identical(current, sheet)) continue;
+        _sheets[index] = current;
+      }
 
-    // Clamp the current frame if the replacement is shorter.
-    if (_frame >= sheet.frames) _frame = 0;
-    super.reassemble();
+      // Clamp the current frame if the replacement is shorter.
+      if (_frame >= sheet.frames) _frame = 0;
+    });
+
+    super.build();
   }
 
   @override

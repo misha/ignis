@@ -36,12 +36,12 @@ class _SceneWidgetState extends State<SceneWidget> {
     _focusNode = FocusNode();
     if (widget.autofocus) _focusNode.requestFocus();
     _cache = Ignis.cache;
-    _cache.addListener(_reassemble);
+    _cache.addListener(_reassembleAssets);
   }
 
   @override
   void dispose() {
-    _cache.removeListener(_reassemble);
+    _cache.removeListener(_reassembleAssets);
     _focusNode.dispose();
     super.dispose();
   }
@@ -49,11 +49,11 @@ class _SceneWidgetState extends State<SceneWidget> {
   @override
   void reassemble() {
     super.reassemble();
-    _reassemble();
+    widget.scene.reassemble(.reload);
   }
 
-  void _reassemble() {
-    widget.scene.reassemble();
+  void _reassembleAssets() {
+    widget.scene.reassemble(.assets);
   }
 
   @override

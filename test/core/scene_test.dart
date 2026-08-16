@@ -25,19 +25,31 @@ void main() {
     a.add(b);
     final scene = a.mount();
 
-    scene.reassemble();
+    scene.reassemble(.reload);
 
-    expect(a.reassembles, 1);
-    expect(b.reassembles, 1);
+    expect(a.builds, 2, reason: 'once on mount, once on the walk');
+    expect(b.builds, 2);
   });
 
   test('drops a reassemble triggered from inside a reassemble', () {
-    late final Scene scene;
-    final node = TestNode()..action = () => scene.reassemble();
-    scene = node.mount();
+    final node = TestNode();
+    final scene = node.mount();
+    node.buildAction = () => scene.reassemble(.reload);
 
-    scene.reassemble();
+    scene.reassemble(.reload);
 
-    expect(node.reassembles, 1);
+    expect(node.builds, 2);
+  });
+
+  test('flushes what a reassemble enqueued, without an update', () {
+    final node = TestNode();
+    final child = TestNode('child');
+    final scene = node.mount();
+    node.buildAction = () => node.add(child);
+
+    scene.reassemble(.reload);
+
+    expect(node.children, [child]);
+    expect(child.isMounted, isTrue);
   });
 }

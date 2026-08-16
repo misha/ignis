@@ -76,13 +76,13 @@ void main() {
       ),
     );
 
-    expect(scene.node.reassembles, 0);
+    expect(scene.node.builds, 1, reason: 'the mount pass');
 
     Ignis.cache.add('hero.png', 1);
-    expect(scene.node.reassembles, 1);
+    expect(scene.node.builds, 2);
 
     Ignis.cache.evict('hero.png');
-    expect(scene.node.reassembles, 2);
+    expect(scene.node.builds, 3);
   });
 
   testWidgets('stops reassembling once removed from the tree', (tester) async {
@@ -99,7 +99,7 @@ void main() {
     await tester.pumpWidget(const SizedBox.square(dimension: 100));
 
     Ignis.cache.add('hero.png', 1);
-    expect(scene.node.reassembles, 0);
+    expect(scene.node.builds, 1, reason: 'the mount pass, and nothing since');
   });
 
   testWidgets('reassembles the scene on hot reload', (tester) async {
@@ -116,7 +116,42 @@ void main() {
     unawaited(tester.binding.reassembleApplication());
     await tester.pump();
 
-    expect(scene.node.reassembles, 1);
+    expect(scene.node.builds, 2);
+  });
+
+  testWidgets('carries hook state through a hot reload, but not its closures', (tester) async {
+    final log = <String>[];
+    var edited = false;
+    Object? memoized;
+
+    final node = TestNode();
+
+    node.buildAction = () {
+      memoized = node.fuseMemoized(Object.new);
+      node.fuseTick((_) => log.add(edited ? 'new' : 'old'));
+    };
+
+    final scene = node.mount();
+    final first = memoized;
+
+    await tester.pumpWidget(
+      SizedBox.square(
+        dimension: 100,
+        child: SceneWidget(scene),
+      ),
+    );
+
+    expect(log, everyElement('old'));
+    edited = true;
+
+    // Never awaited directly: it locks events until the tree is pumped.
+    unawaited(tester.binding.reassembleApplication());
+    await tester.pump();
+    log.clear();
+    scene.update(0);
+
+    expect(memoized, same(first), reason: 'fuseMemoized is state');
+    expect(log, ['new'], reason: 'fuseTick is behavior');
   });
 
   testWidgets('paints against the given background color', (tester) async {

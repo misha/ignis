@@ -5,7 +5,7 @@ final class TestLog {
   final unmounts = <String>[];
   final updates = <String>[];
   final renders = <String>[];
-  final reassembles = <String>[];
+  final builds = <String>[];
 }
 
 final class TestNode extends Node {
@@ -16,8 +16,9 @@ final class TestNode extends Node {
   double elapsed = 0;
   int updates = 0;
   int renders = 0;
-  int reassembles = 0;
+  int builds = 0;
   void Function()? action;
+  void Function()? buildAction;
 
   TestNode([this.name = 'test', this.log]) {
     onMount(() {
@@ -47,10 +48,10 @@ final class TestNode extends Node {
   }
 
   @override
-  void reassemble() {
-    reassembles += 1;
-    log?.reassembles.add(name);
-    action?.call();
-    super.reassemble();
+  void build() {
+    builds += 1;
+    log?.builds.add(name);
+    buildAction?.call();
+    super.build();
   }
 }

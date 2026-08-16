@@ -33,31 +33,62 @@ class GamePage extends HookWidget {
   }
 }
 
+const _SIZE = 100.0;
+const _COLOR = Colors.blue;
+const _SPIN = pi / 4;
+const _ORBIT = 90.0;
+const _ORBIT_SPEED = 1.0;
+
+/// The probe. Every constant above and every closure below is meant to be
+/// edited while the app is running.
 class GameNode extends Node {
-  final shape = ShapeNode(
-    shape: .square(100),
-    anchor: .center,
-    paint: .new()..color = Colors.blue,
-  );
-
-  GameNode() {
-    Unwatch? unwatchResize;
-
-    onMount(() {
-      unwatchResize = scene.onResize((size) {
-        shape.position.setFrom(size / 2);
-      });
-    });
-
-    onUnmount(() {
-      unwatchResize?.call();
-    });
-
-    add(shape);
-  }
-
   @override
-  void tick(double dt) {
-    shape.angle += pi / 4 * dt;
+  void build() {
+    // Construction is state, so a reload preserves it. Keying on _SIZE opts
+    // back out: editing it builds a new square, and the old one's angle with
+    // it. Nothing else about this constructor reloads.
+    final square = fuseChild(
+      () => ShapeNode(
+        shape: .square(_SIZE),
+        anchor: .center,
+      ),
+      [_SIZE],
+    );
+
+    // Re-applied by every pass, so editing _COLOR is the edit.
+    fuseEffect(() {
+      square.paint.color = _COLOR;
+      return null;
+    });
+
+    fuseSignal1(scene.onResize, (size) {
+      square.position.setFrom(size / 2);
+    });
+
+    fuseTick((dt) {
+      square.angle += _SPIN * dt;
+    });
+
+    // Delete this block and save: the dot detaches and its tick stops.
+    final dot = fuseChild(
+      () => ShapeNode(
+        shape: .circle(10),
+        anchor: .center,
+        paint: .new()..color = Colors.white,
+      ),
+    );
+
+    final phase = fuseState(() => 0.0);
+
+    fuseTick((dt) {
+      phase.value += _ORBIT_SPEED * dt;
+
+      dot.position.setValues(
+        square.position.x + cos(phase.value) * _ORBIT,
+        square.position.y + sin(phase.value) * _ORBIT,
+      );
+    });
+
+    super.build();
   }
 }
