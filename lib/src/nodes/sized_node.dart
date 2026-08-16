@@ -1,9 +1,6 @@
 import 'dart:ui';
 
 import 'package:ignis/src/anchor.dart';
-import 'package:ignis/src/layout/layout_constraints.dart';
-import 'package:ignis/src/layout/layout_flex.dart';
-import 'package:ignis/src/layout/layout_item.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/transform_node.dart';
 import 'package:ignis/src/owners/anchor_owner.dart';
@@ -11,28 +8,19 @@ import 'package:ignis/src/shape.dart';
 
 /// A [TransformNode] with a [size], defining an area for shapes,
 /// hit-testing, rendering, and other systems to work against.
-abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwner {
+abstract class SizedNode extends TransformNode implements AnchorOwner {
   /// This node's size.
-  @override
   Vector2 get size;
 
   /// This node's width.
-  @override
   double get width => size.x;
 
   /// This node's height.
-  @override
   double get height => size.y;
 
   /// Where this node's area sits relative to [position]. Defaults to `topLeft`.
   @override
   Anchor anchor;
-
-  /// The share of a flex layout's leftover space this node asks for.
-  ///
-  /// A plain [SizedNode] asks for none.
-  @override
-  LayoutFlex get flex => .none;
 
   SizedNode({
     Anchor? anchor,
@@ -103,13 +91,6 @@ abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwne
   /// Draws this node's debug visuals, in the same coordinate space as
   /// [renderAnchored].
   void debugRenderAnchored(Canvas canvas) {
-    // Nothing to do.
-  }
-
-  /// A plain [SizedNode] can't lay itself out, so its [size] stands whatever
-  /// [constraints] say.
-  @override
-  void layout(LayoutConstraints constraints) {
     // Nothing to do.
   }
 }

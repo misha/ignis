@@ -2,15 +2,10 @@ export 'dart:ui' show Canvas, Paint;
 
 export 'src/anchor.dart';
 export 'src/assets.dart';
-export 'src/collisions.dart';
 export 'src/core.dart' show Node, Scene, Mount;
-export 'src/curves.dart';
-export 'src/effects.dart';
 export 'src/extensions.dart';
 export 'src/flutter/scene_widget.dart';
 export 'src/globals.dart';
-export 'src/inputs.dart';
-export 'src/layout.dart';
 export 'src/math.dart';
 export 'src/nodes.dart';
 export 'src/owners.dart';

@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/flutter/input_router.dart';
 import 'package:ignis/src/flutter/render_loop.dart';
 import 'package:ignis/src/flutter/scene_widget.dart';
 
@@ -52,7 +51,6 @@ class SceneRenderBox extends RenderBox {
   bool _isPaused;
   bool _isDebug;
   bool _isRepaintBoundary;
-  late final _inputRouter = InputRouter(this);
 
   Scene get scene => _scene;
 
@@ -141,9 +139,6 @@ class SceneRenderBox extends RenderBox {
 
   @override
   bool hitTestSelf(Offset position) => true;
-
-  @override
-  void handleEvent(PointerEvent event, HitTestEntry entry) => _inputRouter.handle(event);
 
   @override
   void paint(PaintingContext context, Offset offset) {

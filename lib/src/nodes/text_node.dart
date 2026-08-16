@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:ignis/src/extensions.dart';
-import 'package:ignis/src/layout/layout_constraints.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 
@@ -17,7 +16,6 @@ class TextNode extends SizedNode {
   late TextPainter painter;
   bool _dirty = true;
   Vector2 _size = .zero;
-  LayoutConstraints _constraints = const .unbounded();
 
   /// This node's size, as measured from its text the last time anything about
   /// it changed. Zero until then.
@@ -85,21 +83,6 @@ class TextNode extends SizedNode {
     _dirty = true;
   }
 
-  /// Wraps this node's text to fit [constraints], then takes its size from
-  /// the result.
-  ///
-  /// Only the width is honored - text is never squeezed vertically, so a tall
-  /// enough block overflows its constraints rather than clipping.
-  @override
-  void layout(LayoutConstraints constraints) {
-    if (constraints != _constraints) {
-      _constraints = constraints;
-      _dirty = true;
-    }
-
-    _reflow();
-  }
-
   /// Lays the painter out and stores the size it reports, if anything about
   /// the text or its constraints has changed since the last time.
   void _reflow() {
@@ -109,7 +92,7 @@ class TextNode extends SizedNode {
       ..text = TextSpan(text: text, style: style)
       ..textAlign = textAlign
       ..textDirection = textDirection
-      ..layout(minWidth: _constraints.min.x, maxWidth: _constraints.max.x);
+      ..layout();
 
     _size = painter.size.toVector2();
     _dirty = false;
