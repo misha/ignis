@@ -99,58 +99,6 @@ abstract class HookState<R, T extends Hook<R>> {
   }
 }
 
-// #region Effect
-
-final class _EffectHook extends Hook<void> {
-  final Cleanup Function() effect;
-
-  const _EffectHook(this.effect);
-
-  @override
-  _EffectHookState createState() => .new();
-}
-
-final class _EffectHookState extends HookState<void, _EffectHook> {
-  Cleanup? _cleanup;
-
-  @override
-  void initHook() => _cleanup = hook.effect();
-
-  @override
-  void didUpdateHook(_EffectHook previous) {
-    _cleanup?.call();
-    _cleanup = hook.effect();
-  }
-
-  @override
-  void build() {
-    // Nothing to do.
-  }
-
-  @override
-  void dispose() => _cleanup?.call();
-}
-
-// #endregion
-
-// #region Update
-
-final class _UpdateHook extends Hook<void> {
-  final void Function(double dt) update;
-
-  const _UpdateHook(this.update);
-
-  @override
-  _UpdateHookState createState() => .new();
-}
-
-final class _UpdateHookState extends HookState<void, _UpdateHook> {
-  @override
-  void build() => node._addUpdate(hook.update);
-}
-
-// #endregion
-
 // #region Child
 
 final class _ChildHook<T extends Node> extends Hook<T> {

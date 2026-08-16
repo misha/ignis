@@ -9,4 +9,5 @@ part 'hook.dart';
 part 'node.dart';
 part 'scene.dart';
 part 'signal.dart';
+part 'trash.dart';
 part 'tree.dart';

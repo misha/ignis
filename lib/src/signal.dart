@@ -6,10 +6,9 @@ part of 'core.dart';
 /// it was given, so it both leaks and goes stale unless something owns it.
 ///
 /// Subscribing during a [Node.build] pass hands that ownership to the pass:
-/// the call inserts itself into the building node as a hook, so the handler
-/// is resubscribed fresh by every pass and torn down with the node. The
-/// returned [Cleanup] is a no-op there, and the usual hook rules apply:
-/// subscribe unconditionally, in the same order every pass.
+/// the unwatch goes straight into the building node's [Node.trash], so the
+/// handler is resubscribed fresh by every pass and torn down with the node.
+/// The returned [Cleanup] is a no-op there.
 ///
 /// Everywhere else the caller owns the subscription: keep the [Cleanup] and
 /// call it, e.g. from `flutter_hooks`.
@@ -19,13 +18,13 @@ sealed class Signal {
   /// Subscribes to this signal, ignoring data.
   Cleanup watch(void Function() watcher);
 
-  /// Runs [watch] now, or fuses it into the building node when a [Node.build]
-  /// pass is active, so the pass owns the subscription.
+  /// Subscribes via [watch], handing the unwatch to the building node when a
+  /// [Node.build] pass is active, so the pass owns the subscription.
   Cleanup _register(Cleanup Function() watch) {
     final builder = Node._builder;
     if (builder == null) return watch();
 
-    builder.on(_EffectHook(watch));
+    builder.trash << watch();
     return _noop;
   }
 

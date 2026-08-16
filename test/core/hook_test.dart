@@ -292,6 +292,77 @@ void main() {
     });
   });
 
+  group('trash', () {
+    test('empties when the pass that filled it is superseded', () {
+      final log = <String>[];
+      final node = _Node((node) => node.trash << () => log.add('cleaned'));
+      final scene = node.mount();
+
+      expect(log, isEmpty, reason: 'the pass is still current');
+      scene.reassemble(.reload);
+
+      expect(log, ['cleaned']);
+    });
+
+    test('empties at unmount', () {
+      final log = <String>[];
+      final scene = _Node((node) => node.trash << () => log.add('cleaned')).mount();
+
+      scene.destroy();
+
+      expect(log, ['cleaned']);
+    });
+
+    test('empties in reverse order', () {
+      final log = <String>[];
+
+      final scene = _Node((node) {
+        node.trash << () => log.add('a');
+        node.trash << () => log.add('b');
+        node.trash << () => log.add('c');
+      }).mount();
+
+      scene.destroy();
+
+      expect(log, ['c', 'b', 'a']);
+    });
+
+    test('may be filled conditionally, unlike a hook', () {
+      final log = <String>[];
+      var defer = true;
+
+      final node = _Node((node) {
+        if (defer) node.trash << () => log.add('cleaned');
+      });
+
+      final scene = node.mount();
+      defer = false;
+      final reported = _reported(() => scene.reassemble(.assets));
+
+      expect(reported, isEmpty, reason: 'the bag has no shape to change');
+      expect(log, ['cleaned']);
+
+      scene.destroy();
+
+      expect(log, ['cleaned'], reason: 'the pass that stopped deferring left nothing');
+    });
+
+    test('a throwing cleanup is reported and contained', () {
+      final log = <String>[];
+
+      final scene = _Node((node) {
+        node.trash << () => log.add('after');
+        node.trash << () => throw StateError('bad');
+      }).mount();
+
+      final reported = _reported(scene.destroy);
+
+      expect(reported, hasLength(1));
+      expect(reported.single.exception, isStateError);
+      expect(log, ['after'], reason: 'the rest of the bag still emptied');
+    });
+  });
+
   group('signals', () {
     test('a subscription made in build lives and dies with the node', () {
       final signal = Signal0();

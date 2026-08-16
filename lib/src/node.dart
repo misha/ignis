@@ -334,9 +334,11 @@ class Node {
     }
 
     onUnmount.emit();
+    _trash?._empty();
     _disposeFrom(0);
     _hooks = null;
     _updates = null;
+    _trash = null;
     _scene = null;
     _dependencies = null;
   }
@@ -346,7 +348,6 @@ class Node {
   // #region Hooks
 
   List<HookState<Object?, Hook<Object?>>>? _hooks;
-  List<void Function(double)>? _updates;
 
   /// The slot [on] is about to fill, or -1 while no pass is running.
   int _cursor = -1;
@@ -464,6 +465,7 @@ class Node {
   /// throws routinely, and one bad node must not take the walk down with it.
   void _rebuild(BuildCause cause) {
     _updates?.clear();
+    _trash?._empty();
     final previous = _cause;
     final builder = _builder;
     _cause = cause;
@@ -517,17 +519,11 @@ class Node {
     }
   }
 
-  /// Registers [update] to run every frame until the next [build] pass.
-  ///
-  /// Cleared at the top of every pass, so a hook that wants to keep running
-  /// registers again from its [HookState.build].
-  void _addUpdate(void Function(double dt) update) {
-    (_updates ??= []).add(update);
-  }
-
   // #endregion
 
-  // #region Standard Hooks
+  // #region Updates
+
+  List<void Function(double)>? _updates;
 
   /// Calls [update] with the elapsed seconds on every frame, for as long as
   /// this node keeps declaring it.
@@ -540,8 +536,38 @@ class Node {
   /// ```dart
   /// onUpdate((dt) => shape.angle += pi / 4 * dt);
   /// ```
+  ///
+  /// Not a hook. The list is emptied and refilled by every pass, so this may
+  /// be called from inside an `if`, a loop, or a helper.
   @nonVirtual
-  void onUpdate(void Function(double dt) update) => on(_UpdateHook(update));
+  void onUpdate(void Function(double dt) update) {
+    (_updates ??= []).add(update);
+  }
+
+  // #endregion
+
+  // #region Trash
+
+  Trash? _trash;
+
+  /// Whatever this [build] pass has to release when it stops being current.
+  ///
+  /// The bag is emptied right before every pass and once at unmount, so a
+  /// pass cleans up after the one it replaced:
+  ///
+  /// ```dart
+  /// painter = TextPainter(text: span);
+  /// trash << painter.dispose;
+  /// ```
+  ///
+  /// Lazily allocated, so a node that never defers anything pays a null field
+  /// rather than a bag.
+  @nonVirtual
+  Trash get trash => _trash ??= Trash();
+
+  // #endregion
+
+  // #region Standard Hooks
 
   /// Builds a child with [create], adds it, and returns the same one on every
   /// later pass.
