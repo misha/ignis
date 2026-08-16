@@ -703,7 +703,7 @@ void main() async {
 }
 ```
 
-`LocalAssetBundle` reads the pubspec's `assets` manifest to decide what to watch, exactly how Flutter builds your bundle. Changes are served from the project directory rather than the compiled bundle, so a simple file save is sufficient to trigger an update. Additionally, this *completely* bypasses the usual Flutter restriction preventing the access of completely new assets and directories to an active application.
+`LocalAssetBundle` reads the pubspec's `assets` manifest to decide what to watch, exactly how Flutter builds your bundle. Changes are served from the project directory rather than the compiled bundle, so a simple file save is sufficient to trigger an update. Additionally, this *completely* bypasses the usual Flutter restriction preventing the access of new assets in an active application.
 
 By default the project root is the running process's working directory. Point it elsewhere when that isn't your project:
 
