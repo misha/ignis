@@ -51,11 +51,14 @@ fi
 
 for target in "${targets[@]}"; do
   case "$mode" in
+    # A benchmark is a `main`, not a test, so `flutter test` prints the score
+    # and then exits non-zero complaining it found no tests. Swallowing that is
+    # what lets a run cover more than one benchmark.
     test)
-      flutter test "$target"
+      flutter test "$target" || true
       ;;
     profile)
-      PROFILE=1 flutter test --enable-vmservice "$target"
+      PROFILE=1 flutter test --enable-vmservice "$target" || true
       ;;
     release)
       flutter build linux --release -t "$target"
