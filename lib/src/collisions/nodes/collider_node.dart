@@ -62,13 +62,12 @@ class ColliderNode extends SizedNode {
     cd = ancestors.whereType<CollisionDetectionNode>().firstOrNull;
     cd?.register(this);
 
-    void unregister() {
+    trash(() {
       cd?.unregister(this);
       cd = null;
       _active.clear();
-    }
+    });
 
-    trash << unregister;
     onCollisionStart(_active.add);
     onCollisionEnd(_active.remove);
   }

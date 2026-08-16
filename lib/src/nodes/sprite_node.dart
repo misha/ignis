@@ -84,7 +84,7 @@ class SpriteNode extends PaintedNode {
   @override
   void build() {
     super.build();
-    onUpdate((dt) {
+    tick((dt) {
       if (_finished) return;
       final amount = fps * dt;
       if (amount <= 0 || !amount.isFinite) return;

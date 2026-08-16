@@ -76,7 +76,7 @@ abstract class LayoutNode extends SizedNode {
   @override
   void build() {
     super.build();
-    onUpdate((_) {
+    tick((_) {
       if (!isLayoutRoot) return;
       layout(_rootConstraints());
     });

@@ -1,17 +1,33 @@
 part of 'core.dart';
 
+/// Call to undo whatever was set up.
+typedef Cleanup = void Function();
+
 /// The humble node.
 ///
 /// **Overview**
 ///
-/// Nodes are organized in an acyclic, directed tree with children ordered by
-/// [priority].
-///
-/// TODO: Write these docs.
+/// Nodes are the buildings block of Ignis. They are organized in a directed,
+/// acyclic tree, with [children] ordered by [priority]. Nodes may be assembled
+/// into subtrees using [add] and [remove] any number of times.
 ///
 /// **Building**
 ///
-/// TODO: Write these docs.
+/// Nodes should initialize children, connect signals, and add [tick] behavior
+/// in their [build] method. [build] is called every time a node is mounted to
+/// a live scene, or as the root of its own scene with [mount].
+///
+/// [build] should be written in such a way that it can be run multiple times.
+/// To facilitate this, [build] internally tracks every node added and every
+/// signal subscribed inside that method call. If you create resources that
+/// should be disposed, place it into the [trash] to prevent leaks.
+///
+/// Lastly, the [rebuild] method is provided as a way to "reboot" the internals
+/// of any node. This method will remove added nodes, unsubscribe from signals,
+/// and process the [trash]. Then, it will call [build] again.
+///
+/// **Do not make [build] `async`.** An asynchronous build breaks engine
+/// invariants in multiple, devastating ways.
 ///
 /// **Signals**
 ///
@@ -85,11 +101,11 @@ class Node {
   @nonVirtual
   void update(double dt) {
     if (!_enabled) return;
-    final updates = _updates;
+    final ticks = _ticks;
 
-    if (updates != null) {
-      for (var i = 0; i < updates.length; i += 1) {
-        updates[i](dt);
+    if (ticks != null) {
+      for (var i = 0; i < ticks.length; i += 1) {
+        ticks[i](dt);
       }
     }
 
@@ -112,42 +128,6 @@ class Node {
       if (child._enabled) {
         child.render(canvas);
       }
-    }
-  }
-
-  /// TODO: Review these docs.
-  /// What this node does when the tree is reassembled.
-  ///
-  /// Nothing, by default: a hot reload leaves a running scene alone. Override
-  /// it to answer for this node, either refreshing whatever the change
-  /// touched:
-  ///
-  /// ```dart
-  /// @override
-  /// void reassemble() => _resolve();
-  /// ```
-  ///
-  /// or [rebuild]ing outright, which re-runs [build] and so picks up every
-  /// edit made to it:
-  ///
-  /// ```dart
-  /// @override
-  /// void reassemble() => rebuild();
-  /// ```
-  @visibleForOverriding
-  void reassemble() {}
-
-  /// Asks this node and its children what to do about a reassembly, top down.
-  void _reassemble() {
-    reassemble();
-    final children = _egg?.nodes;
-    if (children == null || children.isEmpty) return;
-
-    for (final child in children) {
-      // A rebuild above queued this one's removal, so it is already gone. Its
-      // replacement built against the current code and is not in this list.
-      if (child._pendingRemoval) continue;
-      child._reassemble();
     }
   }
 
@@ -195,11 +175,11 @@ class Node {
   ///
   /// Everything the previous [build] made is thrown away:
   ///
-  ///   - All children it [add]ed are removed.
-  ///   - All [onUpdate] closures are removed.
-  ///   - Its [trash] is processed and cleared.
+  ///   - All [add]ed direct children are removed.
+  ///   - All [tick] closures are removed.
+  ///   - The [trash] is processed and cleared.
   ///
-  /// Then, the body runs again from the top, so constructor arguments are
+  /// Then, [build] runs again from the top, so constructor arguments are
   /// re-evaluated exactly like a statement is. What survives is this node
   /// itself: its members, its position, and anything added to it imperatively.
   ///
@@ -212,8 +192,8 @@ class Node {
     // Dropped rather than cleared, so a rebuild from inside an [onUpdate]
     // leaves the list that call is being iterated from intact. Its remaining
     // closures run out the frame; the new build installs its own for the next.
-    _updates = null;
-    _emptyTrash();
+    _ticks = null;
+    _cleanup();
     final builder = _builder;
     _builder = this;
 
@@ -257,20 +237,20 @@ class Node {
 
   // #endregion
 
-  // #region Updates
+  // #region Ticks
 
-  List<void Function(double dt)>? _updates;
+  List<void Function(double dt)>? _ticks;
 
   /// Calls [update] with the elapsed seconds on every frame.
   ///
   /// ```dart
-  /// onUpdate((dt) {
+  /// tick((dt) {
   ///   shape.angle += pi / 4 * dt;
   /// });
   /// ```
   @nonVirtual
-  void onUpdate(void Function(double dt) update) {
-    (_updates ??= []).add(update);
+  void tick(void Function(double dt) update) {
+    (_ticks ??= []).add(update);
   }
 
   // #endregion
@@ -279,20 +259,24 @@ class Node {
 
   List<Cleanup>? _trash;
 
-  /// Whatever this [build] has to release when it stops being current.
+  /// Defers [cleanup] until this [build] stops being current.
   ///
-  /// Emptied right before every rebuild and once at unmount, so each build
-  /// cleans up after the one it replaced:
+  /// The trash is emptied right before every rebuild and once at unmount, so
+  /// each build cleans up after the one it replaced:
   ///
   /// ```dart
   /// painter = TextPainter(text: span);
-  /// trash << painter.dispose;
+  /// trash(painter.dispose);
   /// ```
+  ///
+  /// Emptied most-recent-first, so a teardown that emits must be trashed after
+  /// the handlers it will notify.
   @nonVirtual
-  Trash get trash => Trash(this);
+  void trash(Cleanup cleanup) {
+    (_trash ??= []).add(cleanup);
+  }
 
-  /// Runs every deferred cleanup, most recently thrown in first.
-  void _emptyTrash() {
+  void _cleanup() {
     final cleanups = _trash;
     if (cleanups == null || cleanups.isEmpty) return;
     _trash = null;
@@ -497,8 +481,8 @@ class Node {
     }
 
     onUnmount.emit();
-    _emptyTrash();
-    _updates = null;
+    _cleanup();
+    _ticks = null;
     _declared = null;
     _scene = null;
     _dependencies = null;
@@ -592,6 +576,40 @@ class Node {
 
   // #endregion
 
+  // #region Reassembly
+
+  /// What this node does when the tree is reassembled.
+  ///
+  /// By default, this does nothing; Ignis cannot and does not track the
+  /// external dependencies of arbitrary node implementations. Override this
+  /// method to refresh those dependencies whenever your code changes.
+  ///
+  /// For nodes that are capable of completely reconstructing themselves using
+  /// their [build] method, consider implementing it with [rebuild]:
+  ///
+  /// ```dart
+  /// @override
+  /// void reassemble() => rebuild();
+  /// ```
+  ///
+  /// This will enable the highest form of live reload: *everything* the node
+  /// does will update as you write code.
+  @visibleForOverriding
+  void reassemble() {}
+
+  void _reassemble() {
+    reassemble();
+    final children = _egg?.nodes;
+    if (children == null || children.isEmpty) return;
+
+    for (final child in children) {
+      // A rebuild above queued this one's removal, so it is already gone. Its
+      // replacement built against the current code and is not in this list.
+      if (child._pendingRemoval) continue;
+      child._reassemble();
+    }
+  }
+
   // #region Hit Testing
 
   /// Finds every enabled node in this subtree whose hit area contains
@@ -603,6 +621,7 @@ class Node {
   /// Unlike [add], [remove], and [priority], [enabled] takes effect
   /// immediately even on a mounted node. A handler invoked mid-walk that
   /// disables an unvisited node will affect that same walk.
+  ///
   /// TODO: Should it really do that? Is enabled actually a tree operation?
   @nonVirtual
   Iterable<Node> hitTest(Vector2 point) sync* {

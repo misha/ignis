@@ -18,7 +18,7 @@ class CollisionDetectionNode extends Node {
   @override
   void build() {
     super.build();
-    onUpdate((_) {
+    tick((_) {
       _arena.process();
     });
   }

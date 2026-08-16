@@ -45,7 +45,7 @@ final class TestNode extends Node {
   @override
   void build() {
     super.build();
-    onUpdate((dt) {
+    tick((dt) {
       elapsed += dt;
       updates += 1;
       log?.updates.add(name);

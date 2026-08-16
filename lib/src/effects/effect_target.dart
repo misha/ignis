@@ -20,6 +20,6 @@ class EffectTarget<T> {
   void resolve() {
     _value = _host.ancestors.whereType<T>().firstOrNull;
     assert(_value != null, 'Must have an ancestor implementing $T.');
-    _host.trash << () => _value = null;
+    _host.trash(() => _value = null);
   }
 }

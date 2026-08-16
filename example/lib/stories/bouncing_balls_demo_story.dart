@@ -272,7 +272,7 @@ class _BallNode extends ShapeNode {
         }
       });
 
-    onUpdate((dt) {
+    tick((dt) {
       position.addScaled(velocity, dt);
     });
   }

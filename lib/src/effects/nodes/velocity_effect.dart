@@ -35,7 +35,7 @@ class VelocityEffect extends EffectNode implements SpeedOwner {
   void build() {
     super.build();
     _target.resolve();
-    onUpdate((dt) {
+    tick((dt) {
       target!.position.addScaled(velocity, dt);
     });
   }

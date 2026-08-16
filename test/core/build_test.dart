@@ -212,7 +212,7 @@ void main() {
   group('onUpdate', () {
     test('runs its callback every update', () {
       var elapsed = 0.0;
-      final scene = _Node((node) => node.onUpdate((dt) => elapsed += dt)).mount();
+      final scene = _Node((node) => node.tick((dt) => elapsed += dt)).mount();
 
       scene.update(0.5);
       scene.update(0.5);
@@ -223,7 +223,7 @@ void main() {
     test('a reassembly swaps in the callback the new build declared', () {
       final log = <String>[];
       var edited = false;
-      final node = _Node((n) => n.onUpdate((_) => log.add(edited ? 'new' : 'old')));
+      final node = _Node((n) => n.tick((_) => log.add(edited ? 'new' : 'old')));
       final scene = node.mount();
 
       scene.update(0);
@@ -239,7 +239,7 @@ void main() {
       var declared = true;
 
       final node = _Node((n) {
-        if (declared) n.onUpdate((_) => ticks += 1);
+        if (declared) n.tick((_) => ticks += 1);
       });
 
       final scene = node.mount();
@@ -255,7 +255,7 @@ void main() {
   group('trash', () {
     test('empties when the build that filled it is superseded', () {
       final log = <String>[];
-      final node = _Node((node) => node.trash << () => log.add('cleaned'));
+      final node = _Node((node) => node.trash(() => log.add('cleaned')));
       final scene = node.mount();
 
       expect(log, isEmpty, reason: 'the build is still current');
@@ -266,7 +266,7 @@ void main() {
 
     test('empties at unmount', () {
       final log = <String>[];
-      final scene = _Node((node) => node.trash << () => log.add('cleaned')).mount();
+      final scene = _Node((node) => node.trash(() => log.add('cleaned'))).mount();
 
       scene.destroy();
 
@@ -277,9 +277,9 @@ void main() {
       final log = <String>[];
 
       final scene = _Node((node) {
-        node.trash << () => log.add('a');
-        node.trash << () => log.add('b');
-        node.trash << () => log.add('c');
+        node.trash(() => log.add('a'));
+        node.trash(() => log.add('b'));
+        node.trash(() => log.add('c'));
       }).mount();
 
       scene.destroy();
@@ -291,8 +291,8 @@ void main() {
       final log = <String>[];
 
       final scene = _Node((node) {
-        node.trash << () => log.add('after');
-        node.trash << () => throw StateError('bad');
+        node.trash(() => log.add('after'));
+        node.trash(() => throw StateError('bad'));
       }).mount();
 
       final reported = _reported(scene.destroy);

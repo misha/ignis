@@ -55,7 +55,7 @@ class TextNode extends SizedNode {
       textDirection: _textDirection,
     );
 
-    trash << painter.dispose;
+    trash(painter.dispose);
     _dirty = true;
   }
 

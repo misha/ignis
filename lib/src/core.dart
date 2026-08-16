@@ -7,6 +7,5 @@ import 'package:ignis/src/math.dart';
 
 part 'node.dart';
 part 'signal.dart';
-part 'trash.dart';
 part 'scene.dart';
 part 'tree.dart';

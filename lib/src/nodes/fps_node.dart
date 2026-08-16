@@ -25,7 +25,7 @@ class FpsNode extends Node {
   @override
   void build() {
     super.build();
-    onUpdate((dt) {
+    tick((dt) {
       if (dt <= 0 || !dt.isFinite) return;
       _window.add(dt);
       _sum += dt;

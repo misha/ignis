@@ -165,7 +165,7 @@ class _Ball extends TransformNode {
   @override
   void build() {
     super.build();
-    onUpdate((dt) {
+    tick((dt) {
       position.addScaled(velocity, dt);
     });
   }

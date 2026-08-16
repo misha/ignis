@@ -59,7 +59,7 @@ class TimerNode extends Node {
   @override
   void build() {
     super.build();
-    onUpdate((dt) {
+    tick((dt) {
       if (_finished) return;
       _elapsed += dt;
 

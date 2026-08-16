@@ -80,7 +80,7 @@ class ControlledEffect extends EffectNode {
   @override
   void build() {
     super.build();
-    onUpdate((dt) {
+    tick((dt) {
       if (_forward) {
         controller.advance(dt);
       } else {

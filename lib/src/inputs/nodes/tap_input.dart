@@ -34,12 +34,10 @@ class TapInput extends InputNode {
       ..onTap = _handleTap
       ..onTapCancel = _handleTapCancel;
 
-    void dispose() {
+    trash(() {
       recognizer.dispose();
       _recognizer = null;
-    }
-
-    trash << dispose;
+    });
   }
 
   @override

@@ -27,7 +27,7 @@ class SpinEffect extends EffectNode implements SpeedOwner {
     super.build();
     _target.resolve();
 
-    onUpdate((dt) {
+    tick((dt) {
       target!.angle += speed * dt;
     });
   }

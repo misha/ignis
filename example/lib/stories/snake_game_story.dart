@@ -210,7 +210,7 @@ class _GameNode extends Node {
       }
     });
 
-    onUpdate((dt) {
+    tick((dt) {
       game.update(dt);
     });
   }

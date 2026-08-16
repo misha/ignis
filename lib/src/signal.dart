@@ -23,8 +23,7 @@ sealed class Signal {
   Cleanup _register(Cleanup Function() watch) {
     final builder = Node._builder;
     if (builder == null) return watch();
-
-    builder.trash << watch();
+    builder.trash(watch());
     return _noop;
   }
 

@@ -39,7 +39,7 @@ class FollowEffect extends EffectNode {
     super.build();
     _target.resolve();
 
-    onUpdate((dt) {
+    tick((dt) {
       final position = target!.position;
       final offset = destination - position;
       final distance = offset.length;

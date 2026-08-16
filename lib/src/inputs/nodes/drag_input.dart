@@ -57,13 +57,11 @@ class DragInput extends InputNode {
     onDragCancel(() => _dragging = false);
     final recognizer = _recognizer = ImmediateMultiDragGestureRecognizer()..onStart = _handleStart;
 
-    void dispose() {
+    trash(() {
       _drag?.cancel();
       recognizer.dispose();
       _recognizer = null;
-    }
-
-    trash << dispose;
+    });
   }
 
   @override
