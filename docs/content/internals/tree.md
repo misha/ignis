@@ -27,5 +27,3 @@ status: stub
 ## Egg and the type index
 
 <!-- lib/src/egg.dart. The priority-sorted child list, and the per-type _Index that backs query<T>(). Maintained incrementally as children come and go rather than invalidated, which is why repeated query<T>() calls allocate nothing - lib/src/node.dart:450-458. -->
-
-## What this doesn't do

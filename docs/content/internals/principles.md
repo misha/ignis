@@ -21,5 +21,3 @@ status: stub
 ## Reloadability
 
 <!-- The one that pays for the other two. Because a build is a single re-runnable declaration over an instance that survives it, the engine can throw away everything a build made and run it again over the wreckage. That is what makes node-level live reload achievable rather than approximated. What it demands of everything else: no constructor-time side effects, no state on derived children, every subscription owned by a build, every resource in the trash. -->
-
-## What this doesn't do

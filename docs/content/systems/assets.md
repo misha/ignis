@@ -18,5 +18,3 @@ status: stub
 ## Writing a loader
 
 ## Reloading from disk
-
-## What this doesn't do

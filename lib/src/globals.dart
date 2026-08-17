@@ -4,6 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:ignis/src/assets/cache.dart';
 import 'package:ignis/src/assets/preload.dart';
 
+// TODO: These want a single prefix between them, as `Ignis.prefix`. An asset
+// string is the path `bundle` reads and the key `cache` stores under at once,
+// and `preload` hands the same string to both, so an asset root has to be
+// applied at one boundary and one only: prepended on the way to the bundle,
+// absent from every key. Anything else gives one asset two names.
+
 /// Namespace for global Ignis objects.
 abstract final class Ignis {
   /// The asset bundle used across Ignis.

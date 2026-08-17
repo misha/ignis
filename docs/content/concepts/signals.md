@@ -17,5 +17,3 @@ status: stub
 ## Who owns the `Cleanup`
 
 ## Getting it wrong
-
-## What this doesn't do

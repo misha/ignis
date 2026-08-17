@@ -18,5 +18,3 @@ status: stub
 ## Converting from Flutter types
 
 ## Getting it wrong
-
-## What this doesn't do

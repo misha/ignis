@@ -47,7 +47,7 @@ A page is finished when it has named its subject, shown it, stated its rule, and
 
 `usage` pages open with the demo, and prefer several small ones to one that does everything. `internals` pages carry no demos at all.
 
-Every page ends with what it doesn't do.
+A demo documents itself, in its own source. Explain first and at length, then show without commentary: a demo carries a heading and nothing else, and whatever it needs said is said in a comment inside the region, where it sits beside the line it is about and cannot fall out of step with it. Prose that narrates a demo is prose maintained in two places.
 
 ## 4. Status
 

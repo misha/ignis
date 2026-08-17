@@ -17,5 +17,3 @@ status: stub
 ## Layers and masks
 
 ## Start and end are edges
-
-## What this doesn't do

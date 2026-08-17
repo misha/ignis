@@ -30,7 +30,8 @@ Pages ship as soon as they name a topic, and say so until they are finished. Not
 
 <Coverage/>
 
-## What this doesn't do
+The full API surface lives at [`/api`](/api), generated from the source.
 
-- No API reference. That is [`/api`](/api), generated from the source.
-- No versioning or migration notes. Ignis is 0.0.1 and has one user.
+## Attribution
+
+Every sprite the demos on this site draw - the slime, the bonfire, the explosion - is by [Infected Tribe](https://infectedtribe.itch.io/). The mark in the header is a painting by [Mewyn](https://mewyn.itch.io/).

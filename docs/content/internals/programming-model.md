@@ -27,5 +27,3 @@ status: stub
 ## Rebuild, in order
 
 <!-- lib/src/node.dart:209-260. Discard declared, drop the bags, empty the trash, run build again, re-emit onSceneResize. Two details worth their own paragraph: the bags are dropped rather than cleared so a rebuild triggered from inside a tick does not corrupt the list being iterated; and the trash empties most-recent-first so a teardown that emits runs before the handlers it notifies are gone. -->
-
-## What this doesn't do

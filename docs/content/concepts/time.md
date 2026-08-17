@@ -17,5 +17,3 @@ status: stub
 ## Timers
 
 ## Getting it wrong
-
-## What this doesn't do

@@ -19,5 +19,3 @@ status: stub
 ## Providing down a subtree
 
 `read` is not reactive. The result is cached until the node unmounts, so a later `provide` for the same type will not be picked up.
-
-## What this doesn't do

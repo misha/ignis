@@ -25,9 +25,10 @@ class DragAndDropDemoState extends State<DragAndDropDemo> {
 
   @override
   Component build(BuildContext context) {
-    return div(classes: 'demo', [
+    return div(classes: 'demo-solo', [
       FlutterEmbedView.deferred(
-        // A Flutter view cannot size itself, so the height is fixed here.
+        // Sized for the 300x300 board this demo draws, rather than for the
+        // square the `<Demo/>` slots use.
         constraints: ViewConstraints(
           minWidth: 300,
           maxWidth: double.infinity,
@@ -52,17 +53,10 @@ class DragAndDropDemoState extends State<DragAndDropDemo> {
 
   @css
   static List<StyleRule> get styles => [
-    css('.demo').styles(
+    css('.demo-solo').styles(
       margin: .only(top: 1.5.rem, bottom: 1.5.rem),
       radius: .circular(0.5.rem),
       overflow: .hidden,
-    ),
-    css('.demo-loader').styles(
-      display: .flex,
-      height: 320.px,
-      justifyContent: .center,
-      alignItems: .center,
-      color: ContentColors.text,
     ),
     css('.demo-status').styles(
       padding: .all(0.75.rem),

@@ -17,5 +17,3 @@ status: stub
 ## An effect animates what is above it
 
 ## Finishing and cleanup
-
-## What this doesn't do

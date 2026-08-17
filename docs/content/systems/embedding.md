@@ -17,5 +17,3 @@ status: stub
 ## Owning a scene from Flutter
 
 ## Pausing and debugging
-
-## What this doesn't do

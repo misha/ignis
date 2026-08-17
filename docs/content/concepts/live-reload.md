@@ -20,5 +20,3 @@ A save leaves a running game exactly as it was unless a node answers for itself.
 ## Reloading assets
 
 ## Getting it wrong
-
-## What this doesn't do

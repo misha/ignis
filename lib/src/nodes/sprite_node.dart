@@ -7,6 +7,25 @@ import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/palette.dart';
 import 'package:ignis/src/spritesheet.dart';
 
+// TODO: A sheet is a uniform grid and nothing else, which is not enough. A row
+// carries no parameters of its own, so a short row plays off its end and into
+// the padding, and every row on a sheet animates at the one [fps] the node
+// holds. Rows want their own frame count, rate, and start and end frames.
+
+/// Draws one frame of a [Spritesheet] at a time, and animates along its row.
+///
+/// ```dart
+/// add(
+///   SpriteNode(
+///     sheet: .asset('assets/fire.png', size: .new(32, 48)),
+///     fps: 12,
+///   ),
+/// );
+/// ```
+///
+/// A sprite takes its [size] from the sheet's frame, so [anchor], hit testing
+/// and layout all work off the frame rather than the image. [play] chooses
+/// which sheet and which row is playing.
 class SpriteNode extends SizedNode {
   /// This node's registered paints.
   final Palette palette;
@@ -43,14 +62,23 @@ class SpriteNode extends SizedNode {
   num _frame = 0;
   bool _finished = false;
 
+  /// How many sheets this sprite can [play].
   int get sheets => _sheets.length;
+
+  /// The sheet currently playing.
   Spritesheet get sheet => _sheets[_sheet];
+
+  /// The frame currently drawn, indexed into [sheet].
   int get frame => _frame.floor();
+
+  /// Whether a non-looping animation has reached its final frame.
   bool get isFinished => _finished;
 
+  /// The size of one frame of [sheet].
   @override
   Vector2 get size => sheet.size;
 
+  /// Creates a sprite that draws [sheet].
   SpriteNode({
     required Spritesheet sheet,
     Paint? paint,
@@ -70,6 +98,15 @@ class SpriteNode extends SizedNode {
        loop = loop ?? true,
        cleanup = cleanup ?? false;
 
+  /// Creates a sprite that draws one of [sheets], chosen with [play].
+  ///
+  /// Keeps an animation set per image - an idle sheet and a running sheet, say -
+  /// rather than packing every state into one.
+  // TODO: Take a frameSize here for the supplied assets to default to. An
+  // animation set is cut to one size, and every sheet in it currently repeats
+  // that size, which is the noisiest part of constructing one. Alternatively, a
+  // SplitSpritesheet that cuts several images to a single size and hands back
+  // the sheets.
   SpriteNode.split({
     required Iterable<Spritesheet> sheets,
     num? fps,
@@ -158,6 +195,8 @@ class SpriteNode extends SizedNode {
     });
   }
 
+  /// Re-resolves every sheet through [Spritesheet.current], so an image
+  /// replaced in the cache reaches the screen without rebuilding this node.
   @override
   void reassemble() {
     for (var index = 0; index < _sheets.length; index += 1) {
@@ -168,6 +207,15 @@ class SpriteNode extends SizedNode {
     if (_frame >= sheet.frames) _frame = 0;
   }
 
+  /// Plays [sheet] from the frame at [row] and [column].
+  ///
+  /// ```dart
+  /// // Animates the second row of the running sheet.
+  /// sprite.play(sheet: 1, row: 1);
+  /// ```
+  ///
+  /// Clears [isFinished], so a non-looping sprite that already finished runs
+  /// again from wherever this puts it.
   void play({
     int sheet = 0,
     int row = 0,

@@ -17,5 +17,3 @@ status: stub
 ## Enabling and disabling
 
 ## Getting it wrong
-
-## What this doesn't do

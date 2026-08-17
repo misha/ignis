@@ -30,5 +30,3 @@ status: stub
 ## Diffing into edges
 
 <!-- lib/src/collisions/collision_detection.dart. How this frame's contact set is compared against the last to produce start and end, and what happens to a contact whose collider left the tree mid-frame. -->
-
-## What this doesn't do

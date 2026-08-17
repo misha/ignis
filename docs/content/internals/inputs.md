@@ -29,5 +29,3 @@ status: stub
 ## Claiming and falling through
 
 <!-- HitBehavior.opaque against .translucent, and what InputResult.handled does to the search. An event a node does not apply to falls through; an event it claims stops the search unless it is translucent. -->
-
-## What this doesn't do

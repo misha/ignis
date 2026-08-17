@@ -8,6 +8,7 @@ import 'package:jaspr/client.dart';
 
 import 'package:docs/components/drag_and_drop_demo.dart'
     deferred as _drag_and_drop_demo;
+import 'package:docs/components/scene_demo.dart' deferred as _scene_demo;
 import 'package:jaspr_content/components/_internal/code_block_copy_button.dart'
     deferred as _code_block_copy_button;
 import 'package:jaspr_content/components/_internal/zoomable_image.dart'
@@ -16,8 +17,6 @@ import 'package:jaspr_content/components/github_button.dart'
     deferred as _github_button;
 import 'package:jaspr_content/components/sidebar_toggle_button.dart'
     deferred as _sidebar_toggle_button;
-import 'package:jaspr_content/components/theme_toggle.dart'
-    deferred as _theme_toggle;
 
 /// Default [ClientOptions] for use with your Jaspr project.
 ///
@@ -41,6 +40,10 @@ ClientOptions get defaultClientOptions => ClientOptions(
       (p) => _drag_and_drop_demo.DragAndDropDemo(),
       loader: _drag_and_drop_demo.loadLibrary,
     ),
+    'scene_demo': ClientLoader(
+      (p) => _scene_demo.SceneDemo(name: p['name'] as String),
+      loader: _scene_demo.loadLibrary,
+    ),
     'jaspr_content:code_block_copy_button': ClientLoader(
       (p) => _code_block_copy_button.CodeBlockCopyButton(),
       loader: _code_block_copy_button.loadLibrary,
@@ -60,10 +63,6 @@ ClientOptions get defaultClientOptions => ClientOptions(
     'jaspr_content:sidebar_toggle_button': ClientLoader(
       (p) => _sidebar_toggle_button.SidebarToggleButton(),
       loader: _sidebar_toggle_button.loadLibrary,
-    ),
-    'jaspr_content:theme_toggle': ClientLoader(
-      (p) => _theme_toggle.ThemeToggle(),
-      loader: _theme_toggle.loadLibrary,
     ),
   },
 );

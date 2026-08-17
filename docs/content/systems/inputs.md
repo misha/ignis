@@ -63,9 +63,9 @@ When multiple input nodes overlap, `priority` decides who is tried first. An eve
   Hit testing walks children in reverse `priority` order before the node's own hit area, mirroring reverse paint order. The topmost thing you can see is the first thing tried.
 </Info>
 
-## What this doesn't do
+## Pointer and focus
 
-This page is a Flutter view embedded in an HTML document, which means the scene and the page negotiate over the pointer:
+This page is a Flutter view embedded in an HTML document, so the scene and the page negotiate over the pointer:
 
-- The scene does **not** take focus when it mounts. `SceneWidget.autofocus` defaults to `true`, which is right for a game filling the window and wrong for a demo inside prose - it would scroll the reader down to the demo on load. This page passes `autofocus: false`.
-- Ignis has no cursor API, so the piece does not change the pointer on hover. `HoverInput` tracks hover state, but nothing maps that to a `MouseCursor`.
+- The scene mounts without taking focus. `SceneWidget.autofocus` defaults to `true`, which is right for a game filling the window and wrong for a demo inside prose, where it would scroll the reader down on load. This page passes `autofocus: false`.
+- `HoverInput` reports hover state, and the piece is what turns that into a highlight. Mapping it to a `MouseCursor` instead is yours to write, since the cursor is Flutter's to set.

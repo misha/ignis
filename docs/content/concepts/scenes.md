@@ -17,5 +17,3 @@ status: stub
 ## Edits land next frame
 
 ## Getting it wrong
-
-## What this doesn't do

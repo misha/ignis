@@ -33,5 +33,3 @@ status: stub
 ## Re-laying every tick
 
 <!-- lib/src/nodes/layout_node.dart. A layout root re-lays itself every frame rather than tracking invalidation. Say what that costs and why it was chosen - there is a benchmark number for it. -->
-
-## What this doesn't do

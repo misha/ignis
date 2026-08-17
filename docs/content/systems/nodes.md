@@ -13,5 +13,3 @@ status: stub
 ## The catalog
 
 ## Positioning and sizing
-
-## What this doesn't do

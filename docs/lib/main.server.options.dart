@@ -9,6 +9,8 @@ import 'package:docs/components/callouts.dart' as _callouts;
 import 'package:docs/components/coverage.dart' as _coverage;
 import 'package:docs/components/demo.dart' as _demo;
 import 'package:docs/components/drag_and_drop_demo.dart' as _drag_and_drop_demo;
+import 'package:docs/components/reference.dart' as _reference;
+import 'package:docs/components/scene_demo.dart' as _scene_demo;
 import 'package:docs/components/status_banner.dart' as _status_banner;
 import 'package:docs/theme.dart' as _theme;
 import 'package:jaspr_content/components/_internal/code_block_copy_button.dart'
@@ -21,7 +23,6 @@ import 'package:jaspr_content/components/github_button.dart' as _github_button;
 import 'package:jaspr_content/components/image.dart' as _image;
 import 'package:jaspr_content/components/sidebar_toggle_button.dart'
     as _sidebar_toggle_button;
-import 'package:jaspr_content/components/theme_toggle.dart' as _theme_toggle;
 
 /// Default [ServerOptions] for use with your Jaspr project.
 ///
@@ -44,6 +45,10 @@ ServerOptions get defaultServerOptions => ServerOptions(
   clients: {
     _drag_and_drop_demo.DragAndDropDemo:
         ClientTarget<_drag_and_drop_demo.DragAndDropDemo>('drag_and_drop_demo'),
+    _scene_demo.SceneDemo: ClientTarget<_scene_demo.SceneDemo>(
+      'scene_demo',
+      params: __scene_demoSceneDemo,
+    ),
     _code_block_copy_button.CodeBlockCopyButton:
         ClientTarget<_code_block_copy_button.CodeBlockCopyButton>(
           'jaspr_content:code_block_copy_button',
@@ -60,9 +65,6 @@ ServerOptions get defaultServerOptions => ServerOptions(
         ClientTarget<_sidebar_toggle_button.SidebarToggleButton>(
           'jaspr_content:sidebar_toggle_button',
         ),
-    _theme_toggle.ThemeToggle: ClientTarget<_theme_toggle.ThemeToggle>(
-      'jaspr_content:theme_toggle',
-    ),
   },
   styles: () => [
     ..._theme.IgnisStyles.styles,
@@ -70,16 +72,20 @@ ServerOptions get defaultServerOptions => ServerOptions(
     ..._coverage.Coverage.styles,
     ..._demo.Demo.styles,
     ..._drag_and_drop_demo.DragAndDropDemoState.styles,
+    ..._reference.Reference.styles,
+    ..._scene_demo.SceneDemo.styles,
     ..._status_banner.StatusBanner.styles,
     ..._callout.Callout.styles,
     ..._code_block.CodeBlock.styles,
     ..._github_button.GitHubButton.styles,
     ..._image.Image.styles,
-    ..._theme_toggle.ThemeToggleState.styles,
     ..._zoomable_image.ZoomableImage.styles,
   ],
 );
 
+Map<String, Object?> __scene_demoSceneDemo(_scene_demo.SceneDemo c) => {
+  'name': c.name,
+};
 Map<String, Object?> __zoomable_imageZoomableImage(
   _zoomable_image.ZoomableImage c,
 ) => {'src': c.src, 'alt': c.alt, 'caption': c.caption};

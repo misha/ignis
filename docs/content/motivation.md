@@ -19,5 +19,3 @@ status: stub
 ### Virtual methods vs. signals
 
 ### `vector_math` vs. `ivector_math`
-
-## What this doesn't do

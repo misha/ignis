@@ -17,5 +17,3 @@ status: stub
 ## Nesting controllers
 
 ## Curves
-
-## What this doesn't do

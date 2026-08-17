@@ -14,5 +14,3 @@ status: stub
 ## The catalog
 
 ## The Ignis-Flutter cheatsheet
-
-## What this doesn't do

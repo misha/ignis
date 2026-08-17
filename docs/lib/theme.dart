@@ -16,25 +16,26 @@ abstract final class Ember {
   static const pale = Color('#CDC07B');
 }
 
-/// Roles the ramp is put to, dark designed and light derived.
+/// Roles the ramp is put to.
+///
+/// The site is dark, and only dark. A single value per role is the whole of it:
+/// nothing here answers to `data-theme`, and nothing needs a second variant
+/// checked for contrast against a ground the site never shows.
 abstract final class IgnisColors {
-  static final surface = ColorToken('surface', Color('#EDE8E0'), dark: Color('#1B1815'));
-  static final border = ColorToken('border', Color('#DBD3C7'), dark: Color('#2E2823'));
-  static final muted = ColorToken('muted', Color('#6B6156'), dark: Color('#9A9186'));
-  static final primaryHi = ColorToken('primary-hi', Ember.deep, dark: Ember.pale);
+  static final surface = ColorToken('surface', Color('#1B1815'));
+  static final border = ColorToken('border', Color('#2E2823'));
+  static final muted = ColorToken('muted', Color('#9A9186'));
+  static final primaryHi = ColorToken('primary-hi', Ember.pale);
 
-  /// Reserved for the mark. Never body text: it fails contrast on both grounds.
-  static final brand = ColorToken('brand', Ember.core, dark: Ember.core);
+  /// Reserved for the mark. Never body text: it fails contrast on this ground.
+  static final brand = ColorToken('brand', Ember.core);
 
-  static const _background = ThemeColor(Color('#F7F4EF'), dark: Color('#12100E'));
-  static const _text = ThemeColor(Color('#2A241E'), dark: Color('#EDE7DD'));
-  static const _headings = ThemeColor(Color('#171310'), dark: Color('#F5F0E8'));
-  static const _primary = ThemeColor(Color('#A34F0A'), dark: Ember.amber);
+  static const _background = ThemeColor(Color('#12100E'));
+  static const _text = ThemeColor(Color('#EDE7DD'));
+  static const _headings = ThemeColor(Color('#F5F0E8'));
+  static const _primary = ThemeColor(Ember.amber);
 
-  /// Every token, with both variants supplied.
-  ///
-  /// Passing a bare [Color] to [ColorToken.apply] silently drops the dark
-  /// variant, so each of these hands over a [ThemeColor].
+  /// Every token the site defines.
   static List<ColorToken> get all => [
     surface,
     border,
@@ -48,14 +49,14 @@ abstract final class IgnisColors {
     ContentColors.quoteBorders.apply(_primary),
     ContentColors.captions.apply(muted),
     ContentColors.counters.apply(muted),
+    ContentColors.lead.apply(muted),
+    ContentColors.kbdShadows.apply(border),
     ContentColors.bullets.apply(_primary),
     ContentColors.hr.apply(border),
     ContentColors.thBorders.apply(border),
     ContentColors.tdBorders.apply(border),
-    ContentColors.code.apply(_headings),
+    ContentColors.code.apply(const ThemeColor(Ember.pale)),
     ContentColors.kbd.apply(_headings),
-    // Code blocks are dark in both modes: the highlighter bakes its colors
-    // into inline styles at build time and cannot answer to the theme.
     ContentColors.preBg.apply(const ThemeColor(Color('#1B1815'))),
     ContentColors.preCode.apply(const ThemeColor(Color('#EDE7DD'))),
   ];
@@ -97,7 +98,7 @@ final ignisCodeTheme = hl.HighlighterTheme.fromConfiguration(
   {"settings":{"foreground":"#EDE7DD"}},
   {"scope":["comment","punctuation.definition.comment"],"settings":{"foreground":"#7A6F62","fontStyle":"italic"}},
   {"scope":["keyword","storage","storage.type","keyword.control","modifier"],"settings":{"foreground":"#C36E21"}},
-  {"scope":["entity.name.type","entity.name.class","support.class","support.type"],"settings":{"foreground":"#CDC07B"}},
+  {"scope":["entity.name.type","entity.name.class","support.class","support.type"],"settings":{"foreground":"${Ember.pale.value}"}},
   {"scope":["string","string.quoted","constant.character"],"settings":{"foreground":"#B65A18"}},
   {"scope":["constant.numeric","constant.language"],"settings":{"foreground":"#C99F4F"}},
   {"scope":["entity.name.function","support.function","meta.function-call"],"settings":{"foreground":"#F0E4C4"}},
@@ -116,9 +117,49 @@ abstract final class IgnisStyles {
   @css
   static List<StyleRule> get styles => [
     ..._faces,
+    ..._type,
     ..._chrome,
     ..._callouts,
     ..._brackets,
+  ];
+
+  /// The display face, and the size everything else is measured against.
+  ///
+  /// [ContentTheme.typography] reaches inside `.content` only, so the wordmark
+  /// and the page title - the largest type on any page - were being set in the
+  /// prose face. IM FELL carries no bold, so both ask for 400 rather than let
+  /// the browser synthesize one.
+  ///
+  /// Garamond runs small for its point size. The root size lifts the whole
+  /// site to suit it, and the sidebar, which the package sets in `rem`, is
+  /// brought up further and tightened to match.
+  static List<StyleRule> get _type => [
+    css(':root').styles(fontSize: 17.px),
+    css('.docs .header .header-title span').styles(
+      fontFamily: FontFamily('IM FELL Great Primer'),
+      fontSize: 1.375.rem,
+      fontWeight: .w400,
+      letterSpacing: 0.02.em,
+    ),
+    css('.docs .content-header h1').styles(
+      fontFamily: FontFamily('IM FELL Great Primer'),
+      fontWeight: .w400,
+      letterSpacing: 0.01.em,
+    ),
+    css('.docs .sidebar').styles(
+      fontSize: 1.rem,
+      lineHeight: 1.4.em,
+    ),
+    css('.docs .sidebar .sidebar-group').styles(
+      padding: .only(top: 1.rem, right: 0.75.rem),
+    ),
+    css('.docs .sidebar .sidebar-group h3').styles(
+      margin: .only(top: Unit.zero, bottom: 0.375.rem),
+      fontSize: 0.875.rem,
+    ),
+    css('.docs .sidebar .sidebar-group li a').styles(
+      padding: .only(left: 0.75.rem, top: 0.1875.rem, bottom: 0.1875.rem),
+    ),
   ];
 
   /// The highlighter colors brackets by nesting depth from a hardcoded
@@ -163,8 +204,12 @@ abstract final class IgnisStyles {
   }
 
   /// The three hairlines `jaspr_content` hardcodes to black at 5%, which is
-  /// invisible on a dark ground.
+  /// invisible on a dark ground, and the measure it lets prose run to.
   static List<StyleRule> get _chrome => [
+    // The package allows 80rem, which is a paragraph a line long on a wide
+    // display. The column holds a comfortable measure instead, and the layout
+    // centers what it no longer uses.
+    css('.docs .main-container .content-container').styles(maxWidth: 46.rem),
     css('.docs .header-container .header').styles(
       border: .only(
         bottom: BorderSide(width: 1.px, color: IgnisColors.border),
@@ -180,25 +225,32 @@ abstract final class IgnisStyles {
     ),
     css('.docs .sidebar li > div:hover').styles(backgroundColor: IgnisColors.surface),
     css('.docs .sidebar li > div.active').styles(backgroundColor: IgnisColors.surface),
+    // The header is fixed and frosted, and the package puts its height at 4rem
+    // where it offsets the sidebar. Landing an anchor at the target's own top
+    // parks it under that glass, so every target clears the header and keeps a
+    // gap besides. In `rem`, since `em` here would scale the gap by whatever
+    // the heading it lands on happens to be set in.
+    css(
+      '.docs .content :is(h1, h2, h3, h4), .docs .reference',
+    ).styles(raw: {'scroll-margin-top': '6rem'}),
   ];
 
   /// `Callout` reaches for no theme token at all - every color in it is a
-  /// hardcoded sky/amber/red/green. These have to out-specify it in both modes.
+  /// hardcoded sky/amber/red/green, at `.callout.callout-info` and the like.
+  ///
+  /// The `.content` these sit under carries them past that. The package's own
+  /// dark set is written as `[data-theme="dark"] .callout`, and nothing on this
+  /// site sets that attribute, so it never applies.
   static List<StyleRule> get _callouts => [
-    // Repeated under `[data-theme="dark"]` because the package's own dark rules
-    // are `[data-theme="dark"] .callout.callout-info` (0,3,0) and set border and
-    // background as well as color. Overriding color alone leaves its sky,
-    // amber, red and green edges showing through in dark mode.
-    for (final scope in ['.content', '[data-theme="dark"] .content'])
-      css('$scope .callout', [
-        css('&').styles(backgroundColor: IgnisColors.surface),
-        for (final variant in _calloutEdges.entries)
-          css('&.callout-${variant.key}').styles(
-            border: .all(width: 1.px, color: variant.value),
-            color: ContentColors.text,
-            backgroundColor: IgnisColors.surface,
-          ),
-      ]),
+    css('.content .callout', [
+      css('&').styles(backgroundColor: IgnisColors.surface),
+      for (final variant in _calloutEdges.entries)
+        css('&.callout-${variant.key}').styles(
+          border: .all(width: 1.px, color: variant.value),
+          color: ContentColors.text,
+          backgroundColor: IgnisColors.surface,
+        ),
+    ]),
   ];
 
   /// Semantic edges. The palette has one hue, so severity reads through

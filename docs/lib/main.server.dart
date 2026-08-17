@@ -14,13 +14,13 @@ import 'package:jaspr_content/components/github_button.dart';
 import 'package:jaspr_content/components/header.dart';
 import 'package:jaspr_content/components/image.dart';
 import 'package:jaspr_content/components/sidebar.dart';
-import 'package:jaspr_content/components/theme_toggle.dart';
 import 'package:jaspr_content/jaspr_content.dart';
 
 import 'components/callouts.dart';
 import 'components/coverage.dart';
 import 'components/demo.dart';
 import 'components/drag_and_drop_demo.dart';
+import 'components/reference.dart';
 import 'components/status_banner.dart';
 import 'theme.dart';
 
@@ -46,8 +46,16 @@ class _IgnisLayout extends DocsLayout {
   @override
   Component buildBody(Page page, Component child) {
     // Injected here rather than written into every page, so a page cannot
-    // quietly forget to admit how finished it is.
-    return super.buildBody(page, .fragment([StatusBanner(page: page), child]));
+    // quietly forget to admit how finished it is, and so the API links sit in
+    // the same place on every page that lists any.
+    return super.buildBody(
+      page,
+      .fragment([
+        StatusBanner(page: page),
+        child,
+        Reference(page: page),
+      ]),
+    );
   }
 }
 
@@ -76,6 +84,9 @@ void main() {
         HeadingAnchorsExtension(),
         // Generates a table of contents for each page.
         TableOfContentsExtension(),
+        // Lists the reference block underneath it, which the layout injects
+        // too late for the contents above to have seen.
+        ReferenceEntryExtension(),
       ],
       components: [
         // The <Info> block and other callouts.
@@ -103,8 +114,6 @@ void main() {
             title: 'Ignis',
             logo: '/images/ignis-mark.webp',
             items: [
-              // Enables switching between light and dark mode.
-              ThemeToggle(),
               // Shows github stats.
               GitHubButton(repo: 'misha/ignis'),
             ],

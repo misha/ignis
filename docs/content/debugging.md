@@ -16,5 +16,3 @@ status: stub
 ## Drawing your own
 
 ## Reading a stuck frame
-
-## What this doesn't do

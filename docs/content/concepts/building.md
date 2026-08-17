@@ -24,5 +24,3 @@ status: stub
 <Rule>
   State that must survive a rebuild belongs on the node or on a preserved child, never on a derived one.
 </Rule>
-
-## What this doesn't do

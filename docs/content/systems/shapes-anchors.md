@@ -14,5 +14,3 @@ status: stub
 ## The catalog
 
 ## What an anchor does to a position
-
-## What this doesn't do

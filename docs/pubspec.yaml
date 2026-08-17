@@ -27,6 +27,15 @@ jaspr:
   mode: static
   flutter: embedded
 
+flutter:
+  assets:
+    - assets/images/
+    - assets/sheets/
+  fonts:
+    - family: IM FELL Great Primer
+      fonts:
+        - asset: web/fonts/im-fell-great-primer.woff2
+
 scripts:
   analyze: dart analyze
   build: jaspr build

@@ -16,5 +16,3 @@ status: stub
 ## The default paint
 
 ## Ordering and offsets
-
-## What this doesn't do

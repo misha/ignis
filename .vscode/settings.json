@@ -6,6 +6,9 @@
   "files.exclude": {
     "**/.dart_tool": true,
     "**/.git": true,
+    "docs/lib/generated/": true,
+    "docs/**/*.options.dart": true,
+    "docs/**/*.imports.dart": true,
   },
   "dart.lineLength": 100,
   "[dart]": {

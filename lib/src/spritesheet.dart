@@ -15,12 +15,33 @@ final class SpritesheetSource {
   const SpritesheetSource(this.asset, this.size);
 }
 
-// TODO: Document usage and properties.
+/// An image cut into a grid of equally sized frames.
+///
+/// Frames are numbered row-major from the top left, and a [SpriteNode] animates
+/// along one row:
+///
+/// ```
+/// +---+---+---+---+
+/// | 0 | 1 | 2 | 3 |
+/// +---+---+---+---+
+/// | 4 | 5 | 6 | 7 |
+/// +---+---+---+---+
+/// ```
+///
+/// ```dart
+/// final sheet = Spritesheet.asset('assets/fire.png', size: .new(32, 48));
+/// ```
 class Spritesheet {
+  /// The image the frames are cut from.
   final Image image;
+
+  /// The size of a single frame.
   late final Vector2 size;
+
   late final int rows;
   late final int columns;
+
+  /// How many frames the grid holds, across every row.
   late final int frames;
 
   /// Where this sheet came from, or null when built from an image directly.
