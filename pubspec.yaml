@@ -2,8 +2,10 @@ name: ignis
 description: Flutter game engine.
 version: 0.0.1
 publish_to: none
+
 environment:
   sdk: ^3.12.0
+
 dependencies:
   flutter:
     sdk: flutter
@@ -12,11 +14,18 @@ dependencies:
   pool: ^1.5.2
   watcher: ^1.2.1
   yaml: ^3.1.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   leak_tracker: ^11.0.2
+
+flutter:
+  # TODO: I hope the engine doesn't ship with test assets as a result of this line.
+  assets:
+    - test/assets/
+
 scripts:
   analyze: dart analyze
   coverage:
@@ -25,6 +34,3 @@ scripts:
   goldens: flutter test --update-goldens
   open-coverage: open coverage/html/index.html
   test: flutter test
-flutter:
-  assets:
-    - test/assets/

@@ -10,6 +10,7 @@ import 'package:docs/components/coverage.dart' as _coverage;
 import 'package:docs/components/demo.dart' as _demo;
 import 'package:docs/components/drag_and_drop_demo.dart' as _drag_and_drop_demo;
 import 'package:docs/components/status_banner.dart' as _status_banner;
+import 'package:docs/theme.dart' as _theme;
 import 'package:jaspr_content/components/_internal/code_block_copy_button.dart'
     as _code_block_copy_button;
 import 'package:jaspr_content/components/_internal/zoomable_image.dart'
@@ -64,6 +65,7 @@ ServerOptions get defaultServerOptions => ServerOptions(
     ),
   },
   styles: () => [
+    ..._theme.IgnisStyles.styles,
     ..._callouts.Callouts.styles,
     ..._coverage.Coverage.styles,
     ..._demo.Demo.styles,

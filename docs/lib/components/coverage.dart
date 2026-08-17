@@ -23,7 +23,11 @@ class Coverage extends CustomComponentBase {
   static List<StyleRule> get styles => [
     css('.coverage', [
       css('&').styles(width: 100.percent),
-      css('td, th').styles(
+      css('& td').styles(
+        padding: .symmetric(vertical: 0.375.rem, horizontal: 0.5.rem),
+        textAlign: .left,
+      ),
+      css('& th').styles(
         padding: .symmetric(vertical: 0.375.rem, horizontal: 0.5.rem),
         textAlign: .left,
       ),
@@ -63,7 +67,9 @@ class _CoverageTable extends StatelessComponent {
         tbody([
           for (final row in rows)
             tr([
-              td([a(href: row.url, [.text(row.title)])]),
+              td([
+                a(href: row.url, [.text(row.title)]),
+              ]),
               td(classes: 'coverage-status', [.text(row.lane)]),
               td(classes: 'coverage-status', [.text(row.status)]),
             ]),

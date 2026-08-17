@@ -1,0 +1,213 @@
+import 'package:jaspr/dom.dart';
+import 'package:jaspr_content/theme.dart';
+import 'package:syntax_highlight_lite/syntax_highlight_lite.dart' as hl;
+
+/// The ember ramp, sampled from the painted pixels of `ignis.png`.
+///
+/// The artwork is the only fixed brand input and it carries no second hue, so
+/// every color on the site is either this ramp or a neutral derived from it.
+abstract final class Ember {
+  static const deep = Color('#780E04');
+  static const core = Color('#A32C0D');
+  static const burnt = Color('#B65A18');
+  static const flame = Color('#C36E21');
+  static const amber = Color('#C78F30');
+  static const gold = Color('#C99F4F');
+  static const pale = Color('#CDC07B');
+}
+
+/// Roles the ramp is put to, dark designed and light derived.
+abstract final class IgnisColors {
+  static final surface = ColorToken('surface', Color('#EDE8E0'), dark: Color('#1B1815'));
+  static final border = ColorToken('border', Color('#DBD3C7'), dark: Color('#2E2823'));
+  static final muted = ColorToken('muted', Color('#6B6156'), dark: Color('#9A9186'));
+  static final primaryHi = ColorToken('primary-hi', Ember.deep, dark: Ember.pale);
+
+  /// Reserved for the mark. Never body text: it fails contrast on both grounds.
+  static final brand = ColorToken('brand', Ember.core, dark: Ember.core);
+
+  static const _background = ThemeColor(Color('#F7F4EF'), dark: Color('#12100E'));
+  static const _text = ThemeColor(Color('#2A241E'), dark: Color('#EDE7DD'));
+  static const _headings = ThemeColor(Color('#171310'), dark: Color('#F5F0E8'));
+  static const _primary = ThemeColor(Color('#A34F0A'), dark: Ember.amber);
+
+  /// Every token, with both variants supplied.
+  ///
+  /// Passing a bare [Color] to [ColorToken.apply] silently drops the dark
+  /// variant, so each of these hands over a [ThemeColor].
+  static List<ColorToken> get all => [
+    surface,
+    border,
+    muted,
+    primaryHi,
+    brand,
+    ContentColors.headings.apply(_headings),
+    ContentColors.links.apply(_primary),
+    ContentColors.bold.apply(_headings),
+    ContentColors.quotes.apply(_text),
+    ContentColors.quoteBorders.apply(_primary),
+    ContentColors.captions.apply(muted),
+    ContentColors.counters.apply(muted),
+    ContentColors.bullets.apply(_primary),
+    ContentColors.hr.apply(border),
+    ContentColors.thBorders.apply(border),
+    ContentColors.tdBorders.apply(border),
+    ContentColors.code.apply(_headings),
+    ContentColors.kbd.apply(_headings),
+    // Code blocks are dark in both modes: the highlighter bakes its colors
+    // into inline styles at build time and cannot answer to the theme.
+    ContentColors.preBg.apply(const ThemeColor(Color('#1B1815'))),
+    ContentColors.preCode.apply(const ThemeColor(Color('#EDE7DD'))),
+  ];
+}
+
+/// The site theme.
+ContentTheme get ignisTheme => ContentTheme(
+  primary: IgnisColors._primary,
+  background: IgnisColors._background,
+  text: IgnisColors._text,
+  colors: IgnisColors.all,
+  font: FontFamily.list([FontFamily('EB Garamond'), FontFamilies.serif]),
+  codeFont: FontFamily.list([
+    FontFamily('iA Writer Mono'),
+    FontFamilies.uiMonospace,
+    FontFamilies.monospace,
+  ]),
+  typography: ContentTypography.base.apply(
+    styles: Styles(lineHeight: 1.7.em),
+    rules: [
+      // IM FELL has no bold, so the hierarchy is size and spacing alone.
+      css('h1, h2, h3, h4').styles(
+        color: ContentColors.headings,
+        fontFamily: FontFamily('IM FELL Great Primer'),
+        fontWeight: .w400,
+        letterSpacing: 0.01.em,
+      ),
+    ],
+  ),
+);
+
+/// Dart highlighting, drawn from the ramp.
+///
+/// Monochrome by necessity - the artwork has one hue - so the scopes separate
+/// by lightness rather than by color.
+final ignisCodeTheme = hl.HighlighterTheme.fromConfiguration(
+  '''
+{"settings":[
+  {"settings":{"foreground":"#EDE7DD"}},
+  {"scope":["comment","punctuation.definition.comment"],"settings":{"foreground":"#7A6F62","fontStyle":"italic"}},
+  {"scope":["keyword","storage","storage.type","keyword.control","modifier"],"settings":{"foreground":"#C36E21"}},
+  {"scope":["entity.name.type","entity.name.class","support.class","support.type"],"settings":{"foreground":"#CDC07B"}},
+  {"scope":["string","string.quoted","constant.character"],"settings":{"foreground":"#B65A18"}},
+  {"scope":["constant.numeric","constant.language"],"settings":{"foreground":"#C99F4F"}},
+  {"scope":["entity.name.function","support.function","meta.function-call"],"settings":{"foreground":"#F0E4C4"}},
+  {"scope":["variable","variable.parameter","meta.definition.variable"],"settings":{"foreground":"#EDE7DD"}},
+  {"scope":["keyword.operator","punctuation","meta.brace"],"settings":{"foreground":"#9A9186"}},
+  {"scope":["meta.declaration.annotation","storage.type.annotation"],"settings":{"foreground":"#C78F30"}}
+]}''',
+  hl.TextStyle(foreground: hl.Color(0xFFEDE7DD)),
+);
+
+/// Site-wide rules: the bundled faces, and the package styling we have to beat.
+///
+/// Our `@css` block is emitted before `jaspr_content`'s, so every override here
+/// carries a scoping ancestor rather than relying on source order.
+abstract final class IgnisStyles {
+  @css
+  static List<StyleRule> get styles => [
+    ..._faces,
+    ..._chrome,
+    ..._callouts,
+    ..._brackets,
+  ];
+
+  /// The highlighter colors brackets by nesting depth from a hardcoded
+  /// five-hue rainbow (`_bracketStyles`, private and top-level, so neither
+  /// themeable nor overridable in Dart). It writes them as inline styles, which
+  /// only `!important` can beat. Punctuation should be quiet, so all five
+  /// collapse onto the muted tone the theme already gives `meta.brace`.
+  static List<StyleRule> get _brackets => [
+    for (final hex in ['#5caeef', '#dfb976', '#c172d9', '#4fb1bc', '#97c26c'])
+      css('.content pre code span[style*="$hex"]').styles(
+        raw: {'color': 'var(--muted) !important'},
+      ),
+  ];
+
+  static List<StyleRule> get _faces => [
+    _face('EB Garamond', 'eb-garamond', weight: '400 800'),
+    _face('EB Garamond', 'eb-garamond-italic', weight: '400 800', style: 'italic'),
+    _face('IM FELL Great Primer', 'im-fell-great-primer'),
+    _face('IM FELL Great Primer', 'im-fell-great-primer-italic', style: 'italic'),
+    _face('iA Writer Mono', 'ia-writer-mono'),
+    _face('iA Writer Mono', 'ia-writer-mono-bold', weight: '700'),
+    _face('iA Writer Mono', 'ia-writer-mono-italic', style: 'italic'),
+  ];
+
+  /// Jaspr's typed `css.fontFace` emits no `format()`, weight, or display, so
+  /// the raw form is the only one that can describe these files.
+  static StyleRule _face(
+    String family,
+    String file, {
+    String weight = '400',
+    String style = 'normal',
+  }) {
+    return css('@font-face').styles(
+      raw: {
+        'font-family': '"$family"',
+        'src': 'url("/fonts/$file.woff2") format("woff2")',
+        'font-weight': weight,
+        'font-style': style,
+        'font-display': 'swap',
+      },
+    );
+  }
+
+  /// The three hairlines `jaspr_content` hardcodes to black at 5%, which is
+  /// invisible on a dark ground.
+  static List<StyleRule> get _chrome => [
+    css('.docs .header-container .header').styles(
+      border: .only(
+        bottom: BorderSide(width: 1.px, color: IgnisColors.border),
+      ),
+    ),
+    // Matches the package's own `.docs .main-container .sidebar-container`
+    // specificity; ours is emitted later, so the tie falls our way. Theirs is
+    // mobile-only, so this also gives the sidebar an edge on desktop.
+    css('.docs .main-container .sidebar-container').styles(
+      border: .only(
+        right: BorderSide(width: 1.px, color: IgnisColors.border),
+      ),
+    ),
+    css('.docs .sidebar li > div:hover').styles(backgroundColor: IgnisColors.surface),
+    css('.docs .sidebar li > div.active').styles(backgroundColor: IgnisColors.surface),
+  ];
+
+  /// `Callout` reaches for no theme token at all - every color in it is a
+  /// hardcoded sky/amber/red/green. These have to out-specify it in both modes.
+  static List<StyleRule> get _callouts => [
+    // Repeated under `[data-theme="dark"]` because the package's own dark rules
+    // are `[data-theme="dark"] .callout.callout-info` (0,3,0) and set border and
+    // background as well as color. Overriding color alone leaves its sky,
+    // amber, red and green edges showing through in dark mode.
+    for (final scope in ['.content', '[data-theme="dark"] .content'])
+      css('$scope .callout', [
+        css('&').styles(backgroundColor: IgnisColors.surface),
+        for (final variant in _calloutEdges.entries)
+          css('&.callout-${variant.key}').styles(
+            border: .all(width: 1.px, color: variant.value),
+            color: ContentColors.text,
+            backgroundColor: IgnisColors.surface,
+          ),
+      ]),
+  ];
+
+  /// Semantic edges. The palette has one hue, so severity reads through
+  /// lightness: quiet for info, the accent for warning, the core ember for
+  /// error.
+  static Map<String, Color> get _calloutEdges => {
+    'info': IgnisColors.border,
+    'warning': ContentColors.primary,
+    'error': Ember.core,
+    'success': IgnisColors.muted,
+  };
+}

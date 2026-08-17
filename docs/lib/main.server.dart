@@ -16,13 +16,13 @@ import 'package:jaspr_content/components/image.dart';
 import 'package:jaspr_content/components/sidebar.dart';
 import 'package:jaspr_content/components/theme_toggle.dart';
 import 'package:jaspr_content/jaspr_content.dart';
-import 'package:jaspr_content/theme.dart';
 
 import 'components/callouts.dart';
 import 'components/coverage.dart';
 import 'components/demo.dart';
 import 'components/drag_and_drop_demo.dart';
 import 'components/status_banner.dart';
+import 'theme.dart';
 
 // This file is generated automatically by Jaspr, do not remove or edit.
 import 'main.server.options.dart';
@@ -83,7 +83,7 @@ void main() {
         // The <Why> and <Lineage> registers.
         Callouts(),
         // Adds syntax highlighting to code blocks.
-        CodeBlock(),
+        CodeBlock(codeTheme: ignisCodeTheme),
         // The per-page status table on the overview.
         Coverage(),
         // Every <Demo name="..."/> slot on the site.
@@ -101,7 +101,7 @@ void main() {
         _IgnisLayout(
           header: Header(
             title: 'Ignis',
-            logo: '/images/logo.svg',
+            logo: '/images/ignis-mark.webp',
             items: [
               // Enables switching between light and dark mode.
               ThemeToggle(),
@@ -168,14 +168,7 @@ void main() {
           ),
         ),
       ],
-      theme: ContentTheme(
-        // Customizes the default theme colors.
-        primary: ThemeColor(ThemeColors.blue.$500, dark: ThemeColors.blue.$300),
-        background: ThemeColor(ThemeColors.slate.$50, dark: ThemeColors.zinc.$950),
-        colors: [
-          ContentColors.quoteBorders.apply(ThemeColors.blue.$400),
-        ],
-      ),
+      theme: ignisTheme,
     ),
   );
 }
