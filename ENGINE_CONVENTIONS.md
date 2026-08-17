@@ -80,7 +80,7 @@ Effect controller constructors always use positional parameters (`[...]`), not n
 
 ```dart
 class DurationEffectController extends EffectController {
-  DurationEffectController(this.duration, [Curve? curve,]) //
+  DurationEffectController(this.duration, [Curve? curve]) //
     : curve = curve ?? Curves.linear;
 }
 ```
