@@ -5,6 +5,16 @@ import 'package:jaspr_content/theme.dart';
 
 import '../theme.dart';
 
+/// The mark each `<Lineage>` source wears.
+const _MARKS = {
+  'flame': '/images/lineage-flame.png',
+  'godot': '/images/lineage-godot.svg',
+};
+
+/// What the label band reserves whether or not the register carries a mark, so
+/// the registers differ by color and content and match everywhere else.
+const Unit _MARK_SIZE = .rem(1.25);
+
 /// The four registers the README established, as markdown components.
 ///
 /// `<Why>` explains why a decision went the way it did, and
@@ -37,16 +47,11 @@ class Callouts extends CustomComponentBase {
   static Component? _mark(String? source) {
     if (source == null) return null;
 
-    final path = _marks[source.toLowerCase()];
+    final path = _MARKS[source.toLowerCase()];
     if (path == null) return null;
 
     return img(src: path, alt: source, classes: 'aside-mark');
   }
-
-  static const Map<String, String> _marks = {
-    'flame': '/images/lineage-flame.png',
-    'godot': '/images/lineage-godot.svg',
-  };
 
   @css
   static List<StyleRule> get styles => [
@@ -63,7 +68,8 @@ class Callouts extends CustomComponentBase {
       // trimming it to the text's own size lands the mark on the caps.
       css('.aside-label').styles(
         display: .flex,
-        margin: .only(bottom: 0.25.rem),
+        minHeight: _MARK_SIZE,
+        margin: .only(bottom: 0.5.rem),
         alignItems: .center,
         gap: .column(0.375.rem),
         color: ContentColors.primary,
@@ -73,9 +79,12 @@ class Callouts extends CustomComponentBase {
         letterSpacing: 0.05.em,
         lineHeight: 1.em,
       ),
+      // Content typography gives every `img` a 2em vertical margin, which at
+      // the label's size is 24px of air the text-only registers never get.
       css('.aside-mark').styles(
-        width: 1.25.rem,
-        height: 1.25.rem,
+        width: _MARK_SIZE,
+        height: _MARK_SIZE,
+        margin: .zero,
       ),
       css('.aside-body > p:first-child').styles(margin: .zero),
       css('.aside-body > p:last-child').styles(margin: .zero),
