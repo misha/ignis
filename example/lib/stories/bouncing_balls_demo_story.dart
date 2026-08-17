@@ -128,6 +128,12 @@ class _DemoNode extends Node {
   final onBalls = Signal1<int>();
 
   @override
+  void reassemble() {
+    balls = 0;
+    rebuild();
+  }
+
+  @override
   void build() {
     super.build();
 
@@ -143,8 +149,6 @@ class _DemoNode extends Node {
         repeat: true,
       ),
     ]);
-
-    balls = 0;
 
     spawner.onTrigger(() {
       final angle = _RNG.nextDouble() * 2 * pi;
