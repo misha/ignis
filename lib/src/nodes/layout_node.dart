@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/debug.dart';
@@ -76,9 +74,14 @@ abstract class LayoutNode extends SizedNode {
   @override
   void build() {
     super.build();
+
     tick((_) {
       if (!isLayoutRoot) return;
       layout(_rootConstraints());
+    });
+
+    debugDraw((canvas) {
+      canvas.drawRect(.fromLTWH(0, 0, width, height), DEBUG_LAYOUT_PAINT);
     });
   }
 
@@ -88,10 +91,5 @@ abstract class LayoutNode extends SizedNode {
   LayoutConstraints _rootConstraints() {
     if (!isMounted || !scene.hasSize) return .unbounded();
     return .loose(scene.size);
-  }
-
-  @override
-  void debugRenderAnchored(Canvas canvas) {
-    canvas.drawRect(.fromLTWH(0, 0, width, height), DEBUG_LAYOUT_PAINT);
   }
 }

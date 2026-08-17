@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/collisions/nodes/collision_detection_node.dart';
 import 'package:ignis/src/core.dart';
@@ -70,6 +68,10 @@ class ColliderNode extends SizedNode {
 
     onCollisionStart(_active.add);
     onCollisionEnd(_active.remove);
+
+    debugDraw((canvas) {
+      canvas.drawRect(shape.rect(), DEBUG_COLLIDER_PAINT);
+    });
   }
 
   /// Removes [other] from [active] without emitting [onCollisionEnd], for when
@@ -77,9 +79,4 @@ class ColliderNode extends SizedNode {
   /// stopped overlapping.
   @internal
   void dropCollision(ColliderNode other) => _active.remove(other);
-
-  @override
-  void debugRenderAnchored(Canvas canvas) {
-    canvas.drawRect(shape.rect(), DEBUG_COLLIDER_PAINT);
-  }
 }

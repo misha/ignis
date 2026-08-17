@@ -75,32 +75,25 @@ abstract class SizedNode extends TransformNode implements LayoutItem, AnchorOwne
     return bounds;
   }
 
+  /// Draws in a coordinate space where (0, 0) is [width]/[height]'s
+  /// [anchor]-adjusted top-left corner. Children keep the untranslated space.
   @override
-  void renderTransformed(Canvas canvas) {
+  void renderSelf(Canvas canvas) {
     final offsetX = -anchor.x * width;
     final offsetY = -anchor.y * height;
     canvas.translate(offsetX, offsetY);
-    renderAnchored(canvas);
+    super.renderSelf(canvas);
     canvas.translate(-offsetX, -offsetY);
   }
 
-  /// Draws this node's visuals, in a coordinate space where (0, 0) is
-  /// [width]/[height]'s [anchor]-adjusted top-left corner.
-  void renderAnchored(Canvas canvas) {}
-
   @override
-  void debugRenderTransformed(Canvas canvas) {
-    super.debugRenderTransformed(canvas);
+  void debugRenderSelf(Canvas canvas) {
     final offsetX = -anchor.x * width;
     final offsetY = -anchor.y * height;
     canvas.translate(offsetX, offsetY);
-    debugRenderAnchored(canvas);
+    super.debugRenderSelf(canvas);
     canvas.translate(-offsetX, -offsetY);
   }
-
-  /// Draws this node's debug visuals, in the same coordinate space as
-  /// [renderAnchored].
-  void debugRenderAnchored(Canvas canvas) {}
 
   /// A plain [SizedNode] can't lay itself out, so its [size] stands whatever
   /// [constraints] say.

@@ -33,13 +33,6 @@ final class TestNode extends Node {
   }
 
   @override
-  void render(Canvas canvas) {
-    renders += 1;
-    log?.renders.add(name);
-    super.render(canvas);
-  }
-
-  @override
   void reassemble() => rebuild();
 
   @override
@@ -50,6 +43,11 @@ final class TestNode extends Node {
       updates += 1;
       log?.updates.add(name);
       action?.call();
+    });
+
+    draw((canvas) {
+      renders += 1;
+      log?.renders.add(name);
     });
 
     builds += 1;

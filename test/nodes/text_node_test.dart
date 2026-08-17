@@ -106,10 +106,16 @@ void main() {
     expect(node.width, 200);
   });
 
-  test('reports a zero size until it is laid out', () {
+  test('reports a zero size until it builds', () {
+    final node = TextNode(text: 'Ignis');
+    expect(node.size, Vector2.zero, reason: 'nothing to measure with yet');
+  });
+
+  test('measures its text on demand, without waiting to be laid out', () {
     final node = TextNode(text: 'Ignis');
     node.mount();
-    expect(node.size, Vector2.zero);
+
+    expect(node.size, isNot(Vector2.zero));
   });
 
   test('renders styled text', () async {

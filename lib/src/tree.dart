@@ -57,9 +57,13 @@ final class _Tree {
       try {
         switch (operation.kind) {
           case .add:
+            // A remove cancelled this addition, so the child never arrived.
+            if (!identical(operation.target._pendingParent, operation.parent)) break;
             operation.parent._own(operation.target);
 
           case .remove:
+            // An add cancelled this removal, so the child never left.
+            if (!operation.target._pendingRemoval) break;
             operation.parent._disown(operation.target);
 
           case .reposition:

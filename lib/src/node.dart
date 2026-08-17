@@ -1,5 +1,14 @@
 part of 'core.dart';
 
+/// Advances a node by the seconds elapsed since the last frame.
+typedef Tick = void Function(double dt);
+
+/// Paints a node to the canvas, in its own coordinate space.
+typedef Draw = void Function(Canvas canvas);
+
+/// Paints a node's debug overlay, in the same space as a [Draw].
+typedef DebugDraw = void Function(Canvas canvas);
+
 /// Call to undo whatever was set up.
 typedef Cleanup = void Function();
 
@@ -119,6 +128,7 @@ class Node {
 
   /// Renders this node and its children to [canvas].
   void render(Canvas canvas) {
+    renderSelf(canvas);
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
@@ -131,8 +141,23 @@ class Node {
     }
   }
 
+  /// Runs this node's [draw] callbacks.
+  ///
+  /// Wrapped, rather than overridden, by a node that draws itself in a space
+  /// its children do not share.
+  @protected
+  void renderSelf(Canvas canvas) {
+    final draws = _draws;
+    if (draws == null) return;
+
+    for (var i = 0; i < draws.length; i += 1) {
+      draws[i](canvas);
+    }
+  }
+
   /// Renders the debug overlay for this node and its children to [canvas].
   void debugRender(Canvas canvas) {
+    debugRenderSelf(canvas);
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
@@ -140,6 +165,17 @@ class Node {
       if (child._enabled) {
         child.debugRender(canvas);
       }
+    }
+  }
+
+  /// Runs this node's [debugDraw] callbacks, in the same space as [renderSelf].
+  @protected
+  void debugRenderSelf(Canvas canvas) {
+    final debugDraws = _debugDraws;
+    if (debugDraws == null) return;
+
+    for (var i = 0; i < debugDraws.length; i += 1) {
+      debugDraws[i](canvas);
     }
   }
 
@@ -176,12 +212,15 @@ class Node {
   /// Everything the previous [build] made is thrown away:
   ///
   ///   - All [add]ed direct children are removed.
-  ///   - All [tick] closures are removed.
+  ///   - All [tick], [draw], and [debugDraw] closures are removed.
   ///   - The [trash] is processed and cleared.
   ///
   /// Then, [build] runs again from the top, so constructor arguments are
   /// re-evaluated exactly like a statement is. What survives is this node
   /// itself: its members, its position, and anything added to it imperatively.
+  ///
+  /// A child the new body [add]s back is preserved rather than replaced, which
+  /// makes a child held on the instance a boundary this rebuild stops at.
   ///
   /// Call this inside [reassemble] when your node knows how to reboot itself
   /// directly from its instance members to witness *true* live reload.
@@ -193,6 +232,8 @@ class Node {
     // leaves the list that call is being iterated from intact. Its remaining
     // closures run out the frame; the new build installs its own for the next.
     _ticks = null;
+    _draws = null;
+    _debugDraws = null;
     _cleanup();
     final builder = _builder;
     _builder = this;
@@ -239,9 +280,9 @@ class Node {
 
   // #region Ticks
 
-  List<void Function(double dt)>? _ticks;
+  List<Tick>? _ticks;
 
-  /// Calls [update] with the elapsed seconds on every frame.
+  /// Calls [tick] with the elapsed seconds on every frame.
   ///
   /// ```dart
   /// tick((dt) {
@@ -249,15 +290,42 @@ class Node {
   /// });
   /// ```
   @nonVirtual
-  void tick(void Function(double dt) update) {
-    (_ticks ??= []).add(update);
+  void tick(Tick tick) {
+    (_ticks ??= []).add(tick);
+  }
+
+  // #endregion
+
+  // #region Draws
+
+  List<Draw>? _draws;
+  List<DebugDraw>? _debugDraws;
+
+  /// Draws to [canvas] every frame, in this node's own coordinate space.
+  ///
+  /// ```dart
+  /// draw((canvas) {
+  ///   canvas.drawCircle(.zero, radius, paint);
+  /// });
+  /// ```
+  @nonVirtual
+  void draw(Draw draw) {
+    (_draws ??= []).add(draw);
+  }
+
+  /// Draws to the debug overlay every frame, in the same space as [draw].
+  ///
+  /// Only reached while the scene renders with `debug: true`.
+  @nonVirtual
+  void debugDraw(DebugDraw draw) {
+    (_debugDraws ??= []).add(draw);
   }
 
   // #endregion
 
   // #region Trash
 
-  List<Cleanup>? _trash;
+  List<Cleanup>? _cleanups;
 
   /// Defers [cleanup] until this [build] stops being current.
   ///
@@ -273,13 +341,13 @@ class Node {
   /// the handlers it will notify.
   @nonVirtual
   void trash(Cleanup cleanup) {
-    (_trash ??= []).add(cleanup);
+    (_cleanups ??= []).add(cleanup);
   }
 
   void _cleanup() {
-    final cleanups = _trash;
+    final cleanups = _cleanups;
     if (cleanups == null || cleanups.isEmpty) return;
-    _trash = null;
+    _cleanups = null;
 
     for (var i = cleanups.length - 1; i >= 0; i -= 1) {
       try {
@@ -483,6 +551,8 @@ class Node {
     onUnmount.emit();
     _cleanup();
     _ticks = null;
+    _draws = null;
+    _debugDraws = null;
     _declared = null;
     _scene = null;
     _dependencies = null;
@@ -495,15 +565,17 @@ class Node {
   /// Adds [node] to this node. The node is returned.
   ///
   /// Nodes cannot be added to themselves or their descendants. Adding a child
-  /// to its current parent is a no-op.
+  /// to its current parent is a no-op, and cancels its pending removal, so a
+  /// child held on the instance survives the [rebuild] that discarded it.
   ///
   /// Called from this node's own [build], the child is additionally recorded
-  /// as declared, so the next rebuild destroys it before running the body
+  /// as declared, so the next rebuild discards it before running the body
   /// again. The node handed in is always the node handed back.
   T add<T extends Node>(T node) {
     if (identical(_builder, this)) (_declared ??= []).add(node);
 
     if (owns(node)) {
+      node._pendingRemoval = false;
       return node;
     }
 
@@ -545,7 +617,15 @@ class Node {
   /// Returns true if the node was owned by this node and its removal was
   /// accepted. Removing a parentless node, a node not owned by this node, or a
   /// node already awaiting removal, is a no-op that returns `false`.
+  ///
+  /// A node still awaiting its own addition is cancelled outright, so an add
+  /// and a remove queued in the same frame settle to nothing.
   bool remove(Node node) {
+    if (identical(node._pendingParent, this)) {
+      node._pendingParent = null; // Cancels the addition queued this frame.
+      return true;
+    }
+
     if (node._pendingRemoval) return false; // Already being removed.
     if (!owns(node)) return false; // Not our node, not our problem.
 
@@ -571,8 +651,8 @@ class Node {
     for (final child in children) remove(child);
   }
 
-  /// Removes this node from its parent.
-  bool detach() => parent?.remove(this) ?? false;
+  /// Removes this node from its parent, or from the parent it is on its way to.
+  bool detach() => (parent ?? _pendingParent)?.remove(this) ?? false;
 
   // #endregion
 

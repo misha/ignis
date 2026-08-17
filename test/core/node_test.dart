@@ -314,6 +314,36 @@ void main() {
     expect(b.parent, isNull);
   });
 
+  test('re-adding a child cancels a removal queued in the same frame', () {
+    final a = Node();
+    final b = Node();
+    a.add(b);
+    final scene = a.mount()..update(0);
+
+    a.remove(b);
+    a.add(b);
+    scene.update(0);
+
+    expect(a.children, [b]);
+    expect(b.isMounted, isTrue, reason: 'it never left the tree');
+  });
+
+  test('removing a child cancels an addition queued in the same frame', () {
+    final a = Node();
+    final b = Node();
+    final scene = a.mount()..update(0);
+
+    a.add(b);
+
+    expect(a.remove(b), isTrue);
+
+    scene.update(0);
+
+    expect(a.children, isEmpty);
+    expect(b.hasParent, isFalse);
+    expect(b.isMounted, isFalse, reason: 'it never arrived');
+  });
+
   test('propagates destroy listener failures while still detaching the node', () {
     final a = Node();
     final b = Node();

@@ -3,10 +3,17 @@ import 'dart:ui';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/painted_node.dart';
+import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/palette.dart';
 import 'package:ignis/src/spritesheet.dart';
 
-class SpriteNode extends PaintedNode {
+class SpriteNode extends SizedNode {
+  /// This node's registered paints.
+  final Palette palette;
+
+  /// The default paint.
+  Paint get paint => palette.paint;
+
   /// The frames per second to use when animating this sprite.
   ///
   /// Defaults to 0, or no animation. Must be >= 0.
@@ -46,10 +53,10 @@ class SpriteNode extends PaintedNode {
 
   SpriteNode({
     required Spritesheet sheet,
+    Paint? paint,
     num? fps,
     bool? loop,
     bool? cleanup,
-    super.paint,
     super.position,
     super.scale,
     super.angle,
@@ -58,6 +65,7 @@ class SpriteNode extends PaintedNode {
     super.priority,
     super.children,
   }) : _sheets = .of([sheet], growable: false),
+       palette = Palette(paint: paint),
        fps = fps ?? 0,
        loop = loop ?? true,
        cleanup = cleanup ?? false;
@@ -67,7 +75,7 @@ class SpriteNode extends PaintedNode {
     num? fps,
     bool? loop,
     bool? cleanup,
-    super.paint,
+    Paint? paint,
     super.position,
     super.scale,
     super.angle,
@@ -77,6 +85,7 @@ class SpriteNode extends PaintedNode {
     super.children,
   }) : assert(sheets.isNotEmpty),
        _sheets = .of(sheets, growable: false),
+       palette = Palette(paint: paint),
        fps = fps ?? 0,
        loop = loop ?? true,
        cleanup = cleanup ?? false;
@@ -126,6 +135,26 @@ class SpriteNode extends PaintedNode {
       } else {
         _frame = start + next % sheet.columns;
       }
+    });
+
+    void painter(Canvas canvas, Paint paint) {
+      final sheet = this.sheet;
+
+      canvas.drawImageRect(
+        sheet.image,
+        sheet[frame],
+        // TODO: Make just one of these, whenever the spritesheet changes.
+        Rect.fromLTWH(0, 0, width, height),
+        paint,
+      );
+    }
+
+    draw((canvas) {
+      palette.draw(canvas, painter);
+    });
+
+    debugDraw((canvas) {
+      canvas.drawRect(.fromLTWH(0, 0, width, height), DEBUG_TRANSFORM_PAINT);
     });
   }
 
@@ -181,29 +210,5 @@ class SpriteNode extends PaintedNode {
     _sheet = sheet;
     _frame = row * selected.columns + column;
     _finished = false;
-  }
-
-  late Rect _dest;
-
-  @override
-  void render(Canvas canvas) {
-    // TODO: Make just one of these, whenever the spritesheet changes.
-    _dest = .fromLTWH(0, 0, width, height);
-    super.render(canvas);
-  }
-
-  @override
-  void renderPainted(Canvas canvas, Paint paint) {
-    canvas.drawImageRect(
-      sheet.image,
-      sheet[frame],
-      _dest,
-      paint,
-    );
-  }
-
-  @override
-  void debugRenderAnchored(Canvas canvas) {
-    canvas.drawRect(.fromLTWH(0, 0, width, height), DEBUG_TRANSFORM_PAINT);
   }
 }

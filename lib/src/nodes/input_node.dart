@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:ignis/src/debug.dart';
@@ -36,6 +34,21 @@ abstract class InputNode extends SizedNode {
     super.priority,
     super.children,
   }) : behavior = behavior ?? .opaque;
+
+  @override
+  void build() {
+    super.build();
+
+    debugDraw((canvas) {
+      switch (shape) {
+        case Circle():
+          canvas.drawOval(shape.rect(), DEBUG_INPUT_PAINT);
+
+        case Rectangle():
+          canvas.drawRect(shape.rect(), DEBUG_INPUT_PAINT);
+      }
+    });
+  }
 
   /// Registers [event] with this node's gesture recognizer, if it has one.
   ///
@@ -75,17 +88,6 @@ abstract class InputNode extends SizedNode {
   Vector2 toLocal(Vector2 scenePoint) {
     final inverse = absoluteTransform()..invert();
     return scenePoint.transformed(inverse);
-  }
-
-  @override
-  void debugRenderAnchored(Canvas canvas) {
-    switch (shape) {
-      case Circle():
-        canvas.drawOval(shape.rect(), DEBUG_INPUT_PAINT);
-
-      case Rectangle():
-        canvas.drawRect(shape.rect(), DEBUG_INPUT_PAINT);
-    }
   }
 }
 

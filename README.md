@@ -22,10 +22,10 @@
 </div>
 
 - [Features](#features)
-- [Installation](#installation)
 - [Quick start](#quick-start)
 - [Concepts](#concepts)
   - [Nodes](#concept-nodes)
+  - [Building](#concept-building)
   - [Scenes](#concept-scenes)
   - [Signals](#concept-signals)
   - [Time](#concept-time)
@@ -55,6 +55,7 @@
 - **Flutter's layout, on nodes.** `RowNode`, `ColumnNode`, and `BoxNode` behave like the widgets you already know.
 - **Asset preloading.** `Preload` concurrently loads assets with `Loader`s for images, data, or custom resource types.
 - **Live assets.** When developing on the host machine, `LocalAssetBundle` instantly reloads assets into the global cache.
+- **Live nodes.** Any node can opt into rebuilding itself on save, so your edits land in the running game.
 
 ## Quick Start
 
@@ -65,19 +66,21 @@ import 'package:flutter/material.dart';
 import 'package:ignis/ignis.dart';
 
 class GameNode extends TransformNode {
-  final player = ShapeNode(
-    shape: Shape.circle(16),
-    anchor: Anchor.center,
-    paint: Paint()..color = Colors.orange,
-  );
-
-  GameNode() {
-    add(player);
-  }
-
   @override
-  void tick(double dt) {
-    player.position.x += 40 * dt;
+  void build() {
+    super.build();
+
+    final player = add(
+      ShapeNode(
+        shape: .circle(16),
+        anchor: .center,
+        paint: Paint()..color = Colors.orange,
+      ),
+    );
+
+    tick((dt) {
+      player.position.x += 40 * dt;
+    });
   }
 }
 
@@ -94,34 +97,158 @@ void main() {
 
 `Node` is the primitive of Ignis.
 
-A node is set up just once, in its constructor. Node constructors can wire up children, subscribe to signals, retrieve cached assets - there are no restrictions.
+A node declares its behavior and children in `build()`, which runs whenever the node enters a scene. Per-frame logic is registered there with `tick`, and drawing with `draw`. See [Building](#concept-building).
 
-Nodes can override `tick(dt)` to run per-frame logic and `render(canvas)` to use the canvas. These are called in separate passes, once per frame, by the game loop.
-
-A third pass, `reassemble()`, runs only when the world changes out from under the tree: on hot reload or whenever `Ignis.cache` changes. Override it to re-resolve anything the node captured from outside itself. See [Live Reload](#live-reload).
-
-Node comes with two signals, `onMount` and `onUnmount`, which are emitted when that instance enters and exits a scene. Other nodes expose additional signals based on their specific purpose.
+Node comes with three signals: `onMount` and `onUnmount`, emitted when that instance enters and exits a scene, and `onSceneResize`, emitted once at mount and again whenever the scene changes size. Other nodes expose additional signals based on their specific purpose.
 
 Any node can have children, which are sorted by `priority`. Priority dictates the order in which they are updated and rendered.
 
 ```dart
 class Ship extends TransformNode {
-  final sprite = SpriteNode(sheet: Spritesheet.asset('ship.png'));
-  final thruster = ShipThrusterNode(); // Your own `Node` subclass.
   final velocity = Vector2(10, 0);
-  
-  Ship() {
-    addAll([sprite, thruster]);
-  }
 
   @override
-  void tick(double dt) {
-    position.addScaled(velocity, dt);
+  void build() {
+    super.build();
+
+    final ship = add(SpriteNode(sheet: Spritesheet.asset('ship.png')));
+    add(ShipThrusterNode()); // Your own `Node` subclass.
+
+    tick((dt) {
+      position.addScaled(velocity, dt);
+    });
   }
 }
 ```
 
 For a complete list of available nodes, see [Nodes](#nodes).
+
+### Concept: Building
+
+`build()` is where a node declares itself. It runs once when the node is mounted, and again on every `rebuild()`.
+
+Constructors keep doing what constructors are for: accepting arguments and initializing members. Everything derived from them - children, per-frame behavior, signal subscriptions - belongs in `build()`.
+
+```dart
+class TurretNode extends TransformNode {
+  final double speed;
+
+  TurretNode({
+    required this.speed,
+  });
+
+  @override
+  void build() {
+    super.build();
+
+    final barrel = add(ShapeNode(shape: .rectangle(.new(4, 24))));
+
+    tick((dt) {
+      barrel.angle += speed * dt;
+    });
+  }
+}
+```
+
+`super.build()` is required, as skipping it drops whatever the superclass declared.
+
+The body runs with the node already in the scene, so `ancestors`, `scene`, and `read` all work from its very first line. See [Dependency Injection](#dependency-injection).
+
+> :warning: **Never make `build()` `async`.** An asynchronous build breaks engine invariants in multiple, devastating ways. It is also why Ignis requires [preloading](#assets).
+
+**Ticking.** `tick` registers a callback to run every frame with the elapsed seconds. Register as many as you like; each belongs to the build that declared it.
+
+```dart
+tick((dt) {
+  position.addScaled(velocity, dt);
+});
+```
+
+**Drawing.** `draw` registers a callback to paint with, in the node's own coordinate space - the origin is wherever the node sits, anchor and all. Register as many as you like.
+
+```dart
+draw((canvas) {
+  canvas.drawCircle(.zero, radius, paint);
+});
+```
+
+Callbacks run before the node's children, so a parent paints behind them.
+
+`debugDraw` is the same thing for the debug overlay, and only runs when the scene renders with `debug: true`.
+
+```dart
+debugDraw((canvas) {
+  canvas.drawRect(shape.rect(), DEBUG_TRANSFORM_PAINT);
+});
+```
+
+**Cleaning up.** A signal watched inside `build()` is owned by the node and unsubscribed for you. See [Signals](#concept-signals).
+
+Anything else that has to be released goes in the `trash`, which is emptied right before every rebuild and once at unmount, most recently thrown in first.
+
+```dart
+final painter = TextPainter(text: span);
+trash(painter.dispose);
+```
+
+**Rebuilding.** `rebuild()` re-derives a node by running `build()` again over the wreckage of the last one. Everything the previous build made is thrown away:
+
+- The children it created.
+- The `tick`, `draw`, and `debugDraw` callbacks it registered.
+- The signals it subscribed to.
+- Everything in its `trash`.
+
+What survives is the node itself: its members, its transform, and anything added to it imperatively.
+
+Because the body runs again from the top, the constructor arguments *inside* it are re-evaluated, exactly like a statement is. That is what lets an edited `build()` show up in a running game. See [Live Reload](#live-reload).
+
+**Declared vs. imperative.** A child added inside `build()` is *declared*: the body decides again on every rebuild whether it is still there. A child added anywhere else - a constructor, a signal handler, the middle of gameplay - is *imperative*, and a rebuild leaves it alone entirely.
+
+```dart
+@override
+void build() {
+  super.build();
+
+  // Declared, so it is replaced on every rebuild.
+  final spawner = add(TimerNode(interval: 1, repeat: true));
+
+  spawner.onTrigger(() {
+    // Imperative. Nothing rebuilds these.
+    add(EnemyNode());
+  });
+}
+```
+
+**Rebuild boundaries.** Declaring a child decides whether it belongs in the tree. Where you *construct* it decides whether it is rebuilt along with its parent. The two are independent, and that is the whole knob.
+
+| Child      | Constructed      | Added             | On a rebuild                   |
+|------------|------------------|-------------------|--------------------------------|
+| Derived    | inside `build()` | inside `build()`  | Destroyed, then built fresh    |
+| Preserved  | on the instance  | inside `build()`  | Kept; the rebuild passes it by |
+| Imperative | anywhere         | outside `build()` | Untouched                      |
+
+A preserved child is a **rebuild boundary**. It never leaves the tree, so the rebuild above it does not re-run its `build()` or disturb anything beneath it. Reach for one when a subtree owns state you cannot recreate.
+
+```dart
+class GameNode extends Node {
+  // Preserved. The simulation survives however often this node rebuilds.
+  final world = WorldNode();
+
+  @override
+  void build() {
+    super.build();
+
+    add(world);
+
+    // Derived. Rebuilt from scratch on every save.
+    add(HudNode(world: world));
+  }
+}
+```
+
+The boundary stops the rebuild, not the reload: the reassembly walk still reaches a preserved child, so it remains free to answer for itself. And a body that stops declaring one drops it like any other declaration, so `build()` stays the single source of truth about who is in the tree.
+
+> :warning: State that must survive a rebuild belongs on the node or on a preserved child, never on a derived one.
 
 ### Concept: Scenes
 
@@ -143,6 +270,12 @@ final widget = SceneWidget(
 );
 ```
 
+`SceneWidget` also owns the scene it is given, destroying it when the widget leaves the tree or is handed a different scene. Mount once and hold on to the result - in a field, or a `useMemoized` - rather than mounting inside a widget's own `build`.
+
+A scene whose widget is hidden, such as one behind another route, stops updating along with the rest of Flutter's tickers.
+
+> :warning: `destroy()` is permanent. It unmounts the entire tree, and every other way of driving that scene asserts afterwards. Mount a fresh scene to start over.
+
 Scenes can also be driven completely manually. In fact, this is how much of Ignis is tested internally.
 
 ```dart
@@ -157,7 +290,7 @@ Nodes communicate time-sensitive events through `Signal`, a lightweight message 
 
 > :robot: **Why "signal"?** The name is taken from the parallel concept in Godot.
 
-By convention, signals are prefixed with `on` so subscriptions read naturally in node constructors.
+By convention, signals are prefixed with `on` so subscriptions read naturally in a node's [`build()`](#concept-building).
 
 ```dart
 // Declare a signal with 1 parameter. There are Signal0, Signal1, ...
@@ -172,6 +305,10 @@ onCollision.emit(someCollider);
 // Stop watching the signal.
 cleanup();
 ```
+
+Watching a signal returns a `Cleanup`, and somebody has to own it. Inside a node's `build()`, that somebody is the node: the subscription is torn down on the next rebuild and again at unmount, and the `Cleanup` you get back is a no-op. This is why watching in `build()` needs no bookkeeping at all.
+
+Everywhere else, the caller owns it. Hold on to the `Cleanup` and call it, or the signal keeps a reference to your watcher indefinitely.
 
 Although nodes are driven by signals, `Signal` is a standalone utility class and may be used anywhere. Notably, signals can easily be used to implement communication between your Flutter app and your Ignis game. Here's an example integration using [`flutter_hooks`](https://pub.dev/packages/flutter_hooks).
 
@@ -189,10 +326,10 @@ In Ignis, the unit of time is **seconds**.
 For example, nodes receive a tick each frame of the game loop, along with the amount of time that passed as `dt`:
 
 ```dart
-void tick(double dt) {
+tick((dt) {
   // `dt` seconds elapsed this frame.
   // This is usually quite small, e.g. 0.01666 at 60 FPS.
-}
+});
 ```
 
 All objects that accept an interval or duration are also expressed in seconds.
@@ -228,22 +365,21 @@ Although it was developed with Ignis in mind, `ivector_math` is otherwise genera
 
 Ignis comes with the following nodes.
 
-| Node                     | Purpose                                                          | Signals                              |
-|--------------------------|------------------------------------------------------------------|--------------------------------------|
-| `Node`                   | Base node specifying `enabled`, `priority`, and `children`.      | `onMount`, `onUnmount`               |
-| `CollisionDetectionNode` | Holds a `CollisionDetection` arena.                              | -                                    |
-| `ColliderNode`           | Registers its `Shape` with the nearest `CollisionDetectionNode`. | `onCollisionStart`, `onCollisionEnd` |
-| `EffectNode`             | Base node for time-driven effects. See [Effects](#effects).      | `onFinish`                           |
-| `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.             | `onUpdate`                           |
-| `InputNode`              | Base hit area for gestures. See [Inputs](#inputs).               | -                                    |
-| `LayoutNode`             | Base node for laid-out nodes. See [Layout](#layout).             | -                                    |
-| `PaintedNode`            | Base node using `Paint`. See [Palettes](#palettes).              | -                                    |
-| `ShapeNode`              | Draws a `Shape`.                                                 | -                                    |
-| `SizedNode`              | Base node with a size, used for shapes, sprites, and more.       | -                                    |
-| `SpriteNode`             | Animates a `Spritesheet`. See [Sprites](#sprites).               | `onFrame`, `onLoop`, `onFinish`      |
-| `TextNode`               | Draws text with `TextPainter`, wrapping to fit.                  | -                                    |
-| `TimerNode`              | Tracks time to power its signal.                                 | `onTrigger`                          |
-| `TransformNode`          | Base spatial node with a `position`, `scale`, and `angle`.       | -                                    |
+| Node                     | Purpose                                                          | Signals                                 |
+|--------------------------|------------------------------------------------------------------|-----------------------------------------|
+| `Node`                   | Base node specifying `enabled`, `priority`, and `children`.      | `onMount`, `onUnmount`, `onSceneResize` |
+| `CollisionDetectionNode` | Holds a `CollisionDetection` arena.                              | -                                       |
+| `ColliderNode`           | Registers its `Shape` with the nearest `CollisionDetectionNode`. | `onCollisionStart`, `onCollisionEnd`    |
+| `EffectNode`             | Base node for time-driven effects. See [Effects](#effects).      | `onFinish`                              |
+| `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.             | `onFpsChange`                           |
+| `InputNode`              | Base hit area for gestures. See [Inputs](#inputs).               | -                                       |
+| `LayoutNode`             | Base node for laid-out nodes. See [Layout](#layout).             | -                                       |
+| `ShapeNode`              | Draws a `Shape`.                                                 | -                                       |
+| `SizedNode`              | Base node with a size, used for shapes, sprites, and more.       | -                                       |
+| `SpriteNode`             | Animates a `Spritesheet`. See [Sprites](#sprites).               | `onFrame`, `onLoop`, `onFinish`         |
+| `TextNode`               | Draws text with `TextPainter`, wrapping to fit.                  | -                                       |
+| `TimerNode`              | Tracks time to power its signal.                                 | `onTrigger`                             |
+| `TransformNode`          | Base spatial node with a `position`, `scale`, and `angle`.       | -                                       |
 
 ## Layout
 
@@ -411,7 +547,7 @@ sprite.play(sheet: 1, row: 2);
 
 ## Palettes
 
-Sprites and shapes implement `PaintedNode`, giving them access to a `Palette`. A *palette* is an ordered collection of named `Paint`s, letting a single node draw several times each `render` without additional code.
+Sprites and shapes each own a `Palette`. A *palette* is an ordered collection of named `Paint`s, letting a single node draw several times each frame without additional code.
 
 > :fire: Ignis' `Palette` is inspired by Flame's `HasPaint` mixin.
 
@@ -638,9 +774,11 @@ await Preload.run(
 
 ## Live Reload
 
-A running scene captures things from outside itself: assets pulled out of the cache, values read at construction. When one of those changes while the game is running, the scene has to be told. That's `reassemble()`.
+A running scene captures things from outside itself: assets pulled out of the cache, values read when it was built, the code of the node itself. When one of those changes while the game is running, the scene has to be told. That's `reassemble()`.
 
 `SceneWidget` walks its scene from the root, calling `reassemble()` on every node. Unlike `tick` and `render`, the walk ignores `enabled`, so a disabled node never sits on something stale until the moment it comes back.
+
+Each node answers for itself, and the default answer is nothing at all, so a save leaves a running game exactly as it was until you say otherwise.
 
 Two things trigger the walk:
 
@@ -661,10 +799,18 @@ class LevelNode extends Node {
   void reassemble() {
     level = Ignis.cache.retrieve(PATH);
     // Reset the level, etc.
-    super.reassemble();
   }
 }
 ```
+
+A node that knows how to derive itself entirely from its own members can answer with `rebuild()` instead, which re-runs its `build()` and so picks up every edit made to it.
+
+```dart
+@override
+void reassemble() => rebuild();
+```
+
+This is the highest form of live reload: children, layout, behavior, and the constructor arguments that produced them all update as you write code. See [Building](#concept-building) for exactly what a rebuild discards and what it keeps.
 
 Some Ignis nodes implement `reassemble` by default. The table below enumerates their behavior.
 
@@ -731,7 +877,7 @@ final sheet2 = Spritesheet(Ignis.cache.retrieve('assets/ship.png'));
 
 Nodes come integrated with a type-based dependency injection (DI) system. Any node can `provide` a value to its own subtree, and any node can `read` the nearest match back by type.
 
-Since `read` access its tree, it is not available until mount. Use it in combinations with `onMount`, inside `tick`, or in response to signals that occur when the node is in use, like collisions and inputs.
+Since `read` accesses its tree, it is not available until mount. A node's [`build()`](#concept-building) runs mounted, so it is the natural place to read: everything the body declares can be derived from what it resolved.
 
 ```dart
 class GameNode extends Node {
@@ -742,7 +888,8 @@ class GameNode extends Node {
 
 class PlayerNode extends TransformNode {
   @override
-  void tick(double dt) {
+  void build() {
+    super.build();
     final settings = read<Settings>();
     // ...
   }
@@ -781,9 +928,9 @@ Ignis makes several fundamentally different architectural decisions compared to 
 
 In Flame, any component can declare an `async` loading method. While this makes it easy to load assets dynamically, in practice it creates a confusing gap: you can't safely manipulate a component until it's done loading!
 
-In Ignis, nodes *must* be loaded synchronously. There isn't a `load` method because nodes are expected to set themselves up in their constructors. You can always use a node's methods and signals immediately after creating it, no queuing or remembering to `await loaded` necessary.
+In Ignis, nodes *must* set themselves up synchronously. There isn't a `load` method: a node takes its arguments in its constructor and declares the rest of itself in [`build()`](#concept-building), both of which run to completion before anything else touches the node. You can always use a node's methods and signals immediately after creating it, no queuing or remembering to `await loaded` necessary.
 
-> :question: **Why load in the constructor?** Constructors are the only code location that must be synchronous. Having any kind of virtual `load` method, even a `void` one, would open it to being overridden with `async` and breaking the engine's invariants.
+> :question: **Why can't `build()` be `async`?** Because everything downstream assumes a built node is finished. A mounted node is expected to be fully declared, and a rebuild is expected to replace the previous build outright. An `async` build would leave a half-declared node sitting in a live tree, updating and rendering, for an unbounded number of frames.
 
 The drawback is that assets *must* be loaded ahead of time. To compensate, Ignis ships with a highly configurable preloading system.
 
@@ -793,7 +940,7 @@ In Flame, implementing behavior for special events (like collisions and gestures
 
 Virtual methods make it difficult to compose behavior and have no native faculty for handling multiple listeners. To resolve the issue, I wrote [`flame_fuse`](https://github.com/misha/flame_fuse), a library that enables composable behavior in Flame. Every Flame game I wrote in the last three years works using `flame_fuse`. (You may even see the beginnings of Ignis in that package!)
 
-In Ignis, aside from `tick(dt)` and `render(canvas)`, nodes receive engine information using signals. Signals are explicit, accessible without subclasses, and natively support any number of listeners. If you can access the signal, you can watch it and you can emit it.
+In Ignis, aside from `build()`, nodes receive engine information using signals. Signals are explicit, accessible without subclasses, and natively support any number of listeners. If you can access the signal, you can watch it and you can emit it.
 
 The net result is that the number of custom nodes you write in Ignis is much lower - usually just one per "thing" in your game. For example, a `PlayerNode` likely just uses a raw `SpriteNode`, `ColliderNode`, etc. by connecting directly to their signals.
 
@@ -813,7 +960,6 @@ Until `1.0.0`, Ignis will change frequently and dramatically.
 
 I'm currently working on the following:
 
-- Live reload
 - Camera
 - Audio
 - Particles

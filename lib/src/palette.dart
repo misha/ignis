@@ -2,6 +2,9 @@ import 'dart:ui';
 
 import 'package:ignis/src/math.dart';
 
+/// Paints one of a [Palette]'s entries to the canvas.
+typedef Painter = void Function(Canvas canvas, Paint paint);
+
 /// A named [Paint] entry, registered with a [Palette] via [Palette.add].
 ///
 /// [paint] is never reassigned; mutate its properties directly instead.
@@ -75,6 +78,31 @@ class Palette {
     _default = PaletteEntry._default(paint ?? Paint());
     _default._palette = this;
     _paints.add(_default);
+  }
+
+  /// Calls [painter] once per enabled paint, in ascending priority order, with
+  /// [canvas] translated to that entry's offset and back again.
+  ///
+  /// Pass a function that already exists rather than a literal, so a node
+  /// drawing every frame allocates nothing:
+  ///
+  /// ```dart
+  /// void painter(Canvas canvas, Paint paint) { ... }
+  ///
+  /// draw((canvas) {
+  ///   palette.draw(canvas, painter);
+  /// });
+  /// ```
+  void draw(Canvas canvas, Painter painter) {
+    for (final entry in _paints) {
+      if (!entry.enabled) continue;
+      final offset = entry.offset;
+      // TODO: Profile the different ways to do this.
+      final hasOffset = !offset.isZero;
+      if (hasOffset) canvas.translate(offset.x, offset.y);
+      painter(canvas, entry.paint);
+      if (hasOffset) canvas.translate(-offset.x, -offset.y);
+    }
   }
 
   /// The entry registered under [name], or the default entry if null.

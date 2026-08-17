@@ -13,16 +13,23 @@ class TextNode extends SizedNode {
     fontSize: 10,
   );
 
-  @visibleForTesting
-  late TextPainter painter;
+  TextPainter? _painter;
   bool _dirty = true;
   Vector2 _size = .zero;
   LayoutConstraints _constraints = const .unbounded();
 
-  /// This node's size, as measured from its text the last time anything about
-  /// it changed. Zero until then.
+  @visibleForTesting
+  TextPainter get painter => _painter!;
+
+  /// This node's size, as measured from its text. Zero until it first builds.
+  ///
+  /// Reading it lays the text out if anything has changed, so the size is
+  /// current for layout, anchoring, and hit testing alike.
   @override
-  Vector2 get size => _size;
+  Vector2 get size {
+    _reflow();
+    return _size;
+  }
 
   String _text;
   TextStyle _style;
@@ -49,14 +56,22 @@ class TextNode extends SizedNode {
   @override
   void build() {
     super.build();
-    final painter = this.painter = TextPainter(
+    final painter = _painter = TextPainter(
       text: TextSpan(text: _text, style: _style),
       textAlign: _textAlign,
       textDirection: _textDirection,
     );
 
-    trash(painter.dispose);
+    trash(() {
+      painter.dispose();
+      _painter = null;
+    });
+
     _dirty = true;
+
+    draw((canvas) {
+      painter.paint(canvas, .zero);
+    });
   }
 
   /// The text to draw.
@@ -114,6 +129,8 @@ class TextNode extends SizedNode {
   /// the text or its constraints has changed since the last time.
   void _reflow() {
     if (!_dirty) return;
+    final painter = _painter;
+    if (painter == null) return; // Nothing to measure with until it builds.
 
     painter
       ..text = TextSpan(text: text, style: style)
@@ -123,17 +140,5 @@ class TextNode extends SizedNode {
 
     _size = painter.size.toVector2();
     _dirty = false;
-  }
-
-  @override
-  void render(Canvas canvas) {
-    // Laid out here, before the size is used for rendering.
-    _reflow();
-    super.render(canvas);
-  }
-
-  @override
-  void renderAnchored(Canvas canvas) {
-    painter.paint(canvas, .zero);
   }
 }

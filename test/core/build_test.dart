@@ -207,6 +207,55 @@ void main() {
       expect(spawned.isMounted, isTrue, reason: 'no build declared it');
       expect(node.children, hasLength(2));
     });
+
+    test('preserves a child the new build declared again', () {
+      final held = _Silent();
+      final node = _Node((n) => n.add(held));
+      final scene = node.mount()..update(0);
+
+      expect(held.builds, 1);
+
+      scene.reassemble();
+      scene.update(0);
+
+      expect(node.children.single, same(held));
+      expect(held.isMounted, isTrue, reason: 'it never left the tree');
+      expect(held.builds, 1, reason: 'a preserved child is a rebuild boundary');
+    });
+
+    test('rebuilds queued before a flush settle to one generation', () {
+      final node = _Node((n) => n.add(_A()));
+      final scene = node.mount()..update(0);
+
+      scene.reassemble();
+      scene.reassemble();
+      scene.update(0);
+
+      expect(node.builds, 3);
+      expect(node.children, hasLength(1), reason: 'only the last build stuck');
+    });
+
+    test('a preserved child still goes when the body stops declaring it', () {
+      var declared = true;
+      final held = _Silent();
+
+      final node = _Node((n) {
+        if (declared) n.add(held);
+      });
+
+      final scene = node.mount()..update(0);
+      scene.reassemble();
+      scene.update(0);
+
+      expect(held.isMounted, isTrue);
+
+      declared = false;
+      scene.reassemble();
+      scene.update(0);
+
+      expect(node.children, isEmpty);
+      expect(held.isMounted, isFalse);
+    });
   });
 
   group('onUpdate', () {

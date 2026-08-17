@@ -2,19 +2,26 @@ import 'dart:ui';
 
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/painted_node.dart';
+import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/palette.dart';
 import 'package:ignis/src/shape.dart';
 
-class ShapeNode extends PaintedNode {
+class ShapeNode extends SizedNode {
   /// Controls the geometry drawn.
   Shape shape;
+
+  /// This node's registered paints.
+  final Palette palette;
+
+  /// The default paint.
+  Paint get paint => palette.paint;
 
   @override
   Vector2 get size => shape.size;
 
   ShapeNode({
     required this.shape,
-    super.paint,
+    Paint? paint,
     super.position,
     super.scale,
     super.angle,
@@ -22,29 +29,30 @@ class ShapeNode extends PaintedNode {
     super.enabled,
     super.priority,
     super.children,
-  });
-
-  late Rect _dest;
+  }) : palette = Palette(paint: paint);
 
   @override
-  void render(Canvas canvas) {
-    _dest = shape.rect();
-    super.render(canvas);
-  }
+  void build() {
+    super.build();
 
-  @override
-  void renderPainted(Canvas canvas, Paint paint) {
-    switch (shape) {
-      case Circle():
-        canvas.drawOval(_dest, paint);
+    void painter(Canvas canvas, Paint paint) {
+      final dest = shape.rect();
 
-      case Rectangle():
-        canvas.drawRect(_dest, paint);
+      switch (shape) {
+        case Circle():
+          canvas.drawOval(dest, paint);
+
+        case Rectangle():
+          canvas.drawRect(dest, paint);
+      }
     }
-  }
 
-  @override
-  void debugRenderAnchored(Canvas canvas) {
-    canvas.drawRect(shape.rect(), DEBUG_TRANSFORM_PAINT);
+    draw((canvas) {
+      palette.draw(canvas, painter);
+    });
+
+    debugDraw((canvas) {
+      canvas.drawRect(shape.rect(), DEBUG_TRANSFORM_PAINT);
+    });
   }
 }
