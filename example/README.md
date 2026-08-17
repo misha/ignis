@@ -1,4 +1,3 @@
-# Example
+# Ignis Example
 
-A [Widgetbook](https://widgetbook.io) cataloguing Ignis demos. Stories live
-under `lib/stories/`; `lib/main.dart` registers them. Run with `flutter run`.
+This will house a basic example to satisfy `pub.dev` criteria, as the real examples are live and run in the documentation site.
