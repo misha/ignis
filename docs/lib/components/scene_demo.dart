@@ -34,6 +34,7 @@ class SceneDemo extends StatelessComponent {
     return div(classes: 'demo-scene', [
       FlutterEmbedView.deferred(
         styles: Styles(
+          width: DEMO_EMBEDDED_SIZE.px,
           height: DEMO_EMBEDDED_SIZE.px,
         ),
         loadLibrary: demo_view.loadLibrary(),
@@ -48,6 +49,8 @@ class SceneDemo extends StatelessComponent {
   @css
   static List<StyleRule> get styles => [
     css('.demo-scene').styles(
+      width: DEMO_EMBEDDED_SIZE.px,
+      height: DEMO_EMBEDDED_SIZE.px,
       radius: .circular(0.5.rem),
       overflow: .hidden,
     ),
