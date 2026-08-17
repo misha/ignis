@@ -12,7 +12,7 @@ related: [/systems/assets, /concepts/nodes, /concepts/live-reload]
 
 <Demo name="sprite-animation" hero/>
 
-A *sprite* is an image or a sequence of images in a game. It usually refers to a single visual entity on the screen.
+A *sprite* is an image or a sequence of images in a game. It usually refers to a single visual entity on the screen. A *spritesheet* is a single image that packs multiple frames for a single sprite in render order.
 
 In Ignis, `SpriteNode` draws sprites. To do so, it requires a `Spritesheet`, which cuts an image into frames. The process is the same whether you want to render an image, play an animation, or switch between animations:
 
