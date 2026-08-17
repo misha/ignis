@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 
 import 'support/colors.dart';
 import 'support/images.dart';
+import 'support/test_bundle.dart';
 
 /// End-to-end coverage for local asset reloading.
 ///
@@ -20,8 +21,8 @@ import 'support/images.dart';
 ///     -> PubspecWatcher matches it against the pubspec manifest
 ///     -> LocalAssetBundle reads the new bytes off disk
 ///     -> Preload runs them through the image loader
-///     -> Cache.add replaces the image and evicts the sheets cut from it
-///     -> SpriteNode re-resolves when the tree is reassembled
+///     -> Cache.add replaces the image
+///     -> SpriteSheet.reload() re-cuts, when the tree is reassembled
 ///
 /// Nothing here waits a fixed duration. Filesystem events have no guaranteed
 /// latency, so the tests wait on the outcome instead; the timeout is only ever
@@ -74,7 +75,7 @@ flutter:
     // Two 1x1 frames, red.
     await write(['assets', 'hero.png'], await solidImage(2, 1, RED));
 
-    local = LocalAssetBundle(root: root.path);
+    local = LocalAssetBundle(root: root.path, delegate: TestBundle());
     Ignis.bundle = local;
     Ignis.preload = Preload()..register(.image()..extensions(['.png']));
   });
@@ -130,31 +131,30 @@ flutter:
     expect(await pixelAt(replaced, 0, 0), BLUE);
   });
 
-  test('invalidates the spritesheets cut from a changed image', () async {
+  test('re-cuts a sheet from a changed image', () async {
     await start();
 
-    final sheet = Spritesheet.asset('assets/hero.png', .all(1));
-    expect(sheet.frames, 2);
-    expect(Ignis.cache.contains('assets/hero.png#1.0,1.0'), isTrue);
+    final sheet = SpriteSheet('assets/hero.png', .all(1), fps: 0);
+    expect(sheet.frames(0), 2);
 
     await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
 
     await eventually(
-      () => !Ignis.cache.contains('assets/hero.png#1.0,1.0'),
-      'the derived spritesheet survived the reload',
+      () => cached('assets/hero.png')!.width == 4,
+      'the changed asset never reached the cache',
     );
 
-    final current = sheet.current;
-    expect(current, isNot(same(sheet)));
-    expect(current.frames, 4);
-    expect(current.image, same(cached('assets/hero.png')));
+    final reloaded = sheet.reload();
+    expect(reloaded, isNot(same(sheet)));
+    expect(reloaded.frames(0), 4);
+    expect(reloaded.image(0), same(cached('assets/hero.png')));
   });
 
   test('carries a live change into a SpriteNode when it is reassembled', () async {
     await start();
 
-    final node = SpriteNode(sheet: Spritesheet.asset('assets/hero.png', .all(1)));
-    expect(node.sheet.frames, 2);
+    final node = SpriteNode(sprite: SpriteSheet('assets/hero.png', .all(1), fps: 0));
+    expect(node.sprite.frames(0), 2);
 
     await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
 
@@ -165,8 +165,8 @@ flutter:
 
     node.reassemble();
 
-    expect(node.sheet.frames, 4, reason: 'the node did not re-read the cache');
-    expect(node.sheet.image, same(cached('assets/hero.png')));
+    expect(node.sprite.frames(0), 4, reason: 'the node did not re-read the cache');
+    expect(node.sprite.image(0), same(cached('assets/hero.png')));
   });
 
   test('clamps a sprite frame the reloaded sheet no longer has', () async {
@@ -174,8 +174,8 @@ flutter:
     await write(['assets', 'hero.png'], await solidImage(4, 1, RED));
     await start();
 
-    final node = SpriteNode(sheet: Spritesheet.asset('assets/hero.png', .all(1)));
-    node.play(column: 3);
+    final node = SpriteNode(sprite: SpriteSheet('assets/hero.png', .all(1), fps: 0));
+    node.play(frame: 3);
     expect(node.frame, 3);
 
     // Down to two frames, leaving frame 3 out of range.
@@ -188,7 +188,7 @@ flutter:
 
     node.reassemble();
 
-    expect(node.sheet.frames, 2);
+    expect(node.sprite.frames(0), 2);
     expect(node.frame, 0, reason: 'the stale frame index was not clamped');
   });
 

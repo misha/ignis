@@ -2,10 +2,9 @@ import 'package:flutter/foundation.dart';
 
 /// Storage for arbitrary assets.
 ///
-/// A key may be *derived* from another, as in `hero.png#32,32` for a
-/// spritesheet cut out of `hero.png`. Replacing the value at a key evicts
-/// everything derived from it, so live asset changes invalidate the entries
-/// built on top of them.
+/// A key may be *derived* from another by joining it to a parameter string with
+/// [separator]. Replacing the value at a key evicts everything derived from it,
+/// so live asset changes invalidate the entries built on top of them.
 ///
 /// Every mutation notifies listeners exactly once, so consumers holding on to
 /// what they retrieved can re-resolve it.

@@ -111,7 +111,7 @@ class Ship extends TransformNode {
   void build() {
     super.build();
 
-    final ship = add(SpriteNode(sheet: Spritesheet.asset('ship.png')));
+    final ship = add(SpriteNode(sprite: SpriteImage('ship.png')));
     add(ShipThrusterNode()); // Your own `Node` subclass.
 
     tick((dt) {
@@ -376,7 +376,7 @@ Ignis comes with the following nodes.
 | `LayoutNode`             | Base node for laid-out nodes. See [Layout](#layout).             | -                                       |
 | `ShapeNode`              | Draws a `Shape`.                                                 | -                                       |
 | `SizedNode`              | Base node with a size, used for shapes, sprites, and more.       | -                                       |
-| `SpriteNode`             | Animates a `Spritesheet`. See [Sprites](#sprites).               | `onFrame`, `onLoop`, `onFinish`         |
+| `SpriteNode`             | Animates a `Sprite`. See [Sprites](#sprites).                    | `onFrame`, `onLoop`, `onFinish`         |
 | `TextNode`               | Draws text with `TextPainter`, wrapping to fit.                  | -                                       |
 | `TimerNode`              | Tracks time to power its signal.                                 | `onTrigger`                             |
 | `TransformNode`          | Base spatial node with a `position`, `scale`, and `angle`.       | -                                       |
@@ -508,19 +508,19 @@ EffectController controller = .sequence([
 
 ## Sprites
 
-`SpriteNode` draws frames from one or more `Spritesheet`s, optionally animating between them over time.
+`SpriteNode` draws a `Sprite`, one frame at a time. A `SpriteImage` is one whole image, a `SpriteSheet` cuts an image into a grid of frames, and a `SpriteGroup` lays several of either end to end.
+
+A sprite names its own rows, and `play(key:)` finds them. Keys align on one type across everything composed together, so a lookup reaches a row named inside a sheet inside a group. A row with no key is reached by number.
 
 The code below creates a sprite from a spritesheet of 32x32 pixel tiles, animated at 12 frames per second (FPS).
 
 ```dart
 final sprite = SpriteNode(
-  sheet: Spritesheet.asset('assets/ship.png', size: .all(32)), 
-  fps: 12, 
-  loop: true,
+  sprite: SpriteSheet('assets/ship.png', .all(32), fps: 12),
 );
 ```
 
-Call `play` to begin animating from a specific row and column in the spritesheet.
+Call `play` to begin animating from a specific row and frame.
 
 ```dart
 // Animates the second row.
@@ -529,20 +529,44 @@ sprite.play(row: 1);
 
 > :warning: `SpriteNode` can only play animations on the same row.
 
-It's also possible to combine multiple spritesheets via `SpriteNode.split`. This is particularly useful for swapping animation sets, like an idle sheet and a running sheet, while keeping assets modular.
+Rows are equal by default: every one plays its full width at the sheet's rate. A `SheetRow` gives one its own length, start column, rate and looping, so animations of different lengths can share a single sheet.
 
 ```dart
-final sprite = SpriteNode.split(
-  sheets: [
-    .asset('assets/player/idle.png', size: .all(32)),
-    .asset('assets/player/running.png', size: .all(32)), 
-  ], 
-  fps: 12,
-  loop: true,
+final sprite = SpriteNode(
+  sprite: SpriteSheet(
+    'assets/player.png', 
+    .all(32), 
+    fps: 12,
+    rows: [
+      .new(frames: 14),
+      .new(frames: 30, fps: 24),
+      .new(start: 4, frames: 6, loop: false),
+      .timed([0.5, 0.06, 0.06, 0.06]),
+    ],
+  ),
+);
+```
+
+`speed` scales whatever rate the sprite states, and `play(loop:)` overrides whatever the row says, until the next call.
+
+```dart
+final sprite = SpriteNode(sprite: sheet, speed: 0.5);
+
+sprite.play(row: 2, loop: false);
+```
+
+Animations that ship one file each, or that need different frame sizes, go in a `SpriteGroup`. It numbers its parts' rows straight through, so a row past the end of one part carries on into the next - and anything implementing `Sprite` can be a part.
+
+```dart
+final sprite = SpriteNode(
+  sprite: SpriteGroup([
+    SpriteImage('assets/player/portrait.png', key: 'portrait'),
+    SpriteSheet.single('assets/player/idle.png', .all(32), fps: 12, key: 'idle'),
+    SpriteSheet.single('assets/player/running.png', .all(48), fps: 24, key: 'running'),
+  ]),
 );
 
-// Animates the third row of the running spritesheet.
-sprite.play(sheet: 1, row: 2);
+sprite.play(key: 'running');
 ```
 
 ## Palettes
@@ -816,7 +840,7 @@ Some Ignis nodes implement `reassemble` by default. The table below enumerates t
 
 | Node         | Reassembles                                                  |
 |--------------|--------------------------------------------------------------|
-| `SpriteNode` | Every `Spritesheet` it holds, re-cut from the current image. |
+| `SpriteNode` | Its `Sprite`, re-resolved against the current image. |
 
 ### Local Asset Bundle
 
@@ -861,14 +885,16 @@ final local = LocalAssetBundle(root: '/path/to/project');
 
 The `Ignis` namespace holds the global `AssetBundle`, `Cache`, and `Preload`. Most games will only touch `Ignis.preload`, to register their loaders.
 
-Every preload reads from `Ignis.bundle` into `Ignis.cache`. Similarly, `Spritesheet` retrieves from `Ignis.cache`.
+Every preload reads from `Ignis.bundle` into `Ignis.cache`. Every `Sprite` retrieves from `Ignis.cache` by the same key, which is why they take one rather than an `Image`.
 
 `Cache` is a `ChangeNotifier`, and every mutation notifies exactly once. That is how [Live Reload](#live-reload) works, and you can listen to it yourself for anything outside the scene that holds onto what it retrieved.
 
 ```dart
-// The following spritesheets are equivalent:
-final sheet1 = Spritesheet.asset('assets/ship.png');
-final sheet2 = Spritesheet(Ignis.cache.retrieve('assets/ship.png'));
+// Cut from whatever 'assets/ship.png' holds right now.
+final sheet = SpriteSheet('assets/ship.png', .all(32));
+
+// The same sheet, re-cut if that key has been replaced since.
+final reloaded = sheet.reload();
 ```
 
 > :warning: `Ignis.cache`, `Ignis.bundle`, and `Ignis.preload` are mutable static members, not constants. Swap them out for tests. Installing a `Cache` or a `Preload` automatically disposes the previous one.

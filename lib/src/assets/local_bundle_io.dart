@@ -22,10 +22,13 @@ import 'package:path/path.dart' as p;
 /// ```
 ///
 /// Outside [kDebugMode], this is inert. [start] does nothing and every load
-/// delegates to [rootBundle], making it is safe to install unconditionally.
+/// delegates to [delegate], making it is safe to install unconditionally.
 class LocalAssetBundle extends CachingAssetBundle {
   /// The project directory asset keys are resolved against.
   final String root;
+
+  /// Where a key that is not a file under [root] is loaded from.
+  final AssetBundle delegate;
 
   final PubspecWatcher _watcher;
 
@@ -44,16 +47,18 @@ class LocalAssetBundle extends CachingAssetBundle {
   /// directory of the running process.
   factory LocalAssetBundle({
     String? root,
+    AssetBundle? delegate,
   }) {
     final directory = root ?? Directory.current.path;
 
     return LocalAssetBundle._(
       directory,
+      delegate ?? rootBundle,
       .new(pubspecPath: p.join(directory, 'pubspec.yaml')),
     );
   }
 
-  LocalAssetBundle._(this.root, this._watcher);
+  LocalAssetBundle._(this.root, this.delegate, this._watcher);
 
   /// Starts watching for asset changes, returning whether it succeeded.
   ///
@@ -91,7 +96,7 @@ class LocalAssetBundle extends CachingAssetBundle {
       }
     }
 
-    return rootBundle.load(key);
+    return delegate.load(key);
   }
 
   Future<void> _update(String key) async {

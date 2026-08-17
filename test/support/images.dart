@@ -35,6 +35,23 @@ Future<Image> pixelImage(List<List<Color>> colors) {
   return recorder.endRecording().toImage(colors.first.length, colors.length);
 }
 
+var _assets = 0;
+
+/// Caches a [width]x[height] image of the given, solid [color], returning the
+/// key it landed under.
+Future<String> solidAsset(int width, int height, [Color color = WHITE]) async {
+  final key = 'asset-${_assets += 1}.png';
+  Ignis.cache.add(key, await solidImage(width, height, color));
+  return key;
+}
+
+/// Caches a 1x1 color grid image, returning the key it landed under.
+Future<String> pixelAsset(List<List<Color>> colors) async {
+  final key = 'asset-${_assets += 1}.png';
+  Ignis.cache.add(key, await pixelImage(colors));
+  return key;
+}
+
 /// Renders [node] to a [width]x[height] image.
 Future<Image> renderImage(Node node, int width, int height) {
   final recorder = PictureRecorder();

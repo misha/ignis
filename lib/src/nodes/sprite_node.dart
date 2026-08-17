@@ -4,49 +4,40 @@ import 'package:ignis/src/core.dart';
 import 'package:ignis/src/debug.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/owners/speed_owner.dart';
 import 'package:ignis/src/palette.dart';
-import 'package:ignis/src/spritesheet.dart';
+import 'package:ignis/src/sprite.dart';
 
-// TODO: A sheet is a uniform grid and nothing else, which is not enough. A row
-// carries no parameters of its own, so a short row plays off its end and into
-// the padding, and every row on a sheet animates at the one [fps] the node
-// holds. Rows want their own frame count, rate, and start and end frames, and
-// a frame wants a duration of its own, the way Flame's does.
-
-/// Draws one frame of a [Spritesheet] at a time, and animates along its row.
+/// Draws one frame of a [Sprite] at a time, and animates along its row.
 ///
 /// ```dart
 /// add(
 ///   SpriteNode(
-///     sheet: .asset('assets/fire.png', .new(32, 48)),
-///     fps: 12,
+///     sprite: SpriteSheet('assets/fire.png', .new(32, 48), fps: 12),
 ///   ),
 /// );
 /// ```
 ///
-/// A sprite takes its [size] from the sheet's frame, so [anchor], hit testing
-/// and layout all work off the frame rather than the image. [play] chooses
-/// which sheet and which row is playing.
-class SpriteNode extends SizedNode {
+/// A sprite takes its [size] from the frame, so [anchor], hit testing and
+/// layout all work off the frame rather than the image. How fast it plays and
+/// whether it loops belong to the sprite. [speed] scales the rate, and [play]
+/// chooses which row is playing.
+class SpriteNode<T> extends SizedNode implements SpeedOwner {
   /// This node's registered paints.
   final Palette palette;
 
   /// The default paint.
   Paint get paint => palette.paint;
 
-  /// The frames per second to use when animating this sprite.
+  /// How fast this sprite plays, as a multiple of the rate its [sprite] states.
   ///
-  /// Defaults to 0, or no animation. Must be >= 0.
-  num fps;
-
-  /// Whether or not this sprite loops when animating.
-  ///
-  /// Defaults to true, although the default 0 [fps] renders it without effect.
-  bool loop;
+  /// Defaults to 1. Must be >= 0, where 0 holds the current frame.
+  @override
+  double speed;
 
   /// Whether to [detach] once finished. Defaults to false.
   ///
-  /// Ignored when [loop] is true, since a looping sprite never finishes.
+  /// Ignored while [loops] is true, since a looping sprite never finishes.
   bool cleanup;
 
   /// Emitted when animation advances to a new [frame].
@@ -58,33 +49,40 @@ class SpriteNode extends SizedNode {
   /// Emitted when a non-looping animation reaches its final frame.
   final onFinish = Signal0();
 
-  final List<Spritesheet> _sheets;
-  int _sheet = 0;
-  num _frame = 0;
+  Sprite<T> _sprite;
+  int _row = 0;
+  int _frame = 0;
+  double _elapsed = 0;
+  bool? _loop;
   bool _finished = false;
 
-  /// How many sheets this sprite can [play].
-  int get sheets => _sheets.length;
+  Rect? _source;
+  Rect? _destination;
 
-  /// The sheet currently playing.
-  Spritesheet get sheet => _sheets[_sheet];
+  /// What this sprite draws.
+  Sprite<T> get sprite => _sprite;
 
-  /// The frame currently drawn, indexed into [sheet].
-  int get frame => _frame.floor();
+  /// The row currently playing, indexed into [sprite].
+  int get row => _row;
+
+  /// The frame currently drawn, counted from the start of [row].
+  int get frame => _frame;
+
+  /// Whether the row currently playing starts over after its final frame.
+  bool get loops => _loop ?? _sprite.loops(_row);
 
   /// Whether a non-looping animation has reached its final frame.
   bool get isFinished => _finished;
 
-  /// The size of one frame of [sheet].
+  /// The size of one frame of the row currently playing.
   @override
-  Vector2 get size => sheet.size;
+  Vector2 get size => _sprite.size(_row);
 
-  /// Creates a sprite that draws [sheet].
+  /// Creates a node that draws [sprite].
   SpriteNode({
-    required Spritesheet sheet,
+    required this._sprite,
     Paint? paint,
-    num? fps,
-    bool? loop,
+    double? speed,
     bool? cleanup,
     super.position,
     super.scale,
@@ -93,96 +91,64 @@ class SpriteNode extends SizedNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : _sheets = .of([sheet], growable: false),
+  }) : assert(speed == null || speed >= 0, 'Speed cannot be negative.'),
        palette = Palette(paint: paint),
-       fps = fps ?? 0,
-       loop = loop ?? true,
-       cleanup = cleanup ?? false;
-
-  /// Creates a sprite that draws one of [sheets], chosen with [play].
-  ///
-  /// Keeps an animation set per image - an idle sheet and a running sheet, say -
-  /// rather than packing every state into one.
-  // TODO: Take a frameSize here for the supplied assets to default to. An
-  // animation set is cut to one size, and every sheet in it currently repeats
-  // that size, which is the noisiest part of constructing one. Alternatively, a
-  // SplitSpritesheet that cuts several images to a single size and hands back
-  // the sheets.
-  SpriteNode.split({
-    required Iterable<Spritesheet> sheets,
-    num? fps,
-    bool? loop,
-    bool? cleanup,
-    Paint? paint,
-    super.position,
-    super.scale,
-    super.angle,
-    super.anchor,
-    super.enabled,
-    super.priority,
-    super.children,
-  }) : assert(sheets.isNotEmpty),
-       _sheets = .of(sheets, growable: false),
-       palette = Palette(paint: paint),
-       fps = fps ?? 0,
-       loop = loop ?? true,
+       speed = speed ?? 1,
        cleanup = cleanup ?? false;
 
   @override
   void build() {
     super.build();
+
     tick((dt) {
       if (_finished) return;
-      final amount = fps * dt;
+      final amount = dt * speed;
       if (amount <= 0 || !amount.isFinite) return;
 
-      final row = frame ~/ sheet.columns;
-      final start = row * sheet.columns;
-      final column = _frame - start;
-      final next = column + amount;
-      var advanced = next.floor() - column.floor();
+      _elapsed += amount;
 
-      if (!loop && next >= sheet.columns) {
-        advanced = sheet.columns - 1 - column.floor();
-        _finished = true;
-      }
+      // Every pass re-reads the fields, so a handler calling play() redirects
+      // this loop instead of racing it.
+      while (true) {
+        final duration = _sprite.duration(_row, _frame);
 
-      var current = column.floor();
+        if (duration <= 0 || !duration.isFinite) {
+          _elapsed = 0;
+          return;
+        }
 
-      while (advanced-- > 0) {
-        current += 1;
+        if (_elapsed < duration) return;
+        _elapsed -= duration;
+        final next = _frame + 1;
 
-        if (current == sheet.columns) {
-          current = 0;
-          final frame = _frame = start;
-          onFrame.emit(frame);
+        if (next < _sprite.frames(_row)) {
+          _frame = next;
+          _source = null;
+          onFrame.emit(next);
+        } else if (loops) {
+          _frame = 0;
+          _source = null;
+          onFrame.emit(0);
           onLoop.emit();
         } else {
-          final frame = _frame = start + current;
-          onFrame.emit(frame);
-        }
-      }
+          _elapsed = 0;
+          _finished = true;
+          onFinish.emit();
 
-      if (_finished) {
-        _frame = start + sheet.columns - 1;
-        onFinish.emit();
+          if (cleanup) {
+            detach();
+          }
 
-        if (cleanup) {
-          detach();
+          return;
         }
-      } else {
-        _frame = start + next % sheet.columns;
       }
     });
 
     void painter(Canvas canvas, Paint paint) {
-      final sheet = this.sheet;
-
       canvas.drawImageRect(
-        sheet.image,
-        sheet[frame],
-        // TODO: Make just one of these, whenever the spritesheet changes.
-        Rect.fromLTWH(0, 0, width, height),
+        _sprite.image(_row),
+        _source ??= _sprite.rect(_row, _frame),
+        _destination ??= .fromLTWH(0, 0, width, height),
         paint,
       );
     }
@@ -196,68 +162,80 @@ class SpriteNode extends SizedNode {
     });
   }
 
-  /// Re-resolves every sheet through [Spritesheet.current], so an image
-  /// replaced in the cache reaches the screen without rebuilding this node.
+  /// Re-resolves [sprite] through [Sprite.reload], so an image replaced in
+  /// the cache reaches the screen without rebuilding this node.
   @override
   void reassemble() {
-    for (var index = 0; index < _sheets.length; index += 1) {
-      _sheets[index] = _sheets[index].current;
+    _sprite = _sprite.reload();
+
+    // Clamp the playhead if the replacement is smaller. A row that went away
+    // takes its frame with it.
+    if (_row >= _sprite.rows) {
+      _row = 0;
+      _frame = 0;
+    } else if (_frame >= _sprite.frames(_row)) {
+      _frame = 0;
     }
 
-    // Clamp the current frame if the replacement is shorter.
-    if (_frame >= sheet.frames) _frame = 0;
+    _source = null;
+    _destination = null;
   }
 
-  /// Plays [sheet] from the frame at [row] and [column].
+  /// Plays [row] from the given [frame], or whichever row [key] names.
   ///
   /// ```dart
-  /// // Animates the second row of the running sheet.
-  /// sprite.play(sheet: 1, row: 1);
+  /// // Animates the third row from its start.
+  /// sprite.play(row: 2);
+  ///
+  /// // Animates whichever row the sprite calls 'jump'.
+  /// sprite.play(key: 'jump');
   /// ```
   ///
-  /// Clears [isFinished], so a non-looping sprite that already finished runs
-  /// again from wherever this puts it.
+  /// [loop] overrides what the row states, until the next call. It also clears
+  /// [isFinished], so a non-looping sprite that already finished runs again
+  /// from wherever this puts it.
   void play({
-    int sheet = 0,
+    T? key,
     int row = 0,
-    int column = 0,
+    int frame = 0,
+    bool? loop,
   }) {
-    if (sheet < 0) {
-      throw ArgumentError.value(sheet, 'sheet', 'Cannot be negative.');
-    }
+    assert(key == null || row == 0, 'Must supply a key or a row, but not both.');
 
-    if (sheet >= sheets) {
-      throw ArgumentError.value(sheet, 'sheet', 'Only $sheets sheets available.');
-    }
+    if (key != null) {
+      final named = _sprite.rowOf(key);
 
-    final selected = _sheets[sheet];
+      if (named == null) {
+        throw ArgumentError.value(key, 'key', 'No such row.');
+      }
+
+      row = named;
+    }
 
     if (row < 0) {
       throw ArgumentError.value(row, 'row', 'Cannot be negative.');
     }
 
-    if (column < 0) {
-      throw ArgumentError.value(column, 'column', 'Cannot be negative.');
+    if (row >= _sprite.rows) {
+      throw ArgumentError.value(row, 'row', 'Only ${_sprite.rows} rows available.');
     }
 
-    if (row >= selected.rows) {
-      throw ArgumentError.value(
-        row,
-        'row',
-        'The selected sheet only has ${selected.rows} rows.',
-      );
+    if (frame < 0) {
+      throw ArgumentError.value(frame, 'frame', 'Cannot be negative.');
     }
 
-    if (column >= selected.columns) {
-      throw ArgumentError.value(
-        column,
-        'column',
-        'The selected sheet only has ${selected.columns} columns.',
-      );
+    final frames = _sprite.frames(row);
+
+    if (frame >= frames) {
+      throw ArgumentError.value(frame, 'frame', 'That row only plays $frames frames.');
     }
 
-    _sheet = sheet;
-    _frame = row * selected.columns + column;
+    _row = row;
+    _frame = frame;
+    _loop = loop;
+    _elapsed = 0;
     _finished = false;
+    _source = null;
+    _destination = null;
   }
 }

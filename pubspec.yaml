@@ -21,11 +21,6 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   leak_tracker: ^11.0.2
 
-flutter:
-  # TODO: I hope the engine doesn't ship with test assets as a result of this line.
-  assets:
-    - test/assets/
-
 scripts:
   analyze: dart analyze
   coverage:

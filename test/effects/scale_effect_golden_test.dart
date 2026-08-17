@@ -15,7 +15,7 @@ void main() {
       tester,
       'goldens/scale_effect_by.png',
       SpriteNode(
-        sheet: .asset('test/assets/fire.png', .new(32, 48)),
+        sprite: SpriteSheet('test/assets/fire.png', .new(32, 48), fps: 0),
         anchor: .center,
         position: .all(50),
         children: [
@@ -24,7 +24,7 @@ void main() {
             controller: .duration(1),
           ),
         ],
-      )..play(column: 4),
+      )..play(frame: 4),
       dt: 1,
     ),
   );

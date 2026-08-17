@@ -14,7 +14,13 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/sprite_frame.png',
-      SpriteNode(sheet: .asset('test/assets/fire.png', .new(32, 48)))..play(column: 4),
+      SpriteNode(
+        sprite: SpriteSheet(
+          'test/assets/fire.png',
+          .new(32, 48),
+          fps: 0,
+        ),
+      )..play(frame: 4),
     ),
   );
 }

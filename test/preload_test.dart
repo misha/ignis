@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 import 'package:leak_tracker/leak_tracker.dart';
@@ -13,7 +12,7 @@ void main() {
 
   setUp(() {
     Ignis.cache.clear();
-    Ignis.bundle = rootBundle;
+    Ignis.bundle = TestBundle();
   });
 
   test('loads a single asset with the registered loader', () async {

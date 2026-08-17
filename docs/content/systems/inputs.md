@@ -60,7 +60,9 @@ class PieceNode extends ShapeNode {
 When multiple input nodes overlap, `priority` decides who is tried first. An event a node does not apply to - a `HoverInput` receiving a tap, say - falls through to the next input node. Once a node *does* claim an event the search stops there, unless its `behavior` is `HitBehavior.translucent`.
 
 <Info>
+
   Hit testing walks children in reverse `priority` order before the node's own hit area, mirroring reverse paint order. The topmost thing you can see is the first thing tried.
+
 </Info>
 
 ## Pointer and focus

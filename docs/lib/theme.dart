@@ -68,7 +68,10 @@ ContentTheme get ignisTheme => ContentTheme(
   background: IgnisColors._background,
   text: IgnisColors._text,
   colors: IgnisColors.all,
-  font: FontFamily.list([FontFamily('EB Garamond'), FontFamilies.serif]),
+  font: FontFamily.list([
+    FontFamily('EB Garamond'),
+    FontFamilies.serif,
+  ]),
   codeFont: FontFamily.list([
     FontFamily('iA Writer Mono'),
     FontFamilies.uiMonospace,
@@ -77,7 +80,6 @@ ContentTheme get ignisTheme => ContentTheme(
   typography: ContentTypography.base.apply(
     styles: Styles(lineHeight: 1.7.em),
     rules: [
-      // IM FELL has no bold, so the hierarchy is size and spacing alone.
       css('h1, h2, h3, h4').styles(
         color: ContentColors.headings,
         fontFamily: FontFamily('IM FELL Great Primer'),

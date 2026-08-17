@@ -8,8 +8,8 @@ import '../theme.dart';
 /// The four registers the README established, as markdown components.
 ///
 /// `<Why>` explains why a decision went the way it did, and
-/// `<Lineage from="Godot">` credits where an idea came from. Anything that fits
-/// neither is ordinary prose.
+/// `<Lineage from="Godot">` credits where an idea came from, wearing that
+/// engine's own mark. Anything that fits neither is ordinary prose.
 ///
 /// `<Warning>` is taken from the package's own `Callout`, which draws a bordered
 /// box in a color the theme doesn't own. An aside opens off the entry it belongs
@@ -23,16 +23,30 @@ class Callouts extends CustomComponentBase {
 
   @override
   Component apply(String name, Map<String, String> attributes, Component? child) {
-    final label = switch (name) {
-      'Lineage' => 'From ${attributes['from'] ?? 'elsewhere'}',
-      final other => other,
-    };
-
     return div(classes: 'aside aside-${name.toLowerCase()}', [
-      span(classes: 'aside-label', [.text(label)]),
+      span(classes: 'aside-label', [
+        ?_mark(attributes['from']),
+        .text(name),
+      ]),
       div(classes: 'aside-body', [?child]),
     ]);
   }
+
+  /// The label names the register, so the mark is what says where the idea
+  /// came from. A source with no mark of its own goes without.
+  static Component? _mark(String? source) {
+    if (source == null) return null;
+
+    final path = _marks[source.toLowerCase()];
+    if (path == null) return null;
+
+    return img(src: path, alt: source, classes: 'aside-mark');
+  }
+
+  static const Map<String, String> _marks = {
+    'flame': '/images/lineage-flame.png',
+    'godot': '/images/lineage-godot.svg',
+  };
 
   @css
   static List<StyleRule> get styles => [
@@ -45,14 +59,23 @@ class Callouts extends CustomComponentBase {
         ),
         radius: .only(topRight: .circular(0.375.rem), bottomRight: .circular(0.375.rem)),
       ),
+      // Uppercase caps sit high in a line box sized by the body's leading, so
+      // trimming it to the text's own size lands the mark on the caps.
       css('.aside-label').styles(
-        display: .block,
+        display: .flex,
         margin: .only(bottom: 0.25.rem),
+        alignItems: .center,
+        gap: .column(0.375.rem),
         color: ContentColors.primary,
         fontSize: 0.75.rem,
         fontWeight: .w600,
         textTransform: .upperCase,
         letterSpacing: 0.05.em,
+        lineHeight: 1.em,
+      ),
+      css('.aside-mark').styles(
+        width: 1.25.rem,
+        height: 1.25.rem,
       ),
       css('.aside-body > p:first-child').styles(margin: .zero),
       css('.aside-body > p:last-child').styles(margin: .zero),
