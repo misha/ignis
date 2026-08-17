@@ -29,7 +29,7 @@ final class SpritesheetSource {
 /// ```
 ///
 /// ```dart
-/// final sheet = Spritesheet.asset('assets/fire.png', size: .new(32, 48));
+/// final sheet = Spritesheet.asset('assets/fire.png', .new(32, 48));
 /// ```
 class Spritesheet {
   /// The image the frames are cut from.
@@ -53,10 +53,7 @@ class Spritesheet {
   ///
   /// The sheet itself is cached under a key derived from [key] and the frame
   /// size, so replacing the image evicts every sheet cut out of it.
-  factory Spritesheet.asset(
-    String key, {
-    Vector2? size,
-  }) {
+  factory Spritesheet.asset(String key, [Vector2? size]) {
     final cache = Ignis.cache;
     final image = cache.retrieve<Image>(key);
     final frame = size ?? Vector2.cast(image.width, image.height);
@@ -73,6 +70,10 @@ class Spritesheet {
     return sheet;
   }
 
+  // TODO: No caller has an [Image] that did not come through the cache, so
+  // this exists for [Spritesheet.asset] to call and for no one else - and a
+  // sheet built here has no [source], which leaves it out of live reload.
+  // Fold it into the factory and drop it.
   Spritesheet(
     this.image, {
     Vector2? size,
@@ -145,6 +146,6 @@ class Spritesheet {
     if (source == null) return this;
     final image = Ignis.cache.retrieve<Image>(source.asset);
     if (identical(image, this.image)) return this;
-    return Spritesheet.asset(source.asset, size: source.size);
+    return Spritesheet.asset(source.asset, source.size);
   }
 }

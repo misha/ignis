@@ -99,8 +99,8 @@ void main() {
 
     final node = SpriteNode.split(
       sheets: [
-        Spritesheet.asset('first.png', size: .all(4)),
-        Spritesheet.asset('second.png', size: .all(2)),
+        Spritesheet.asset('first.png', .all(4)),
+        Spritesheet.asset('second.png', .all(2)),
       ],
     );
 

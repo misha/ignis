@@ -133,7 +133,7 @@ flutter:
   test('invalidates the spritesheets cut from a changed image', () async {
     await start();
 
-    final sheet = Spritesheet.asset('assets/hero.png', size: .all(1));
+    final sheet = Spritesheet.asset('assets/hero.png', .all(1));
     expect(sheet.frames, 2);
     expect(Ignis.cache.contains('assets/hero.png#1.0,1.0'), isTrue);
 
@@ -153,7 +153,7 @@ flutter:
   test('carries a live change into a SpriteNode when it is reassembled', () async {
     await start();
 
-    final node = SpriteNode(sheet: Spritesheet.asset('assets/hero.png', size: .all(1)));
+    final node = SpriteNode(sheet: Spritesheet.asset('assets/hero.png', .all(1)));
     expect(node.sheet.frames, 2);
 
     await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
@@ -174,7 +174,7 @@ flutter:
     await write(['assets', 'hero.png'], await solidImage(4, 1, RED));
     await start();
 
-    final node = SpriteNode(sheet: Spritesheet.asset('assets/hero.png', size: .all(1)));
+    final node = SpriteNode(sheet: Spritesheet.asset('assets/hero.png', .all(1)));
     node.play(column: 3);
     expect(node.frame, 3);
 

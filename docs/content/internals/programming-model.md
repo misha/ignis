@@ -1,5 +1,5 @@
 ---
-title: The programming model
+title: The Programming Model
 description: How a build is recorded, discarded, and run again.
 lane: internals
 category: internal

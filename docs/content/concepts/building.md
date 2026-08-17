@@ -7,7 +7,7 @@ status: stub
 ---
 
 <!-- The keystone. Ignis' Rules of Hooks: the rules you follow, not the machine that enforces them - that is /internals/programming-model. -->
-<!-- Source: lib/src/node.dart:199-260 (build, rebuild), :283-343 (tick, draw, trash), README.md:126-252. The derived/preserved/imperative table at README.md:222-251 is the centrepiece and must become a demo with a rebuild button. -->
+<!-- Source: lib/src/node.dart:199-260 (build, rebuild), :283-343 (tick, draw, trash), README.md:126-252. The derived/preserved/imperative table at README.md:222-251 is the centerpiece and must become a demo with a rebuild button. -->
 
 <Demo name="rebuild-boundary"/>
 

@@ -32,9 +32,9 @@ flutter:
     - assets/images/
     - assets/sheets/
   fonts:
-    - family: IM FELL Great Primer
+    - family: iA Writer Mono
       fonts:
-        - asset: web/fonts/im-fell-great-primer.woff2
+        - asset: web/fonts/ia-writer-mono.woff2
 
 scripts:
   analyze: dart analyze

@@ -25,6 +25,54 @@ Future<void> _load(Iterable<String> assets) {
   ]);
 }
 
+/// The line a demo prints, standing in the corner of its own scene.
+///
+/// A signal fires and leaves nothing on screen, so a demo about signals has
+/// nothing to show. Printing is what makes it a demo at all - and the scene is
+/// where it belongs, rather than in a panel the page has to make room for.
+class DemoLog extends TextNode {
+  DemoLog() : super(style: _print(.muted));
+
+  /// Shows [line], in [color] where one event should stand apart from another.
+  void call(String line, [LogColor color = .muted]) {
+    text = line;
+    style = _print(color);
+  }
+}
+
+/// What a demo can print in, so a call says which color it means.
+///
+/// A scene draws where no stylesheet reaches, so every one of these is stated
+/// rather than inherited, and each is picked to read on the demo's own ground.
+enum LogColor {
+  muted(Color(0xFF9A9186)),
+  white(Color(0xFFEDE7DD)),
+  orange(Color(0xFFC78F30)),
+  blue(Color(0xFF7FA6C4)),
+  green(Color(0xFF8FB07A)),
+  red(Color(0xFFC4756A));
+
+  final Color value;
+
+  const LogColor(this.value);
+}
+
+/// How large a printed line is drawn, in scene units.
+const _PRINT_SIZE = 7.0;
+
+/// The site's own mono, registered with Flutter in `pubspec.yaml`.
+///
+/// The fallback is what canvaskit downloads for itself, and is here because an
+/// unmatched family draws no glyphs at all rather than substituting one.
+TextStyle _print(LogColor color) {
+  return TextStyle(
+    color: color.value,
+    fontFamily: 'iA Writer Mono',
+    fontFamilyFallback: const ['Roboto'],
+    fontSize: _PRINT_SIZE,
+  );
+}
+
 /// A scene, mounted once the assets it draws from are in [Ignis.cache].
 ///
 /// [Spritesheet.asset] and its like read the cache synchronously, so a scene
@@ -42,7 +90,6 @@ class DemoScene extends StatefulWidget {
     this.assets = const [],
     super.key,
   });
-
   @override
   State<DemoScene> createState() => _DemoSceneState();
 }
@@ -68,20 +115,25 @@ class _DemoSceneState extends State<DemoScene> {
     final scene = this.scene;
     if (scene == null) return const ColoredBox(color: DEMO_BACKGROUND);
 
-    return ColoredBox(
-      color: DEMO_BACKGROUND,
-      child: FittedBox(
-        child: SizedBox.square(
-          dimension: DEMO_SIZE.x,
-          // Autofocus is off on purpose. A scene embedded in a page of prose
-          // must not take focus as it mounts, or it drags the reader with it.
-          child: SceneWidget(
-            scene,
-            color: DEMO_BACKGROUND,
-            autofocus: false,
-          ),
+    final stage = FittedBox(
+      child: SizedBox.square(
+        dimension: DEMO_SIZE.x,
+        // Autofocus is off on purpose. A scene embedded in a page of prose
+        // must not take focus as it mounts, or it drags the reader with it.
+        child: SceneWidget(
+          scene,
+          color: DEMO_BACKGROUND,
+          autofocus: false,
         ),
       ),
+    );
+
+    // An embedded view is mounted bare, with no `WidgetsApp` above it, so a
+    // widget that resolves a start or end edge has no direction to resolve it
+    // against unless one is declared here.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: ColoredBox(color: DEMO_BACKGROUND, child: stage),
     );
   }
 }

@@ -58,7 +58,7 @@ void main() {
     final image = await solidImage(4, 4);
     Ignis.cache.add(key, image);
     final size = MVector2.all(2);
-    final sheet = Spritesheet.asset(key, size: size);
+    final sheet = Spritesheet.asset(key, size);
     size.splat(4);
 
     expect(sheet.image, same(image));

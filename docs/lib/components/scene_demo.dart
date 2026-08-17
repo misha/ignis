@@ -33,7 +33,9 @@ class SceneDemo extends StatelessComponent {
   Component build(BuildContext context) {
     return div(classes: 'demo-scene', [
       FlutterEmbedView.deferred(
-        styles: Styles(height: DEMO_EMBEDDED_SIZE.px),
+        styles: Styles(
+          height: DEMO_EMBEDDED_SIZE.px,
+        ),
         loadLibrary: demo_view.loadLibrary(),
         builder: () {
           return demo_view.DemoView(name: name);

@@ -121,6 +121,34 @@ abstract final class IgnisStyles {
     ..._chrome,
     ..._callouts,
     ..._brackets,
+    ..._lists,
+  ];
+
+  /// A catalog page is a list, and the package spaces lists for prose.
+  ///
+  /// Markdown calls a list loose the moment any entry carries a second block -
+  /// a callout, a diagram - and wraps every entry's content in a paragraph. The
+  /// package then gives those paragraphs `1.25em` top and bottom, over the
+  /// `0.5em` it gives the entry itself, and the entries drift apart until the
+  /// list reads as separate paragraphs that happen to have bullets.
+  ///
+  /// These take an entry's own paragraphs back to the line. Paragraphs deeper
+  /// in - inside a callout - are left to the rules that own them.
+  static List<StyleRule> get _lists => [
+    css('.docs .content > ul > li, .docs .content > ol > li').styles(
+      margin: .symmetric(vertical: 0.25.em),
+    ),
+    css('.docs .content > ul > li > p, .docs .content > ol > li > p').styles(
+      margin: .symmetric(vertical: 0.25.em),
+    ),
+    css(
+      '.docs .content > ul > li > p:first-child, '
+      '.docs .content > ol > li > p:first-child',
+    ).styles(margin: .only(top: Unit.zero)),
+    css(
+      '.docs .content > ul > li > p:last-child, '
+      '.docs .content > ol > li > p:last-child',
+    ).styles(margin: .only(bottom: Unit.zero)),
   ];
 
   /// The display face, and the size everything else is measured against.
@@ -223,6 +251,12 @@ abstract final class IgnisStyles {
         right: BorderSide(width: 1.px, color: IgnisColors.border),
       ),
     ),
+    // A page's `description` stays in frontmatter, where it is the page's
+    // `<meta name="description">` and its link preview, but it is not also
+    // printed under the title. The layout renders it as plain text, so it can
+    // carry no code and name no class, and the page's opening line says the
+    // same thing in a register that can.
+    css('.docs .content-header p').styles(display: .none),
     css('.docs .sidebar li > div:hover').styles(backgroundColor: IgnisColors.surface),
     css('.docs .sidebar li > div.active').styles(backgroundColor: IgnisColors.surface),
     // The header is fixed and frosted, and the package puts its height at 4rem

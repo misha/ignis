@@ -7,10 +7,10 @@ const _BLOB = 'https://github.com/misha/ignis/blob/main/docs';
 const _DEMOS = 'lib/widgets/demos';
 
 /// The marker a region opens with, before its name.
-const _OPEN = '// #region';
+const _OPEN = '// demo on';
 
 /// The marker a region closes with.
-const _CLOSE = '// #endregion';
+const _CLOSE = '// demo off';
 
 /// A run of lines cut out of a demo's source.
 ///
@@ -31,9 +31,9 @@ class DemoSource {
   /// Cuts the region named [region] out of [file].
   ///
   /// ```dart
-  /// // #region sprite-animation
-  /// class _BonfireNode extends Node { ... }
-  /// // #endregion
+  /// // demo on sprite-animation
+  /// final fire = SpriteNode(...);
+  /// // demo off
   /// ```
   ///
   /// Throws if either marker is missing, so a page that names a region which

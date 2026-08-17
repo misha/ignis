@@ -10,6 +10,7 @@ import 'package:docs/components/coverage.dart' as _coverage;
 import 'package:docs/components/demo.dart' as _demo;
 import 'package:docs/components/drag_and_drop_demo.dart' as _drag_and_drop_demo;
 import 'package:docs/components/reference.dart' as _reference;
+import 'package:docs/components/related.dart' as _related;
 import 'package:docs/components/scene_demo.dart' as _scene_demo;
 import 'package:docs/components/status_banner.dart' as _status_banner;
 import 'package:docs/theme.dart' as _theme;
@@ -73,6 +74,7 @@ ServerOptions get defaultServerOptions => ServerOptions(
     ..._demo.Demo.styles,
     ..._drag_and_drop_demo.DragAndDropDemoState.styles,
     ..._reference.Reference.styles,
+    ..._related.Related.styles,
     ..._scene_demo.SceneDemo.styles,
     ..._status_banner.StatusBanner.styles,
     ..._callout.Callout.styles,

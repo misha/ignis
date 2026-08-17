@@ -1,5 +1,5 @@
 ---
-title: Your first scene
+title: Your First Scene
 description: A running game, and an edit you make while it runs.
 lane: usage
 category: concept

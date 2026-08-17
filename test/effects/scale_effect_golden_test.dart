@@ -15,7 +15,7 @@ void main() {
       tester,
       'goldens/scale_effect_by.png',
       SpriteNode(
-        sheet: .asset('test/assets/fire.png', size: .new(32, 48)),
+        sheet: .asset('test/assets/fire.png', .new(32, 48)),
         anchor: .center,
         position: .all(50),
         children: [

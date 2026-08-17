@@ -10,14 +10,15 @@ import 'package:ignis/src/spritesheet.dart';
 // TODO: A sheet is a uniform grid and nothing else, which is not enough. A row
 // carries no parameters of its own, so a short row plays off its end and into
 // the padding, and every row on a sheet animates at the one [fps] the node
-// holds. Rows want their own frame count, rate, and start and end frames.
+// holds. Rows want their own frame count, rate, and start and end frames, and
+// a frame wants a duration of its own, the way Flame's does.
 
 /// Draws one frame of a [Spritesheet] at a time, and animates along its row.
 ///
 /// ```dart
 /// add(
 ///   SpriteNode(
-///     sheet: .asset('assets/fire.png', size: .new(32, 48)),
+///     sheet: .asset('assets/fire.png', .new(32, 48)),
 ///     fps: 12,
 ///   ),
 /// );

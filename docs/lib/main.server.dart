@@ -21,6 +21,7 @@ import 'components/coverage.dart';
 import 'components/demo.dart';
 import 'components/drag_and_drop_demo.dart';
 import 'components/reference.dart';
+import 'components/related.dart';
 import 'components/status_banner.dart';
 import 'theme.dart';
 
@@ -52,6 +53,7 @@ class _IgnisLayout extends DocsLayout {
       page,
       .fragment([
         StatusBanner(page: page),
+        Related(page: page),
         child,
         Reference(page: page),
       ]),
@@ -89,10 +91,11 @@ void main() {
         ReferenceEntryExtension(),
       ],
       components: [
-        // The <Info> block and other callouts.
-        Callout(),
-        // The <Why> and <Lineage> registers.
+        // The <Why>, <Lineage> and <Warning> registers. Ahead of Callout, which
+        // matches <Warning> too and would otherwise claim it first.
         Callouts(),
+        // The <Info> block and the callouts left to the package.
+        Callout(),
         // Adds syntax highlighting to code blocks.
         CodeBlock(codeTheme: ignisCodeTheme),
         // The per-page status table on the overview.
@@ -124,7 +127,7 @@ void main() {
                 links: [
                   SidebarLink(text: 'Overview', href: '/'),
                   SidebarLink(text: 'Motivation', href: '/motivation'),
-                  SidebarLink(text: 'Your first scene', href: '/start'),
+                  SidebarLink(text: 'Your First Scene', href: '/start'),
                 ],
               ),
               SidebarGroup(
@@ -136,7 +139,7 @@ void main() {
                   SidebarLink(text: 'Signals', href: '/concepts/signals'),
                   SidebarLink(text: 'Time', href: '/concepts/time'),
                   SidebarLink(text: 'Math', href: '/concepts/math'),
-                  SidebarLink(text: 'Live reload', href: '/concepts/live-reload'),
+                  SidebarLink(text: 'Live Reload', href: '/concepts/live-reload'),
                 ],
               ),
               SidebarGroup(
@@ -145,13 +148,13 @@ void main() {
                   SidebarLink(text: 'Nodes', href: '/systems/nodes'),
                   SidebarLink(text: 'Layout', href: '/systems/layout'),
                   SidebarLink(text: 'Effects', href: '/systems/effects'),
-                  SidebarLink(text: 'Effect controllers', href: '/systems/effect-controllers'),
+                  SidebarLink(text: 'Effect Controllers', href: '/systems/effect-controllers'),
                   SidebarLink(text: 'Sprites', href: '/systems/sprites'),
                   SidebarLink(text: 'Palettes', href: '/systems/palettes'),
                   SidebarLink(text: 'Collisions', href: '/systems/collisions'),
                   SidebarLink(text: 'Inputs', href: '/systems/inputs'),
                   SidebarLink(text: 'Assets', href: '/systems/assets'),
-                  SidebarLink(text: 'Shapes and anchors', href: '/systems/shapes-anchors'),
+                  SidebarLink(text: 'Shapes and Anchors', href: '/systems/shapes-anchors'),
                   SidebarLink(text: 'Embedding', href: '/systems/embedding'),
                   SidebarLink(text: 'Globals and DI', href: '/systems/globals-di'),
                 ],
@@ -166,7 +169,7 @@ void main() {
                 title: 'Internals',
                 links: [
                   SidebarLink(text: 'Principles', href: '/internals/principles'),
-                  SidebarLink(text: 'Programming model', href: '/internals/programming-model'),
+                  SidebarLink(text: 'Programming Model', href: '/internals/programming-model'),
                   SidebarLink(text: 'Tree', href: '/internals/tree'),
                   SidebarLink(text: 'Collisions', href: '/internals/collisions'),
                   SidebarLink(text: 'Layout', href: '/internals/layout'),

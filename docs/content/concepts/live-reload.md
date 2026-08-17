@@ -1,5 +1,5 @@
 ---
-title: Live reload
+title: Live Reload
 description: What a save does to a running game, and how to ask for more.
 lane: usage
 category: concept

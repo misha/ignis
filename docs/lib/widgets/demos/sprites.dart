@@ -46,6 +46,12 @@ final Map<String, Widget Function()> spriteDemos = {
       builder: _SlimeNode.new,
     );
   },
+  'sprite-signals': () {
+    return DemoScene(
+      assets: const ['assets/sheets/slime_jump.png'],
+      builder: _SignalsNode.new,
+    );
+  },
   'sprite-finish': () {
     return DemoScene(
       assets: const ['assets/sheets/explosion.png'],
@@ -55,18 +61,14 @@ final Map<String, Widget Function()> spriteDemos = {
 };
 
 /// An image with no grid to it, drawn as a single frame.
-///
-/// Each demo marks off the sprite it is about, and the page shows that much.
-/// Mounting the node and centering it stay out of the region: true of every
-/// scene, and nothing to do with sprites.
 class _StillNode extends Node {
   @override
   void build() {
     super.build();
 
-    // #region sprite-still
+    // demo on sprite-still
     final fire = SpriteNode(sheet: .asset('assets/images/bonfire.png'));
-    // #endregion
+    // demo off
 
     add(
       BoxNode(
@@ -83,12 +85,12 @@ class _BonfireNode extends Node {
   void build() {
     super.build();
 
-    // #region sprite-animation
+    // demo on sprite-animation
     final fire = SpriteNode(
-      sheet: .asset('assets/sheets/bonfire.png', size: BONFIRE_SIZE),
+      sheet: .asset('assets/sheets/bonfire.png', BONFIRE_SIZE),
       fps: 16,
     );
-    // #endregion
+    // demo off
 
     add(
       BoxNode(
@@ -105,26 +107,23 @@ class _LayeredNode extends Node {
   void build() {
     super.build();
 
-    // #region sprite-layers
-    // One fire in three sheets, each keeping its own clock: the smoke drifts,
-    // the flame runs, and the logs barely move.
+    // demo on sprite-layers
     final smoke = SpriteNode(
-      sheet: .asset('assets/sheets/bonfire_smoke.png', size: BONFIRE_SIZE),
+      sheet: .asset('assets/sheets/bonfire_smoke.png', BONFIRE_SIZE),
       fps: 10,
     );
 
     final flame = SpriteNode(
-      sheet: .asset('assets/sheets/bonfire_flame.png', size: BONFIRE_SIZE),
+      sheet: .asset('assets/sheets/bonfire_flame.png', BONFIRE_SIZE),
       fps: 16,
     );
 
     final wood = SpriteNode(
-      sheet: .asset('assets/sheets/bonfire_wood.png', size: BONFIRE_SIZE),
+      sheet: .asset('assets/sheets/bonfire_wood.png', BONFIRE_SIZE),
       fps: 6,
     );
-    // #endregion
+    // demo off
 
-    // Smoke behind, the flame over it, the logs in front.
     add(
       BoxNode(
         alignment: .center,
@@ -140,19 +139,16 @@ class _SlimeNode extends Node {
   void build() {
     super.build();
 
-    // #region sprite-split
-    // Three sheets, each its own animation and its own length: fourteen frames
-    // of idling, thirty of jumping.
+    // demo on sprite-split
     final slime = SpriteNode.split(
       sheets: [
-        .asset('assets/sheets/slime_idle.png', size: SLIME_SIZE),
-        .asset('assets/sheets/slime_jump.png', size: SLIME_SIZE),
-        .asset('assets/sheets/slime_spit.png', size: SLIME_SIZE),
+        .asset('assets/sheets/slime_idle.png', SLIME_SIZE),
+        .asset('assets/sheets/slime_jump.png', SLIME_SIZE),
+        .asset('assets/sheets/slime_spit.png', SLIME_SIZE),
       ],
       fps: 16,
     );
 
-    // Tapping moves on to the next sheet.
     var playing = 0;
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
@@ -160,7 +156,7 @@ class _SlimeNode extends Node {
       playing = (playing + 1) % slime.sheets;
       slime.play(sheet: playing);
     });
-    // #endregion
+    // demo off
 
     addAll([
       BoxNode(
@@ -178,13 +174,13 @@ class _ExplosionsNode extends Node {
   void build() {
     super.build();
 
-    // #region sprite-finish
+    // demo on sprite-finish
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
     taps.onTapDown((event) {
       add(
         SpriteNode(
-          sheet: .asset('assets/sheets/explosion.png', size: EXPLOSION_SIZE),
+          sheet: .asset('assets/sheets/explosion.png', EXPLOSION_SIZE),
           fps: 20,
           loop: false,
           cleanup: true,
@@ -193,8 +189,50 @@ class _ExplosionsNode extends Node {
         ),
       );
     });
-    // #endregion
+    // demo off
 
     add(taps);
+  }
+}
+
+/// A sprite reporting its own progress, with nothing on screen to show for it.
+class _SignalsNode extends Node {
+  @override
+  void build() {
+    super.build();
+
+    final log1 = DemoLog();
+    final log2 = DemoLog();
+
+    // demo on sprite-signals
+    final slime = SpriteNode(
+      sheet: .asset('assets/sheets/slime_jump.png', SLIME_SIZE),
+      fps: 16,
+    );
+
+    var count = 0;
+
+    slime.onFrame((frame) => log1('onFrame $frame'));
+    slime.onLoop(() => log2('onLoop ${count += 1}', .orange));
+    // demo off
+
+    addAll([
+      BoxNode(
+        alignment: .center,
+        children: [slime],
+      ),
+      BoxNode(
+        padding: .all(4),
+        alignment: .topRight,
+        children: [
+          ColumnNode(
+            mainAxisSize: .min,
+            crossAxisAlignment: .end,
+            spacing: 2,
+            children: [log1, log2],
+          ),
+        ],
+      ),
+    ]);
   }
 }

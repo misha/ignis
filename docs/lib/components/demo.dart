@@ -25,6 +25,7 @@ class Demo extends CustomComponentBase {
     'sprite-animation': 'sprites.dart',
     'sprite-layers': 'sprites.dart',
     'sprite-split': 'sprites.dart',
+    'sprite-signals': 'sprites.dart',
     'sprite-finish': 'sprites.dart',
   };
 
@@ -131,17 +132,17 @@ class Demo extends CustomComponentBase {
       ),
     ]),
     // A hero carries no source, so it keeps its square and lets the opening
-    // paragraph run beside it.
+    // paragraph run beside it. A float and a width, and nothing else: the
+    // scene and its caption are two blocks, and stack as such.
     css('.content .demo-hero', [
       css('&').styles(
-        display: .flex,
         width: DEMO_EMBEDDED_SIZE.px,
         margin: .only(left: 1.5.rem, bottom: 1.rem),
-        flexDirection: .column,
-        gap: .column(0.375.rem),
         raw: {'float': 'right'},
       ),
       css('.demo-hint').styles(
+        display: .block,
+        margin: .only(top: 0.375.rem),
         color: IgnisColors.muted,
         fontFamily: ContentTheme.currentCodeFont,
         fontSize: 0.75.rem,

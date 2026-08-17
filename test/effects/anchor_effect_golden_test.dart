@@ -15,7 +15,7 @@ void main() {
       tester,
       'goldens/anchor_effect_to.png',
       SpriteNode(
-        sheet: .asset('test/assets/fire.png', size: .new(32, 48)),
+        sheet: .asset('test/assets/fire.png', .new(32, 48)),
         position: .all(50),
         children: [
           AnchorEffect.to(
