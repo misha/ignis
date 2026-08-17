@@ -1,7 +1,6 @@
-# Code Conventions
+# Engine Conventions
 
-Conventions specific to this codebase, on top of what `dart format` and
-`dart analyze` already enforce.
+Conventions for writing engine code, on top of what `dart format` and `dart analyze` already enforce.
 
 ## Table of Contents
 
@@ -35,8 +34,7 @@ class ColliderNode extends SizedNode {
 
 ## 2. Parameter Defaults
 
-Every parameter with a default is nullable, defaulted via `??` in the
-constructor initializer list. Never use a default on the parameter itself.
+Every parameter with a default is nullable, defaulted via `??` in the constructor initializer list. Never use a default on the parameter itself.
 
 ```dart
 // Right:

@@ -18,7 +18,11 @@ import 'package:jaspr_content/components/theme_toggle.dart';
 import 'package:jaspr_content/jaspr_content.dart';
 import 'package:jaspr_content/theme.dart';
 
+import 'components/callouts.dart';
+import 'components/coverage.dart';
+import 'components/demo.dart';
 import 'components/drag_and_drop_demo.dart';
+import 'components/status_banner.dart';
 
 // This file is generated automatically by Jaspr, do not remove or edit.
 import 'main.server.options.dart';
@@ -38,6 +42,13 @@ class _IgnisLayout extends DocsLayout {
     // Relative on purpose: it resolves against the document's <base href>.
     yield script(src: 'flutter_bootstrap.js', async: true);
   }
+
+  @override
+  Component buildBody(Page page, Component child) {
+    // Injected here rather than written into every page, so a page cannot
+    // quietly forget to admit how finished it is.
+    return super.buildBody(page, .fragment([StatusBanner(page: page), child]));
+  }
 }
 
 void main() {
@@ -54,6 +65,9 @@ void main() {
     ContentApp(
       // Enables mustache templating inside the markdown files.
       templateEngine: MustacheTemplateEngine(),
+      // <Coverage/> reports on every page, so every page must be loaded before
+      // the first one renders.
+      eagerlyLoadAllPages: true,
       parsers: [
         MarkdownParser(),
       ],
@@ -66,8 +80,14 @@ void main() {
       components: [
         // The <Info> block and other callouts.
         Callout(),
+        // The <Why> and <Lineage> registers.
+        Callouts(),
         // Adds syntax highlighting to code blocks.
         CodeBlock(),
+        // The per-page status table on the overview.
+        Coverage(),
+        // Every <Demo name="..."/> slot on the site.
+        Demo(),
         // Embeds the drag-and-drop scene as <DragAndDropDemo/> in markdown.
         CustomComponent(
           pattern: 'DragAndDropDemo',
@@ -91,16 +111,57 @@ void main() {
           ),
           sidebar: Sidebar(
             groups: [
-              // Adds navigation links to the sidebar.
               SidebarGroup(
                 links: [
                   SidebarLink(text: 'Overview', href: '/'),
+                  SidebarLink(text: 'Motivation', href: '/motivation'),
+                  SidebarLink(text: 'Your first scene', href: '/start'),
                 ],
               ),
               SidebarGroup(
-                title: 'Guides',
+                title: 'Concepts',
                 links: [
-                  SidebarLink(text: 'Inputs', href: '/inputs'),
+                  SidebarLink(text: 'Nodes', href: '/concepts/nodes'),
+                  SidebarLink(text: 'Building', href: '/concepts/building'),
+                  SidebarLink(text: 'Scenes', href: '/concepts/scenes'),
+                  SidebarLink(text: 'Signals', href: '/concepts/signals'),
+                  SidebarLink(text: 'Time', href: '/concepts/time'),
+                  SidebarLink(text: 'Math', href: '/concepts/math'),
+                  SidebarLink(text: 'Live reload', href: '/concepts/live-reload'),
+                ],
+              ),
+              SidebarGroup(
+                title: 'Systems',
+                links: [
+                  SidebarLink(text: 'Nodes', href: '/systems/nodes'),
+                  SidebarLink(text: 'Layout', href: '/systems/layout'),
+                  SidebarLink(text: 'Effects', href: '/systems/effects'),
+                  SidebarLink(text: 'Effect controllers', href: '/systems/effect-controllers'),
+                  SidebarLink(text: 'Sprites', href: '/systems/sprites'),
+                  SidebarLink(text: 'Palettes', href: '/systems/palettes'),
+                  SidebarLink(text: 'Collisions', href: '/systems/collisions'),
+                  SidebarLink(text: 'Inputs', href: '/systems/inputs'),
+                  SidebarLink(text: 'Assets', href: '/systems/assets'),
+                  SidebarLink(text: 'Shapes and anchors', href: '/systems/shapes-anchors'),
+                  SidebarLink(text: 'Embedding', href: '/systems/embedding'),
+                  SidebarLink(text: 'Globals and DI', href: '/systems/globals-di'),
+                ],
+              ),
+              SidebarGroup(
+                title: 'Debugging',
+                links: [
+                  SidebarLink(text: 'Debugging', href: '/debugging'),
+                ],
+              ),
+              SidebarGroup(
+                title: 'Internals',
+                links: [
+                  SidebarLink(text: 'Principles', href: '/internals/principles'),
+                  SidebarLink(text: 'Programming model', href: '/internals/programming-model'),
+                  SidebarLink(text: 'Tree', href: '/internals/tree'),
+                  SidebarLink(text: 'Collisions', href: '/internals/collisions'),
+                  SidebarLink(text: 'Layout', href: '/internals/layout'),
+                  SidebarLink(text: 'Inputs', href: '/internals/inputs'),
                 ],
               ),
             ],
