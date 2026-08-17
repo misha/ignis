@@ -157,12 +157,7 @@ void main() {
                   SidebarLink(text: 'Shapes and Anchors', href: '/systems/shapes-anchors'),
                   SidebarLink(text: 'Embedding', href: '/systems/embedding'),
                   SidebarLink(text: 'Globals and DI', href: '/systems/globals-di'),
-                ],
-              ),
-              SidebarGroup(
-                title: 'Debugging',
-                links: [
-                  SidebarLink(text: 'Debugging', href: '/debugging'),
+                  SidebarLink(text: 'Debugging', href: '/systems/debugging'),
                 ],
               ),
               SidebarGroup(
