@@ -13,13 +13,13 @@ status: stub
 
 ## Declare in `build`
 
-## What a rebuild destroys
+## What a Rebuild Destroys
 
-## Rebuild boundaries
+## Rebuild Boundaries
 
-## What `trash` owns
+## What `trash` Owns
 
-## Getting it wrong
+## Getting It Wrong
 
 <Rule>
   State that must survive a rebuild belongs on the node or on a preserved child, never on a derived one.

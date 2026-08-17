@@ -7,7 +7,7 @@ status: complete
 related: [/concepts/building, /concepts/signals, /concepts/math]
 ---
 
-## Why a new engine
+## Why a New Engine
 
 Why does Ignis exist?
 
@@ -31,7 +31,7 @@ Until now, Flame has been the *only* reliable, unopinionated option for 2D game 
 
 Ignis makes several fundamentally different architectural decisions compared to [Flame](https://flame-engine.org/). This section hopes to explain these trade-offs and how they affect the usage of the engine.
 
-### Synchronous vs. asynchronous
+### Synchronous vs. Asynchronous
 
 In Flame, any component can declare an `async` loading method. While this makes it easy to load assets dynamically, in practice it creates a confusing gap: you can't safely manipulate a component until it's done loading!
 
@@ -45,7 +45,7 @@ In Ignis, nodes *must* set themselves up synchronously. There isn't a `load` met
 
 The drawback is that assets *must* be loaded ahead of time. To compensate, Ignis ships with a highly configurable [preloading system](/systems/assets).
 
-### Virtual methods vs. signals
+### Virtual Methods vs. Signals
 
 In Flame, implementing behavior for special events (like collisions and gestures) usually requires extending a component and overriding a virtual method.
 

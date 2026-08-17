@@ -14,7 +14,7 @@ status: stub
 
 <!-- Nodes are constructed, updated and rendered in one synchronous loop, and errors surface at the source. What it buys: no partially-initialized nodes, no awaiting mid-frame, no question of what to render while something loads. What it costs: preloading is mandatory, and build must never be async - lib/src/node.dart:38-39 calls an async build devastating and should say here exactly which invariants it breaks. -->
 
-## Code locality
+## Code Locality
 
 <!-- A node's children, its signal wiring and its per-frame behavior are declared in one method. The bags exist so behavior has a location that can be discarded and re-derived, rather than being spread across virtual method overrides that cannot. -->
 

@@ -10,10 +10,10 @@ status: stub
 
 <Demo name="deferred-tree"/>
 
-## The rule
+## The Rule
 
 ## Mounting
 
-## Edits land next frame
+## Edits Land Next Frame
 
-## Getting it wrong
+## Getting It Wrong

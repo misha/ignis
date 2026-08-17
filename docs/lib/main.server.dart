@@ -117,6 +117,30 @@ void main() {
             title: 'Ignis',
             logo: '/images/ignis-mark.webp',
             items: [
+              // The generated API reference, beside the repo it is cut from.
+              // The mark is lucide's `code-xml`, inlined rather than linked so
+              // its `currentColor` stroke tracks the link's own color.
+              a(classes: 'header-api', href: '/api', [
+                svg(
+                  viewBox: '0 0 24 24',
+                  attributes: {
+                    'fill': 'none',
+                    'stroke': 'currentColor',
+                    'stroke-width': '1.5',
+                    'stroke-linecap': 'round',
+                    'stroke-linejoin': 'round',
+                  },
+                  [
+                    path(d: 'm18 16 4-4-4-4', []),
+                    path(d: 'm6 8-4 4 4 4', []),
+                    path(d: 'm14.5 4-5 16', []),
+                  ],
+                ),
+                span([.text('API')]),
+              ]),
+              // Parts the two, so they read as siblings rather than as one
+              // wide control.
+              span(classes: 'header-separator', [.text('·')]),
               // Shows github stats.
               GitHubButton(repo: 'misha/ignis'),
             ],
@@ -169,6 +193,7 @@ void main() {
                   SidebarLink(text: 'Collisions', href: '/internals/collisions'),
                   SidebarLink(text: 'Layout', href: '/internals/layout'),
                   SidebarLink(text: 'Inputs', href: '/internals/inputs'),
+                  SidebarLink(text: 'Documentation', href: '/internals/documentation'),
                 ],
               ),
             ],

@@ -10,6 +10,6 @@ status: stub
 
 <Demo name="node-gallery"/>
 
-## The catalog
+## The Catalog
 
-## Positioning and sizing
+## Positioning and Sizing

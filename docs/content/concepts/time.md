@@ -10,10 +10,10 @@ status: stub
 
 <Demo name="dt-scaling"/>
 
-## The rule
+## The Rule
 
 ## Scaling by `dt`
 
 ## Timers
 
-## Getting it wrong
+## Getting It Wrong

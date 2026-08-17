@@ -10,10 +10,10 @@ status: stub
 
 <Demo name="node-tree"/>
 
-## The rule
+## The Rule
 
-## Priority decides order
+## Priority Decides Order
 
-## Enabling and disabling
+## Enabling and Disabling
 
-## Getting it wrong
+## Getting It Wrong

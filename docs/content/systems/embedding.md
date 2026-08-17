@@ -12,8 +12,8 @@ status: stub
 
 <Demo name="scene-widget"/>
 
-## The catalog
+## The Catalog
 
-## Owning a scene from Flutter
+## Owning a Scene from Flutter
 
-## Pausing and debugging
+## Pausing and Debugging

@@ -11,8 +11,8 @@ status: stub
 
 <Demo name="debug-overlay"/>
 
-## The debug overlay
+## The Debug Overlay
 
-## Drawing your own
+## Drawing Your Own
 
-## Reading a stuck frame
+## Reading a Stuck Frame

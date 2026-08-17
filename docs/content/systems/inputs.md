@@ -14,7 +14,7 @@ The demo below is a `DragInput` on a piece, and two zones that report collisions
 
 That status line is not painted inside the scene. It is HTML on this page, updated by a signal the scene emits - the page and the engine share Dart state directly.
 
-## The inputs
+## The Inputs
 
 | Input        | Purpose             | Signals                                                    |
 |--------------|---------------------|------------------------------------------------------------|
@@ -24,7 +24,7 @@ That status line is not painted inside the scene. It is HTML on this page, updat
 
 A node wanting more than one gesture just adds more input nodes.
 
-## Wiring one up
+## Wiring One Up
 
 Inputs are declared in `build()`, like any other behavior. The piece above is a `ShapeNode` that adds a slightly larger `DragInput` over itself, so it is easier to grab than it is to hit exactly.
 
@@ -55,7 +55,7 @@ class PieceNode extends ShapeNode {
 }
 ```
 
-## Overlap and fallthrough
+## Overlap and Fallthrough
 
 When multiple input nodes overlap, `priority` decides who is tried first. An event a node does not apply to - a `HoverInput` receiving a tap, say - falls through to the next input node. Once a node *does* claim an event the search stops there, unless its `behavior` is `HitBehavior.translucent`.
 
@@ -65,7 +65,7 @@ When multiple input nodes overlap, `priority` decides who is tried first. An eve
 
 </Info>
 
-## Pointer and focus
+## Pointer and Focus
 
 This page is a Flutter view embedded in an HTML document, so the scene and the page negotiate over the pointer:
 

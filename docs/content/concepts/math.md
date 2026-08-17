@@ -11,10 +11,10 @@ status: stub
 
 <Demo name="mutable-vector"/>
 
-## The rule
+## The Rule
 
-## Mutable and immutable
+## Mutable and Immutable
 
-## Converting from Flutter types
+## Converting from Flutter Types
 
-## Getting it wrong
+## Getting It Wrong

@@ -12,8 +12,8 @@ status: stub
 
 <Demo name="controller-comparison"/>
 
-## The catalog
+## The Catalog
 
-## Nesting controllers
+## Nesting Controllers
 
 ## Curves

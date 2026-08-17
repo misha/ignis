@@ -12,8 +12,8 @@ status: stub
 
 <Demo name="collision-layers"/>
 
-## The catalog
+## The Catalog
 
-## Layers and masks
+## Layers and Masks
 
-## Start and end are edges
+## Start and End Are Edges

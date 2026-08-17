@@ -11,8 +11,8 @@ status: stub
 
 <Demo name="palette-layers"/>
 
-## The catalog
+## The Catalog
 
-## The default paint
+## The Default Paint
 
-## Ordering and offsets
+## Ordering and Offsets

@@ -11,6 +11,6 @@ status: stub
 
 <Demo name="anchor-grid"/>
 
-## The catalog
+## The Catalog
 
-## What an anchor does to a position
+## What an Anchor Does to a Position

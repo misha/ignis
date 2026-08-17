@@ -12,10 +12,10 @@ status: stub
 
 <Demo name="provide-read"/>
 
-## The catalog
+## The Catalog
 
 ## Globals
 
-## Providing down a subtree
+## Providing Down a Subtree
 
 `read` is not reactive. The result is cached until the node unmounts, so a later `provide` for the same type will not be picked up.

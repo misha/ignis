@@ -259,6 +259,42 @@ abstract final class IgnisStyles {
     // carry no code and name no class, and the page's opening line says the
     // same thing in a register that can.
     css('.docs .content-header p').styles(display: .none),
+    // Sits beside `GitHubButton` and borrows its metrics, so the two read as
+    // one pair rather than a link next to a button.
+    css('.docs .header .header-api', [
+      css('&').styles(
+        display: .flex,
+        padding: .symmetric(horizontal: 0.7.rem, vertical: 0.4.rem),
+        radius: .circular(8.px),
+        alignItems: .center,
+        gap: .column(0.5.rem),
+        color: ContentColors.text,
+        // The acronym reads as an identifier, not as prose, and `w700` lands on
+        // the bold face that ships rather than a synthesized one.
+        fontFamily: ContentTheme.currentCodeFont,
+        fontSize: 0.7.rem,
+        fontWeight: .w700,
+        letterSpacing: 0.02.em,
+        lineHeight: 1.2.em,
+        textDecoration: .none,
+      ),
+      css('&:hover').styles(backgroundColor: IgnisColors.surface),
+      css('svg').styles(width: 1.2.rem, height: 1.2.rem),
+    ]),
+    // Garamond sets its middle dot small and low, which reads as a full stop
+    // beside capitals. The mono centers it, and the size lifts it clear.
+    //
+    // Centering agrees on boxes, not on ink. `API` is capitals, so it rides
+    // above its box center, and a middle dot sits below its own. The nudge is
+    // the sum of the two, which lands the dot on the cap line.
+    css('.docs .header .header-separator').styles(
+      display: .flex,
+      alignItems: .center,
+      color: IgnisColors.muted,
+      fontFamily: ContentTheme.currentCodeFont,
+      fontSize: 1.rem,
+      raw: {'user-select': 'none', 'transform': 'translateY(-0.08em)'},
+    ),
     css('.docs .sidebar li > div:hover').styles(backgroundColor: IgnisColors.surface),
     css('.docs .sidebar li > div.active').styles(backgroundColor: IgnisColors.surface),
     // The header is fixed and frosted, and the package puts its height at 4rem

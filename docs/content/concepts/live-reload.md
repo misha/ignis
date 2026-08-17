@@ -11,12 +11,12 @@ status: stub
 
 <Demo name="live-reload"/>
 
-## The rule
+## The Rule
 
-## Opting in
+## Opting In
 
 A save leaves a running game exactly as it was unless a node answers for itself. The default answer is nothing.
 
-## Reloading assets
+## Reloading Assets
 
-## Getting it wrong
+## Getting It Wrong

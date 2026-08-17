@@ -11,6 +11,6 @@ status: stub
 
 <Demo name="layout-flex"/>
 
-## The catalog
+## The Catalog
 
-## The Ignis-Flutter cheatsheet
+## The Ignis-Flutter Cheatsheet

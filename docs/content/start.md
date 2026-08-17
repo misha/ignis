@@ -10,10 +10,10 @@ status: stub
 
 <Demo name="first-scene"/>
 
-## Mount a node
+## Mount a Node
 
-## Give it behavior
+## Give It Behavior
 
-## Reload it while it runs
+## Reload It While It Runs
 
-## Where to go next
+## Where to Go Next

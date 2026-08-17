@@ -12,8 +12,8 @@ status: stub
 
 <Demo name="effect-gallery"/>
 
-## The catalog
+## The Catalog
 
-## An effect animates what is above it
+## An Effect Animates What Is Above It
 
-## Finishing and cleanup
+## Finishing and Cleanup

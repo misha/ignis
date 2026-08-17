@@ -11,10 +11,10 @@ status: stub
 
 <Demo name="preload-progress"/>
 
-## The catalog
+## The Catalog
 
-## Why preloading is required
+## Why Preloading Is Required
 
-## Writing a loader
+## Writing a Loader
 
-## Reloading from disk
+## Reloading from Disk

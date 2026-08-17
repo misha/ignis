@@ -10,10 +10,10 @@ status: stub
 
 <Demo name="signal-ownership"/>
 
-## The rule
+## The Rule
 
-## Naming a signal
+## Naming a Signal
 
-## Who owns the `Cleanup`
+## Who Owns the `Cleanup`
 
-## Getting it wrong
+## Getting It Wrong
