@@ -1,0 +1,12 @@
+# Site Configuration
+titleBase: Ignis
+favicon: favicon.ico
+
+# NOTE: This site must be served from a domain root. Setting `base:` here emits
+# the <base> tag, but generated sidebar and table-of-contents links stay
+# root-absolute (/inputs), so a project sub-path would 404 on navigation.
+
+# Social media links
+social:
+  - name: Github
+    url: https://github.com/misha/ignis

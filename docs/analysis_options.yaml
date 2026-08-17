@@ -1,0 +1,24 @@
+include: ../analysis_options.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - lib/**/*.imports.dart
+    - lib/generated/**
+    - lib/main.client.options.dart
+    - lib/main.server.options.dart
+    - web/**
+    - android/**
+    - ios/**
+    - windows/**
+    - macos/**
+    - linux/**
+
+# Jaspr ships an analyzer plugin with component-specific rules.
+plugins:
+  jaspr_lints:
+    version: ^0.7.2
+    diagnostics:
+      prefer_html_components: true
+      sort_children_last: true
+      styles_ordering: true

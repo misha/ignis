@@ -16,3 +16,35 @@ jobs:
           channel: stable
       - run: flutter pub get
       - run: flutter test --coverage -r expanded
+
+  docs:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: dart pub global activate jaspr_cli
+      - run: flutter pub get
+      - run: dart analyze
+      - run: dart pub global run jaspr_cli:jaspr build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build/jaspr
+
+  deploy-docs:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: docs
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
