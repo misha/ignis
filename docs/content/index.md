@@ -1,31 +1,25 @@
 ---
 title: Ignis
-description: A Flutter game engine built on nodes and signals.
+description: An open-source 2D game engine built on nodes and signals.
+image: /images/ignis.webp
+imageAlt: The Ignis mark, a painting of a flame.
 lane: usage
 category: essay
-status: partial
+status: complete
 ---
 
-Ignis is a Flutter game engine built on nodes and signals.
-
-These docs are under construction. They exist to do the one thing the README cannot: run.
+- **Embrace composition.** *Everything* is a `Node`. Compose behavior and graphics with trees.
+- **Completely synchronous.** Nodes are built and rendered in a synchronous loop. Errors are reported at the source.
+- **Signals over callbacks.** The `Signal`, a lightweight event emitter, powers everything from animations to collisions.
+- **Embedded in Flutter.** Any node can be rendered in the widget tree via `SceneWidget`. Ignis runs wherever Flutter runs.
+- **Live nodes.** Any node can opt into rebuilding itself on save, so your edits land in the running game.
+- **Live assets.** When developing on the host machine, `LocalAssetBundle` instantly reloads assets into the global cache.
 
 <Info>
 
   Every demo on this site is a real Ignis scene compiled into the page, not a recording or a code sample. The prose and the engine share Dart state directly.
 
 </Info>
-
-## Features
-
-- **Embrace composition.** Everything - sprites, shapes, text, colliders, effects - is a `Node`. Compose behavior and graphics by building trees.
-- **Completely synchronous.** Nodes are instantiated, updated, and rendered in a completely synchronous loop. Errors are reported at the source.
-- **Signals, not callbacks.** The `Signal`, a lightweight event emitter, powers everything from animations to collisions.
-- **Embedded in Flutter.** Any node can be rendered in the widget tree via `SceneWidget`. Ignis runs wherever Flutter runs (I think).
-- **Flutter's layout, on nodes.** `RowNode`, `ColumnNode`, and `BoxNode` behave like the widgets you already know.
-- **Asset preloading.** `Preload` concurrently loads assets with `Loader`s for images, data, or custom resource types.
-- **Live assets.** When developing on the host machine, `LocalAssetBundle` instantly reloads assets into the global cache.
-- **Live nodes.** Any node can opt into rebuilding itself on save, so your edits land in the running game.
 
 ## Start Here
 
@@ -35,4 +29,6 @@ These docs are under construction. They exist to do the one thing the README can
 
 ## Attribution
 
-Every sprite the demos on this site draw - the slime, the bonfire, the explosion - is by [Infected Tribe](https://infectedtribe.itch.io/). The mark in the header is a painting by [Mewyn](https://mewyn.itch.io/).
+The mark in the header is a beautiful painting by [Mewyn](https://mewyn.itch.io/).
+
+The example assets in the demos are provided by [Infected Tribe](https://infectedtribe.itch.io/).

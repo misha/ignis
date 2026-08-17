@@ -15,7 +15,7 @@ Conventions for everything a reader sees: the site under `docs/` and the doc com
 - Address the reader as "you".
 - Headings are Title Case: every word capitalized except articles, conjunctions and prepositions, as in `## Getting It Wrong` and `## Differences from Flame`. The one exception is a catalog's per-demo `###`, which stays sentence case.
 - Use dot shorthand in every sample, e.g. `shape: .circle(16)`, `padding: .all(4)`. Samples skip `const`.
-- Use `<Warning>` for something that will bite you, `<Why>` for rationale, and `<Lineage from="Godot|Flame">` for where an idea came from.
+- Use `<Warning>` for something that will bite you, `<Why>` for rationale, `<Lineage from="Godot|Flame">` for where an idea came from, and `<Info>` for something worth knowing that fits none of those.
 - Anything else is ordinary prose.
 
 ## 2. Lanes

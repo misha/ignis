@@ -91,10 +91,10 @@ void main() {
         ReferenceEntryExtension(),
       ],
       components: [
-        // The <Why>, <Lineage> and <Warning> registers. Ahead of Callout, which
-        // matches <Warning> too and would otherwise claim it first.
+        // The <Why>, <Lineage>, <Warning> and <Info> registers. Ahead of
+        // Callout, which matches the last two and would otherwise claim them.
         Callouts(),
-        // The <Info> block and the callouts left to the package.
+        // The callouts left to the package.
         Callout(),
         // Adds syntax highlighting to code blocks.
         CodeBlock(codeTheme: ignisCodeTheme),

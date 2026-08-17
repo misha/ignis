@@ -15,28 +15,35 @@ const _MARKS = {
 /// the registers differ by color and content and match everywhere else.
 const Unit _MARK_SIZE = .rem(1.25);
 
+/// The words a register wears, where its tag is not what the reader should see.
+const _LABELS = {
+  'Info': 'By the way...',
+};
+
 /// The four registers the README established, as markdown components.
 ///
 /// `<Why>` explains why a decision went the way it did, and
 /// `<Lineage from="Godot">` credits where an idea came from, wearing that
 /// engine's own mark. Anything that fits neither is ordinary prose.
 ///
-/// `<Warning>` is taken from the package's own `Callout`, which draws a bordered
-/// box in a color the theme doesn't own. An aside opens off the entry it belongs
-/// to; a box interrupts it. This must be registered ahead of `Callout` for the
-/// tag to land here, since the first matching component wins.
+/// `<Info>` states something worth knowing that fits no other register.
+///
+/// `<Warning>` and `<Info>` are taken from the package's own `Callout`, which
+/// draws a bordered box in a color the theme doesn't own. An aside opens off the
+/// entry it belongs to; a box interrupts it. This must be registered ahead of
+/// `Callout` for the tags to land here, since the first matching component wins.
 class Callouts extends CustomComponentBase {
   Callouts();
 
   @override
-  final Pattern pattern = RegExp(r'Why|Lineage|Warning');
+  final Pattern pattern = RegExp(r'Why|Lineage|Warning|Info');
 
   @override
   Component apply(String name, Map<String, String> attributes, Component? child) {
     return div(classes: 'aside aside-${name.toLowerCase()}', [
       span(classes: 'aside-label', [
         ?_mark(attributes['from']),
-        .text(name),
+        .text(_LABELS[name] ?? name),
       ]),
       div(classes: 'aside-body', [?child]),
     ]);

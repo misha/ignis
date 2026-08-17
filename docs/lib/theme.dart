@@ -259,6 +259,38 @@ abstract final class IgnisStyles {
     // carry no code and name no class, and the page's opening line says the
     // same thing in a register that can.
     css('.docs .content-header p').styles(display: .none),
+    // A page carrying an `image` is the hero, and only the overview does. The
+    // layout emits the header as title, description, mark, so `order` puts the
+    // painting on top without the markup moving, and the description comes back
+    // from the rule above to serve as the centered opening line.
+    css('.docs .content-header:has(img)', [
+      css('&').styles(
+        display: .flex,
+        margin: .only(bottom: 3.rem),
+        flexDirection: .column,
+        alignItems: .center,
+        textAlign: .center,
+      ),
+      css('img').styles(
+        width: 9.rem,
+        height: Unit.auto,
+        margin: .zero,
+        radius: .circular(Unit.zero),
+        raw: {'order': '1'},
+      ),
+      css('h1').styles(
+        margin: .only(top: 1.25.rem),
+        fontSize: 4.rem,
+        lineHeight: 1.1.em,
+        raw: {'order': '2'},
+      ),
+      css('p').styles(
+        display: .block,
+        margin: .only(top: 0.75.rem),
+        lineHeight: 1.4.em,
+        raw: {'order': '3'},
+      ),
+    ]),
     // Sits beside `GitHubButton` and borrows its metrics, so the two read as
     // one pair rather than a link next to a button.
     css('.docs .header .header-api', [
