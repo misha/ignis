@@ -6,8 +6,8 @@ import '../support/images.dart';
 
 void main() {
   test('loads sheets in order and starts with the first sheet', () async {
-    final first = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
-    final second = Spritesheet(await solidImage(6, 6, BLUE), size: .all(2));
+    final first = Spritesheet.raw(await solidImage(8, 4, RED), size: .all(4));
+    final second = Spritesheet.raw(await solidImage(6, 6, BLUE), size: .all(2));
     final node = SpriteNode.split(sheets: [first, second]);
     node.mount();
 
@@ -17,8 +17,8 @@ void main() {
   });
 
   test('play switches the active sheet and frame', () async {
-    final first = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
-    final second = Spritesheet(await solidImage(6, 6, BLUE), size: .all(2));
+    final first = Spritesheet.raw(await solidImage(8, 4, RED), size: .all(4));
+    final second = Spritesheet.raw(await solidImage(6, 6, BLUE), size: .all(2));
     final node = SpriteNode.split(sheets: [first, second]);
 
     node.play(
@@ -37,7 +37,7 @@ void main() {
   });
 
   test("width and height default to the first sheet's native size", () async {
-    final sheet = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
+    final sheet = Spritesheet.raw(await solidImage(8, 4, RED), size: .all(4));
     final node = SpriteNode(sheet: sheet);
 
     node.mount();
@@ -46,8 +46,8 @@ void main() {
   });
 
   test('size follows the active sheet', () async {
-    final first = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
-    final second = Spritesheet(await solidImage(6, 6, BLUE), size: .all(2));
+    final first = Spritesheet.raw(await solidImage(8, 4, RED), size: .all(4));
+    final second = Spritesheet.raw(await solidImage(6, 6, BLUE), size: .all(2));
     final node = SpriteNode.split(sheets: [first, second]);
 
     expect(node.size, Vector2.all(4));
@@ -58,8 +58,8 @@ void main() {
   });
 
   test('renders the active sheet', () async {
-    final first = Spritesheet(await solidImage(1, 1, RED));
-    final second = Spritesheet(await solidImage(1, 1, BLUE));
+    final first = Spritesheet.raw(await solidImage(1, 1, RED));
+    final second = Spritesheet.raw(await solidImage(1, 1, BLUE));
     final node = SpriteNode.split(sheets: [first, second]);
     node.mount();
 
@@ -73,7 +73,7 @@ void main() {
   });
 
   test('renders the selected row and column', () async {
-    final sheet = Spritesheet(
+    final sheet = Spritesheet.raw(
       await pixelImage([
         [RED, GREEN],
         [BLUE, WHITE],
@@ -119,7 +119,7 @@ void main() {
 
   test('does not detach once finished, by default', () async {
     final a = Node();
-    final sheet = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
+    final sheet = Spritesheet.raw(await solidImage(8, 4, RED), size: .all(4));
     final node = SpriteNode(sheet: sheet, fps: 2, loop: false);
     a.add(node);
     final scene = a.mount();
@@ -133,7 +133,7 @@ void main() {
 
   test('detaches itself once finished, when cleanup is true', () async {
     final a = Node();
-    final sheet = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
+    final sheet = Spritesheet.raw(await solidImage(8, 4, RED), size: .all(4));
     final node = SpriteNode(sheet: sheet, fps: 2, loop: false, cleanup: true);
     a.add(node);
     final scene = a.mount();
@@ -148,7 +148,7 @@ void main() {
 
   test('ignores cleanup while looping, since a looping sprite never finishes', () async {
     final a = Node();
-    final sheet = Spritesheet(await solidImage(8, 4, RED), size: .all(4));
+    final sheet = Spritesheet.raw(await solidImage(8, 4, RED), size: .all(4));
     final node = SpriteNode(sheet: sheet, fps: 2, cleanup: true);
     a.add(node);
     final scene = a.mount();

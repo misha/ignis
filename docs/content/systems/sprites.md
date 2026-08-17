@@ -8,28 +8,37 @@ reference: [SpriteNode, Spritesheet]
 related: [/systems/assets, /concepts/nodes, /concepts/live-reload]
 ---
 
-<Demo name="sprite-animation" hero/>
-
-A `SpriteNode` draws the frames a `Spritesheet` cuts from an image, whether that is one still picture, one animation, or a set of them. Repainting a `.png` while the scene runs swaps the art under a sprite that never stops playing, since a sprite is the one node that survives live reload without rebuilding.
-
 ## Overview
 
-A `Spritesheet` cuts an image into a grid of equally sized frames, numbered row-major from the top left. Omit the frame size and the grid holds a single frame, which is what a still sprite draws.
+<Demo name="sprite-animation" hero/>
+
+A *sprite* is an image or a sequence of images in a game. It usually refers to a single visual entity on the screen.
+
+In Ignis, `SpriteNode` draws sprites. To do so, it requires a `Spritesheet`, which cuts an image into frames. The process is the same whether you want to render an image, play an animation, or switch between animations:
+
+1. [Preload](/systems/assets) the assets.
+2. Define a `Spritesheet`.
+3. Pass it to a `SpriteNode`.
+
+## Usage notes
+
+- If you don't pass a `size` to `Spritesheet.asset(key, [size])`, it treats the asset as a single image.
+- If you pass a `size`, `Spritesheet.asset` cuts the image into a grid of equally sized frames, numbered row-major from the top left. A 128x64 image with a 32x32 `size` holds 8 frames:
 
 ```
-+---+---+---+---+
-| 0 | 1 | 2 | 3 |
-+---+---+---+---+
-| 4 | 5 | 6 | 7 |
-+---+---+---+---+
+    0              128
+  0 +---+---+---+---+
+    | 0 | 1 | 2 | 3 |
+    +---+---+---+---+
+    | 4 | 5 | 6 | 7 |
+ 64 +---+---+---+---+
 ```
 
-A sprite plays along one row and never leaves it, so how a sheet is cut up is an authoring decision: a 4-row sheet holds 4 animations, and `play` moves between them. Every frame is held for the same length of time, so a sheet's own frames are where timing lives.
-
-One node draws one sheet. A character with several animations keeps one node and several sheets through `SpriteNode.split`. A picture made of parts takes one node per part, drawn in [`priority`](/concepts/nodes) order.
+- `SpriteNode` comes with a `reassemble` implementation that allows it to reload images in live scenes when using the [local asset bundle](/concepts/live-reload#reloading-assets).
 
 ## Known limitations
 
+- You cannot play an animation across two rows.
 - You cannot play a row partially.
 - You cannot set a per-row `fps`.
 - You cannot set a per-frame `fps`.

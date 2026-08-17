@@ -68,18 +68,20 @@ Explain, then show. A page states everything it has to say, then runs its demos 
 
 A `system` page runs in this order.
 
-1. The hero: `<Demo name="..." hero/>`, written *above* the lede, since it floats and only wraps what follows it.
+1. `## Overview`, opening on the hero: `<Demo name="..." hero/>`, written *above* the lede, since it floats and only wraps what follows it.
 2. The lede: one sentence naming the classes in `reference:` and what they do between them.
 3. The dispatch: whatever the page does not own, sent to the page that does, in the same paragraph. This is what delineates the page's responsibility, so it goes before the reader has invested anything.
-4. `## Overview`: the groups.
-5. `### Known limitations`: the last group.
-6. `## Examples`: one `###` per demo, in the order the Overview introduced them.
+4. `## Usage notes`: what a demo cannot show.
+5. `## Known limitations`: what a reader goes looking for and does not find.
+6. `## Examples`: one `###` per demo.
 
-Groups are `###`, named as a noun, and open with one sentence whose main verb is the thing's job. "Is a", "is responsible for", "provides" and "handles" name a category instead of an action and are banned. A group whose lede cannot take a real verb is not a group.
+The Overview is the one part of a page written as prose, and it runs unbroken. No headings inside it: a subject that needs sections to introduce it is two pages. Its sentences name actions. "Is a", "is responsible for", "provides" and "handles" name a category instead of an action and are banned.
 
 An entry is a claim and its consequence: a declarative that is true on its own, then what it means for the reader. No bold lead-in - most entries open on an identifier, and that is anchor enough.
 
-`### Known limitations` takes no lede, because a section defined by absence has no verb to give. Each entry is one clause of the form "You cannot X", with no consequence and no workaround attached. The section mirrors the `TODO`s in the source it documents: a resolved `TODO` removes an entry. Every `system` page carries the section, since an empty one still reports that somebody looked.
+`## Usage notes` is where a fact the reader needs lands when no demo carries it - what an omitted argument does, what a node does when something changes underneath it. A note earns its place by changing what the reader writes.
+
+`## Known limitations` takes no lede, because a section defined by absence has no verb to give. Each entry is one clause of the form "You cannot X", with no consequence and no workaround attached. The section mirrors the `TODO`s in the source it documents: a resolved `TODO` removes an entry. Every `system` page carries the section, since an empty one still reports that somebody looked.
 
 A demo documents itself, in its own source. It carries a heading and nothing else: no prose narrating it, and no comments between its `// demo on` and `// demo off` markers either. A demo is a handful of lines in isolation, so one that needs a comment to be read is a finding against the engine - a name, a default or a shape is wrong - and the fix belongs in `lib/`. Prose that narrates a demo is prose maintained in two places; a comment that explains one is a bug filed in the wrong place.
 
@@ -101,9 +103,9 @@ Those three are worth naming because each is *local*: verifiable one line at a t
 
 What a page leaves out is as fixed as what it includes.
 
-- Defaults. `dart doc` states them, and a second copy drifts.
+- Defaults. `dart doc` states them, and a second copy drifts. A default the reader has to construct around is a usage note instead.
 - The contents of an error message. That a call throws is the fact worth having; the string is the exception's business.
 - Anything another page owns. Link to it. Tie-breaking is part of what `priority` means, so it belongs to the page that defines `priority`.
 - A workaround for a limitation. A documented workaround becomes the recommended path, and then constrains the fix.
 - Internal state changes, where an observable behavior says it better. "A sprite finishes once" over "`play` clears the flag".
-- A `<Why>` without a decision behind it. Where the honest answer is "not built yet", the content is a limitation, and it goes in `### Known limitations`. Rationale invented to cover a gap reads as authoritative and has nothing in the source to check it against.
+- A `<Why>` without a decision behind it. Where the honest answer is "not built yet", the content is a limitation, and it goes in `## Known limitations`. Rationale invented to cover a gap reads as authoritative and has nothing in the source to check it against.

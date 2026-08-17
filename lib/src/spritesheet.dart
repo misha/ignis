@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:ignis/src/assets/cache.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
@@ -18,14 +19,15 @@ final class SpritesheetSource {
 /// An image cut into a grid of equally sized frames.
 ///
 /// Frames are numbered row-major from the top left, and a [SpriteNode] animates
-/// along one row:
+/// along one row. A 128x64 image with a 32x32 [size] holds 8 frames:
 ///
 /// ```
-/// +---+---+---+---+
-/// | 0 | 1 | 2 | 3 |
-/// +---+---+---+---+
-/// | 4 | 5 | 6 | 7 |
-/// +---+---+---+---+
+///     0              128
+///   0 +---+---+---+---+
+///     | 0 | 1 | 2 | 3 |
+///     +---+---+---+---+
+///     | 4 | 5 | 6 | 7 |
+///  64 +---+---+---+---+
 /// ```
 ///
 /// ```dart
@@ -60,7 +62,7 @@ class Spritesheet {
     final derived = Cache.derive(key, '${frame.x},${frame.y}');
     if (cache.contains(derived)) return cache.retrieve<Spritesheet>(derived);
 
-    final sheet = Spritesheet(
+    final sheet = Spritesheet.raw(
       image,
       size: frame,
       source: .new(key, size),
@@ -70,11 +72,11 @@ class Spritesheet {
     return sheet;
   }
 
-  // TODO: No caller has an [Image] that did not come through the cache, so
-  // this exists for [Spritesheet.asset] to call and for no one else - and a
-  // sheet built here has no [source], which leaves it out of live reload.
-  // Fold it into the factory and drop it.
-  Spritesheet(
+  /// Cuts [image] into frames of the given [size], without touching the cache.
+  // TODO: A sheet built here has no [source], which leaves it out of live
+  // reload. Fold it into [Spritesheet.asset] and drop it.
+  @internal
+  Spritesheet.raw(
     this.image, {
     Vector2? size,
     this.source,

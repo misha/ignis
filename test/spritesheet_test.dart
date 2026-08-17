@@ -12,7 +12,7 @@ void main() {
 
   test('uses the whole image as one frame by default', () async {
     final image = await solidImage(8, 4);
-    final sheet = Spritesheet(image);
+    final sheet = Spritesheet.raw(image);
 
     expect(sheet.image, same(image));
     expect(sheet.size, Vector2(8, 4));
@@ -23,7 +23,7 @@ void main() {
   });
 
   test('caches frame rectangles in row-major order', () async {
-    final sheet = Spritesheet(await solidImage(4, 6), size: .all(2));
+    final sheet = Spritesheet.raw(await solidImage(4, 6), size: .all(2));
 
     expect(sheet.rows, 3);
     expect(sheet.columns, 2);
@@ -46,7 +46,7 @@ void main() {
 
   test('clones the supplied frame size', () async {
     final size = MVector2.all(2);
-    final sheet = Spritesheet(await solidImage(4, 4), size: size);
+    final sheet = Spritesheet.raw(await solidImage(4, 4), size: size);
 
     size.splat(1);
 
@@ -69,19 +69,19 @@ void main() {
   test('requires positive finite frame dimensions', () async {
     final image = await solidImage(4, 4);
 
-    expect(() => Spritesheet(image, size: .new(0, 2)), throwsArgumentError);
-    expect(() => Spritesheet(image, size: .new(2, double.infinity)), throwsArgumentError);
+    expect(() => Spritesheet.raw(image, size: .new(0, 2)), throwsArgumentError);
+    expect(() => Spritesheet.raw(image, size: .new(2, double.infinity)), throwsArgumentError);
   });
 
   test('requires frame dimensions to divide the image evenly', () async {
     final image = await solidImage(4, 4);
 
-    expect(() => Spritesheet(image, size: .new(3, 2)), throwsArgumentError);
-    expect(() => Spritesheet(image, size: .new(2, 3)), throwsArgumentError);
+    expect(() => Spritesheet.raw(image, size: .new(3, 2)), throwsArgumentError);
+    expect(() => Spritesheet.raw(image, size: .new(2, 3)), throwsArgumentError);
   });
 
   test('rejects frame indexes outside the sheet', () async {
-    final sheet = Spritesheet(await solidImage(4, 4), size: .all(2));
+    final sheet = Spritesheet.raw(await solidImage(4, 4), size: .all(2));
 
     expect(() => sheet[-1], throwsRangeError);
     expect(() => sheet[sheet.frames], throwsRangeError);
