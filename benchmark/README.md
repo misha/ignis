@@ -16,20 +16,20 @@ A bare name resolves to `<name>_benchmark.dart`, or to the same under `flame/`.
 
 > :warning: This is not the performance tuning log and does not explain changes.
 
-Measured with `flutter test` on 2026/08/15, average of 3 or more runs.
+Measured with `flutter test` on 2026/08/17, average of 3 or more runs.
 
 | Benchmark                     | Runtime     |
 |-------------------------------|-------------|
-| Collisions                    | 7058.91 us  |
-| Intersect Circle-Circle       | 2118.30 us  |
-| Intersect Circle-Rectangle    | 14934.67 us |
-| Intersect Rectangle-Rectangle | 9305.33 us  |
-| Layout                        | 21702.94 us |
-| Lifecycle Events              | 47344.48 us |
-| Nearest                       | 6862.29 us  |
-| Signal Emissions              | 2545.72 us  |
-| Update                        | 18608.55 us |
-| Update + Render               | 32807.71 us |
+| Collisions                    | 7365.83 us  |
+| Intersect Circle-Circle       | 2132.50 us  |
+| Intersect Circle-Rectangle    | 14677.91 us |
+| Intersect Rectangle-Rectangle | 9394.30 us  |
+| Layout                        | 23804.14 us |
+| Lifecycle Events              | 45688.34 us |
+| Nearest                       | 6861.46 us  |
+| Signal Emissions              | 2535.51 us  |
+| Update                        | 15781.22 us |
+| Update + Render               | 34228.27 us |
 
 System details:
 
