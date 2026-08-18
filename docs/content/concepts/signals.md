@@ -8,12 +8,6 @@ status: complete
 
 Nodes communicate time-sensitive events through `Signal`, a lightweight message emitter.
 
-<Lineage from="Godot">
-
-  The name is taken from the parallel concept in Godot.
-
-</Lineage>
-
 By convention, signals are prefixed with `on` so subscriptions read naturally in a node's [`build()`](/concepts/nodes).
 
 ```dart
@@ -23,7 +17,7 @@ final onCollisionStart = Signal1<ColliderNode>();
 // Call a signal with a function argument to watch it.
 final cleanup = onCollisionStart((other) => print('Hit $other!'));
 
-// Sends a type-safe message to all watchers.
+// Emit sends a type-safe message to all watchers.
 onCollisionStart.emit(someCollider);
 
 // Stop watching the signal.
@@ -31,6 +25,12 @@ cleanup();
 ```
 
 `Signal0` through `Signal3` carry zero to three arguments, each typed.
+
+<Lineage from="Godot">
+
+  The name *signal* is taken from the parallel concept in Godot.
+
+</Lineage>
 
 ## Ownership
 
