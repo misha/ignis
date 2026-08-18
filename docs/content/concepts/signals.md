@@ -61,4 +61,4 @@ void useSignal0(Signal0 signal, void Function() handle) {
 
 ## Why Not `ChangeNotifier`
 
-`ChangeNotifier` is similar to `Signal`, but it was made for *widgets*, not nodes. `ChangeNotifier` comes with three drawbacks: poor performance, lack of N-argument typing, and an obligation to call `dispose`. Signals are fast, support specific argument counts, and do not require disposal.
+`ChangeNotifier` is similar to `Signal`, but it was made for *widgets*, not nodes. `ChangeNotifier` has limited performance, lack of N-argument typing, and an obligation to call `dispose`. Signals are fast, support specific argument counts, and do not require disposal.
