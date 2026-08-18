@@ -177,23 +177,22 @@ class _PackedNode extends Node {
         SLIME_SIZE,
         fps: 16,
         rows: [
-          .new(frames: 14),
-          .new(frames: 30),
-          .new(frames: 25),
-          .new(frames: 17),
-          .new(frames: 30),
-          .new(frames: 12),
-          .new(frames: 13),
-          .new(frames: 13),
-          .new(frames: 45),
-          .new(frames: 27),
-          .new(frames: 49),
+          .new(frames: 14), // idle
+          .new(frames: 30), // jump
+          .new(frames: 25), // jump_forward
+          .new(frames: 17), // spit
+          .new(frames: 30), // spike
+          .new(frames: 12), // injured1
+          .new(frames: 13), // injured2
+          .new(frames: 13), // injured3
+          .new(frames: 45), // splat_wall
+          .new(frames: 27), // recover
+          .new(frames: 49), // death
         ],
       ),
     );
 
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
     taps.onTap(() => slime.play(row: (slime.row + 1) % slime.sprite.rows));
     // demo off
 
@@ -227,7 +226,6 @@ class _KeyedNode extends Node {
     );
 
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
     taps.onTap(() => slime.play(key: slime.row == 0 ? 'jump' : 'idle'));
     // demo off
 
@@ -253,8 +251,8 @@ class _RatesNode extends Node {
       SLIME_SIZE,
       fps: 16,
       rows: [
-        .new(frames: 14, fps: 5),
-        .new(frames: 30),
+        .new(frames: 14, fps: 5), // idle
+        .new(frames: 30), // jump
       ],
     );
 
@@ -289,7 +287,7 @@ class _PartialNode extends Node {
         SLIME_SIZE,
         fps: 12,
         rows: [
-          .new(start: 6, frames: 6),
+          .new(start: 6, frames: 6), // idle
         ],
       ),
     );
@@ -317,7 +315,7 @@ class _TimedNode extends Node {
         SLIME_SIZE,
         fps: 0,
         rows: [
-          .timed([0.8, 0.06, 0.06, 0.06, 0.06, 0.06]),
+          .timed([0.8, 0.06, 0.06, 0.06, 0.06, 0.06]), // idle
         ],
       ),
     );
@@ -374,7 +372,6 @@ class _GroupNode extends Node {
     );
 
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
     taps.onTap(() => creature.play(key: creature.row == 0 ? 'slime' : 'fire'));
     // demo off
 
@@ -396,7 +393,6 @@ class _ExplosionsNode extends Node {
 
     // demo on sprite-finish
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
     taps.onTapDown((event) {
       add(
         SpriteNode(

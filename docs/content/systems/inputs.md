@@ -35,7 +35,7 @@ class PieceNode extends ShapeNode {
     : super(
         shape: .square(60),
         anchor: .center,
-        paint: Paint()..color = const Color(0xFFFFAB40),
+        paint: Paint()..color = Color(0xFFFFAB40),
       );
 
   @override

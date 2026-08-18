@@ -14,7 +14,7 @@ Conventions for everything a reader sees: the site under `docs/` and the doc com
 
 - Address the reader as "you".
 - Headings are Title Case: every word capitalized except articles, conjunctions and prepositions, as in `## Getting It Wrong` and `## Differences from Flame`. The one exception is a catalog's per-demo `###`, which stays sentence case.
-- Use dot shorthand in every sample, e.g. `shape: .circle(16)`, `padding: .all(4)`. Samples skip `const`.
+- Use dot shorthand in every sample, e.g. `shape: .circle(16)`, `padding: .all(4)`. Samples skip `const` before a constructor.
 - Use `<Warning>` for something that will bite you, `<Why>` for rationale, `<Lineage from="Godot|Flame">` for where an idea came from, and `<Info>` for something worth knowing that fits none of those.
 - Anything else is ordinary prose.
 
@@ -40,14 +40,14 @@ Every page declares a `category`. It fixes what the page owes its reader, and wh
 
 | Category   | Lane        | Owes                                        | Stops at                         |
 |------------|-------------|---------------------------------------------|----------------------------------|
-| `essay`    | `usage`     | An argument, and what it costs.             | Code.                            |
+| `essay`    | `usage`     | An argument.                                | Code.                            |
 | `concept`  | `usage`     | A rule and what breaks when you ignore it.  | Enumerating API.                 |
 | `system`   | `usage`     | A catalog of what you construct.            | Whatever `dart doc` says better. |
 | `internal` | `internals` | A mechanism, walked through its own source. | Cataloguing.                     |
 
-A page is finished when it has named its subject, shown it, stated its rule, and linked the source.
+A page is finished when it has named its subject, shown it, and stated its rule. Types it names go in `reference:`, which links them into `/api`.
 
-`usage` pages open with the demo, and prefer several small ones to one that does everything. `internals` pages carry no demos at all.
+A page with demos opens with one, and prefers several small to one that does everything. `system` pages always have them.
 
 ## 4. Status
 
@@ -63,6 +63,6 @@ An incomplete page is not a reason to delay a deploy, drop a page, or omit a sid
 
 ## 5. Page Shape
 
-A `usage` page is a text summary of the major features, followed by a catalog of examples.
+A `system` page explains its topic succinctly, then shows it. The prose names what you construct and any footguns.
 
-The summary is prose. The catalog is one `###` per demo, run one after another, and it is as long as the feature set is wide.
+The catalog is one `###` per demo, sentence case, run one after another. Each demo must illustrate a single, focused concept.

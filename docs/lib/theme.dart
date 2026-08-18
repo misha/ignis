@@ -2,38 +2,28 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr_content/theme.dart';
 import 'package:syntax_highlight_lite/syntax_highlight_lite.dart' as hl;
 
-/// The ember ramp, sampled from the painted pixels of `ignis.png`.
-///
-/// The artwork is the only fixed brand input and it carries no second hue, so
-/// every color on the site is either this ramp or a neutral derived from it.
-abstract final class Ember {
-  static const deep = Color('#780E04');
-  static const core = Color('#A32C0D');
-  static const burnt = Color('#B65A18');
-  static const flame = Color('#C36E21');
-  static const amber = Color('#C78F30');
-  static const gold = Color('#C99F4F');
-  static const pale = Color('#CDC07B');
+abstract final class Fire {
+  static const ember = Color('#FF4B33');
+  static const flare = Color('#FF8A3D');
+  static const spark = Color('#FFC53D');
+  static const glow = Color('#FFE9A8');
 }
 
-/// Roles the ramp is put to.
-///
-/// The site is dark, and only dark. A single value per role is the whole of it:
-/// nothing here answers to `data-theme`, and nothing needs a second variant
-/// checked for contrast against a ground the site never shows.
 abstract final class IgnisColors {
-  static final surface = ColorToken('surface', Color('#1B1815'));
-  static final border = ColorToken('border', Color('#2E2823'));
-  static final muted = ColorToken('muted', Color('#9A9186'));
-  static final primaryHi = ColorToken('primary-hi', Ember.pale);
+  static const ink = Color('#1B1815');
+  static const dim = Color('#6B6156');
+  static const grey = Color('#9A9186');
+  static const bright = Color('#EDE7DD');
 
-  /// Reserved for the mark. Never body text: it fails contrast on this ground.
-  static final brand = ColorToken('brand', Ember.core);
+  static final surface = ColorToken('surface', ink);
+  static final border = ColorToken('border', Color('#2E2823'));
+  static final muted = ColorToken('muted', grey);
+  static final primaryHi = ColorToken('primary-hi', Fire.spark);
 
   static const _background = ThemeColor(Color('#12100E'));
-  static const _text = ThemeColor(Color('#EDE7DD'));
+  static const _text = ThemeColor(bright);
   static const _headings = ThemeColor(Color('#F5F0E8'));
-  static const _primary = ThemeColor(Ember.amber);
+  static const _primary = ThemeColor(Fire.flare);
 
   /// Every token the site defines.
   static List<ColorToken> get all => [
@@ -41,7 +31,6 @@ abstract final class IgnisColors {
     border,
     muted,
     primaryHi,
-    brand,
     ContentColors.headings.apply(_headings),
     ContentColors.links.apply(_primary),
     ContentColors.bold.apply(_headings),
@@ -55,10 +44,10 @@ abstract final class IgnisColors {
     ContentColors.hr.apply(border),
     ContentColors.thBorders.apply(border),
     ContentColors.tdBorders.apply(border),
-    ContentColors.code.apply(const ThemeColor(Ember.pale)),
+    ContentColors.code.apply(const ThemeColor(Fire.glow)),
     ContentColors.kbd.apply(_headings),
-    ContentColors.preBg.apply(const ThemeColor(Color('#1B1815'))),
-    ContentColors.preCode.apply(const ThemeColor(Color('#EDE7DD'))),
+    ContentColors.preBg.apply(const ThemeColor(IgnisColors.ink)),
+    ContentColors.preCode.apply(const ThemeColor(bright)),
   ];
 }
 
@@ -97,16 +86,16 @@ ContentTheme get ignisTheme => ContentTheme(
 final ignisCodeTheme = hl.HighlighterTheme.fromConfiguration(
   '''
 {"settings":[
-  {"settings":{"foreground":"#EDE7DD"}},
-  {"scope":["comment","punctuation.definition.comment"],"settings":{"foreground":"#7A6F62","fontStyle":"italic"}},
-  {"scope":["keyword","storage","storage.type","keyword.control","modifier"],"settings":{"foreground":"#C36E21"}},
-  {"scope":["entity.name.type","entity.name.class","support.class","support.type"],"settings":{"foreground":"${Ember.pale.value}"}},
-  {"scope":["string","string.quoted","constant.character"],"settings":{"foreground":"#B65A18"}},
-  {"scope":["constant.numeric","constant.language"],"settings":{"foreground":"#C99F4F"}},
-  {"scope":["entity.name.function","support.function","meta.function-call"],"settings":{"foreground":"#F0E4C4"}},
-  {"scope":["variable","variable.parameter","meta.definition.variable"],"settings":{"foreground":"#EDE7DD"}},
-  {"scope":["keyword.operator","punctuation","meta.brace"],"settings":{"foreground":"#9A9186"}},
-  {"scope":["meta.declaration.annotation","storage.type.annotation"],"settings":{"foreground":"#C78F30"}}
+  {"settings":{"foreground":"${IgnisColors.bright.value}"}},
+  {"scope":["comment","punctuation.definition.comment"],"settings":{"foreground":"${IgnisColors.dim.value}","fontStyle":"italic"}},
+  {"scope":["keyword","storage","storage.type","keyword.control","modifier"],"settings":{"foreground":"${Fire.ember.value}"}},
+  {"scope":["entity.name.type","entity.name.class","support.class","support.type"],"settings":{"foreground":"${Fire.flare.value}"}},
+  {"scope":["string","string.quoted","constant.character"],"settings":{"foreground":"${Fire.flare.value}"}},
+  {"scope":["constant.numeric","constant.language"],"settings":{"foreground":"${Fire.spark.value}"}},
+  {"scope":["entity.name.function","support.function","meta.function-call"],"settings":{"foreground":"${Fire.spark.value}"}},
+  {"scope":["variable","variable.parameter","meta.definition.variable"],"settings":{"foreground":"${IgnisColors.bright.value}"}},
+  {"scope":["keyword.operator","punctuation","meta.brace"],"settings":{"foreground":"${IgnisColors.grey.value}"}},
+  {"scope":["meta.declaration.annotation","storage.type.annotation"],"settings":{"foreground":"${Fire.ember.value}"}}
 ]}''',
   hl.TextStyle(foreground: hl.Color(0xFFEDE7DD)),
 );
@@ -342,7 +331,7 @@ abstract final class IgnisStyles {
       backgroundColor: const Color('#2E2823'),
     ),
     css('.docs .sidebar-container:hover::-webkit-scrollbar-thumb').styles(
-      backgroundColor: const Color('#6B6156'),
+      backgroundColor: IgnisColors.dim,
     ),
     css('.docs .sidebar li > div:hover').styles(backgroundColor: IgnisColors.surface),
     css('.docs .sidebar li > div.active').styles(backgroundColor: IgnisColors.surface),
@@ -386,13 +375,10 @@ abstract final class IgnisStyles {
     ]),
   ];
 
-  /// Semantic edges. The palette has one hue, so severity reads through
-  /// lightness: quiet for info, the accent for warning, the core ember for
-  /// error.
   static Map<String, Color> get _calloutEdges => {
     'info': IgnisColors.border,
     'warning': ContentColors.primary,
-    'error': Ember.core,
+    'error': Fire.ember,
     'success': IgnisColors.muted,
   };
 }

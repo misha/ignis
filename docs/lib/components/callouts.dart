@@ -102,10 +102,10 @@ class Callouts extends CustomComponentBase {
     css('.aside-warning', [
       css('&').styles(
         border: .only(
-          left: BorderSide(width: 3.px, color: Ember.burnt),
+          left: BorderSide(width: 3.px, color: Fire.flare),
         ),
       ),
-      css('.aside-label').styles(color: Ember.burnt),
+      css('.aside-label').styles(color: Fire.flare),
     ]),
     // An aside inside a list entry belongs to that entry rather than to the
     // page, so it gives back most of the room it takes between paragraphs and
