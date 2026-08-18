@@ -6,8 +6,6 @@ category: concept
 status: complete
 ---
 
-## Signals
-
 Nodes communicate time-sensitive events through `Signal`, a lightweight message emitter.
 
 <Lineage from="Godot">

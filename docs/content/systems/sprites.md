@@ -8,23 +8,11 @@ reference: [SpriteNode, Sprite, SpriteImage, SpriteSheet, SheetRow, SpriteGroup]
 related: [/systems/assets, /concepts/nodes, /systems/live-reload]
 ---
 
-## Overview
-
 <Demo name="sprite-animation" hero/>
 
 A *sprite* is an image or a sequence of images in a game. It refers to a single visual entity on the screen.
 
-In Ignis, `SpriteNode` draws `Sprite`s. `Sprite` defines properties inherent to the art: the number and size of its frames, how fast it should play, and whether it loops. `SpriteNode` acts as a controller, selecting the appropriate frame on demand.
-
-The process is the same whether you want to render an image, play an animation, or switch between animations: [preload](/systems/assets) the assets, create a `Sprite`, then pass it to a `SpriteNode`.
-
-<Lineage from="Flame">
-
-  The APIs for `SpriteSheet` and `SpriteGroup` are heavily inspired by their corresponding classes in Flame.
-
-</Lineage>
-
-## Sprites
+In Ignis, `SpriteNode` draws `Sprite`s. `Sprite` defines properties inherent to the art: the number and size of its frames, how fast it should play, and whether it loops. `SpriteNode` acts as a controller, selecting the appropriate frame on demand. The process is the same whether you want to render an image or play an animation: [preload](/systems/assets) assets, create a `Sprite`, then pass it to a `SpriteNode`.
 
 There are several kinds of `Sprite`, depending on what you need to draw.
 
@@ -41,6 +29,12 @@ These `Sprite` implementations automatically work with the [local asset bundle](
   `SpriteSheet` cannot hold animations that wrap across multiple rows or skip frames. A single animation must be specified contiguously on one row.
 
 </Warning>
+
+<Lineage from="Flame">
+
+  The APIs for `SpriteSheet` and `SpriteGroup` are heavily inspired by their corresponding classes in Flame.
+
+</Lineage>
 
 ## Examples
 

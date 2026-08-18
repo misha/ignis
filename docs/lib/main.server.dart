@@ -23,6 +23,7 @@ import 'components/drag_and_drop_demo.dart';
 import 'components/reference.dart';
 import 'components/related.dart';
 import 'components/status_banner.dart';
+import 'contents.dart';
 import 'theme.dart';
 
 // This file is generated automatically by Jaspr, do not remove or edit.
@@ -86,6 +87,9 @@ void main() {
         HeadingAnchorsExtension(),
         // Generates a table of contents for each page.
         TableOfContentsExtension(),
+        // Heads the contents with the page's own title, which the layout
+        // renders outside the content the extension above walks.
+        TitleEntryExtension(),
         // Lists the reference block underneath it, which the layout injects
         // too late for the contents above to have seen.
         ReferenceEntryExtension(),
