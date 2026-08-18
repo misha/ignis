@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
@@ -66,24 +65,11 @@ void main() {
     expect(host.target.value, same(second));
   });
 
-  test('reports when no ancestor implements T', () {
+  test('throws when no ancestor implements T', () {
     final root = Node(); // Doesn't implement PositionOwner.
     final host = _Host();
     root.add(host);
 
-    final reported = <FlutterErrorDetails>[];
-    final previous = FlutterError.onError;
-    FlutterError.onError = reported.add;
-
-    try {
-      root.mount();
-    } finally {
-      FlutterError.onError = previous;
-    }
-
-    // A build that throws is reported rather than thrown, so one bad node
-    // cannot take the whole reassembly down with it.
-    expect(reported, hasLength(1));
-    expect(reported.single.exception, isA<AssertionError>());
+    expect(root.mount, throwsAssertionError);
   });
 }

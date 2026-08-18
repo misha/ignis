@@ -125,8 +125,8 @@ void main() {
     });
 
     test('fires onCollisionEnd on both colliders when a pair stops overlapping', () {
-      final a = ColliderNode(shape: .square(10), position: .zero);
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      final a = ColliderNode(shape: .square(10), position: .zero, strict: false);
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
       Node(children: [a, b]).mount();
       final aEnded = <ColliderNode>[];
       final bEnded = <ColliderNode>[];
@@ -146,8 +146,8 @@ void main() {
     });
 
     test('does not fire onCollisionEnd for a pair that never overlapped', () {
-      final a = ColliderNode(shape: .square(10), position: .zero);
-      final b = ColliderNode(shape: .square(10), position: .new(100, 0));
+      final a = ColliderNode(shape: .square(10), position: .zero, strict: false);
+      final b = ColliderNode(shape: .square(10), position: .new(100, 0), strict: false);
       Node(children: [a, b]).mount();
       final aEnded = <ColliderNode>[];
       a.onCollisionEnd(aEnded.add);
@@ -162,8 +162,8 @@ void main() {
     });
 
     test('does not fire onCollisionEnd for a pair with a detached member', () {
-      final a = ColliderNode(shape: .square(10), position: .zero);
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      final a = ColliderNode(shape: .square(10), position: .zero, strict: false);
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
       final scene = Node(children: [a, b]).mount();
 
       arena
@@ -189,8 +189,8 @@ void main() {
   group('active / isColliding', () {
     test('adds the other collider to active while overlapping', () {
       // Mounted, because tracking `active` is declared in build.
-      final a = ColliderNode(shape: .square(10))..mount();
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0))..mount();
+      final a = ColliderNode(shape: .square(10), strict: false)..mount();
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false)..mount();
 
       arena
         ..add(a)
@@ -204,8 +204,8 @@ void main() {
     });
 
     test('removes the other collider from active once they stop overlapping', () {
-      final a = ColliderNode(shape: .square(10));
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      final a = ColliderNode(shape: .square(10), strict: false);
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
       Node(children: [a, b]).mount();
 
       arena
@@ -225,8 +225,8 @@ void main() {
     test(
       'drops a detached partner from the survivor\'s active set without firing onCollisionEnd',
       () {
-        final a = ColliderNode(shape: .square(10));
-        final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+        final a = ColliderNode(shape: .square(10), strict: false);
+        final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
         final scene = Node(children: [a, b]).mount();
 
         arena
@@ -249,8 +249,8 @@ void main() {
     );
 
     test('clears active when this collider itself is unmounted', () {
-      final a = ColliderNode(shape: .square(10));
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      final a = ColliderNode(shape: .square(10), strict: false);
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
       final scene = Node(children: [a, b]).mount();
 
       arena
@@ -499,6 +499,7 @@ void main() {
         position: .zero,
         layer: 1,
         mask: 2,
+        strict: false,
       );
 
       final b = ColliderNode(
@@ -506,6 +507,7 @@ void main() {
         position: .new(6, 0),
         layer: 2,
         mask: 0,
+        strict: false,
       );
 
       Node(children: [a, b]).mount();

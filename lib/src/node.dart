@@ -246,15 +246,6 @@ class Node {
       if (scene != null && scene.hasSize) {
         onSceneResize.emit(scene.size);
       }
-    } catch (exception, stack) {
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: exception,
-          stack: stack,
-          library: 'ignis',
-          context: ErrorDescription('while building $runtimeType'),
-        ),
-      );
     } finally {
       _builder = builder;
     }
@@ -679,7 +670,20 @@ class Node {
   void reassemble() {}
 
   void _reassemble() {
-    reassemble();
+    // A mid-edit build throws, and must not take the rest of the walk down.
+    try {
+      reassemble();
+    } catch (exception, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: exception,
+          stack: stack,
+          library: 'ignis',
+          context: ErrorDescription('while reassembling $runtimeType'),
+        ),
+      );
+    }
+
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 

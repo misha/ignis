@@ -77,7 +77,21 @@ void main() {
       expect(node.builds, 3);
     });
 
-    test('a throwing build is reported and contained', () {
+    test('a build that throws on mount throws out of mount', () {
+      final node = _Node((_) => throw StateError('no ancestor'));
+
+      expect(node.mount, throwsStateError);
+    });
+
+    test('a build that throws on a live add throws out of update', () {
+      final root = _Node((_) {});
+      final scene = root.mount();
+      root.add(_Node((_) => throw StateError('no ancestor')));
+
+      expect(() => scene.update(0), throwsStateError);
+    });
+
+    test('a throwing reassembly is reported and contained', () {
       final a = _Node((_) {});
       final b = _Node((_) {});
       a.add(b);

@@ -2,10 +2,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  test('does nothing without a CollisionNode ancestor', () {
+  test('throws without a CollisionNode ancestor', () {
     final collider = ColliderNode(
       shape: .circle(1),
       position: .zero,
+    );
+
+    expect(collider.mount, throwsStateError);
+  });
+
+  test('does nothing without a CollisionNode ancestor while not strict', () {
+    final collider = ColliderNode(
+      shape: .circle(1),
+      position: .zero,
+      strict: false,
     );
 
     expect(() => collider.mount(), returnsNormally);
