@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  An open-source 2D game engine built on nodes and signals.
+  A 2D Flutter game engine built on nodes and signals.
 </p>
 
 <p align="center">
