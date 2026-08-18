@@ -3,9 +3,10 @@ title: Collisions
 description: Hitboxes, layers, and the two signals that report contact.
 lane: usage
 category: system
-status: partial
+status: complete
 reference: [CollisionDetectionNode, ColliderNode, Shape]
-related: [/internals/collisions, /systems/shapes-anchors, /concepts/signals]
+related: [/systems/shapes-anchors, /concepts/signals]
+internals: [/internals/collisions]
 ---
 
 <Demo name="collision-balls" hero hint="Try dragging!"/>
@@ -51,3 +52,25 @@ player
   The names `layer` and `mask` come from Godot's collision system.
 
 </Lineage>
+
+## Examples
+
+### Reporting a pair
+
+<Demo name="collision-pair"/>
+
+### Everything you touch
+
+<Demo name="collision-active"/>
+
+### A spinning hitbox
+
+<Demo name="collision-spin"/>
+
+### Filtering with layers
+
+<Demo name="collision-layer"/>
+
+### Many at once
+
+<Demo name="collision-balls" hint="Try dragging!"/>

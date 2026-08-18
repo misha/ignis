@@ -4,6 +4,7 @@ description: Hit areas that recognize pointer gestures, and how they compose.
 lane: usage
 category: system
 status: partial
+internals: [/internals/inputs]
 ---
 
 `InputNode` is a hit area that recognizes pointer gestures by delegating to Flutter's own gesture recognizers. It carries its own shape, so it is free to cover an area larger or smaller than whatever it represents.

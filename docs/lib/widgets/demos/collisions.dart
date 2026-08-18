@@ -1,13 +1,24 @@
 import 'dart:math';
 
 import 'package:docs/rng.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:ignis/ignis.dart';
 
 import '../demo_scene.dart';
 
-const _IDLE = Color(0xFF8FB07A);
-const _HIT = Color(0xFFC4756A);
+const _IDLE_COLOR = Color(0xFF8FB07A);
+const _HIT_COLOR = Color(0xFFC4756A);
+const _BLUE = Color(0xFF7FA6C4);
+const _ORANGE = Color(0xFFC78F30);
+
+const _BLOCK = 20.0;
+const _PROBE = 8.0;
+const _GAP = 5.0;
+const _PAD = 4.0;
+
+const BLUE_LAYER = 1 << 0;
+const ORANGE_LAYER = 1 << 1;
+
 const _INITIAL_SPAWN_COUNT = 10;
 const _SPAWN_INTERVAL = 0.01;
 const _RADIUS = 2.5;
@@ -16,10 +27,259 @@ const _SPEED = 40.0;
 final _LIMIT = DEMO_SIZE.x - _RADIUS;
 final _CENTER = DEMO_SIZE / 2;
 
-/// The demos on the Collisions page, by the name their `<Demo/>` slot carries.
 final Map<String, Widget Function()> collisionDemos = {
+  'collision-pair': () => DemoScene(builder: _PairNode.new),
+  'collision-active': () => DemoScene(builder: _ActiveNode.new),
+  'collision-spin': () => DemoScene(builder: _SpinNode.new),
+  'collision-layer': () => DemoScene(builder: _LayerNode.new),
   'collision-balls': () => DemoScene(builder: _ArenaNode.new),
 };
+
+PaletteEntry _stroke() {
+  return PaletteEntry(
+    'outline',
+    Paint()
+      ..style = .stroke
+      ..strokeWidth = 0
+      ..color = Colors.black,
+    priority: 1,
+  );
+}
+
+ShapeNode _still(
+  Shape shape, {
+  Vector2? position,
+  Color color = _BLUE,
+}) {
+  final node = ShapeNode(
+    shape: shape,
+    anchor: .center,
+    position: position,
+    paint: Paint()..color = color,
+  );
+
+  return node..palette.add(_stroke());
+}
+
+ShapeNode _mover(
+  Shape shape, {
+  double seconds = 1.6,
+}) {
+  final node = ShapeNode(
+    shape: shape,
+    anchor: .center,
+    position: .new(shape.width / 2, _CENTER.y),
+    paint: Paint()..color = _IDLE_COLOR,
+  );
+
+  return node
+    ..palette.add(_stroke())
+    ..add(
+      MoveEffect.by(
+        offset: .new(DEMO_SIZE.x - shape.width, 0),
+        controller: .infinite(.roundtrip(.duration(seconds))),
+      ),
+    );
+}
+
+BoxNode _caption(DemoLog log) {
+  return BoxNode(
+    padding: .all(_PAD),
+    alignment: .bottomCenter,
+    children: [log],
+  );
+}
+
+void _colorOnContact(ShapeNode node, ColliderNode collider) {
+  collider
+    ..onCollisionStart((_) {
+      node.paint.color = _HIT_COLOR;
+    })
+    ..onCollisionEnd((_) {
+      if (!collider.isColliding) node.paint.color = _IDLE_COLOR;
+    });
+}
+
+/// A circle sliding through a square, reporting each edge as it crosses.
+class _PairNode extends CollisionDetectionNode {
+  @override
+  void build() {
+    super.build();
+    final log = DemoLog();
+
+    final wall = add(_still(.square(_BLOCK), position: _CENTER));
+    wall.add(ColliderNode(shape: wall.shape, anchor: wall.anchor));
+
+    final mover = add(_mover(.circle(_PROBE))..paint.blendMode = .plus);
+
+    // demo on collision-pair
+    final collider = mover.add(
+      ColliderNode(
+        shape: mover.shape,
+        anchor: mover.anchor,
+      ),
+    );
+
+    collider
+      ..onCollisionStart((_) => log('colliding', .red))
+      ..onCollisionEnd((_) => log('not colliding', .green));
+    // demo off
+
+    log('not colliding', .green);
+    add(_caption(log));
+  }
+}
+
+/// A circle crossing three squares, counting what it touches every tick.
+class _ActiveNode extends CollisionDetectionNode {
+  @override
+  void build() {
+    super.build();
+    final log = DemoLog();
+    final blocks = [
+      for (var i = 0; i < 3; i += 1) //
+        _still(.square(_BLOCK)),
+    ];
+
+    for (final block in blocks) {
+      block.add(
+        ColliderNode(
+          shape: block.shape,
+          anchor: block.anchor,
+        ),
+      );
+    }
+
+    add(
+      BoxNode(
+        alignment: .center,
+        children: [
+          RowNode(
+            mainAxisSize: .min,
+            spacing: _GAP,
+            children: blocks,
+          ),
+        ],
+      ),
+    );
+
+    final mover = add(
+      _mover(.circle(_PROBE)) //
+        ..paint.blendMode = .plus,
+    );
+
+    // demo on collision-active
+    final collider = mover.add(
+      ColliderNode(
+        shape: mover.shape,
+        anchor: mover.anchor,
+      ),
+    );
+
+    tick((_) {
+      log(switch (collider.active.length) {
+        0 => "can't touch this!",
+        final n => 'touching $n',
+      });
+    });
+    // demo off
+
+    add(_caption(log));
+  }
+}
+
+/// A long hitbox turning through a circle its bounding box never leaves.
+class _SpinNode extends CollisionDetectionNode {
+  @override
+  void build() {
+    super.build();
+
+    final circle = add(_still(.circle(16), position: _CENTER / 2));
+
+    circle.add(
+      ColliderNode(
+        shape: circle.shape,
+        anchor: circle.anchor,
+      ),
+    );
+
+    // demo on collision-spin
+    final blade = add(
+      ShapeNode(
+        shape: .rectangle(.new(70, 10)),
+        anchor: .center,
+        position: _CENTER,
+        paint: Paint()..color = _IDLE_COLOR,
+      ),
+    );
+
+    final collider = blade.add(
+      ColliderNode(
+        shape: blade.shape,
+        anchor: blade.anchor,
+      ),
+    );
+
+    blade.add(SpinEffect(speed: pi / 2));
+    // demo off
+
+    blade.palette.add(_stroke());
+    _colorOnContact(blade, collider);
+  }
+}
+
+/// A circle that reports over one of the two squares it crosses, not the other.
+class _LayerNode extends CollisionDetectionNode {
+  @override
+  void build() {
+    super.build();
+    final blue = _still(.square(_BLOCK));
+    final orange = _still(.square(_BLOCK), color: _ORANGE);
+
+    add(
+      BoxNode(
+        alignment: .center,
+        children: [
+          RowNode(
+            mainAxisSize: .min,
+            spacing: _BLOCK + _GAP,
+            children: [blue, orange],
+          ),
+        ],
+      ),
+    );
+
+    final mover = add(_mover(.circle(_PROBE)));
+
+    // demo on collision-layer
+    blue.add(
+      ColliderNode(
+        shape: blue.shape,
+        anchor: blue.anchor,
+        layer: BLUE_LAYER,
+      ),
+    );
+
+    orange.add(
+      ColliderNode(
+        shape: orange.shape,
+        anchor: orange.anchor,
+        layer: ORANGE_LAYER,
+      ),
+    );
+
+    final collider = mover.add(
+      ColliderNode(
+        shape: mover.shape,
+        anchor: mover.anchor,
+        mask: ORANGE_LAYER,
+      ),
+    );
+    // demo off
+
+    _colorOnContact(mover, collider);
+  }
+}
 
 /// A stroked white caption pinned to one corner of the stage.
 class _LabelNode extends BoxNode {
@@ -33,12 +293,13 @@ class _LabelNode extends BoxNode {
     ),
   );
 
-  _LabelNode({required Anchor alignment})
-    : super(
-        alignment: alignment,
-        padding: .all(4),
-        priority: 1,
-      );
+  _LabelNode({
+    required Anchor alignment,
+  }) : super(
+         alignment: alignment,
+         padding: .all(_PAD),
+         priority: 1,
+       );
 
   @override
   void build() {
@@ -144,7 +405,7 @@ class _BallNode extends ShapeNode {
   }) : super(
          shape: .circle(_RADIUS),
          anchor: .center,
-         paint: Paint()..color = _IDLE,
+         paint: Paint()..color = _IDLE_COLOR,
        );
 
   @override
@@ -162,10 +423,12 @@ class _BallNode extends ShapeNode {
 
     collider
       ..onCollisionStart((_) {
-        paint.color = _HIT;
+        paint.color = _HIT_COLOR;
       })
       ..onCollisionEnd((_) {
-        if (!collider.isColliding) paint.color = _IDLE;
+        if (!collider.isColliding) {
+          paint.color = _IDLE_COLOR;
+        }
       });
     // demo off
 

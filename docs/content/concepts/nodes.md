@@ -5,6 +5,7 @@ lane: usage
 category: concept
 status: complete
 related: [/systems/nodes, /concepts/scenes, /concepts/signals]
+internals: [/internals/tree]
 ---
 
 `Node` is the primitive of Ignis.

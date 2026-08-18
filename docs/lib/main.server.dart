@@ -55,6 +55,7 @@ class _IgnisLayout extends DocsLayout {
       .fragment([
         StatusBanner(page: page),
         Related(page: page),
+        Related.internals(page: page),
         child,
         Reference(page: page),
       ]),
@@ -189,9 +190,9 @@ void main() {
                 title: 'Internals',
                 links: [
                   SidebarLink(text: 'Tree', href: '/internals/tree'),
-                  SidebarLink(text: 'Collisions', href: '/internals/collisions'),
-                  SidebarLink(text: 'Layout', href: '/internals/layout'),
-                  SidebarLink(text: 'Inputs', href: '/internals/inputs'),
+                  SidebarLink(text: 'Collision Detection', href: '/internals/collisions'),
+                  SidebarLink(text: 'Layout Engine', href: '/internals/layout'),
+                  SidebarLink(text: 'Input Routing', href: '/internals/inputs'),
                   SidebarLink(text: 'Documentation', href: '/internals/documentation'),
                 ],
               ),

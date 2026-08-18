@@ -346,6 +346,18 @@ abstract final class IgnisStyles {
     ),
     css('.docs .sidebar li > div:hover').styles(backgroundColor: IgnisColors.surface),
     css('.docs .sidebar li > div.active').styles(backgroundColor: IgnisColors.surface),
+    css('.docs .toc a, .related a').styles(
+      raw: {
+        'text-decoration': 'underline',
+        'text-decoration-color': 'transparent',
+        'text-underline-offset': '0.2em',
+        'transition': 'color 150ms ease, text-decoration-color 150ms ease',
+      },
+    ),
+    css('.docs .toc a:hover, .related a:hover').styles(
+      color: IgnisColors.primaryHi,
+      raw: {'text-decoration-color': 'currentColor'},
+    ),
     // The header is fixed and frosted, and the package puts its height at 4rem
     // where it offsets the sidebar. Landing an anchor at the target's own top
     // parks it under that glass, so every target clears the header and keeps a

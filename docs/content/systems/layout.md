@@ -4,6 +4,7 @@ description: Flutter's layout model, on nodes.
 lane: usage
 category: system
 status: stub
+internals: [/internals/layout]
 ---
 
 <!-- Catalog: BoxNode, BoxNode.square, FlexNode, RowNode, ColumnNode, LayoutFlex. Keep README.md:431-448's Ignis-Flutter cheatsheet - it is the fastest thing on the page for a reader who already knows Flutter. -->
