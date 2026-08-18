@@ -6,8 +6,6 @@ category: concept
 status: complete
 ---
 
-## Mounting
-
 A *scene* is a tree of nodes. Any node can be mounted as the root of a `Scene`. `Scene` wraps the tree with a size and offers methods to manipulate the entire tree effectively.
 
 ```dart
