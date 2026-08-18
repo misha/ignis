@@ -4,6 +4,7 @@ description: Mounting a tree, and why your edits land next frame.
 lane: usage
 category: concept
 status: complete
+related: [/concepts/nodes]
 ---
 
 A *scene* is a tree of nodes. Any node can be mounted as the root of a `Scene`. `Scene` wraps the tree with a size and offers methods to manipulate the entire tree effectively.

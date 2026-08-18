@@ -1,5 +1,5 @@
 ---
-title: Nodes
+title: Built-in Nodes
 description: The nodes you construct, and what distinguishes each.
 lane: usage
 category: system

@@ -170,7 +170,7 @@ void main() {
               SidebarGroup(
                 title: 'Systems',
                 links: [
-                  SidebarLink(text: 'Nodes', href: '/systems/nodes'),
+                  SidebarLink(text: 'Built-in Nodes', href: '/systems/nodes'),
                   SidebarLink(text: 'Layout', href: '/systems/layout'),
                   SidebarLink(text: 'Effects', href: '/systems/effects'),
                   SidebarLink(text: 'Effect Controllers', href: '/systems/effect-controllers'),
@@ -181,7 +181,6 @@ void main() {
                   SidebarLink(text: 'Assets', href: '/systems/assets'),
                   SidebarLink(text: 'Live Reload', href: '/systems/live-reload'),
                   SidebarLink(text: 'Shapes and Anchors', href: '/systems/shapes-anchors'),
-                  SidebarLink(text: 'Embedding', href: '/systems/embedding'),
                   SidebarLink(text: 'Globals and DI', href: '/systems/globals-di'),
                   SidebarLink(text: 'Debugging', href: '/systems/debugging'),
                 ],

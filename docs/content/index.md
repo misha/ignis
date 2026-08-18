@@ -19,7 +19,7 @@ status: complete
 
 <Info>
 
-  Every demo on this site is a real Ignis scene compiled into the page, not a recording or a code sample. The prose and the engine share Dart state directly.
+  Every demo on this site is a real Ignis scene compiled into the page, not a recording or a code sample.
 
 </Info>
 

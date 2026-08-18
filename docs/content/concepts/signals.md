@@ -4,6 +4,7 @@ description: Who owns a subscription, and why it matters.
 lane: usage
 category: concept
 status: complete
+related: [/concepts/nodes, /systems/nodes]
 ---
 
 Nodes communicate time-sensitive events through `Signal`, a lightweight message emitter.

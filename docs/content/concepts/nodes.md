@@ -4,6 +4,7 @@ description: The tree, and where your code goes.
 lane: usage
 category: concept
 status: complete
+related: [/systems/nodes, /concepts/scenes, /concepts/signals]
 ---
 
 `Node` is the primitive of Ignis.
@@ -26,7 +27,7 @@ A node declares its behavior and children in `build()`, which runs whenever the 
 
 </Warning>
 
-For a complete list of available nodes, see [Nodes](/systems/nodes).
+For a complete list of available nodes, see [Built-in Nodes](/systems/nodes).
 
 ## Ticking and Drawing
 

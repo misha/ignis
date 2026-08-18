@@ -306,9 +306,9 @@ abstract final class IgnisStyles {
         fontFamily: ContentTheme.currentCodeFont,
         fontSize: 0.7.rem,
         fontWeight: .w700,
+        textDecoration: .none,
         letterSpacing: 0.02.em,
         lineHeight: 1.2.em,
-        textDecoration: .none,
       ),
       css('&:hover').styles(backgroundColor: IgnisColors.surface),
       css('svg').styles(width: 1.2.rem, height: 1.2.rem),
@@ -326,6 +326,23 @@ abstract final class IgnisStyles {
       fontFamily: ContentTheme.currentCodeFont,
       fontSize: 1.rem,
       raw: {'user-select': 'none', 'transform': 'translateY(-0.08em)'},
+    ),
+    css('.docs .sidebar-container').styles(
+      raw: {
+        'scrollbar-width': 'thin',
+        'scrollbar-color': '#2E2823 transparent',
+      },
+    ),
+    css('.docs .sidebar-container::-webkit-scrollbar').styles(width: 0.5.rem),
+    css('.docs .sidebar-container::-webkit-scrollbar-track').styles(
+      backgroundColor: Colors.transparent,
+    ),
+    css('.docs .sidebar-container::-webkit-scrollbar-thumb').styles(
+      radius: .circular(0.25.rem),
+      backgroundColor: const Color('#2E2823'),
+    ),
+    css('.docs .sidebar-container:hover::-webkit-scrollbar-thumb').styles(
+      backgroundColor: const Color('#6B6156'),
     ),
     css('.docs .sidebar li > div:hover').styles(backgroundColor: IgnisColors.surface),
     css('.docs .sidebar li > div.active').styles(backgroundColor: IgnisColors.surface),
