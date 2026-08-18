@@ -112,7 +112,7 @@ class Ball extends GameObject {
 }
 ```
 
-The new API allows the programmer to define a single concern in a single, contiguous region of the code. In short, locality of behavior is achieved.
+The new API allows the programmer to define each concern in a single, contiguous region of the code. In short, locality of behavior is achieved.
 
 ## Differences from Flame
 

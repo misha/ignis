@@ -44,9 +44,10 @@ typedef Cleanup = void Function();
 /// message emitters. Use one to report an event to consumers, or as an input
 /// to react to external events.
 ///
-/// Conventionally, signals are prefixed with the word `on`. For example, a
-/// collision signal should be named `onCollision`. This allows consumers to
-/// have a natural-reading constructor, e.g. `onCollision(/* do stuff */);`.
+/// Conventionally, signals are prefixed with the word `on`. For example, the
+/// signal a collider emits on contact is named `onCollisionStart`. This allows
+/// consumers to have a natural-reading constructor, e.g.
+/// `onCollisionStart(/* do stuff */);`.
 ///
 /// **Scenes**
 ///

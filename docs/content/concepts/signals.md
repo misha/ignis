@@ -3,24 +3,64 @@ title: Signals
 description: Who owns a subscription, and why it matters.
 lane: usage
 category: concept
-status: stub
+status: complete
 ---
 
-<!-- Scope: Signal0..3, the on- prefix convention, and the ownership split - subscribing inside build hands the Cleanup to the node, everywhere else the caller owns it. Source: lib/src/signal.dart:1-30, lib/src/node.dart:41-49, README.md:287-321. Ceiling: the sealed Signal base and the reentrancy tombstoning are internals. -->
+## Signals
 
-<Demo name="signal-ownership"/>
+Nodes communicate time-sensitive events through `Signal`, a lightweight message emitter.
 
+<Lineage from="Godot">
 
-<!-- Saved content from the original README: -->
+  The name is taken from the parallel concept in Godot.
 
-<Why>
+</Lineage>
 
-  **Why not `ChangeNotifier`?** `ChangeNotifier` is similar to `Signal`, but it was made for widgets, not nodes. `ChangeNotifier` comes with three drawbacks: poor performance, lack of N-argument typing, and a requirement to call `dispose`. Signals are fast, support specific argument counts, and do not require disposal.
+By convention, signals are prefixed with `on` so subscriptions read naturally in a node's [`build()`](/concepts/nodes).
 
-</Why>
+```dart
+// Declare a signal with 1 parameter. There are Signal0, Signal1, ...
+final onCollisionStart = Signal1<ColliderNode>();
 
-## The Rule
+// Call a signal with a function argument to watch it.
+final cleanup = onCollisionStart((other) => print('Hit $other!'));
 
-## Naming a Signal
+// Sends a type-safe message to all watchers.
+onCollisionStart.emit(someCollider);
 
-## Who Owns the `Cleanup`
+// Stop watching the signal.
+cleanup();
+```
+
+`Signal0` through `Signal3` carry zero to three arguments, each typed.
+
+## Ownership
+
+Watching a signal returns a `Cleanup`, and somebody has to own it. Inside a node's `build()`, that somebody is the node: the subscription is automatically torn down on the next rebuild or unmount:
+
+```dart
+@override
+void build() {
+  super.build();
+  // No need to assign `cleanup` here!
+  // The node magically knows about this subscription.
+  onCollisionStart(/* some behavior */);
+}
+```
+
+Watching signals in `build()` needs no bookkeeping at all, but everywhere else, it does. Hold on to the `Cleanup` and call it, or the signal keeps a reference to your watcher indefinitely.
+
+## Outside a Node
+
+Although nodes are driven by signals, `Signal` is a standalone utility class and may be used anywhere. Notably, signals can easily be used to implement communication between your Flutter app and your Ignis game. Here's an example integration using [`flutter_hooks`](https://pub.dev/packages/flutter_hooks).
+
+```dart
+/// Calls [handle] whenever [signal] is emitted.
+void useSignal0(Signal0 signal, void Function() handle) {
+  useEffect(() => signal(handle), [signal, handle]);
+}
+```
+
+## Why Not `ChangeNotifier`
+
+`ChangeNotifier` is similar to `Signal`, but it was made for *widgets*, not nodes. `ChangeNotifier` comes with three drawbacks: poor performance, lack of N-argument typing, and an obligation to call `dispose`. Signals are fast, support specific argument counts, and do not require disposal.
