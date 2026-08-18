@@ -1,6 +1,6 @@
 ---
 title: Ignis
-description: An open-source 2D game engine built on nodes and signals.
+description: A 2D Flutter game engine built on nodes and signals.
 image: /images/ignis.webp
 imageAlt: The Ignis mark, a painting of a flame.
 lane: usage
