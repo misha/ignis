@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:docs/rng.dart';
 import 'package:flutter/widgets.dart';
 import 'package:ignis/ignis.dart';
 
@@ -8,10 +9,9 @@ import '../demo_scene.dart';
 const _IDLE = Color(0xFF8FB07A);
 const _HIT = Color(0xFFC4756A);
 const _INITIAL_SPAWN_COUNT = 10;
-const _SPAWN_INTERVAL = 0.05;
-const _RADIUS = 3.0;
+const _SPAWN_INTERVAL = 0.01;
+const _RADIUS = 2.5;
 const _SPEED = 40.0;
-const _SEED = 12345;
 
 final _LIMIT = DEMO_SIZE.x - _RADIUS;
 final _CENTER = DEMO_SIZE / 2;
@@ -55,7 +55,6 @@ class _LabelNode extends BoxNode {
 
 /// An arena that pours balls from the middle, and from wherever you hold.
 class _ArenaNode extends CollisionDetectionNode {
-  final _random = Random(_SEED);
   final MVector2 _source = .zero();
 
   final _count = _LabelNode(alignment: .topRight);
@@ -125,7 +124,7 @@ class _ArenaNode extends CollisionDetectionNode {
   void _spawn(Vector2 at) {
     _balls += 1;
     _count('$_balls balls');
-    final angle = _random.nextDouble() * 2 * pi;
+    final angle = rng.nextDouble() * 2 * pi;
 
     add(
       _BallNode(
