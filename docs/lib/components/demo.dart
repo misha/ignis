@@ -21,6 +21,7 @@ class Demo extends CustomComponentBase {
 
   /// The demos with a scene behind them, by the file their region lives in.
   static const built = {
+    'spinner': 'overview.dart',
     'node-priority-order': 'nodes.dart',
     'node-priority-lifted': 'nodes.dart',
     'node-priority-nested': 'nodes.dart',

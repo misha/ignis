@@ -15,6 +15,8 @@ status: complete
 - **Live nodes.** Any node can opt into rebuilding itself on save, so your edits land in the running game.
 - **Live assets.** When developing on the host machine, `LocalAssetBundle` instantly reloads assets into the global cache.
 
+<Demo name="spinner"/>
+
 <Info>
 
   Every demo on this site is a real Ignis scene compiled into the page, not a recording or a code sample. The prose and the engine share Dart state directly.
@@ -23,9 +25,8 @@ status: complete
 
 ## Start Here
 
-- [Motivation](/motivation) - why this exists when Flame already does.
-- [Your first scene](/start) - a running game, and an edit you make while it runs.
-- [Nodes](/concepts/nodes) - the tree, and the one rule the rest of the engine is shaped around.
+- [Motivation](/motivation) - why this engine exists.
+- [Nodes](/concepts/nodes) - how to use a `Node`.
 
 ## Attribution
 

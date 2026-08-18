@@ -155,7 +155,6 @@ void main() {
                 links: [
                   SidebarLink(text: 'Overview', href: '/'),
                   SidebarLink(text: 'Motivation', href: '/motivation'),
-                  SidebarLink(text: 'Your First Scene', href: '/start'),
                 ],
               ),
               SidebarGroup(

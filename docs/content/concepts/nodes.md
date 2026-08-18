@@ -12,23 +12,7 @@ Nodes are constructed in trees, inheriting the properties and transforms of thei
 
 A node declares its behavior and children in `build()`, which runs whenever the node enters a scene. Per-frame logic is registered with `tick`, and drawing with `draw`.
 
-```dart
-class BallNode extends TransformNode {
-  final velocity = Vector2(60, -40);
-
-  @override
-  void build() {
-    super.build();
-
-    add(ShapeNode(shape: .circle(8)));
-    add(ColliderNode(shape: .circle(8)));
-
-    tick((dt) {
-      position.addScaled(velocity, dt);
-    });
-  }
-}
-```
+<Demo name="spinner"/>
 
 <Warning>
 
