@@ -24,5 +24,3 @@ status: stub
 ## Naming a Signal
 
 ## Who Owns the `Cleanup`
-
-## Getting It Wrong

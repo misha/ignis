@@ -2,7 +2,7 @@
 title: Live Reload
 description: What a save does to a running game, and how to ask for more.
 lane: usage
-category: concept
+category: system
 status: stub
 ---
 
@@ -26,5 +26,3 @@ This capability is made possible by leveraging Dart's incredible ability to dyna
 A save leaves a running game exactly as it was unless a node answers for itself. The default answer is nothing.
 
 ## Reloading Assets
-
-## Getting It Wrong

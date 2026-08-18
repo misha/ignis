@@ -3,17 +3,39 @@ title: Time
 description: There is no clock. There is only `dt`.
 lane: usage
 category: concept
-status: stub
+status: complete
 ---
 
-<!-- Scope: dt as the only time primitive, TimerNode, FpsNode. Say plainly that Ignis has no Time or clock abstraction - a reader will look for one. Source: lib/src/nodes/timer_node.dart, lib/src/nodes/fps_node.dart, README.md:322-344. -->
+## Unit
 
-<Demo name="dt-scaling"/>
+In Ignis, the unit of time and duration is **seconds**, always expressed as a `double`.
 
-## The Rule
+## Ticks
 
-## Scaling by `dt`
+Nodes can hook into the game loop with `tick`:
 
-## Timers
+```dart
+// Do something every frame...
+tick((double dt) {
+  // `dt` seconds elapsed this frame.
+  // This is usually quite small, e.g. 0.01666 at 60 FPS.
+});
+```
 
-## Getting It Wrong
+Anything that happens at a rate should be scaled on the way in. For example, a velocity in units per second becomes a distance when scaled by `dt`:
+
+```dart
+tick((double dt) {
+  position.addScaled(velocity, dt);
+});
+```
+
+Additionally, all Ignis objects that accept an interval or duration are expressed in seconds.
+
+```dart
+// Triggers after 200 milliseconds.
+final timer = TimerNode(interval: 0.2);
+
+// Progresses an effect over the course of 1.5 seconds.
+final controller = EffectController.duration(1.5);
+```

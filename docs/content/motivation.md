@@ -4,7 +4,7 @@ description: Why Ignis exists when Flame already does.
 lane: usage
 category: essay
 status: complete
-related: [/concepts/building, /concepts/signals, /concepts/math]
+related: [/concepts/nodes, /concepts/signals, /concepts/math]
 ---
 
 ## Why a New Engine
@@ -113,8 +113,6 @@ class Ball extends GameObject {
 ```
 
 The new API allows the programmer to define a single concern in a single, contiguous region of the code. In short, locality of behavior is achieved.
-
-Ignis implements the latter API, and it is the single largest driving factor behind Ignis' design.
 
 ## Differences from Flame
 

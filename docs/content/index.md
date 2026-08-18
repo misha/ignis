@@ -25,7 +25,7 @@ status: complete
 
 - [Motivation](/motivation) - why this exists when Flame already does.
 - [Your first scene](/start) - a running game, and an edit you make while it runs.
-- [Building](/concepts/building) - the one rule the rest of the engine is shaped around.
+- [Nodes](/concepts/nodes) - the tree, and the one rule the rest of the engine is shaped around.
 
 ## Attribution
 

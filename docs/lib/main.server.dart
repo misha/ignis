@@ -158,12 +158,10 @@ void main() {
                 title: 'Concepts',
                 links: [
                   SidebarLink(text: 'Nodes', href: '/concepts/nodes'),
-                  SidebarLink(text: 'Building', href: '/concepts/building'),
                   SidebarLink(text: 'Scenes', href: '/concepts/scenes'),
                   SidebarLink(text: 'Signals', href: '/concepts/signals'),
                   SidebarLink(text: 'Time', href: '/concepts/time'),
                   SidebarLink(text: 'Math', href: '/concepts/math'),
-                  SidebarLink(text: 'Live Reload', href: '/concepts/live-reload'),
                 ],
               ),
               SidebarGroup(
@@ -178,6 +176,7 @@ void main() {
                   SidebarLink(text: 'Collisions', href: '/systems/collisions'),
                   SidebarLink(text: 'Inputs', href: '/systems/inputs'),
                   SidebarLink(text: 'Assets', href: '/systems/assets'),
+                  SidebarLink(text: 'Live Reload', href: '/systems/live-reload'),
                   SidebarLink(text: 'Shapes and Anchors', href: '/systems/shapes-anchors'),
                   SidebarLink(text: 'Embedding', href: '/systems/embedding'),
                   SidebarLink(text: 'Globals and DI', href: '/systems/globals-di'),
@@ -187,7 +186,6 @@ void main() {
               SidebarGroup(
                 title: 'Internals',
                 links: [
-                  SidebarLink(text: 'Programming Model', href: '/internals/programming-model'),
                   SidebarLink(text: 'Tree', href: '/internals/tree'),
                   SidebarLink(text: 'Collisions', href: '/internals/collisions'),
                   SidebarLink(text: 'Layout', href: '/internals/layout'),

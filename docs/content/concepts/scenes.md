@@ -15,5 +15,3 @@ status: stub
 ## Mounting
 
 ## Edits Land Next Frame
-
-## Getting It Wrong
