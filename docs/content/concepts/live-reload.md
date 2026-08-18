@@ -11,6 +11,14 @@ status: stub
 
 <Demo name="live-reload"/>
 
+In the course of game development, you will soon find yourself needing to iterate on code in a certain game state. The typical loop is to make a change, compile the code, and restart the game. In short, dreadfully slow.
+
+Game engines that can live reload drastically accelerate this loop. Every running game is already an iterative environment!
+
+Ignis commits to giving you the tools to create the perfect, live-reloading game. It grants the programmer the ability to *rebuild* objects while maintaining their state, as well as explicit control over the scope and severity of the reload sequence itself.
+
+This capability is made possible by leveraging Dart's incredible ability to dynamically update method bodies in running applications. This is particularly insane given Dart is a statically-typed, compiled language!
+
 ## The Rule
 
 ## Opting In

@@ -10,6 +10,15 @@ status: stub
 
 <Demo name="signal-ownership"/>
 
+
+<!-- Saved content from the original README: -->
+
+<Why>
+
+  **Why not `ChangeNotifier`?** `ChangeNotifier` is similar to `Signal`, but it was made for widgets, not nodes. `ChangeNotifier` comes with three drawbacks: poor performance, lack of N-argument typing, and a requirement to call `dispose`. Signals are fast, support specific argument counts, and do not require disposal.
+
+</Why>
+
 ## The Rule
 
 ## Naming a Signal

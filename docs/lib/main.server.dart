@@ -187,7 +187,6 @@ void main() {
               SidebarGroup(
                 title: 'Internals',
                 links: [
-                  SidebarLink(text: 'Principles', href: '/internals/principles'),
                   SidebarLink(text: 'Programming Model', href: '/internals/programming-model'),
                   SidebarLink(text: 'Tree', href: '/internals/tree'),
                   SidebarLink(text: 'Collisions', href: '/internals/collisions'),

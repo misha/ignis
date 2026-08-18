@@ -9,8 +9,6 @@ related: [/concepts/building, /concepts/signals, /concepts/math]
 
 ## Why a New Engine
 
-Why does Ignis exist?
-
 I, [@misha](https://github.com/misha), have been making [games](https://misha.itch.io/) using [Flame](https://flame-engine.org/) for many years. In late 2025, I decided to do that full time as an indie game developer.
 
 Flame has been my engine of choice for three reasons.
@@ -21,54 +19,137 @@ Flame has been my engine of choice for three reasons.
 
 On a whim, I began experimenting with [Godot](https://godotengine.org/) last year. I was incredibly surprised at how intuitive the node hierarchy, signals, and asset management were. Unfortunately, I quickly fell out of the honeymoon phase trying to develop user interfaces and safe, ergonomic abstractions in GDScript. The programming experience provided by Dart and Flutter is worlds apart.
 
-When I eventually came home to Flame, I realized I missed Godot's mental model of `Node`s and `Signal`s. Initially, I wrote Ignis on top of Flame's low-level `Game` class, with a `Node` hierarchy completely replacing `Component`. But soon I noticed there wasn't that much I needed from Flame, and simply adopted the remaining classes into the codebase. `Anchor`, `RenderLoop`, `SceneRenderBox`, `SceneWidget`, some of `TransformNode`, and a plethora of bits and bobs throughout Ignis can trace their lineage directly to Flame.
+When I eventually came home to Flame, I realized I missed Godot's mental model of `Node`s and `Signal`s. Initially, I wrote Ignis on top of Flame's low-level `Game` class, with a `Node` hierarchy completely replacing `Component`. But soon I noticed there wasn't that much I needed from Flame, and simply adopted the remaining classes. Many of the core abstractions and Flutter-related bits can trace their lineage directly to Flame.
 
-Ignis literally would not exist without Flame. Meanwhile, the new abstractions are my (flexible!) interpretation of Godot's primitives. I chose the name "ignis" because it means "flame" in Latin, yet has the same foreign-sounding mouthfeel as "godot".
+Ignis would not exist without Flame, while the new abstractions are my (creative) interpretation of Godot's primitives. I chose the name "ignis" because it means "flame" in Latin, yet has the same foreign-sounding mouthfeel as "godot".
 
-Until now, Flame has been the *only* reliable, unopinionated option for 2D game development in Flutter. I'm hoping Ignis can be a second.
+Until now, Flame has been the only reliable, unopinionated option for 2D game development in Flutter. I'm hoping Ignis can be a second.
+
+## Locality of Behavior
+
+Ignis commits to a single driving principle from which its entire architecture emerges. That principle is *locality of behavior*, a property of source code referring to its ability to keep related code physically close together.
+
+Consider the following `Ball`, implemented with a hypothetical game engine that runs using virtual method overrides.
+
+```dart
+class Ball extends GameObject {
+  final position = Vector2.zero();
+  final velocity = Vector2.zero();
+  final paint = Paint()..color = Colors.green;
+  var collisions = 0;
+
+  @override
+  void update(double dt) {
+    position += velocity * dt;
+  }
+
+  @override
+  void onCollisionStart(GameObject other) {
+    collisions += 1;
+    paint.color = Colors.red;
+
+    if (other is Wall) {
+      velocity.reflect(other.normal);
+    }
+  }
+
+  @override
+  void onCollisionEnd(GameObject other) {
+    collisions -= 1;
+
+    if (collisions == 0) {
+      paint.color = Colors.green;
+    }
+  }
+}
+```
+
+Our `Ball` has two major concerns:
+
+- It manages a `velocity`, using it to increment `position` and reflecting it off colliding walls.
+- It manages a `paint`, turning it red when there are active collisions, and green otherwise.
+
+With this API, it is not possible to write all the code related to `velocity` or all the code related to `paint` in one contiguous region. The two concerns are **inevitably** interspersed. Imagine a complex object with fifty! It's spaghetti.
+
+Now, let's consider a different game engine, one that accepts function closures instead of virtual method overrides. `Ball` would be refactored as follows:
+
+```dart
+class Ball extends GameObject {
+  final position = Vector2.zero();
+  final velocity = Vector2.zero();
+  final paint = Paint()..color = Colors.green;
+  var collisions = 0;
+
+  @override
+  void build() {
+    // velocity concern
+
+    onUpdate((double dt) {
+      position += velocity * dt;
+    });
+
+    onCollisionStart((GameObject other) {
+      if (other is Wall) {
+        velocity.reflect(other.normal);
+      }
+    });
+
+    // paint concern
+
+    onCollisionStart((GameObject other) {
+      collisions += 1;
+      paint.color = Colors.red;
+    });
+
+    onCollisionEnd((GameObject other) {
+      collisions -= 1;
+
+      if (collisions == 0) {
+        paint.color = Colors.green;
+      }
+    });
+  }
+}
+```
+
+The new API allows the programmer to define a single concern in a single, contiguous region of the code. In short, locality of behavior is achieved.
+
+Ignis implements the latter API, and it is the single largest driving factor behind Ignis' design.
 
 ## Differences from Flame
 
-Ignis makes several fundamentally different architectural decisions compared to [Flame](https://flame-engine.org/). This section hopes to explain these trade-offs and how they affect the usage of the engine.
+Ignis makes several fundamentally different architectural decisions compared to Flame. This section hopes to explain these trade-offs and how they affect the usage of the engine.
 
 ### Synchronous vs. Asynchronous
 
-In Flame, any component can declare an `async` loading method. While this makes it easy to load assets dynamically, in practice it creates a confusing gap: you can't safely manipulate a component until it's done loading!
+In Flame, any component can declare an `async` loading method. This makes it possible to load assets dynamically, as components are added to the game.
 
-In Ignis, nodes *must* set themselves up synchronously. There isn't a `load` method: a node takes its arguments in its constructor and declares the rest of itself in [`build()`](/concepts/building), both of which run to completion before anything else touches the node. You can always use a node's methods and signals immediately after creating it, no queuing or remembering to `await loaded` necessary.
+In Ignis, nodes *must* set themselves up synchronously. A synchronous node is easier to think about; if you've added it to the scene, it's now live, no `await` necessary. It is also no longer possible to have frames where some nodes may have been loaded while others have not, asserting the visual fidelity of the game from the very first render.
 
-<Why>
-
-  **Why can't `build()` be `async`?** Because everything downstream assumes a built node is finished. A mounted node is expected to be fully declared, and a rebuild is expected to replace the previous build outright. An `async` build would leave a half-declared node sitting in a live tree, updating and rendering, for an unbounded number of frames.
-
-</Why>
-
-The drawback is that assets *must* be loaded ahead of time. To compensate, Ignis ships with a highly configurable [preloading system](/systems/assets).
+To compensate, Ignis ships with a highly configurable [preloading system](/systems/assets). That same system *also* enables live assets, as the engine is now aware of how your application loads its assets, continuing the commitment to live reload in general.
 
 ### Virtual Methods vs. Signals
 
 In Flame, implementing behavior for special events (like collisions and gestures) usually requires extending a component and overriding a virtual method.
 
-Virtual methods make it difficult to compose behavior and have no native faculty for handling multiple listeners. To resolve the issue, I wrote [`flame_fuse`](https://github.com/misha/flame_fuse), a library that enables composable behavior in Flame. Every Flame game I wrote in the last three years works using `flame_fuse`. (You may even see the beginnings of Ignis in that package!)
+In Ignis, nodes receive events using [signals](/concepts/signals). Signals are explicit, accessible without subclasses, and natively support any number of listeners. If you can access the signal, you can watch it and you can emit it.
 
-In Ignis, aside from `build()`, nodes receive engine information using [signals](/concepts/signals). Signals are explicit, accessible without subclasses, and natively support any number of listeners. If you can access the signal, you can watch it and you can emit it.
+As explained above, the primary motivation for this change is to permit a high degree of [locality of behavior](#locality-of-behavior) in the source code.
 
-The net result is that the number of custom nodes you write in Ignis is much lower - usually just one per "thing" in your game. For example, a `PlayerNode` likely just uses a raw `SpriteNode`, `ColliderNode`, etc. by connecting directly to their signals.
+<Info>
 
-<Why>
+I wrote and still maintain [`flame_fuse`](https://github.com/misha/flame_fuse), a library that enables locality of behavior in Flame. Every Flame game I wrote in the last three years uses `flame_fuse`. You may even see the beginnings of Ignis in that package!
 
-  **Why not `ChangeNotifier`?** `ChangeNotifier` is similar to `Signal`, but it was made for widgets, not nodes. `ChangeNotifier` comes with three drawbacks: poor performance, lack of N-argument typing, and a requirement to call `dispose`. Signals are fast, support specific argument counts, and do not require disposal.
-
-</Why>
+</Info>
 
 ### `vector_math` vs. `ivector_math`
 
 Flame uses `vector_math`, a popular, well-tested math library. Unfortunately, the API of `vector_math` is suboptimal from the perspective of control: it's very hard to tell when you are creating new objects or mutating them.
 
-Ignis instead uses [`ivector_math`](/concepts/math), a reimplementation of `vector_math` that creates a syntactic gap between its mutable and immutable APIs. As a result, it's difficult to write code that accidentally mutates vectors and matrices - both in the engine itself, and in your game.
+Ignis instead uses [`ivector_math`](/concepts/math), a reimplementation of `vector_math` that offers a mutable and an immutable version. As a result, every math type in the engine will tell whether or not a particular vector or matrix is mutable during static analysis.
 
 <Warning>
 
-  While `ivector_math` was created specifically to make Ignis more safe and performant, it is less battle-tested and offers significantly fewer features compared to the original `vector_math`. However, I still think it's the better fit.
+  I wrote `ivector_math` specifically to make Ignis more safe and performant. It is significantly less battle-tested and offers fewer features compared to the original `vector_math`. However, I still think it's the better fit.
 
 </Warning>
