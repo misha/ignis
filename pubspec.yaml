@@ -1,5 +1,5 @@
 name: ignis
-description: Flutter game engine.
+description: A 2D Flutter game engine built on nodes and signals.
 version: 0.0.1
 publish_to: none
 

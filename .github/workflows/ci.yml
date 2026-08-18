@@ -37,6 +37,7 @@ jobs:
         working-directory: .
       - run: dart doc --output docs/build/jaspr/api
         working-directory: .
+      - run: cp logo_light.png logo_dark.png docs/build/jaspr/api/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/build/jaspr
