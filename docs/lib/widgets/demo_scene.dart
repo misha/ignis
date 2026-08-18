@@ -30,16 +30,16 @@ enum LogColor {
   const LogColor(this.value);
 }
 
+/// The type every demo sets text in, with no color of its own so a caller can
+/// give it either a [color] or a [TextStyle.foreground].
+const DEMO_TEXT_STYLE = TextStyle(
+  fontFamily: 'iA Writer Mono',
+  fontFamilyFallback: ['Roboto'],
+  fontSize: 7,
+);
+
 class DemoLog extends TextNode {
-  DemoLog()
-    : super(
-        style: TextStyle(
-          fontFamily: 'iA Writer Mono',
-          fontFamilyFallback: ['Roboto'],
-          fontSize: 7,
-          color: LogColor.muted.value,
-        ),
-      );
+  DemoLog() : super(style: DEMO_TEXT_STYLE.copyWith(color: LogColor.muted.value));
 
   void call(String line, [LogColor color = .muted]) {
     text = line;
