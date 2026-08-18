@@ -248,6 +248,49 @@ void main() {
       },
     );
 
+    test('holds the other collider in active already inside onCollisionStart', () {
+      final a = ColliderNode(shape: .square(10), strict: false);
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
+      final seen = <int>[];
+
+      // Subscribed before the collider builds, so this handler runs ahead of
+      // any the node declares for itself.
+      a.onCollisionStart((_) {
+        seen.add(a.active.length);
+      });
+
+      Node(children: [a, b]).mount();
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      expect(seen, [1]);
+    });
+
+    test('has dropped the other collider from active already inside onCollisionEnd', () {
+      final a = ColliderNode(shape: .square(10), strict: false);
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
+      final colliding = <bool>[];
+
+      a.onCollisionEnd((_) {
+        colliding.add(a.isColliding);
+      });
+
+      Node(children: [a, b]).mount();
+
+      arena
+        ..add(a)
+        ..add(b)
+        ..process();
+
+      a.position.x = 200;
+      arena.process();
+
+      expect(colliding, [false]);
+    });
+
     test('clears active when this collider itself is unmounted', () {
       final a = ColliderNode(shape: .square(10), strict: false);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);

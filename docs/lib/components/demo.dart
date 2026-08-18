@@ -25,6 +25,7 @@ class Demo extends CustomComponentBase {
     'node-priority-order': 'nodes.dart',
     'node-priority-lifted': 'nodes.dart',
     'node-priority-nested': 'nodes.dart',
+    'collision-balls': 'collisions.dart',
     'sprite-still': 'sprites.dart',
     'sprite-animation': 'sprites.dart',
     'sprite-layers': 'sprites.dart',

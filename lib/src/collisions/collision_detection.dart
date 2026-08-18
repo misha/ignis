@@ -288,8 +288,8 @@ final class CollisionDetection {
         final previous = _overlapping[key];
 
         if (previous == null || !_identicalPair(previous, next)) {
-          if (aSeesB) a.onCollisionStart.emit(b);
-          if (bSeesA) b.onCollisionStart.emit(a);
+          if (aSeesB) a.startCollision(b);
+          if (bSeesA) b.startCollision(a);
         }
       }
     }
@@ -311,8 +311,8 @@ final class CollisionDetection {
         continue;
       }
 
-      if ((a.mask & b.layer) != 0) a.onCollisionEnd.emit(b);
-      if ((b.mask & a.layer) != 0) b.onCollisionEnd.emit(a);
+      if ((a.mask & b.layer) != 0) a.endCollision(b);
+      if ((b.mask & a.layer) != 0) b.endCollision(a);
     }
 
     _overlapping

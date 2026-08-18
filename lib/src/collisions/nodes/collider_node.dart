@@ -77,17 +77,23 @@ class ColliderNode extends SizedNode {
       _active.clear();
     });
 
-    onCollisionStart(_active.add);
-    onCollisionEnd(_active.remove);
-
     debugDraw((canvas) {
       canvas.drawRect(shape.rect(), DEBUG_COLLIDER_PAINT);
     });
   }
 
-  /// Removes [other] from [active] without emitting [onCollisionEnd], for when
-  /// a collision is dropped because a member left the arena, not because it
-  /// stopped overlapping.
+  @internal
+  void startCollision(ColliderNode other) {
+    _active.add(other);
+    onCollisionStart.emit(other);
+  }
+
+  @internal
+  void endCollision(ColliderNode other) {
+    _active.remove(other);
+    onCollisionEnd.emit(other);
+  }
+
   @internal
   void dropCollision(ColliderNode other) => _active.remove(other);
 }
