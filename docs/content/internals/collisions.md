@@ -1,6 +1,6 @@
 ---
 title: Collision Detection
-description: The arena, and the two phases it runs.
+description: Broadphase, narrowphase, and the intersection system.
 lane: internals
 category: internal
 status: stub
