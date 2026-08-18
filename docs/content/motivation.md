@@ -124,7 +124,7 @@ In Flame, any component can declare an `async` loading method. This makes it pos
 
 In Ignis, nodes *must* set themselves up synchronously. A synchronous node is easier to think about; if you've added it to the scene, it's now live, no `await` necessary. It is also no longer possible to have frames where some nodes may have been loaded while others have not, asserting the visual fidelity of the game from the very first render.
 
-To compensate, Ignis ships with a highly configurable [preloading system](/systems/assets). That same system *also* enables live assets, as the engine is now aware of how your application loads its assets, continuing the commitment to live reload in general.
+To compensate, Ignis ships with a highly configurable [preloading system](/systems/assets). That system also happens to enable live assets, as the engine is now aware of how your application loads its assets.
 
 ### Virtual Methods vs. Signals
 
