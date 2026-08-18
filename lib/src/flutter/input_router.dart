@@ -54,7 +54,7 @@ class InputRouter {
       cleanup: target.onUnmount(() => _exit(pointer, hover)),
     );
 
-    if (target is HoverInput) target.onHoverEnter.emit(hover);
+    if (target is HoverInput) target.enter(hover);
   }
 
   /// Drops [pointer]'s hover, emitting `onHoverExit`.
@@ -63,7 +63,7 @@ class InputRouter {
     if (hovered == null) return;
     hovered.cleanup();
     final node = hovered.node;
-    if (node is HoverInput && node.isMounted) node.onHoverExit.emit(event);
+    if (node is HoverInput && node.isMounted) node.exit(event);
   }
 
   /// Walks [point]'s hit-test chain, offering each [InputNode] to [respond]

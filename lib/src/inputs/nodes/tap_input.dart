@@ -4,17 +4,30 @@ import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/input_node.dart';
 
-/// A hit area that recognizes taps by delegating to a [MultiTapGestureRecognizer].
+/// A hit area that recognizes taps by delegating to a [TapGestureRecognizer].
 class TapInput extends InputNode {
+  /// How far the pointer may drift from where it landed before the tap
+  /// cancels, in logical pixels. Defaults to [kTouchSlop], the same allowance
+  /// Flutter's own tap gives.
+  ///
+  /// Pass null to let it drift any distance, which turns this into a press
+  /// that lasts until it is released or the gesture arena takes it away.
+  final double? slop;
+
   final onTapDown = Signal1<TapDownEvent>();
   final onTapUp = Signal1<TapUpEvent>();
   final onTap = Signal0();
   final onTapCancel = Signal0();
 
-  MultiTapGestureRecognizer? _recognizer;
+  bool _down = false;
+  TapGestureRecognizer? _recognizer;
+
+  /// Whether a pointer is currently down on this node.
+  bool get isDown => _down;
 
   TapInput({
     required super.shape,
+    this.slop = kTouchSlop,
     super.behavior,
     super.position,
     super.scale,
@@ -28,11 +41,17 @@ class TapInput extends InputNode {
   @override
   void build() {
     super.build();
-    final recognizer = _recognizer = MultiTapGestureRecognizer()
-      ..onTapDown = _handleTapDown
-      ..onTapUp = _handleTapUp
+
+    final recognizer = _recognizer = TapGestureRecognizer(
+      preAcceptSlopTolerance: slop,
+      postAcceptSlopTolerance: slop,
+    );
+
+    recognizer
+      ..onTapDown = _handleDown
+      ..onTapUp = _handleUp
       ..onTap = _handleTap
-      ..onTapCancel = _handleTapCancel;
+      ..onTapCancel = _handleCancel;
 
     trash(() {
       recognizer.dispose();
@@ -46,8 +65,9 @@ class TapInput extends InputNode {
     return .handled;
   }
 
-  void _handleTapDown(int pointer, TapDownDetails details) {
+  void _handleDown(TapDownDetails details) {
     final scenePoint = details.localPosition.toVector2();
+    _down = true;
 
     onTapDown.emit(
       TapDownEvent(
@@ -58,8 +78,9 @@ class TapInput extends InputNode {
     );
   }
 
-  void _handleTapUp(int pointer, TapUpDetails details) {
+  void _handleUp(TapUpDetails details) {
     final scenePoint = details.localPosition.toVector2();
+    _down = false;
 
     onTapUp.emit(
       TapUpEvent(
@@ -70,11 +91,12 @@ class TapInput extends InputNode {
     );
   }
 
-  void _handleTap(int pointer) {
+  void _handleTap() {
     onTap.emit();
   }
 
-  void _handleTapCancel(int pointer) {
+  void _handleCancel() {
+    _down = false;
     onTapCancel.emit();
   }
 }

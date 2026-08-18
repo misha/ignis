@@ -52,9 +52,6 @@ class DragInput extends InputNode {
   @override
   void build() {
     super.build();
-    onDragStart((_) => _dragging = true);
-    onDragEnd((_) => _dragging = false);
-    onDragCancel(() => _dragging = false);
     final recognizer = _recognizer = ImmediateMultiDragGestureRecognizer()..onStart = _handleStart;
 
     trash(() {
@@ -77,6 +74,7 @@ class DragInput extends InputNode {
     final globalToLocal = _pendingGlobalToLocal!;
     _pendingStart = null;
     _pendingGlobalToLocal = null;
+    _dragging = true;
 
     onDragStart.emit(
       DragStartEvent(
@@ -125,12 +123,14 @@ class _NodeDrag extends Drag {
   @override
   void end(DragEndDetails details) {
     node._drag = null;
+    node._dragging = false;
     node.onDragEnd.emit(DragEndEvent(details: details));
   }
 
   @override
   void cancel() {
     node._drag = null;
+    node._dragging = false;
     node.onDragCancel.emit();
 
     if (node.endOnCancel) {

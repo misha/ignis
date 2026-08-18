@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
@@ -28,11 +29,16 @@ class HoverInput extends InputNode {
     super.children,
   });
 
-  @override
-  void build() {
-    super.build();
-    onHoverEnter((_) => _hovering = true);
-    onHoverExit((_) => _hovering = false);
+  @internal
+  void enter(HoverEvent event) {
+    _hovering = true;
+    onHoverEnter.emit(event);
+  }
+
+  @internal
+  void exit(HoverEvent event) {
+    _hovering = false;
+    onHoverExit.emit(event);
   }
 }
 

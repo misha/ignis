@@ -12,7 +12,6 @@ void main() {
     return scene;
   }
 
-  // MultiTapGestureRecognizer has an internal kDoubleTapMinTime timer.
   const settle = Duration(milliseconds: 50);
 
   testWidgets('a hit fires onTapDown', (tester) async {
@@ -56,21 +55,17 @@ void main() {
     expect(taps, 1);
   });
 
-  testWidgets('moving past the slop cancels instead of firing onTapUp', (tester) async {
+  testWidgets('isDown tracks the press', (tester) async {
     final tap = TapInput(shape: .square(200));
     await pumpScene(tester, [tap]);
-    final ups = <TapUpEvent>[];
-    var cancels = 0;
-    tap.onTapUp(ups.add);
-    tap.onTapCancel(() => cancels += 1);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
-    await gesture.moveBy(const Offset(50, 0));
+    await tester.pump(settle);
+    expect(tap.isDown, isTrue);
+
     await gesture.up();
     await tester.pump(settle);
-
-    expect(cancels, 1);
-    expect(ups, isEmpty);
+    expect(tap.isDown, isFalse);
   });
 
   testWidgets('dragging past the slop starts, then updates with the right delta', (tester) async {
@@ -195,9 +190,11 @@ void main() {
 
     final drag = DragInput(shape: .square(200));
     await pumpScene(tester, [tap, drag]);
+    final downs = <TapDownEvent>[];
     final taps = <TapUpEvent>[];
     var cancels = 0;
     final starts = <DragStartEvent>[];
+    tap.onTapDown(downs.add);
     tap.onTapUp(taps.add);
     tap.onTapCancel(() => cancels += 1);
     drag.onDragStart(starts.add);
@@ -210,8 +207,39 @@ void main() {
     await tester.pump(settle);
 
     expect(starts, hasLength(1));
-    expect(cancels, 1);
     expect(taps, isEmpty);
+
+    // A contested tap holds its own down until kPressTimeout, so one resolved
+    // this fast never announced itself and has nothing to take back.
+    expect(downs, isEmpty);
+    expect(cancels, 0);
+  });
+
+  testWidgets('a contested tap held past the press timeout announces, then cancels', (
+    tester,
+  ) async {
+    final tap = TapInput(
+      shape: .square(200),
+      priority: 1,
+      behavior: .translucent,
+    );
+
+    final drag = DragInput(shape: .square(200));
+    await pumpScene(tester, [tap, drag]);
+    final downs = <TapDownEvent>[];
+    var cancels = 0;
+    tap.onTapDown(downs.add);
+    tap.onTapCancel(() => cancels += 1);
+
+    final gesture = await tester.startGesture(const Offset(5, 5));
+    await tester.pump(kPressTimeout + settle);
+    expect(downs, hasLength(1), reason: 'the deadline elapsed, so the tap spoke up');
+
+    await gesture.moveBy(const Offset(50, 0));
+    await gesture.up();
+    await tester.pump(settle);
+
+    expect(cancels, 1);
   });
 
   testWidgets('a small movement wins as a tap over a contesting drag', (tester) async {

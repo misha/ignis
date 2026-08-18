@@ -7,8 +7,8 @@ import '../demo_scene.dart';
 
 const _IDLE = Color(0xFF8FB07A);
 const _HIT = Color(0xFFC4756A);
-const _INITIAL = 50;
-const _INTERVAL = 0.02;
+const _INITIAL_SPAWN_COUNT = 10;
+const _SPAWN_INTERVAL = 0.05;
 const _RADIUS = 3.0;
 const _SPEED = 40.0;
 const _SEED = 12345;
@@ -56,14 +56,12 @@ class _LabelNode extends BoxNode {
 /// An arena that pours balls from the middle, and from wherever you hold.
 class _ArenaNode extends CollisionDetectionNode {
   final _random = Random(_SEED);
-  final MVector2 _source = .copy(_CENTER);
+  final MVector2 _source = .zero();
 
   final _count = _LabelNode(alignment: .topRight);
   final _fps = _LabelNode(alignment: .topLeft);
 
-  int _pending = _INITIAL;
   int _balls = 0;
-  bool _held = false;
 
   @override
   void build() {
@@ -80,63 +78,48 @@ class _ArenaNode extends CollisionDetectionNode {
 
     _count('$_balls balls');
 
-    final taps = add(
-      TapInput(
-        shape: .rectangle(DEMO_SIZE),
-        behavior: .translucent,
+    final pour = add(
+      TimerNode(
+        interval: _SPAWN_INTERVAL,
+        count: _INITIAL_SPAWN_COUNT,
+        cleanup: true,
       ),
     );
+
+    pour.onTrigger(() {
+      _spawn(_CENTER);
+    });
+
+    final spawner = add(
+      TimerNode(
+        interval: _SPAWN_INTERVAL,
+        repeat: true,
+        enabled: false,
+      ),
+    );
+
+    spawner.onTrigger(() {
+      _spawn(_source);
+    });
 
     final drags = add(
       DragInput(
         shape: .rectangle(DEMO_SIZE),
-        behavior: .translucent,
+        endOnCancel: true,
       ),
     );
 
-    taps
-      ..onTapDown((event) {
-        _held = true;
-        _source.setFrom(event.scene);
-      })
-      ..onTapUp((_) {
-        _held = false;
-      })
-      ..onTapCancel(() {
-        _held = drags.isDragging;
-      });
-
     drags
       ..onDragStart((event) {
-        _held = true;
         _source.setFrom(event.scene);
+        spawner.enable();
       })
       ..onDragUpdate((event) {
         _source.setFrom(event.scene);
       })
       ..onDragEnd((_) {
-        _held = false;
-      })
-      ..onDragCancel(() {
-        _held = false;
+        spawner.disable();
       });
-
-    final spawns = add(
-      TimerNode(
-        interval: _INTERVAL,
-        repeat: true,
-      ),
-    );
-
-    spawns.onTrigger(() {
-      if (_pending > 0) {
-        _pending -= 1;
-        _spawn(_CENTER);
-        return;
-      }
-
-      if (_held) _spawn(_source);
-    });
   }
 
   void _spawn(Vector2 at) {

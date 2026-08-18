@@ -65,6 +65,10 @@ When multiple input nodes overlap, `priority` decides who is tried first. An eve
 
 </Info>
 
+A `TapInput` and a `DragInput` on the same node are a special case of this, and they sort themselves out without your help. Both are offered the pointer, and Flutter's gesture arena decides between them: the drag claims the pointer the moment real movement starts, which cancels the tap. Hold still and the tap wins on release instead.
+
+That means a `TapInput` does not give up on its own when the pointer moves. It stays down until it is released or the arena takes it away, so pressing and holding is just `onTapDown` with no `onTapCancel` after it, and `isDown` stays true throughout. Pass a `slop` if you want the tap to quit earlier than the arena would - the distance, in logical pixels, the pointer may drift before it cancels.
+
 ## Pointer and Focus
 
 This page is a Flutter view embedded in an HTML document, so the scene and the page negotiate over the pointer:

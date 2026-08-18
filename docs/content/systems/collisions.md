@@ -10,7 +10,7 @@ status: stub
 <!-- A collider registers with the nearest CollisionDetectionNode ancestor, so the arena node has to be above it - that is the one non-obvious rule. Source: lib/src/collisions/nodes/, README.md:617-659. -->
 <!-- Ceiling: the arena, sweep-and-prune, SAT and IntersectionSystem are /internals/collisions. -->
 
-<Demo name="collision-balls" hero hint="Try tapping!"/>
+<Demo name="collision-balls" hero hint="Try dragging!"/>
 
 ## The Catalog
 
