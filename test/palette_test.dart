@@ -32,14 +32,39 @@ void main() {
     expect(() => palette['missing'], throwsStateError);
   });
 
-  test('throws when a name is already registered', () {
+  test('replaces the entry already registered under a name', () {
     final palette = Palette();
-    palette.add(.new('glow', Paint()));
+    final first = palette.add(.new('glow', Paint()));
+    final second = palette.add(.new('glow', Paint()));
 
-    expect(() => palette.add(.new('glow', Paint())), throwsStateError);
+    expect(palette.entry('glow'), same(second));
+    expect(palette['glow'], same(second.paint));
+    expect(palette.entries, [palette.entry(), second]);
+    expect(palette.entries, isNot(contains(first)));
   });
 
-  test('throws when an entry is already registered in a palette', () {
+  test('frees a replaced entry to join another palette', () {
+    final palette = Palette();
+    final PaletteEntry entry = .new('glow', Paint());
+    palette.add(entry);
+    palette.add(.new('glow', Paint()));
+
+    final other = Palette();
+    expect(other.add(entry), same(entry));
+    expect(other['glow'], same(entry.paint));
+  });
+
+  test('re-adding an entry to its own palette registers it once', () {
+    final palette = Palette();
+    final PaletteEntry entry = .new('glow', Paint());
+    palette.add(entry);
+    palette.add(entry);
+
+    expect(palette.entry('glow'), same(entry));
+    expect(palette.entries, [palette.entry(), entry]);
+  });
+
+  test('throws when an entry is already registered in another palette', () {
     final palette = Palette();
     final PaletteEntry entry = .new('glow', Paint());
     palette.add(entry);

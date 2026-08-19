@@ -113,20 +113,24 @@ class Palette {
     return entry;
   }
 
-  /// Registers [entry] in the palette.
+  /// Registers [entry] in the palette, replacing whatever was registered under
+  /// its name before.
   ///
-  /// Throws a [StateError] if [entry] is already in another palette, or if an
-  /// entry with the same name is already registered to this palette.
+  /// Throws a [StateError] if [entry] belongs to a different palette.
   PaletteEntry add(PaletteEntry entry) {
-    if (entry._palette != null) {
+    final palette = entry._palette;
+
+    if (palette != null && palette != this) {
       throw StateError('This entry is registered in a different palette.');
     }
 
     // Ensured by the public `Palette` factory.
     final name = entry.name!;
+    final replaced = _index[name];
 
-    if (_index.containsKey(name)) {
-      throw StateError('A paint named "$name" is already registered.');
+    if (replaced != null) {
+      _paints.remove(replaced);
+      replaced._palette = null;
     }
 
     entry._palette = this;
