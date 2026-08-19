@@ -19,15 +19,24 @@ class TapInput extends InputNode {
   final onTap = Signal0();
   final onTapCancel = Signal0();
 
-  bool _down = false;
+  /// Whether a cancelled tap should also manufacture and emit an [onTapUp],
+  /// built from the position the pointer went down at.
+  ///
+  /// If enabled, [onTapUp] is called immediately *after* [onTapCancel].
+  ///
+  /// Defaults to `false`.
+  final bool upOnCancel;
+
+  TapDownDetails? _down;
   TapGestureRecognizer? _recognizer;
 
   /// Whether a pointer is currently down on this node.
-  bool get isDown => _down;
+  bool get isDown => _down != null;
 
   TapInput({
     required super.shape,
     this.slop = kTouchSlop,
+    bool? upOnCancel,
     super.behavior,
     super.position,
     super.scale,
@@ -36,7 +45,7 @@ class TapInput extends InputNode {
     super.enabled,
     super.priority,
     super.children,
-  });
+  }) : upOnCancel = upOnCancel ?? false;
 
   @override
   void build() {
@@ -67,7 +76,7 @@ class TapInput extends InputNode {
 
   void _handleDown(TapDownDetails details) {
     final scenePoint = details.localPosition.toVector2();
-    _down = true;
+    _down = details;
 
     onTapDown.emit(
       TapDownEvent(
@@ -80,7 +89,7 @@ class TapInput extends InputNode {
 
   void _handleUp(TapUpDetails details) {
     final scenePoint = details.localPosition.toVector2();
-    _down = false;
+    _down = null;
 
     onTapUp.emit(
       TapUpEvent(
@@ -96,8 +105,25 @@ class TapInput extends InputNode {
   }
 
   void _handleCancel() {
-    _down = false;
+    final down = _down;
+    _down = null;
     onTapCancel.emit();
+
+    if (upOnCancel) {
+      final scenePoint = down!.localPosition.toVector2();
+
+      onTapUp.emit(
+        TapUpEvent(
+          scene: scenePoint,
+          local: toLocal(scenePoint),
+          details: TapUpDetails(
+            globalPosition: down.globalPosition,
+            localPosition: down.localPosition,
+            kind: down.kind ?? .unknown,
+          ),
+        ),
+      );
+    }
   }
 }
 

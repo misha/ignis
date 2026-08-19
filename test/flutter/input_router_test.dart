@@ -215,6 +215,30 @@ void main() {
     expect(cancels, 0);
   });
 
+  testWidgets('upOnCancel manufactures onTapUp from where the pointer went down', (tester) async {
+    final tap = TapInput(shape: .square(200), upOnCancel: true);
+    await pumpScene(tester, [tap]);
+    final ups = <TapUpEvent>[];
+    var taps = 0;
+    var cancels = 0;
+    tap.onTapUp(ups.add);
+    tap.onTap(() => taps += 1);
+    tap.onTapCancel(() => cancels += 1);
+
+    final gesture = await tester.startGesture(const Offset(5, 5));
+    await gesture.cancel();
+    await tester.pump(settle);
+
+    expect(cancels, 1);
+    expect(ups, hasLength(1));
+    expect(ups.single.scene, Vector2.all(5));
+    expect(ups.single.details.globalPosition, const Offset(5, 5));
+
+    // The tap never happened, so only the release it lost is taken back.
+    expect(taps, 0);
+    expect(tap.isDown, isFalse);
+  });
+
   testWidgets('a contested tap held past the press timeout announces, then cancels', (
     tester,
   ) async {
