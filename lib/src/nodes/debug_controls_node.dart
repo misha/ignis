@@ -2,89 +2,87 @@ import 'package:ignis/src/core.dart';
 import 'package:ignis/src/devices/keyboard.dart';
 import 'package:ignis/src/globals.dart';
 
-/// The engine's own actions, bound by [DebugControlsNode].
-enum DebugAction {
-  /// Freezes or resumes the current scene.
-  pause,
-
-  /// Steps the debug overlay to its next stage, or switches it on.
-  cycleNext,
-
-  /// Steps the debug overlay back a stage.
-  cyclePrevious,
-
-  /// Turns the debug overlay off.
-  off,
-}
-
-/// Wires [DebugAction] to the keyboard for as long as this node is mounted.
+/// Wires the engine's own debug controls to the keyboard for as long as this
+/// node is mounted.
 ///
 /// The default controls are as follows:
 ///
-/// | Key      | Parameter       | Action                                     |
-/// |----------|-----------------|--------------------------------------------|
-/// | F1       | [pause]         | Pauses and resumes the scene.              |
-/// | F2       | [cycleNext]     | Steps the overlay on, then stage by stage. |
-/// | Shift-F2 | [cyclePrevious] | Steps the overlay back a stage.            |
-/// | F3       | [off]           | Turns the overlay off.                     |
+/// | Key      | Parameter   | Does                                          |
+/// |----------|-------------|-----------------------------------------------|
+/// | F1       | [pause]     | Freezes and resumes the scene this node is in |
+/// | F2       | [cycle]     | Steps the overlay on, then stage by stage     |
+/// | Shift-F2 | [cycleBack] | Steps the overlay back a stage                |
+/// | F3       | [off]       | Turns the overlay off                         |
 ///
-/// [cycleNext] walks [DebugMode], which starts by showing all the wireframes
-/// at once, and then takes them one at a time. The cycle never passes through
-/// off; instead, [off] is a single, separate key press.
+/// [cycle] walks [DebugMode], which opens on every wireframe at once and then
+/// takes them one at a time, so the first press shows the lot and the next
+/// narrows it. The cycle never passes through off: [off] is the single press out
+/// of it, from wherever it stopped.
 ///
-/// Pass `null` to any press to leave it unbound. Note the controls will still
-/// perform the matching debug action when a [DebugAction] is *manually* fired.
+/// One key carries both directions because [cycle] asks for shift released and
+/// [cycleBack] asks for it held, so a press answers exactly one of them.
+///
+/// Every parameter is a set of matchers, so `DebugControlsNode(off: const {})`
+/// declines that one and keeps the rest, and passing your own remaps just it.
+/// Unlike a declined control, an omitted one takes its default.
 ///
 /// The default [priority] is lower than usual to ensure key presses prefer
 /// actual game controls, if they overlap with the debug controls.
 class DebugControlsNode extends Node {
   /// Pauses and resumes the scene this node is in.
-  final KeyPress? pause;
+  final Set<ControlEvent> pause;
 
-  /// Steps the overlay to its next stage, or switches it on.
-  final KeyPress? cycleNext;
+  /// Steps the overlay to its next mode, or switches it on.
+  final Set<ControlEvent> cycle;
 
-  /// Steps the overlay back a stage.
-  final KeyPress? cyclePrevious;
+  /// Steps the overlay back a mode.
+  final Set<ControlEvent> cycleBack;
 
   /// Turns the overlay off.
-  final KeyPress? off;
+  final Set<ControlEvent> off;
+
+  /// The groups gating every one of them, empty where nothing does.
+  final Set<String> groups;
 
   DebugControlsNode({
-    this.pause = const KeyPress(.f1),
-    this.cycleNext = const KeyPress(.f2, shift: false),
-    this.cyclePrevious = const KeyPress(.f2, shift: true),
-    this.off = const KeyPress(.f3),
+    Set<ControlEvent>? pause,
+    Set<ControlEvent>? cycle,
+    Set<ControlEvent>? cycleBack,
+    Set<ControlEvent>? off,
+    this.groups = const {'debug'},
     super.priority = -1000,
     super.enabled,
-  });
+  }) : pause = pause ?? {const KeyPress(.f1)},
+       cycle = cycle ?? {const KeyPress(.f2, shift: false)},
+       cycleBack = cycleBack ?? {const KeyPress(.f2, shift: true)},
+       off = off ?? {const KeyPress(.f3)};
 
   @override
   void build() {
     super.build();
 
-    Ignis.controls.claim(
-      DebugAction.pause,
+    Ignis.controls.bind(
       (_) => scene.paused = !scene.paused,
-      matchers: {?pause},
+      matchers: pause,
+      groups: groups,
     );
 
-    Ignis.controls.claim(
-      DebugAction.cycleNext,
+    Ignis.controls.bind(
       (_) => Ignis.debug.next(),
-      matchers: {?cycleNext},
+      matchers: cycle,
+      groups: groups,
     );
 
-    Ignis.controls.claim(
-      DebugAction.cyclePrevious,
+    Ignis.controls.bind(
       (_) => Ignis.debug.previous(),
-      matchers: {?cyclePrevious},
+      matchers: cycleBack,
+      groups: groups,
     );
 
-    Ignis.controls.claim(
-      DebugAction.off,
+    Ignis.controls.bind(
       (_) => Ignis.debug.mode = null,
-      matchers: {?off},
+      matchers: off,
+      groups: groups,
     );
   }
 }

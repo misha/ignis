@@ -2,19 +2,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-enum _Game { pause }
-
-/// A game's own node, answering an action from inside the scene.
+/// A game's own node, answering a key from inside the scene.
 final class _Mine extends Node {
-  final Object action;
+  final ControlEvent matcher;
   final void Function() onFire;
 
-  _Mine(this.action, this.onFire);
+  _Mine(this.matcher, this.onFire);
 
   @override
   void build() {
     super.build();
-    Ignis.controls.claim(action, (_) => onFire());
+    Ignis.controls.bind((_) => onFire(), matchers: {matcher});
   }
 }
 
@@ -73,36 +71,36 @@ void main() {
     expect(scene.paused, isFalse);
   });
 
-  test('a null key leaves that one unbound and the rest alone', () {
-    add(DebugControlsNode(off: null));
+  test('a declined control leaves that one unbound and the rest alone', () {
+    add(DebugControlsNode(off: const {}));
 
     expect(press(.f3), isFalse);
     expect(press(.f2), isTrue);
   });
 
-  test('a declined default still answers a key the game binds itself', () {
-    add(DebugControlsNode(off: null));
-    Ignis.controls.bind(DebugAction.off, {const KeyPress(.f4)});
+  test('a remapped control takes the key the game gives it', () {
+    add(DebugControlsNode(off: {const KeyPress(.f4)}));
 
     press(.f2);
     expect(Ignis.debug.enabled, isTrue);
 
+    expect(press(.f3), isFalse, reason: 'the default went with the remap');
     expect(press(.f4), isTrue);
-    expect(Ignis.debug.enabled, isFalse, reason: 'the claim was there waiting');
+    expect(Ignis.debug.enabled, isFalse);
   });
 
   test('a key can be remapped without touching the others', () {
-    add(DebugControlsNode(pause: const KeyPress(.escape)));
+    add(DebugControlsNode(pause: {const KeyPress(.escape)}));
 
     expect(press(.f1), isFalse);
     expect(press(.escape), isTrue);
     expect(scene.paused, isTrue);
   });
 
-  test('a game node outranks the debug node on the same action', () {
+  test('a game node outranks the debug node on the same key', () {
     var mine = 0;
     add(DebugControlsNode());
-    add(_Mine(DebugAction.pause, () => mine += 1));
+    add(_Mine(const KeyPress(.f1), () => mine += 1));
 
     press(.f1);
 
@@ -110,19 +108,20 @@ void main() {
     expect(scene.paused, isFalse, reason: 'debug sits at -1000, so it never ran');
   });
 
-  test('a game can bind its own action to a key debug already uses', () {
-    var mine = 0;
-    add(DebugControlsNode());
-    Ignis.controls.bind(_Game.pause, {const KeyPress(.f1)});
-    add(_Mine(_Game.pause, () => mine += 1));
+  test('a group switches every debug control off together', () {
+    add(DebugControlsNode(groups: const {'debug'}));
 
-    press(.f1);
+    press(.f2);
+    expect(Ignis.debug.enabled, isTrue);
 
-    expect(mine, 1, reason: 'both actions are bound to F1');
-    expect(scene.paused, isTrue, reason: 'and both ran, being different actions');
+    Ignis.controls.disable('debug');
+
+    expect(press(.f2), isFalse);
+    expect(press(.f1), isFalse);
+    expect(scene.paused, isFalse);
   });
 
-  test('detaching the node removes every binding and claim', () {
+  test('detaching the node removes every control it bound', () {
     final node = DebugControlsNode();
     add(node);
 
@@ -131,7 +130,8 @@ void main() {
 
     expect(press(.f1), isFalse);
     expect(press(.f2), isFalse);
-    expect(Ignis.controls.bindings, isEmpty, reason: 'the build owned the lot');
+    expect(press(.f3), isFalse);
+    expect(press(.f2, shift: true), isFalse, reason: 'the build owned the lot');
   });
 
   group('the cycle', () {

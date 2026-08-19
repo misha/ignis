@@ -1,33 +1,13 @@
 part of 'core.dart';
 
 /// Something a device emits: a key going down, a button pressed, a stick moved.
-///
-/// The same type describes both halves of a match: [accepts] is asked of the
-/// one bound to an action and handed the one a device emitted. What counts as
-/// a match is each event's own business, so a bound event is free to be looser
-/// than the one that meets it.
-///
-/// Kept open rather than sealed: a keyboard is the only device the engine
-/// ships for, but a gamepad or a plugin's device can emit events of its own and
-/// have them dispatched without [Controls] knowing what they are.
 abstract interface class ControlEvent {
-  /// Whether this event, as something bound to an action, accepts [emitted].
+  /// Whether this event, as something bound to a handler, accepts [emitted].
   bool accepts(ControlEvent emitted);
 }
 
-/// States that an action has been fired, along with any other context.
-final class ControlReport<T extends Object> {
-  /// The action that fired.
-  final T action;
-
-  /// What fired it, or null where [Controls.fire] ran the action outright.
-  final ControlEvent? event;
-
-  const ControlReport._(this.action, [this.event]);
-}
-
-/// Responds to reports of a particular type of action.
-typedef ControlHandler<T extends Object> = void Function(ControlReport<T> report);
+/// Responds to an event a device emitted.
+typedef ControlHandler = void Function(ControlEvent event);
 
 /// A source of control events.
 ///
@@ -74,177 +54,146 @@ abstract base class ControlDevice {
   }
 }
 
-/// One handler's claim on an action.
-class _Claim {
-  /// The node whose build made this claim, or null where nothing was building.
+/// One handler, the events that reach it, and the groups that gate it.
+class _Control {
+  /// What answers the events.
+  final ControlHandler handler;
+
+  /// The events it answers, any one of which is enough.
+  final Set<ControlEvent> matchers;
+
+  /// The groups gating it, empty where nothing does.
+  final Set<String> groups;
+
+  /// The node whose build bound this, or null where nothing was building.
   final Node? node;
 
-  /// The handler, with the action's type closed over, so one list can hold
-  /// claims on actions of every type at once.
-  final void Function(Object action, ControlEvent? event) run;
-
-  const _Claim(this.node, this.run);
+  const _Control(this.handler, this.matchers, this.groups, this.node);
 }
 
-/// Routes events emitted by control devices to registered handlers.
+/// Routes events emitted by control devices to the handlers bound to them.
 ///
-/// An action is any value that hashes and compares by value: an enum member, a
-/// string, a class a game builds at runtime out of whatever names an action to
-/// it. The engine never reads one, only matches it.
+/// One call binds the lot: the events that reach a handler, the handler, and
+/// any groups that switch it on and off. There is nothing else to register and
+/// no name in the middle, so a control is one thing in one place.
 ///
 /// TODO: Document further.
 class Controls {
-  final Map<Object, Set<ControlEvent>> _events = {};
-  final Map<Object, List<_Claim>> _claims = {};
-
+  final List<_Control> _controls = [];
+  final Set<String> _disabled = {};
   final List<ControlDevice> _devices = [];
 
   /// The devices feeding events in.
   List<ControlDevice> get devices => UnmodifiableListView(_devices);
 
-  /// Starts [device] and feeds its events to [dispatch], until [detach]ed.
-  void attach(ControlDevice device) {
+  /// Starts [device] and feeds its events to [dispatch], until [uninstall]ed.
+  void install(ControlDevice device) {
     if (_devices.contains(device)) return;
     _devices.add(device);
     device._start(dispatch);
   }
 
   /// Stops [device] and drops it.
-  void detach(ControlDevice device) {
+  void uninstall(ControlDevice device) {
     if (!_devices.remove(device)) return;
     device._stop();
   }
 
-  /// Assigns [events] to [action], replacing whatever it had.
-  void bind(Object action, Set<ControlEvent> events) {
-    _events[action] = {...events};
-  }
-
-  /// Drops every event assigned to [action].
-  void unbind(Object action) {
-    _events.remove(action);
-  }
-
-  /// The events assigned to [action], empty if it has none.
-  Set<ControlEvent> eventsFor(Object action) {
-    return UnmodifiableSetView(_events[action] ?? const {});
-  }
-
-  /// Every assignment, for a screen that lists them. Read-only.
-  Map<Object, Set<ControlEvent>> get bindings {
-    return UnmodifiableMapView({
-      for (final entry in _events.entries) //
-        entry.key: UnmodifiableSetView(entry.value),
-    });
-  }
-
-  /// Answers [action] with [handler] until the returned [Cleanup] is called,
-  /// or until the [Node.build] that made it is gone.
+  /// Answers any of [matchers] with [handler], until the returned [Cleanup] is
+  /// called or the [Node.build] that bound it is gone.
   ///
-  /// Where several claims are live on one action the topmost node wins, as a
-  /// hit test would pick it. [matchers] assigns what fires the action for
-  /// exactly as long as the claim lasts, putting back whatever it displaced.
-  Cleanup claim<T extends Object>(
-    T action,
-    ControlHandler<T> handler, {
-    Set<ControlEvent> matchers = const {},
+  /// Where several live handlers match one event the topmost node wins and the
+  /// rest never run, as a hit test would pick it.
+  ///
+  /// [groups] gates the handler: it answers if at least one group is enabled.
+  /// If [groups] is empty, it always answers.
+  Cleanup bind(
+    ControlHandler handler, {
+    required Set<ControlEvent> matchers,
+    Set<String> groups = const {},
   }) {
-    final claims = _claims[action] ??= [];
-    final claim = _Claim(Node._builder, (fired, event) {
-      return handler(ControlReport<T>._(fired as T, event));
-    });
+    final control = _Control(
+      handler,
+      .of(matchers),
+      .of(groups),
+      Node._builder,
+    );
 
-    claims.add(claim);
-
-    // TODO: Refactor this spaghetti.
-
-    void release() {
-      if (!claims.remove(claim)) return;
-      if (claims.isEmpty) _claims.remove(action);
-    }
-
-    if (matchers.isEmpty) return _trash(release);
-
-    final displaced = _events[action];
-    bind(action, matchers);
-
-    return _trash(() {
-      if (displaced == null) {
-        _events.remove(action);
-      } else {
-        _events[action] = displaced;
-      }
-
-      release();
-    });
+    _controls.add(control);
+    return _trash(() => _controls.remove(control));
   }
 
-  /// Runs the winning claim of every action [emitted] fires.
+  /// Lets the handlers in [group] answer again.
+  void enable(String group) => _disabled.remove(group);
+
+  /// Stops the handlers in [group] answering, until [enable].
+  void disable(String group) => _disabled.add(group);
+
+  /// Whether [group] is enabled, which it is until [disable].
+  bool isEnabled(String group) => !_disabled.contains(group);
+
+  /// Runs the one handler that answers [emitted], if any.
   ///
-  /// Returns whether anything ran, so a device can report the event as
-  /// handled.
+  /// Returns whether anything ran, so a device can report the event as handled.
   ///
-  /// Every action is matched before any handler runs, so a handler is free to
-  /// bind and unbind as it answers: a press is judged against the bindings as
-  /// they stood when it arrived, not as it leaves them.
+  /// Every match is found before the winner runs, so a handler is free to bind
+  /// and unbind as it answers: a press is judged against the controls as they
+  /// stood when it arrived, not as it leaves them.
   bool dispatch(ControlEvent emitted) {
-    List<Object>? fired;
+    List<_Control>? matched;
 
-    for (final entry in _events.entries) {
-      if (!entry.value.any((bound) => bound.accepts(emitted))) continue;
-      (fired ??= []).add(entry.key);
+    for (final control in _controls) {
+      if (!_eligible(control)) continue;
+      if (!control.matchers.any((matcher) => matcher.accepts(emitted))) continue;
+      (matched ??= []).add(control);
     }
 
-    if (fired == null) return false;
-    var handled = false;
-
-    for (final action in fired) {
-      if (fire(action, emitted)) {
-        handled = true;
-      }
-    }
-
-    return handled;
-  }
-
-  /// Runs the winning claim on [action], whatever is bound to it.
-  ///
-  /// How a button on screen, a script or a console reaches an action with no
-  /// device in the middle, and the only way to reach one nothing is bound to.
-  /// Returns whether anything ran.
-  ///
-  /// [event] is what set the action off, and reaches the handler on its
-  /// [ControlReport]. [dispatch] passes whatever the device emitted; a caller
-  /// firing an action itself can make one up to say where it came from, and
-  /// leave it out where there is nothing worth saying.
-  bool fire(Object action, [ControlEvent? event]) {
-    final winner = _winner(action);
+    if (matched == null) return false;
+    final winner = _winner(matched);
     if (winner == null) return false;
-    winner.run(action, event);
+
+    winner.handler(emitted);
     return true;
   }
 
-  /// The claim on [action] that answers it, by tree order.
+  /// Whether [control] is in no group, or in one that is enabled.
+  bool _eligible(_Control control) {
+    if (_disabled.isEmpty || control.groups.isEmpty) {
+      return true;
+    }
+
+    for (final group in control.groups) {
+      if (!_disabled.contains(group)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /// The one of [matched] that answers, by tree order.
   ///
   /// Walks the live scenes exactly as a hit test would, and takes the first
-  /// claim whose node it reaches, so a claim the walk never reaches never runs.
-  /// Claims with no node rank below every node, the most recent of them first.
-  _Claim? _winner(Object action) {
-    final claims = _claims[action];
-    if (claims == null || claims.isEmpty) return null;
-
-    if (claims.any((claim) => claim.node != null)) {
+  /// whose node it reaches, so a handler the walk never reaches never runs.
+  /// Handlers with no node rank below every node, the most recent of them
+  /// first.
+  _Control? _winner(List<_Control> matched) {
+    if (matched.any((control) => control.node != null)) {
       for (final scene in Scene.live) {
         for (final node in _topmost(scene.node)) {
-          for (final claim in claims.reversed) {
-            if (identical(claim.node, node)) return claim;
+          for (final control in matched.reversed) {
+            if (identical(control.node, node)) {
+              return control;
+            }
           }
         }
       }
     }
 
-    for (final claim in claims.reversed) {
-      if (claim.node == null) return claim;
+    for (final control in matched.reversed) {
+      if (control.node == null) {
+        return control;
+      }
     }
 
     return null;
@@ -264,14 +213,14 @@ class Controls {
     yield node;
   }
 
-  /// Stops every device, and drops every binding and claim.
+  /// Stops every device, and drops every control.
   void dispose() {
     for (final device in _devices) {
       device._stop();
     }
 
     _devices.clear();
-    _events.clear();
-    _claims.clear();
+    _controls.clear();
+    _disabled.clear();
   }
 }

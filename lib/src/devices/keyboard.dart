@@ -16,7 +16,7 @@ import 'package:ignis/src/core.dart';
 /// | `false`   | The modifier was *not* held as the key went down.            |
 /// | `null`    | The keyboard never uses this, it's always `true` or `false`. |
 ///
-/// When used as a matcher on [Controls.claim], a modifier `bool?` means:
+/// When used as a matcher on [Controls.bind], a modifier `bool?` means:
 ///
 /// | Value     | Matches                                     |
 /// |-----------|---------------------------------------------|

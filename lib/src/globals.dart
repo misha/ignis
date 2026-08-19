@@ -31,7 +31,7 @@ abstract final class Ignis {
   /// Controls flags and settings for Ignis' debug features.
   static Debug debug = Debug();
 
-  static Controls _controls = Controls()..attach(KeyboardDevice());
+  static Controls _controls = Controls()..install(KeyboardDevice());
 
   /// Registers devices and routes their events to control handlers.
   ///

@@ -3,8 +3,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-enum _Action { fire }
-
 /// Stands in for a gamepad or a plugin's event.
 final class _Other implements ControlEvent {
   const _Other();
@@ -114,16 +112,15 @@ void main() {
 
   group('KeyboardDevice', () {
     late KeyboardDevice keyboard;
-    late List<ControlReport> fired;
+    late List<ControlEvent> fired;
 
     setUp(() {
       fired = [];
       keyboard = KeyboardDevice();
 
       Ignis.controls = Controls()
-        ..attach(keyboard)
-        ..bind(_Action.fire, {const KeyPress(.keyF)})
-        ..claim(_Action.fire, fired.add);
+        ..install(keyboard)
+        ..bind(fired.add, matchers: {const KeyPress(.keyF)});
     });
 
     Future<void> pump(WidgetTester tester, {bool mounted = true}) async {
@@ -140,7 +137,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
 
       expect(fired, hasLength(1));
-      expect((fired.single.event! as KeyPress).key, LogicalKeyboardKey.keyF);
+      expect((fired.single as KeyPress).key, LogicalKeyboardKey.keyF);
     });
 
     testWidgets('modifiers travel with the press', (tester) async {
@@ -149,7 +146,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
 
-      expect((fired.single.event! as KeyPress).control, isTrue);
+      expect((fired.single as KeyPress).control, isTrue);
     });
 
     testWidgets('a key up runs nothing', (tester) async {
@@ -161,18 +158,16 @@ void main() {
       expect(fired, isEmpty);
     });
 
-    testWidgets('detaching stops the keyboard reaching it', (tester) async {
+    testWidgets('uninstalling stops the keyboard reaching it', (tester) async {
       await pump(tester);
-      Ignis.controls.detach(keyboard);
+      Ignis.controls.uninstall(keyboard);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
 
       expect(fired, isEmpty);
     });
 
     testWidgets('controls with no device hear nothing', (tester) async {
-      Ignis.controls = Controls()
-        ..bind(_Action.fire, {const KeyPress(.keyF)})
-        ..claim(_Action.fire, fired.add);
+      Ignis.controls = Controls()..bind(fired.add, matchers: {const KeyPress(.keyF)});
 
       await pump(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
@@ -180,10 +175,10 @@ void main() {
       expect(fired, isEmpty, reason: 'listening is opt-in');
     });
 
-    testWidgets('attaching one keyboard twice still runs an action once', (tester) async {
+    testWidgets('installing one keyboard twice still runs a handler once', (tester) async {
       Ignis.controls
-        ..attach(keyboard)
-        ..attach(keyboard);
+        ..install(keyboard)
+        ..install(keyboard);
 
       await pump(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);

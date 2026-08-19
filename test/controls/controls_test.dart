@@ -20,44 +20,6 @@ final class _Event implements ControlEvent {
   String toString() => name;
 }
 
-/// An action a game names at runtime, out of more than one piece.
-final class _PlayerAction {
-  final int player;
-  final String verb;
-
-  const _PlayerAction(this.player, this.verb);
-
-  @override
-  bool operator ==(Object other) {
-    return other is _PlayerAction && other.player == player && other.verb == verb;
-  }
-
-  @override
-  int get hashCode => Object.hash(player, verb);
-}
-
-enum _Game { jump }
-
-/// A node that offers its own default, and should need nothing else to.
-final class _Binder extends Node {
-  final List<String> log;
-
-  _Binder(this.log);
-
-  @override
-  void build() {
-    super.build();
-
-    Ignis.controls.claim(
-      'jump',
-      (_) => log.add('jump'),
-      matchers: {
-        const _Event('space'),
-      },
-    );
-  }
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -70,209 +32,101 @@ void main() {
   });
 
   ControlHandler note(String name) {
-    return (report) => log.add('$name:${report.event ?? 'direct'}');
+    return (event) => log.add('$name:$event');
   }
 
-  group('actions', () {
-    test('a string names an action', () {
-      controls
-        ..bind('jump', {const _Event('space')})
-        ..claim('jump', note('jump'));
+  group('binding', () {
+    test('reaches its handler, with the event that got there', () {
+      controls.bind(note('jump'), matchers: {const _Event('space')});
 
       expect(controls.dispatch(const _Event('space')), isTrue);
       expect(log, ['jump:space']);
     });
 
-    test('a value built at runtime names an action', () {
-      controls
-        ..bind(const _PlayerAction(2, 'jump'), {const _Event('space')})
-        ..claim(const _PlayerAction(2, 'jump'), note('p2'));
-
-      expect(controls.dispatch(const _Event('space')), isTrue);
-      expect(log, ['p2:space'], reason: 'an equal action is the same action');
-    });
-
-    test('actions that compare unequal stay apart', () {
-      controls
-        ..bind(const _PlayerAction(1, 'jump'), {const _Event('space')})
-        ..bind(const _PlayerAction(2, 'jump'), {const _Event('enter')})
-        ..claim(const _PlayerAction(1, 'jump'), note('p1'))
-        ..claim(const _PlayerAction(2, 'jump'), note('p2'));
-
-      controls.dispatch(const _Event('enter'));
-
-      expect(log, ['p2:enter']);
-    });
-
-    test('an enum names an action', () {
-      controls
-        ..bind(_Game.jump, {const _Event('space')})
-        ..claim(_Game.jump, note('jump'));
-
-      expect(controls.dispatch(const _Event('space')), isTrue);
-    });
-
-    test('an action is matched, never read', () {
-      controls
-        ..bind('jump', {const _Event('space')})
-        ..claim('JUMP', note('shouting'));
-
-      expect(controls.dispatch(const _Event('space')), isFalse);
-      expect(log, isEmpty);
-    });
-  });
-
-  group('binding', () {
-    test('does nothing for a trigger nothing is bound to', () {
-      controls
-        ..bind('jump', {const _Event('space')})
-        ..claim('jump', note('jump'));
-
-      expect(controls.dispatch(const _Event('enter')), isFalse);
-      expect(log, isEmpty);
-    });
-
-    test('does nothing for a bound trigger nothing claims', () {
-      controls.bind('jump', {const _Event('space')});
-
-      expect(controls.dispatch(const _Event('space')), isFalse);
-    });
-
-    test('carries several triggers for one action, and says which fired', () {
-      controls
-        ..bind('jump', {const _Event('space'), const _Event('up')})
-        ..claim('jump', note('jump'));
+    test('several matchers reach one handler, and say which arrived', () {
+      controls.bind(note('jump'), matchers: {const _Event('space'), const _Event('up')});
 
       controls
         ..dispatch(const _Event('up'))
         ..dispatch(const _Event('space'));
 
-      expect(log, ['jump:up', 'jump:space']);
+      expect(log, ['jump:up', 'jump:space'], reason: 'one handler, either way in');
     });
 
-    test('rebinding replaces the old triggers', () {
-      controls
-        ..bind('jump', {const _Event('space')})
-        ..claim('jump', note('jump'))
-        ..bind('jump', {const _Event('enter')});
+    test('matchers from several subsystems reach one handler', () {
+      controls.bind(note('jump'), matchers: {const _Event('space'), const _Button(3)});
+
+      expect(controls.dispatch(const _Button(3)), isTrue);
+      expect(log, ['jump:button3'], reason: 'the engine never learns what a button is');
+    });
+
+    test('an event nothing matches runs nothing', () {
+      controls.bind(note('jump'), matchers: {const _Event('space')});
+
+      expect(controls.dispatch(const _Event('enter')), isFalse);
+      expect(log, isEmpty);
+    });
+
+    test('an event of another kind never matches', () {
+      controls.bind(note('jump'), matchers: {const _Event('space')});
+
+      expect(controls.dispatch(const _Button(3)), isFalse);
+    });
+
+    test('with nothing bound at all, dispatch reports unhandled', () {
+      expect(controls.dispatch(const _Event('space')), isFalse);
+    });
+
+    test('an empty matcher set can never be reached', () {
+      controls.bind(note('unreachable'), matchers: const {});
 
       expect(controls.dispatch(const _Event('space')), isFalse);
-      expect(controls.dispatch(const _Event('enter')), isTrue);
+      expect(log, isEmpty);
     });
 
-    test('unbinding leaves the claim unreachable', () {
-      controls
-        ..bind('jump', {const _Event('space')})
-        ..claim('jump', note('jump'))
-        ..unbind('jump');
+    test('the set is copied, so the caller cannot reach in and change it', () {
+      final matchers = {const _Event('space')};
+      controls.bind(note('jump'), matchers: matchers);
 
-      expect(controls.dispatch(const _Event('space')), isFalse);
-    });
+      matchers.add(const _Event('enter'));
 
-    test('unbinding an action that was never bound is harmless', () {
-      expect(() => controls.unbind('jump'), returnsNormally);
+      expect(controls.dispatch(const _Event('enter')), isFalse);
     });
   });
 
-  group('claiming with events', () {
-    test('binds for as long as the claim lasts', () {
-      final release = controls.claim('jump', note('jump'), matchers: {const _Event('space')});
+  group('lifetime', () {
+    test('releasing stops the handler answering', () {
+      final release = controls.bind(note('jump'), matchers: {const _Event('space')});
 
-      expect(controls.eventsFor('jump'), {const _Event('space')});
       expect(controls.dispatch(const _Event('space')), isTrue);
 
       release();
 
-      expect(controls.eventsFor('jump'), isEmpty, reason: 'it went out with the claim');
       expect(controls.dispatch(const _Event('space')), isFalse);
+      expect(log, ['jump:space'], reason: 'it ran once, before the release');
     });
 
-    test('puts back whatever was assigned before it', () {
-      controls.bind('jump', {const _Event('up')});
-
-      final release = controls.claim('jump', note('jump'), matchers: {const _Event('space')});
-      expect(controls.eventsFor('jump'), {const _Event('space')});
-
+    test('releasing twice is harmless', () {
+      final release = controls.bind(note('jump'), matchers: {const _Event('space')});
       release();
 
-      expect(
-        controls.eventsFor('jump'),
-        {const _Event('up')},
-        reason: 'a passing claim does not eat the app assignment',
-      );
-    });
-
-    test('a node owns the assignment along with the claim', () {
-      final node = _Binder(log);
-      final scene = Node(children: [node]).mount();
-
-      expect(Ignis.controls.eventsFor('jump'), {const _Event('space')});
-
-      node.detach();
-      scene.update(0);
-
-      expect(Ignis.controls.eventsFor('jump'), isEmpty, reason: 'no trash() of your own');
-      scene.destroy();
+      expect(release, returnsNormally);
     });
   });
 
-  group('reentrancy', () {
-    test('a handler can bind while it answers', () {
+  group('precedence', () {
+    test('one event runs one handler, however many match', () {
       controls
-        ..bind('jump', {const _Event('space')})
-        ..claim('jump', (_) {
-          controls.bind('crouch', {const _Event('ctrl')});
-          log.add('rebound');
-        });
+        ..bind(note('confirm'), matchers: {const _Event('enter')})
+        ..bind(note('cancel'), matchers: {const _Event('enter')});
 
-      expect(() => controls.dispatch(const _Event('space')), returnsNormally);
-      expect(log, ['rebound']);
-    });
-
-    test('a handler can unbind another action while it answers', () {
-      controls
-        ..bind('confirm', {const _Event('enter')})
-        ..bind('cancel', {const _Event('enter')})
-        ..claim('confirm', (_) {
-          controls.unbind('cancel');
-          log.add('confirm');
-        })
-        ..claim('cancel', note('cancel'));
-
-      expect(() => controls.dispatch(const _Event('enter')), returnsNormally);
-      expect(log, contains('confirm'));
-    });
-
-    test('a handler can unbind its own action while it answers', () {
-      controls
-        ..bind('jump', {const _Event('space')})
-        ..claim('jump', (_) {
-          controls.unbind('jump');
-          log.add('once');
-        });
-
-      expect(() => controls.dispatch(const _Event('space')), returnsNormally);
-      expect(controls.dispatch(const _Event('space')), isFalse);
-      expect(log, ['once']);
-    });
-  });
-
-  group('claims', () {
-    test('with no node between them, the most recent wins', () {
-      controls
-        ..bind('confirm', {const _Event('enter')})
-        ..claim('confirm', note('first'))
-        ..claim('confirm', note('second'));
-
-      controls.dispatch(const _Event('enter'));
-
-      expect(log, ['second:enter']);
+      expect(controls.dispatch(const _Event('enter')), isTrue);
+      expect(log, ['cancel:enter'], reason: 'the most recent of them, and only it');
     });
 
     test('releasing the winner falls back to the one beneath', () {
-      controls.bind('confirm', {const _Event('enter')});
-      controls.claim('confirm', note('world'));
-      final dialog = controls.claim('confirm', note('dialog'));
+      controls.bind(note('world'), matchers: {const _Event('enter')});
+      final dialog = controls.bind(note('dialog'), matchers: {const _Event('enter')});
 
       controls.dispatch(const _Event('enter'));
       dialog();
@@ -281,145 +135,214 @@ void main() {
       expect(log, ['dialog:enter', 'world:enter']);
     });
 
-    test('a released claim never runs again', () {
-      controls.bind('jump', {const _Event('space')});
-      final claim = controls.claim('jump', note('jump'));
-      claim();
-
-      expect(controls.dispatch(const _Event('space')), isFalse);
-    });
-
-    test('releasing twice is harmless', () {
-      controls.bind('jump', {const _Event('space')});
-      final claim = controls.claim('jump', note('jump'));
-      claim();
-
-      expect(claim, returnsNormally);
-    });
-
-    test('one trigger runs the winner of every action bound to it', () {
+    test('a handler masks another whose matchers it does not share', () {
       controls
-        ..bind('confirm', {const _Event('enter')})
-        ..bind('cancel', {const _Event('enter')})
-        ..claim('confirm', note('confirm'))
-        ..claim('cancel', note('cancel'));
+        ..bind(note('world'), matchers: {const _Event('enter'), const _Event('space')})
+        ..bind(note('dialog'), matchers: {const _Event('enter')});
 
-      expect(controls.dispatch(const _Event('enter')), isTrue);
-      expect(log, unorderedEquals(['confirm:enter', 'cancel:enter']));
-    });
-  });
+      controls.dispatch(const _Event('enter'));
+      controls.dispatch(const _Event('space'));
 
-  group('fire', () {
-    test('runs the winning claim with no event at all', () {
-      controls
-        ..bind('jump', {const _Event('space')})
-        ..claim('jump', note('jump'));
-
-      expect(controls.fire('jump'), isTrue);
-      expect(log, ['jump:direct']);
-    });
-
-    test('reaches an action nothing is bound to', () {
-      controls.claim('jump', note('jump'));
-
-      expect(controls.eventsFor('jump'), isEmpty);
-      expect(controls.fire('jump'), isTrue, reason: 'no trigger stands in the way');
-    });
-
-    test('carries an event a caller makes up to say where it came from', () {
-      late ControlReport seen;
-
-      controls.claim('jump', (report) => seen = report);
-      controls.fire('jump', const _Event('button'));
-
-      expect(seen.event, const _Event('button'));
-      expect(controls.eventsFor('jump'), isEmpty);
       expect(
-        controls.dispatch(const _Event('button')),
-        isFalse,
-        reason: 'the made-up event is provenance, never a binding',
+        log,
+        ['dialog:enter', 'world:space'],
+        reason: 'the dialog takes only what it matches, and masks nothing else',
       );
     });
+  });
 
-    test('reports false when nothing claims the action', () {
-      controls.bind('jump', {const _Event('space')});
+  group('groups', () {
+    test('a handler in no group always answers', () {
+      controls.bind(note('jump'), matchers: {const _Event('space')});
 
-      expect(controls.fire('jump'), isFalse);
+      expect(controls.dispatch(const _Event('space')), isTrue);
     });
 
-    test('picks a winner like any other firing', () {
+    test('a group is enabled until it is not', () {
+      controls.bind(
+        note('jump'),
+        matchers: {const _Event('space')},
+        groups: {'ground'},
+      );
+
+      expect(controls.isEnabled('ground'), isTrue);
+      expect(controls.dispatch(const _Event('space')), isTrue);
+    });
+
+    test('disabling one stops its handlers answering', () {
+      controls.bind(
+        note('jump'),
+        matchers: {const _Event('space')},
+        groups: {'ground'},
+      );
+      controls.disable('ground');
+
+      expect(controls.isEnabled('ground'), isFalse);
+      expect(controls.dispatch(const _Event('space')), isFalse);
+      expect(log, isEmpty);
+    });
+
+    test('enabling one lets them answer again', () {
+      controls.bind(
+        note('jump'),
+        matchers: {const _Event('space')},
+        groups: {'ground'},
+      );
+
       controls
-        ..claim('confirm', note('world'))
-        ..claim('confirm', note('dialog'));
+        ..disable('ground')
+        ..enable('ground');
 
-      controls.fire('confirm');
+      expect(controls.dispatch(const _Event('space')), isTrue);
+    });
 
-      expect(log, ['dialog:direct']);
+    test('a handler in two groups survives one going dead', () {
+      controls.bind(
+        note('move'),
+        matchers: {const _Event('left')},
+        groups: {'ground', 'aerial'},
+      );
+      controls.disable('aerial');
+
+      expect(controls.dispatch(const _Event('left')), isTrue, reason: 'ground still holds it');
+    });
+
+    test('it dies only when every group holding it does', () {
+      controls.bind(
+        note('move'),
+        matchers: {const _Event('left')},
+        groups: {'ground', 'aerial'},
+      );
+
+      controls.disable('ground');
+      expect(controls.dispatch(const _Event('left')), isTrue);
+
+      controls.disable('aerial');
+      expect(controls.dispatch(const _Event('left')), isFalse);
+    });
+
+    test('swapping two groups swaps which handlers answer', () {
+      controls
+        ..bind(
+          note('move'),
+          matchers: {const _Event('left')},
+          groups: {'ground', 'aerial'},
+        )
+        ..bind(
+          note('jump'),
+          matchers: {const _Event('space')},
+          groups: {'ground'},
+        )
+        ..bind(
+          note('airDash'),
+          matchers: {const _Event('shift')},
+          groups: {'aerial'},
+        )
+        ..disable('aerial');
+
+      controls
+        ..disable('ground')
+        ..enable('aerial');
+
+      expect(controls.dispatch(const _Event('space')), isFalse, reason: 'grounded jump is gone');
+      expect(controls.dispatch(const _Event('shift')), isTrue, reason: 'the air dash woke up');
+      expect(controls.dispatch(const _Event('left')), isTrue, reason: 'move is in both');
+    });
+
+    test('a disabled group is skipped, so the one beneath it answers', () {
+      controls
+        ..bind(note('world'), matchers: {const _Event('enter')})
+        ..bind(
+          note('dialog'),
+          matchers: {const _Event('enter')},
+          groups: {'ui'},
+        )
+        ..disable('ui');
+
+      controls.dispatch(const _Event('enter'));
+
+      expect(log, ['world:enter'], reason: 'gone, rather than swallowing the event');
+    });
+
+    test('a group can be switched before anything is in it', () {
+      controls.disable('ground');
+      controls.bind(
+        note('jump'),
+        matchers: {const _Event('space')},
+        groups: {'ground'},
+      );
+
+      expect(
+        controls.dispatch(const _Event('space')),
+        isFalse,
+        reason: 'the switch outlives whatever happens to be bound',
+      );
     });
   });
 
-  group('report', () {
-    test('carries the action and the event that fired it', () {
-      late ControlReport seen;
+  group('reentrancy', () {
+    test('a handler can bind while it answers', () {
+      controls.bind((_) {
+        controls.bind(note('crouch'), matchers: {const _Event('ctrl')});
+        log.add('rebound');
+      }, matchers: {const _Event('space')});
 
-      controls
-        ..bind('jump', {const _Event('space'), const _Event('up')})
-        ..claim('jump', (report) => seen = report);
-
-      controls.dispatch(const _Event('up'));
-
-      expect(seen.action, 'jump');
-      expect(seen.event, const _Event('up'), reason: 'which of the two fired');
+      expect(() => controls.dispatch(const _Event('space')), returnsNormally);
+      expect(log, ['rebound']);
     });
 
-    test('carries the action at its own type, with no cast', () {
-      late _PlayerAction seen;
+    test('a handler can release itself while it answers', () {
+      late Cleanup release;
 
-      controls
-        ..bind(const _PlayerAction(2, 'jump'), {const _Event('space')})
-        ..claim(const _PlayerAction(2, 'jump'), (report) => seen = report.action);
+      release = controls.bind((_) {
+        release();
+        log.add('once');
+      }, matchers: {const _Event('space')});
+
+      expect(() => controls.dispatch(const _Event('space')), returnsNormally);
+      expect(controls.dispatch(const _Event('space')), isFalse);
+      expect(log, ['once']);
+    });
+
+    test('a handler binding a matcher for the event it answers does not rerun it', () {
+      controls.bind((_) {
+        controls.bind(note('later'), matchers: {const _Event('space')});
+        log.add('first');
+      }, matchers: {const _Event('space')});
 
       controls.dispatch(const _Event('space'));
 
-      expect(seen.player, 2, reason: 'report.action is a _PlayerAction, not an Object');
-    });
-
-    test('carries only the action when fired directly', () {
-      late ControlReport seen;
-
-      controls
-        ..bind('jump', {const _Event('space')})
-        ..claim('jump', (report) => seen = report);
-
-      controls.fire('jump');
-
-      expect(seen.action, 'jump');
-      expect(seen.event, isNull);
+      expect(log, ['first'], reason: 'the match was found before the winner ran');
     });
   });
 
-  group('bindings view', () {
-    test('reports what is assigned', () {
-      controls.bind('jump', {const _Event('space')});
+  group('devices', () {
+    test('disposing drops every control and every group switch', () {
+      final controls = Controls()
+        ..bind(
+          note('jump'),
+          matchers: {const _Event('space')},
+          groups: {'ground'},
+        )
+        ..disable('ground')
+        ..dispose();
 
-      expect(controls.eventsFor('jump'), {const _Event('space')});
-      expect(controls.eventsFor('cancel'), isEmpty);
-      expect(controls.bindings.keys, ['jump']);
-    });
-
-    test('cannot be mutated through', () {
-      controls.bind('jump', {const _Event('space')});
-
-      expect(() => controls.bindings['cancel'] = {}, throwsUnsupportedError);
-      expect(() => controls.eventsFor('jump').clear(), throwsUnsupportedError);
-
-      // The sets inside the view are the live ones, so they need wrapping too.
-      expect(
-        () => controls.bindings['jump']!.add(const _Event('enter')),
-        throwsUnsupportedError,
-      );
-
-      expect(controls.eventsFor('jump'), {const _Event('space')});
+      expect(controls.dispatch(const _Event('space')), isFalse);
+      expect(controls.isEnabled('ground'), isTrue);
+      expect(controls.devices, isEmpty);
     });
   });
+}
+
+/// An event no keyboard could produce, to prove matching never assumes one.
+final class _Button implements ControlEvent {
+  final int id;
+
+  const _Button(this.id);
+
+  @override
+  bool accepts(ControlEvent emitted) => emitted is _Button && emitted.id == id;
+
+  @override
+  String toString() => 'button$id';
 }
