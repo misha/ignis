@@ -1,7 +1,8 @@
 ---
 title: Controls
-description: Devices, actions, and handlers.
+description: Devices and bindings.
 lane: usage
 category: system
 status: stub
 ---
+
