@@ -7,8 +7,6 @@ import 'package:ignis/src/globals.dart';
 class SceneWidget extends StatefulWidget {
   final Scene scene;
   final Color color;
-  final bool paused;
-  final bool debug;
   final bool autofocus;
   final bool addRepaintBoundary;
 
@@ -16,8 +14,6 @@ class SceneWidget extends StatefulWidget {
     this.scene, {
     super.key,
     this.color = const Color(0xFF000000),
-    this.paused = false,
-    this.debug = false,
     this.autofocus = true,
     this.addRepaintBoundary = true,
   });
@@ -94,9 +90,8 @@ class _SceneWidgetState extends State<SceneWidget> {
 
             return RenderSceneWidget(
               scene: widget.scene,
-              paused: widget.paused || muted,
-              debug: widget.debug,
               addRepaintBoundary: widget.addRepaintBoundary,
+              muted: muted,
             );
           },
         ),

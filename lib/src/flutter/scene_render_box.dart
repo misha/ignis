@@ -13,14 +13,12 @@ import 'package:ignis/src/flutter/scene_widget.dart';
 class RenderSceneWidget extends LeafRenderObjectWidget {
   final Scene scene;
   final bool addRepaintBoundary;
-  final bool paused;
-  final bool debug;
+  final bool muted;
 
   const RenderSceneWidget({
     required this.scene,
     required this.addRepaintBoundary,
-    this.paused = false,
-    this.debug = false,
+    this.muted = false,
     super.key,
   });
 
@@ -29,8 +27,7 @@ class RenderSceneWidget extends LeafRenderObjectWidget {
     return SceneRenderBox(
       scene,
       isRepaintBoundary: addRepaintBoundary,
-      isPaused: paused,
-      isDebug: debug,
+      muted: muted,
     );
   }
 
@@ -38,9 +35,8 @@ class RenderSceneWidget extends LeafRenderObjectWidget {
   void updateRenderObject(BuildContext context, SceneRenderBox renderObject) {
     renderObject
       ..scene = scene
-      ..isRepaintBoundary = addRepaintBoundary
-      ..isPaused = paused
-      ..isDebug = debug;
+      ..muted = muted
+      ..isRepaintBoundary = addRepaintBoundary;
   }
 }
 
@@ -49,41 +45,48 @@ class SceneRenderBox extends RenderBox {
   RenderLoop? renderLoop;
 
   Scene _scene;
-  bool _isPaused;
-  bool _isDebug;
   bool _isRepaintBoundary;
+  bool _muted;
+  Cleanup? _unwatch;
   late final _inputRouter = InputRouter(this);
 
   Scene get scene => _scene;
 
   SceneRenderBox(
     this._scene, {
-    this._isPaused = false,
-    this._isDebug = false,
     required this._isRepaintBoundary,
+    this._muted = false,
   });
 
   set scene(Scene value) {
     if (identical(_scene, value)) return;
     _scene = value;
+    if (attached) _watch();
     markNeedsPaint();
   }
 
-  set isPaused(bool value) {
-    if (_isPaused == value) return;
-    _isPaused = value;
+  /// Tracks this scene's pause, which a hotkey may flip without the widget
+  /// tree hearing about it.
+  void _watch() {
+    _unwatch?.call();
+    _unwatch = _scene.onPause.watch(_apply);
+    _apply();
+  }
 
-    if (_isPaused) {
+  /// Whether the surrounding tree has its tickers off, so this scene stops
+  /// drawing without being paused.
+  set muted(bool value) {
+    if (_muted == value) return;
+    _muted = value;
+    _apply();
+  }
+
+  void _apply() {
+    if (_scene.paused || _muted) {
       renderLoop?.stop();
     } else {
       renderLoop?.start();
     }
-  }
-
-  set isDebug(bool value) {
-    if (_isDebug == value) return;
-    _isDebug = value;
-    markNeedsPaint();
   }
 
   set isRepaintBoundary(bool value) {
@@ -104,8 +107,8 @@ class SceneRenderBox extends RenderBox {
   @override
   void attach(PipelineOwner owner) {
     super.attach(owner);
-    final renderLoop = this.renderLoop = RenderLoop(_renderLoopCallback);
-    if (!_isPaused) renderLoop.start();
+    renderLoop = RenderLoop(_renderLoopCallback);
+    _watch();
   }
 
   // Detach pairs with attach and can recur, e.g. on reparenting, so it only
@@ -113,6 +116,8 @@ class SceneRenderBox extends RenderBox {
   @override
   void detach() {
     super.detach();
+    _unwatch?.call();
+    _unwatch = null;
     renderLoop?.dispose();
     renderLoop = null;
   }
@@ -133,7 +138,7 @@ class SceneRenderBox extends RenderBox {
     final canvas = context.canvas;
     // TODO: What's faster, manually un-translating or save/restore?
     canvas.translate(offset.dx, offset.dy);
-    scene.render(canvas, debug: _isDebug);
+    scene.render(canvas);
     canvas.translate(-offset.dx, -offset.dy);
   }
 }

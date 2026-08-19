@@ -50,7 +50,7 @@ draw((canvas) {
 
 Callbacks run before the node's children, so a parent paints behind them.
 
-`debugDraw` is the same thing for the debug overlay, and only runs when the scene renders with `debug: true`.
+`debugDraw` is the same thing for the debug overlay, and runs whenever the overlay is on. See [Debugging](/systems/debugging).
 
 ```dart
 debugDraw((canvas) {

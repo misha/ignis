@@ -48,37 +48,25 @@ void main() {
     await tester.pump(const Duration(milliseconds: 16));
     expect(scene.node.updates, 1);
 
-    await tester.pumpWidget(
-      RenderSceneWidget(
-        scene: scene,
-        paused: true,
-        addRepaintBoundary: true,
-      ),
-    );
+    scene.paused = true;
     await tester.pump(const Duration(milliseconds: 16));
     final updatesAfterPause = scene.node.updates;
 
     await tester.pump(const Duration(milliseconds: 16));
     expect(scene.node.updates, updatesAfterPause); // No longer driven while paused.
 
-    await tester.pumpWidget(
-      RenderSceneWidget(
-        scene: scene,
-        addRepaintBoundary: true,
-      ),
-    );
+    scene.paused = false;
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 16));
     expect(scene.node.updates, greaterThan(updatesAfterPause));
   });
 
   testWidgets('starting paused does not start its render loop', (tester) async {
-    final scene = makeScene();
+    final scene = makeScene()..paused = true;
 
     await tester.pumpWidget(
       RenderSceneWidget(
         scene: scene,
-        paused: true,
         addRepaintBoundary: true,
       ),
     );

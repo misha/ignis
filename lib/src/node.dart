@@ -306,8 +306,6 @@ class Node {
   }
 
   /// Draws to the debug overlay every frame, in the same space as [draw].
-  ///
-  /// Only reached while the scene renders with `debug: true`.
   @nonVirtual
   void debugDraw(DebugDraw draw) {
     (_debugDraws ??= []).add(draw);
@@ -363,14 +361,14 @@ class Node {
 
   bool _enabled;
 
-  /// Whether this node updates and renders. Defaults to true.
+  /// Whether this node updates, renders, and answers input. Defaults to true.
   bool get enabled => _enabled;
 
-  /// Enables this node, so it resumes updating and rendering.
+  /// Enables this node, so it resumes updating, rendering and answering.
   @mustCallSuper
   void enable() => _enabled = true;
 
-  /// Disables this node, so it stops updating and rendering.
+  /// Disables this node, so it stops updating, rendering and answering.
   @mustCallSuper
   void disable() => _enabled = false;
 

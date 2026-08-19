@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/debug.dart';
+import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/layout/layout_constraints.dart';
 import 'package:ignis/src/layout/layout_flex.dart';
 import 'package:ignis/src/layout/layout_item.dart';
@@ -81,7 +81,9 @@ abstract class LayoutNode extends SizedNode {
     });
 
     debugDraw((canvas) {
-      canvas.drawRect(.fromLTWH(0, 0, width, height), DEBUG_LAYOUT_PAINT);
+      final debug = Ignis.debug;
+      if (!debug.draws(.layouts)) return;
+      canvas.drawRect(.fromLTWH(0, 0, width, height), debug.layoutPaint);
     });
   }
 

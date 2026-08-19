@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/debug.dart';
+import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/owners/speed_owner.dart';
@@ -158,7 +158,9 @@ class SpriteNode<T> extends SizedNode implements SpeedOwner {
     });
 
     debugDraw((canvas) {
-      canvas.drawRect(.fromLTWH(0, 0, width, height), DEBUG_TRANSFORM_PAINT);
+      final debug = Ignis.debug;
+      if (!debug.draws(.transforms)) return;
+      canvas.drawRect(.fromLTWH(0, 0, width, height), debug.transformPaint);
     });
   }
 

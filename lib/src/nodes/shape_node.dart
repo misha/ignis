@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:ignis/src/debug.dart';
+import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/palette.dart';
@@ -52,7 +52,9 @@ class ShapeNode extends SizedNode {
     });
 
     debugDraw((canvas) {
-      canvas.drawRect(shape.rect(), DEBUG_TRANSFORM_PAINT);
+      final debug = Ignis.debug;
+      if (!debug.draws(.transforms)) return;
+      canvas.drawRect(shape.rect(), debug.transformPaint);
     });
   }
 }

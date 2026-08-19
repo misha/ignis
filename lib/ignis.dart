@@ -5,6 +5,7 @@ export 'src/assets.dart';
 export 'src/collisions.dart';
 export 'src/core.dart';
 export 'src/curves.dart';
+export 'src/devices.dart';
 export 'src/effects.dart';
 export 'src/extensions.dart';
 export 'src/flutter/scene_widget.dart';

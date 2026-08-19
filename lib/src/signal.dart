@@ -17,17 +17,6 @@ sealed class Signal {
 
   /// Subscribes to this signal, ignoring data.
   Cleanup watch(void Function() watcher);
-
-  /// Subscribes via [watch], handing the cleanup to the building node's
-  /// [Node.trash] while a [Node.build] is running, so that node owns it.
-  Cleanup _register(Cleanup Function() watch) {
-    final builder = Node._builder;
-    if (builder == null) return watch();
-    builder.trash(watch());
-    return _noop;
-  }
-
-  static void _noop() {}
 }
 
 /// A primitive that sends messages to watchers.
@@ -49,7 +38,7 @@ class Signal0 extends Signal {
 
   /// Subscribes to this signal, receiving data.
   Cleanup call(void Function() watcher) {
-    return _register(() => _watch(watcher));
+    return _trash(_watch(watcher));
   }
 
   Cleanup _watch(void Function() watcher) {
@@ -111,7 +100,7 @@ class Signal1<A> extends Signal {
 
   /// Subscribes to this signal.
   Cleanup call(void Function(A) watcher) {
-    return _register(() => _watch(watcher));
+    return _trash(_watch(watcher));
   }
 
   Cleanup _watch(void Function(A) watcher) {
@@ -173,7 +162,7 @@ class Signal2<A, B> extends Signal {
 
   /// Subscribes to this signal.
   Cleanup call(void Function(A, B) watcher) {
-    return _register(() => _watch(watcher));
+    return _trash(_watch(watcher));
   }
 
   Cleanup _watch(void Function(A, B) watcher) {
@@ -235,7 +224,7 @@ class Signal3<A, B, C> extends Signal {
 
   /// Subscribes to this signal.
   Cleanup call(void Function(A, B, C) watcher) {
-    return _register(() => _watch(watcher));
+    return _trash(_watch(watcher));
   }
 
   Cleanup _watch(void Function(A, B, C) watcher) {

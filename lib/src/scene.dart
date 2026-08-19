@@ -7,10 +7,16 @@ class Scene<T extends Node> {
   /// This scene's root. Cannot be modified.
   final T node;
 
+  static final List<Scene> _live = [];
+
+  /// Every scene currently mounted, the most recent first.
+  static Iterable<Scene> get live => _live.reversed;
+
   final _tree = _Tree();
   bool _mounted = true;
   bool _sized = false;
   bool _reassembling = false;
+  bool _paused = false;
 
   Vector2 _size = .zero;
 
@@ -20,9 +26,41 @@ class Scene<T extends Node> {
   /// Whether the scene has been [resize]d at least once.
   bool get hasSize => _sized;
 
+  /// Whether this scene is frozen: it neither updates nor advances time.
+  bool get paused => _paused;
+
+  /// Freezes this scene, so it stops updating and advancing time.
+  @mustCallSuper
+  void pause() {
+    if (_paused) return;
+    _paused = true;
+    onPause.emit(true);
+  }
+
+  /// Unfreezes this scene, so it resumes updating.
+  @mustCallSuper
+  void resume() {
+    if (!_paused) return;
+    _paused = false;
+    onPause.emit(false);
+  }
+
+  @nonVirtual
+  set paused(bool value) {
+    if (value) {
+      pause();
+    } else {
+      resume();
+    }
+  }
+
+  /// Emitted whenever [paused] changes.
+  final onPause = Signal1<bool>();
+
   Scene._({
     required this.node,
   }) {
+    _live.add(this);
     node._mount(this);
   }
 
@@ -45,16 +83,11 @@ class Scene<T extends Node> {
   }
 
   /// Renders this scene to [canvas].
-  ///
-  /// Pass [debug] to additionally render the debug overlay for this frame.
-  void render(
-    Canvas canvas, {
-    bool debug = false,
-  }) {
+  void render(Canvas canvas) {
     assert(_mounted, 'Cannot render a destroyed scene.');
     if (!node.enabled) return;
     node.render(canvas);
-    if (debug) node.debugRender(canvas);
+    if (Debug.instance.enabled) node.debugRender(canvas);
   }
 
   void resize(double width, double height) {
@@ -76,6 +109,7 @@ class Scene<T extends Node> {
   void destroy() {
     if (!_mounted) return;
     _mounted = false;
+    _live.remove(this);
     node._unmount();
   }
 }

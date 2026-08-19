@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/debug.dart';
+import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/angle_owner.dart';
 import 'package:ignis/src/owners/position_owner.dart';
@@ -173,12 +173,22 @@ class TransformNode extends Node implements PositionOwner, ScaleOwner, AngleOwne
 
   /// Renders the subtree under this node's transform, marking [position] with
   /// a 2-pixel cross before anything this node or its children draw.
+  ///
+  /// Overridden rather than drawn through [debugDraw] because the transform
+  /// has to wrap the children too, and a callback would cost every node in the
+  /// engine a list and a closure it may never use.
   @override
   void debugRender(Canvas canvas) {
     canvas.save();
     canvas.transform(renderTransform);
-    canvas.drawLine(.new(-1, 0), .new(1, 0), DEBUG_TRANSFORM_PAINT);
-    canvas.drawLine(.new(0, -1), .new(0, 1), DEBUG_TRANSFORM_PAINT);
+
+    final debug = Ignis.debug;
+
+    if (debug.draws(.transforms)) {
+      canvas.drawLine(.new(-1, 0), .new(1, 0), debug.transformPaint);
+      canvas.drawLine(.new(0, -1), .new(0, 1), debug.transformPaint);
+    }
+
     super.debugRender(canvas);
     canvas.restore();
   }

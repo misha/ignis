@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:ignis/src/assets/cache.dart';
+import 'package:ignis/src/core.dart';
+import 'package:ignis/src/devices/keyboard.dart';
 import 'package:ignis/src/assets/preload.dart';
 
 // TODO: These want a single prefix between them, as `Ignis.prefix`. An asset
@@ -24,6 +26,22 @@ abstract final class Ignis {
     if (identical(_cache, value)) return;
     _cache.dispose();
     _cache = value;
+  }
+
+  /// Controls flags and settings for Ignis' debug features.
+  static Debug debug = Debug();
+
+  static Controls _controls = Controls()..attach(KeyboardDevice());
+
+  /// Registers devices and routes their events to control handlers.
+  ///
+  /// The default instance comes with a [KeyboardDevice] attached.
+  static Controls get controls => _controls;
+
+  static set controls(Controls value) {
+    if (identical(_controls, value)) return;
+    _controls.dispose();
+    _controls = value;
   }
 
   static Preload _preload = Preload();

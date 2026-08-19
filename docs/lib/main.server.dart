@@ -179,6 +179,7 @@ void main() {
                   SidebarLink(text: 'Palettes', href: '/systems/palettes'),
                   SidebarLink(text: 'Collisions', href: '/systems/collisions'),
                   SidebarLink(text: 'Inputs', href: '/systems/inputs'),
+                  SidebarLink(text: 'Controls', href: '/systems/controls'),
                   SidebarLink(text: 'Assets', href: '/systems/assets'),
                   SidebarLink(text: 'Live Reload', href: '/systems/live-reload'),
                   SidebarLink(text: 'Shapes and Anchors', href: '/systems/shapes-anchors'),

@@ -90,4 +90,34 @@ void main() {
 
     expect(node.builds, 2);
   });
+
+  group('pause', () {
+    test('pause and resume flip it, and emit only on a change', () {
+      final scene = Node().mount();
+      final emitted = <bool>[];
+      scene.onPause(emitted.add);
+
+      scene.pause();
+      expect(scene.paused, isTrue);
+
+      scene.pause();
+      expect(emitted, [true], reason: 'already paused, nothing changed');
+
+      scene.resume();
+      expect(scene.paused, isFalse);
+      expect(emitted, [true, false]);
+    });
+
+    test('the setter goes through pause and resume', () {
+      final scene = Node().mount();
+      final emitted = <bool>[];
+      scene.onPause(emitted.add);
+
+      scene.paused = true;
+      scene.paused = true;
+      scene.paused = false;
+
+      expect(emitted, [true, false]);
+    });
+  });
 }

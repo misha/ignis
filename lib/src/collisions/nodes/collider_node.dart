@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/collisions/nodes/collision_detection_node.dart';
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/debug.dart';
+import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/shape.dart';
@@ -78,7 +78,9 @@ class ColliderNode extends SizedNode {
     });
 
     debugDraw((canvas) {
-      canvas.drawRect(shape.rect(), DEBUG_COLLIDER_PAINT);
+      final debug = Ignis.debug;
+      if (!debug.draws(.collisions)) return;
+      canvas.drawRect(shape.rect(), debug.collisionPaint);
     });
   }
 

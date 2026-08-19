@@ -16,15 +16,21 @@ final scene = game.mount(); // Ready to go!
 
 ## Flutter Usage
 
-`SceneWidget` embeds a scene in Flutter. Flutter's engine will then automatically drive updating and rendering. You can control the loop using the widget's parameters:
+`SceneWidget` embeds a scene in Flutter. Flutter's engine will then automatically drive updating and rendering.
 
 ```dart
-final widget = SceneWidget(
-  scene,
-  paused: true, // Start the scene paused.
-  debug: true,  // Enable debug rendering.
-);
+final widget = SceneWidget(scene);
 ```
+
+The scene owns whether it runs, not the widget. Pause it directly, from anywhere, and the widget follows:
+
+```dart
+scene.pause();
+scene.resume();
+scene.paused; // Whether it is frozen.
+```
+
+Flutter can also stop the loop on its own account: a scene inside hidden UI has its tickers disabled, and stops drawing without being paused.
 
 <Lineage from="Flame">
 
@@ -47,6 +53,5 @@ Scenes can also be driven completely manually. In fact, this is how much of Igni
 ```dart
 scene.update(1 / 60); // Manual update at 60 FPS.
 scene.render(canvas); // Manual render (e.g. to a `PictureRecorder`).
-scene.render(canvas, debug: true); // Manual render with debug rendering.
 scene.destroy(); // All done, thanks.
 ```

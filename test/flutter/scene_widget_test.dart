@@ -108,11 +108,11 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(100, 80));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final scene = TestNode().mount();
-    await tester.pumpWidget(SceneWidget(scene, paused: true));
+    final scene = TestNode().mount()..pause();
+    await tester.pumpWidget(SceneWidget(scene));
     expect(scene.node.updates, 1);
 
-    await tester.pumpWidget(SceneWidget(scene, paused: true));
+    await tester.pumpWidget(SceneWidget(scene));
     await tester.binding.setSurfaceSize(const Size(200, 80));
     await tester.pump();
 

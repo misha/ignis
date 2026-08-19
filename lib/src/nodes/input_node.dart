@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:ignis/src/debug.dart';
+import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/shape.dart';
@@ -40,12 +40,15 @@ abstract class InputNode extends SizedNode {
     super.build();
 
     debugDraw((canvas) {
+      final debug = Ignis.debug;
+      if (!debug.draws(.inputs)) return;
+
       switch (shape) {
         case Circle():
-          canvas.drawOval(shape.rect(), DEBUG_INPUT_PAINT);
+          canvas.drawOval(shape.rect(), debug.inputPaint);
 
         case Rectangle():
-          canvas.drawRect(shape.rect(), DEBUG_INPUT_PAINT);
+          canvas.drawRect(shape.rect(), debug.inputPaint);
       }
     });
   }

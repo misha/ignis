@@ -16,6 +16,8 @@ Future<void> expectGolden(
 }) async {
   assert(dt >= 0, 'dt cannot be negative.');
   final key = GlobalKey();
+  Ignis.debug = Debug();
+  if (debug) Ignis.debug.mode = .all;
 
   await tester.pumpWidget(
     Center(
@@ -27,7 +29,6 @@ Future<void> expectGolden(
           child: SceneWidget(
             node.mount(),
             color: color,
-            debug: debug,
           ),
         ),
       ),

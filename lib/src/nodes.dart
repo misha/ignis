@@ -1,3 +1,4 @@
+export 'nodes/debug_controls_node.dart';
 export 'nodes/effect_node.dart';
 export 'nodes/fps_node.dart';
 export 'nodes/input_node.dart';
