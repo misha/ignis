@@ -19,7 +19,6 @@ import 'package:jaspr_content/jaspr_content.dart';
 import 'components/callouts.dart';
 import 'components/coverage.dart';
 import 'components/demo.dart';
-import 'components/drag_and_drop_demo.dart';
 import 'components/reference.dart';
 import 'components/related.dart';
 import 'components/status_banner.dart';
@@ -107,11 +106,6 @@ void main() {
         Coverage(),
         // Every <Demo name="..."/> slot on the site.
         Demo(),
-        // Embeds the drag-and-drop scene as <DragAndDropDemo/> in markdown.
-        CustomComponent(
-          pattern: 'DragAndDropDemo',
-          builder: (_, _, _) => DragAndDropDemo(),
-        ),
         // Adds zooming and caption support to images.
         Image(zoom: true),
       ],

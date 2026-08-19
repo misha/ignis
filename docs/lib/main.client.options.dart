@@ -6,8 +6,6 @@
 
 import 'package:jaspr/client.dart';
 
-import 'package:docs/components/drag_and_drop_demo.dart'
-    deferred as _drag_and_drop_demo;
 import 'package:docs/components/scene_demo.dart' deferred as _scene_demo;
 import 'package:jaspr_content/components/_internal/code_block_copy_button.dart'
     deferred as _code_block_copy_button;
@@ -36,10 +34,6 @@ import 'package:jaspr_content/components/sidebar_toggle_button.dart'
 /// ```
 ClientOptions get defaultClientOptions => ClientOptions(
   clients: {
-    'drag_and_drop_demo': ClientLoader(
-      (p) => _drag_and_drop_demo.DragAndDropDemo(),
-      loader: _drag_and_drop_demo.loadLibrary,
-    ),
     'scene_demo': ClientLoader(
       (p) => _scene_demo.SceneDemo(name: p['name'] as String),
       loader: _scene_demo.loadLibrary,

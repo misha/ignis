@@ -4,4 +4,5 @@ description: What drives an effect's timing, and how controllers nest.
 lane: usage
 category: system
 status: stub
+reference: [EffectController, DurationEffectController, RepeatEffectController, RoundtripEffectController, SequenceEffectController]
 ---

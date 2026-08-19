@@ -1,7 +1,8 @@
 ---
 title: Shapes and Anchors
-description: The geometry a node draws and is hit against, and where it is held.
+description: A crash course in node geometry.
 lane: usage
 category: system
 status: stub
+reference: [Shape, Circle, Rectangle]
 ---

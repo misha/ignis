@@ -8,5 +8,3 @@
 
 dynamic DemoView;
 typedef DemoViewOrStubbed = dynamic;
-dynamic DragAndDropWidget;
-typedef DragAndDropWidgetOrStubbed = dynamic;
