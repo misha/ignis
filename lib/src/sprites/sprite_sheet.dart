@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/sprite.dart';
+import 'package:ignis/src/sprites/sprite_entry.dart';
+import 'package:ignis/src/sprites/sprite_key.dart';
 
 // TODO: Sprite sheets should precache their computed rects rather than create
 //  them on demand.
@@ -11,13 +13,13 @@ import 'package:ignis/src/sprite.dart';
 ///
 /// ```dart
 /// SpriteSheet('assets/slime.png', .all(56), fps: 16, rows: [
-///   .new(key: 'idle', frames: 14),
-///   .new(key: 'jump', frames: 30, fps: 24, loop: false),
+///   .new(id: 'idle', frames: 14),
+///   .new(id: 'jump', frames: 30, fps: 24, loop: false),
 /// ]);
 /// ```
 class SheetRow<T> {
-  /// What this row answers to in [Sprite.rowOf], or null to go unnamed.
-  final T? key;
+  /// What this row answers to, or null to go unnamed.
+  final T? id;
 
   /// The first column this row plays from. Defaults to 0.
   final int start;
@@ -36,13 +38,19 @@ class SheetRow<T> {
   final bool? loop;
 
   const SheetRow({
-    this.key,
+    this.id,
     int? start,
     this.frames,
     this.fps,
     this.loop,
-  }) : assert(start == null || start >= 0, 'A row starts at column 0 or later.'),
-       assert(frames == null || frames >= 1, 'A row plays at least one frame.'),
+  }) : assert(
+         start == null || start >= 0,
+         'A row starts at column 0 or later.',
+       ),
+       assert(
+         frames == null || frames >= 1,
+         'A row plays at least one frame.',
+       ),
        assert(
          fps == null || (fps >= 0 && fps < double.infinity),
          'A rate is finite and not negative.',
@@ -55,7 +63,7 @@ class SheetRow<T> {
   /// Plays as many frames as [durations] is long.
   SheetRow.timed(
     List<double> durations, {
-    this.key,
+    this.id,
     int? start,
     this.loop,
   }) : start = start ?? 0,
@@ -126,7 +134,7 @@ class SpriteSheet<T> extends Sprite<T> {
   ///
   /// A rate of 0 holds a row on its first frame, which is what a sheet whose
   /// rows all time themselves states.
-  final num fps;
+  final double fps;
 
   /// Whether every row without a [SheetRow.loop] of its own starts over.
   final bool loop;
@@ -135,7 +143,7 @@ class SpriteSheet<T> extends Sprite<T> {
   final String asset;
 
   @override
-  late final int rows;
+  late final int length;
 
   /// How many columns of frames the grid holds.
   late final int columns;
@@ -149,7 +157,7 @@ class SpriteSheet<T> extends Sprite<T> {
   factory SpriteSheet(
     String asset,
     Vector2 size, {
-    required num fps,
+    required double fps,
     bool? loop,
     List<SheetRow<T>>? rows,
   }) {
@@ -157,15 +165,17 @@ class SpriteSheet<T> extends Sprite<T> {
     return SpriteSheet._(image, size, asset, fps, loop, rows);
   }
 
-  /// Cuts an image that holds one animation, under the name [key].
+  /// Cuts an image that holds one animation, under the name [id].
   ///
   /// For art that ships a file per animation, where the row is the whole sheet
   /// and there is nothing to number.
   factory SpriteSheet.single(
     String asset,
     Vector2 size, {
-    required num fps,
-    T? key,
+    T? id,
+    int? start,
+    int? frames,
+    required double fps,
     bool? loop,
   }) {
     final sheet = SpriteSheet<T>(
@@ -173,14 +183,22 @@ class SpriteSheet<T> extends Sprite<T> {
       size,
       fps: fps,
       loop: loop,
-      rows: [SheetRow<T>(key: key)],
+      rows: [
+        SheetRow<T>(
+          id: id,
+          start: start,
+          frames: frames,
+          fps: fps,
+          loop: loop,
+        ),
+      ],
     );
 
-    if (sheet.rows != 1) {
+    if (sheet.length != 1) {
       throw ArgumentError.value(
         size,
         'size',
-        'Cuts ${sheet.rows} rows out of this image, not one.',
+        'Cuts ${sheet.length} rows out of this image, not one.',
       );
     }
 
@@ -194,7 +212,10 @@ class SpriteSheet<T> extends Sprite<T> {
     this.fps,
     bool? loop,
     List<SheetRow<T>>? declared,
-  ) : assert(fps >= 0 && fps < double.infinity, 'FPS must be finite and non-negative.'),
+  ) : assert(
+        fps >= 0 && fps < double.infinity,
+        'FPS must be finite and non-negative.',
+      ),
       _size = .copy(size),
       loop = loop ?? true,
       _declared = declared == null ? null : List.of(declared, growable: false) {
@@ -234,19 +255,19 @@ class SpriteSheet<T> extends Sprite<T> {
     }
 
     columns = _image.width ~/ width;
-    rows = _image.height ~/ height;
+    length = _image.height ~/ height;
 
     final declared = _declared;
 
-    if (declared != null && declared.length > rows) {
+    if (declared != null && declared.length > length) {
       throw ArgumentError.value(
         declared.length,
         'rows',
-        'The sheet only has $rows rows.',
+        'The sheet only has $length rows.',
       );
     }
 
-    _rows = .generate(rows, _resolve, growable: false);
+    _rows = .generate(length, _resolve, growable: false);
   }
 
   /// The row at [index], with everything it left unstated filled in.
@@ -294,15 +315,24 @@ class SpriteSheet<T> extends Sprite<T> {
   }
 
   @override
-  int? rowOf(T key) {
+  SpriteEntry<T>? resolve(SpriteKey<T> key) {
     final declared = _declared;
-    if (declared == null) return null;
 
-    for (var index = 0; index < declared.length; index += 1) {
-      if (declared[index].key == key) return index;
+    switch (key) {
+      case SpriteIndex(:final index):
+        return SpriteEntry(index, declared?[index].id);
+
+      case SpriteId(:final id):
+        if (declared != null) {
+          for (var index = 0; index < declared.length; index += 1) {
+            if (declared[index].id == id) {
+              return SpriteEntry(index, id);
+            }
+          }
+        }
+
+        return null;
     }
-
-    return null;
   }
 
   @override

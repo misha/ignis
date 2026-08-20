@@ -7,8 +7,73 @@ import 'package:ignis/src/nodes/sized_node.dart';
 import 'package:ignis/src/owners/speed_owner.dart';
 import 'package:ignis/src/palette.dart';
 import 'package:ignis/src/sprite.dart';
+import 'package:ignis/src/sprites/sprite_entry.dart';
+import 'package:ignis/src/sprites/sprite_key.dart';
 
-/// Draws one frame of a [Sprite] at a time, and animates along its row.
+/// What a [SpriteNode] is drawing.
+final class SpriteState<T> {
+  int _index = 0;
+  T? _id;
+  int _frame = 0;
+  bool _loops = false;
+  bool _finished = false;
+  Vector2 _size = .zero;
+
+  bool? _loop;
+  double _elapsed = 0;
+  Rect? _source;
+  Rect? _destination;
+
+  SpriteState._();
+
+  /// Where the entry playing sits in the node's sprite.
+  int get index => _index;
+
+  /// What that entry answers to, or null where it goes unnamed.
+  T? get id => _id;
+
+  /// The frame drawn, counted from the start of the entry.
+  int get frame => _frame;
+
+  /// Whether the entry playing starts over after its final frame.
+  bool get loops => _loops;
+
+  /// Whether a non-looping entry has reached its final frame.
+  bool get isFinished => _finished;
+
+  /// The size of one frame of the entry playing.
+  Vector2 get size => _size;
+
+  /// Draws [frame] next, dropping the cut taken for the one before it.
+  void _seek(int frame) {
+    _frame = frame;
+    _source = null;
+  }
+
+  /// Moves onto [frame] of [entry], reading [sprite] for everything else that
+  /// follows from the move.
+  void _select(Sprite<T> sprite, SpriteEntry<T> entry, int frame) {
+    _index = entry.index;
+    _id = entry.id;
+    _frame = frame;
+    _loops = _loop ?? sprite.loops(entry.index);
+    _finished = false;
+    _size = sprite.size(entry.index);
+    _source = null;
+    _destination = null;
+  }
+
+  @override
+  String toString() {
+    final buffer = StringBuffer('SpriteState(');
+    buffer.write(_id == null ? 'entry $_index' : '$_id');
+    if (_finished) buffer.write(', finished');
+    buffer.write(')');
+    return buffer.toString();
+  }
+}
+
+/// Draws one frame of a [Sprite] at a time, and animates along its entry.
 ///
 /// ```dart
 /// add(
@@ -21,7 +86,7 @@ import 'package:ignis/src/sprite.dart';
 /// A sprite takes its [size] from the frame, so [anchor], hit testing and
 /// layout all work off the frame rather than the image. How fast it plays and
 /// whether it loops belong to the sprite. [speed] scales the rate, and [play]
-/// chooses which row is playing.
+/// chooses which entry is playing.
 class SpriteNode<T> extends SizedNode implements SpeedOwner {
   /// This node's registered paints.
   final Palette palette;
@@ -37,46 +102,30 @@ class SpriteNode<T> extends SizedNode implements SpeedOwner {
 
   /// Whether to [detach] once finished. Defaults to false.
   ///
-  /// Ignored while [loops] is true, since a looping sprite never finishes.
+  /// Ignored while while looping, since animation never finishes.
   bool cleanup;
 
-  /// Emitted when animation advances to a new [frame].
+  /// Emitted when animation advances to a new [SpriteState.frame].
   final onFrame = Signal1<int>();
 
-  /// Emitted when a looping animation wraps to the start of its row.
+  /// Emitted when a looping animation wraps to the start of its entry.
   final onLoop = Signal0();
 
   /// Emitted when a non-looping animation reaches its final frame.
   final onFinish = Signal0();
 
+  final SpriteState<T> _current = SpriteState._();
   Sprite<T> _sprite;
-  int _row = 0;
-  int _frame = 0;
-  double _elapsed = 0;
-  bool? _loop;
-  bool _finished = false;
-
-  Rect? _source;
-  Rect? _destination;
 
   /// What this sprite draws.
   Sprite<T> get sprite => _sprite;
 
-  /// The row currently playing, indexed into [sprite].
-  int get row => _row;
+  /// The entry playing, the frame drawn, and everything else about it.
+  SpriteState<T> get current => _current;
 
-  /// The frame currently drawn, counted from the start of [row].
-  int get frame => _frame;
-
-  /// Whether the row currently playing starts over after its final frame.
-  bool get loops => _loop ?? _sprite.loops(_row);
-
-  /// Whether a non-looping animation has reached its final frame.
-  bool get isFinished => _finished;
-
-  /// The size of one frame of the row currently playing.
+  /// The size of one frame of the entry currently playing.
   @override
-  Vector2 get size => _sprite.size(_row);
+  Vector2 get size => _current.size;
 
   /// Creates a node that draws [sprite].
   SpriteNode({
@@ -94,45 +143,61 @@ class SpriteNode<T> extends SizedNode implements SpeedOwner {
   }) : assert(speed == null || speed >= 0, 'Speed cannot be negative.'),
        palette = Palette(paint: paint),
        speed = speed ?? 1,
-       cleanup = cleanup ?? false;
+       cleanup = cleanup ?? false {
+    _current._select(sprite, _resolve(const .index(0)), 0);
+  }
+
+  /// The entry [key] looks up, or a throw where [sprite] has none.
+  ///
+  /// The range check is here rather than in [Sprite.resolve], which takes an
+  /// index it has already been vetted for.
+  SpriteEntry<T> _resolve(SpriteKey<T> key) {
+    if (key case SpriteIndex(:final index) when index < 0 || index >= _sprite.length) {
+      throw ArgumentError.value(index, 'index', 'No such entry.');
+    }
+
+    final entry = _sprite.resolve(key);
+    if (entry != null) return entry;
+
+    throw ArgumentError.value(key, 'key', 'No such entry.');
+  }
 
   @override
   void build() {
     super.build();
 
     tick((dt) {
-      if (_finished) return;
+      final state = _current;
+      if (state.isFinished) return;
       final amount = dt * speed;
       if (amount <= 0 || !amount.isFinite) return;
 
-      _elapsed += amount;
+      state._elapsed += amount;
 
-      // Every pass re-reads the fields, so a handler calling play() redirects
+      // Every pass re-reads the state, so a handler calling play() redirects
       // this loop instead of racing it.
       while (true) {
-        final duration = _sprite.duration(_row, _frame);
+        final duration = _sprite.duration(state.index, state.frame);
 
         if (duration <= 0 || !duration.isFinite) {
-          _elapsed = 0;
+          state._elapsed = 0;
           return;
         }
 
-        if (_elapsed < duration) return;
-        _elapsed -= duration;
-        final next = _frame + 1;
+        if (state._elapsed < duration) return;
+        state._elapsed -= duration;
+        final next = state.frame + 1;
 
-        if (next < _sprite.frames(_row)) {
-          _frame = next;
-          _source = null;
+        if (next < _sprite.frames(state.index)) {
+          state._seek(next);
           onFrame.emit(next);
-        } else if (loops) {
-          _frame = 0;
-          _source = null;
+        } else if (state.loops) {
+          state._seek(0);
           onFrame.emit(0);
           onLoop.emit();
         } else {
-          _elapsed = 0;
-          _finished = true;
+          state._elapsed = 0;
+          state._finished = true;
           onFinish.emit();
 
           if (cleanup) {
@@ -145,10 +210,12 @@ class SpriteNode<T> extends SizedNode implements SpeedOwner {
     });
 
     void painter(Canvas canvas, Paint paint) {
+      final state = _current;
+
       canvas.drawImageRect(
-        _sprite.image(_row),
-        _source ??= _sprite.rect(_row, _frame),
-        _destination ??= .fromLTWH(0, 0, width, height),
+        _sprite.image(state.index),
+        state._source ??= _sprite.rect(state.index, state.frame),
+        state._destination ??= .fromLTWH(0, 0, width, height),
         paint,
       );
     }
@@ -170,74 +237,69 @@ class SpriteNode<T> extends SizedNode implements SpeedOwner {
   void reassemble() {
     _sprite = _sprite.reload();
 
-    // Clamp the playhead if the replacement is smaller. A row that went away
-    // takes its frame with it.
-    if (_row >= _sprite.rows) {
-      _row = 0;
-      _frame = 0;
-    } else if (_frame >= _sprite.frames(_row)) {
-      _frame = 0;
+    // Clamp the playhead if the replacement is smaller. An entry that went
+    // away takes its frame with it.
+    var index = _current.index;
+    var frame = _current.frame;
+
+    if (index >= _sprite.length) {
+      index = 0;
+      frame = 0;
+    } else if (frame >= _sprite.frames(index)) {
+      frame = 0;
     }
 
-    _source = null;
-    _destination = null;
+    _current._select(_sprite, _resolve(.index(index)), frame);
   }
 
-  /// Plays [row] from the given [frame], or whichever row [key] names.
+  /// Plays the entry at [index] from the given [frame], or whichever entry
+  /// [id] names.
   ///
   /// ```dart
-  /// // Animates the third row from its start.
-  /// sprite.play(row: 2);
+  /// // Animates the third entry from its start.
+  /// sprite.play(index: 2);
   ///
-  /// // Animates whichever row the sprite calls 'jump'.
-  /// sprite.play(key: 'jump');
+  /// // Animates whichever entry the sprite calls 'jump'.
+  /// sprite.play(id: 'jump');
   /// ```
   ///
-  /// [loop] overrides what the row states, until the next call. It also clears
-  /// [isFinished], so a non-looping sprite that already finished runs again
-  /// from wherever this puts it.
+  /// [loop] overrides what the entry states, until the next call. It also
+  /// clears [SpriteState.isFinished], so a non-looping sprite that already
+  /// finished runs again from wherever this puts it.
   void play({
-    T? key,
-    int row = 0,
+    T? id,
+    int index = 0,
     int frame = 0,
     bool? loop,
   }) {
-    assert(key == null || row == 0, 'Must supply a key or a row, but not both.');
+    assert(
+      id == null || index == 0,
+      'Must supply an id or an index, but not both.',
+    );
 
-    if (key != null) {
-      final named = _sprite.rowOf(key);
-
-      if (named == null) {
-        throw ArgumentError.value(key, 'key', 'No such row.');
-      }
-
-      row = named;
-    }
-
-    if (row < 0) {
-      throw ArgumentError.value(row, 'row', 'Cannot be negative.');
-    }
-
-    if (row >= _sprite.rows) {
-      throw ArgumentError.value(row, 'row', 'Only ${_sprite.rows} rows available.');
-    }
+    final entry = _resolve(id != null ? .id(id) : .index(index));
 
     if (frame < 0) {
-      throw ArgumentError.value(frame, 'frame', 'Cannot be negative.');
+      throw ArgumentError.value(
+        frame,
+        'frame',
+        'Cannot be negative.',
+      );
     }
 
-    final frames = _sprite.frames(row);
+    final frames = _sprite.frames(entry.index);
 
     if (frame >= frames) {
-      throw ArgumentError.value(frame, 'frame', 'That row only plays $frames frames.');
+      throw ArgumentError.value(
+        frame,
+        'frame',
+        'That entry only plays $frames frames.',
+      );
     }
 
-    _row = row;
-    _frame = frame;
-    _loop = loop;
-    _elapsed = 0;
-    _finished = false;
-    _source = null;
-    _destination = null;
+    _current
+      .._loop = loop
+      .._elapsed = 0
+      .._select(_sprite, entry, frame);
   }
 }

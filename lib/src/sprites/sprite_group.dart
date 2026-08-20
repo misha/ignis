@@ -2,39 +2,41 @@ import 'dart:ui';
 
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/sprite.dart';
+import 'package:ignis/src/sprites/sprite_entry.dart';
+import 'package:ignis/src/sprites/sprite_key.dart';
 
-/// One row of a [SpriteGroup], and where it came from.
+/// One entry of a [SpriteGroup], and where it came from.
 final class _Slot<T> {
   final Sprite<T> sprite;
-  final int row;
+  final int index;
 
-  const _Slot(this.sprite, this.row);
+  const _Slot(this.sprite, this.index);
 }
 
-/// Several [Sprite]s laid end to end, addressed as one run of rows.
+/// Several [Sprite]s laid end to end, addressed as one run of entries.
 ///
 /// ```dart
 /// final slime = SpriteGroup([
-///   SpriteSheet('assets/idle.png', .all(56), fps: 16, rows: [.new(key: 'idle')]),
-///   SpriteSheet('assets/jump.png', .all(56), fps: 24, rows: [.new(key: 'jump')]),
+///   SpriteSheet('assets/idle.png', .all(56), fps: 16, rows: [.new(id: 'idle')]),
+///   SpriteSheet('assets/jump.png', .all(56), fps: 24, rows: [.new(id: 'jump')]),
 /// ]);
 ///
-/// node.play(key: 'jump');
+/// node.play(id: 'jump');
 /// ```
 ///
-/// Rows are numbered straight through, so a part contributes as many as it
+/// Entries are numbered straight through, so a part contributes as many as it
 /// holds and the next one carries on where it left off. Parts answer for their
-/// own rows, so each brings its own image, frame size, rates and looping.
+/// own entries, so each brings its own image, frame size, rates and looping.
 /// Anything implementing [Sprite] can be one of them.
 ///
-/// Names come from the parts, never from here: [rowOf] asks each of them in
-/// turn and shifts the answer by the rows before it.
+/// Names come from the parts, never from here: [resolve] asks each of them in
+/// turn and shifts the answer by the entries before it.
 class SpriteGroup<T> extends Sprite<T> {
-  /// What this draws, in the order their rows are numbered.
+  /// What this draws, in the order their entries are numbered.
   final List<Sprite<T>> parts;
 
   @override
-  late final int rows;
+  late final int length;
 
   late final List<_Slot<T>> _slots;
   late final List<int> _offsets;
@@ -50,62 +52,74 @@ class SpriteGroup<T> extends Sprite<T> {
 
     for (var index = 0; index < this.parts.length; index += 1) {
       _offsets[index] = offset;
-      offset += this.parts[index].rows;
+      offset += this.parts[index].length;
     }
 
     _slots = [
       for (final part in this.parts)
-        for (var row = 0; row < part.rows; row += 1) //
-          _Slot<T>(part, row),
+        for (var index = 0; index < part.length; index += 1) //
+          _Slot<T>(part, index),
     ];
 
-    rows = _slots.length;
+    length = _slots.length;
   }
 
   @override
-  Image image(int row) {
-    final slot = _slots[row];
-    return slot.sprite.image(slot.row);
+  Image image(int index) {
+    final slot = _slots[index];
+    return slot.sprite.image(slot.index);
   }
 
   @override
-  Vector2 size(int row) {
-    final slot = _slots[row];
-    return slot.sprite.size(slot.row);
+  Vector2 size(int index) {
+    final slot = _slots[index];
+    return slot.sprite.size(slot.index);
   }
 
   @override
-  int frames(int row) {
-    final slot = _slots[row];
-    return slot.sprite.frames(slot.row);
+  int frames(int index) {
+    final slot = _slots[index];
+    return slot.sprite.frames(slot.index);
   }
 
   @override
-  Rect rect(int row, int index) {
-    final slot = _slots[row];
-    return slot.sprite.rect(slot.row, index);
+  Rect rect(int index, int frame) {
+    final slot = _slots[index];
+    return slot.sprite.rect(slot.index, frame);
   }
 
   @override
-  double duration(int row, int index) {
-    final slot = _slots[row];
-    return slot.sprite.duration(slot.row, index);
+  double duration(int index, int frame) {
+    final slot = _slots[index];
+    return slot.sprite.duration(slot.index, frame);
   }
 
   @override
-  bool loops(int row) {
-    final slot = _slots[row];
-    return slot.sprite.loops(slot.row);
+  bool loops(int index) {
+    final slot = _slots[index];
+    return slot.sprite.loops(slot.index);
   }
 
   @override
-  int? rowOf(T key) {
-    for (var index = 0; index < parts.length; index += 1) {
-      final row = parts[index].rowOf(key);
-      if (row != null) return _offsets[index] + row;
+  SpriteEntry<T>? resolve(SpriteKey<T> key) {
+    switch (key) {
+      case SpriteIndex(:final index):
+        final slot = _slots[index];
+        final resolved = slot.sprite.resolve(.index(slot.index));
+        return SpriteEntry(index, resolved?.id);
+
+      case SpriteId(:final id):
+        for (var part = 0; part < parts.length; part += 1) {
+          final entry = parts[part].resolve(key);
+
+          if (entry != null) {
+            final index = _offsets[part] + entry.index;
+            return SpriteEntry(index, id);
+          }
+        }
+
+        return null;
     }
-
-    return null;
   }
 
   @override

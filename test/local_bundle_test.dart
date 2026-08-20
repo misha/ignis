@@ -176,7 +176,7 @@ flutter:
 
     final node = SpriteNode(sprite: SpriteSheet('assets/hero.png', .all(1), fps: 0));
     node.play(frame: 3);
-    expect(node.frame, 3);
+    expect(node.current.frame, 3);
 
     // Down to two frames, leaving frame 3 out of range.
     await write(['assets', 'hero.png'], await solidImage(2, 1, BLUE));
@@ -189,7 +189,7 @@ flutter:
     node.reassemble();
 
     expect(node.sprite.frames(0), 2);
-    expect(node.frame, 0, reason: 'the stale frame index was not clamped');
+    expect(node.current.frame, 0, reason: 'the stale frame index was not clamped');
   });
 
   test('ignores a change outside the pubspec manifest', () async {

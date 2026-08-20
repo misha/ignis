@@ -193,7 +193,7 @@ class _PackedNode extends Node {
     );
 
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    taps.onTap(() => slime.play(row: (slime.row + 1) % slime.sprite.rows));
+    taps.onTap(() => slime.play(index: (slime.current.index + 1) % slime.sprite.length));
     // demo off
 
     addAll([
@@ -219,14 +219,14 @@ class _KeyedNode extends Node {
         SLIME_SIZE,
         fps: 16,
         rows: [
-          .new(key: 'idle', frames: 14),
-          .new(key: 'jump', frames: 30),
+          .new(id: 'idle', frames: 14),
+          .new(id: 'jump', frames: 30),
         ],
       ),
     );
 
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    taps.onTap(() => slime.play(key: slime.row == 0 ? 'jump' : 'idle'));
+    taps.onTap(() => slime.play(id: slime.current.index == 0 ? 'jump' : 'idle'));
     // demo off
 
     addAll([
@@ -257,7 +257,7 @@ class _RatesNode extends Node {
     );
 
     final idle = SpriteNode(sprite: sheet);
-    final jump = SpriteNode(sprite: sheet)..play(row: 1);
+    final jump = SpriteNode(sprite: sheet)..play(index: 1);
     // demo off
 
     add(
@@ -366,13 +366,13 @@ class _GroupNode extends Node {
     // demo on sprite-group
     final creature = SpriteNode(
       sprite: SpriteGroup([
-        SpriteImage('assets/images/bonfire.png', key: 'fire'),
-        SpriteSheet.single('assets/sheets/slime_jump.png', SLIME_SIZE, fps: 16, key: 'slime'),
+        SpriteImage('assets/images/bonfire.png', id: 'fire'),
+        SpriteSheet.single('assets/sheets/slime_jump.png', SLIME_SIZE, fps: 16, id: 'slime'),
       ]),
     );
 
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    taps.onTap(() => creature.play(key: creature.row == 0 ? 'slime' : 'fire'));
+    taps.onTap(() => creature.play(id: creature.current.index == 0 ? 'slime' : 'fire'));
     // demo off
 
     addAll([

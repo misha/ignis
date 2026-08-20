@@ -31,20 +31,20 @@ class _WireframesNode extends Node {
           'assets/sheets/slime_idle.png',
           SLIME_SIZE,
           fps: 16,
-          key: 'idle',
+          id: 'idle',
         ),
         SpriteSheet.single(
           'assets/sheets/slime_death.png',
           SLIME_SIZE,
           fps: 16,
-          key: 'death',
+          id: 'death',
           loop: false,
         ),
         SpriteSheet.single(
           'assets/sheets/slime_recover.png',
           SLIME_SIZE,
           fps: 16,
-          key: 'recover',
+          id: 'recover',
           loop: false,
         ),
       ]),
@@ -54,17 +54,18 @@ class _WireframesNode extends Node {
 
     taps.onTap(() {
       taps.enabled = false;
-      slime.play(key: 'death');
+      slime.play(id: 'death');
     });
 
     slime.onFinish(() {
-      if (slime.row == slime.sprite.rowOf('death')) {
-        slime.play(key: 'recover');
-        return;
-      }
+      switch (slime.current.id) {
+        case 'death':
+          slime.play(id: 'recover');
 
-      slime.play(key: 'idle');
-      taps.enabled = true;
+        case 'recover':
+          slime.play(id: 'idle');
+          taps.enabled = true;
+      }
     });
     // demo off
 

@@ -2,6 +2,8 @@ import 'dart:ui';
 
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/sprites/sprite_entry.dart';
+import 'package:ignis/src/sprites/sprite_key.dart';
 
 /// The frames a [SpriteNode] draws, and how long each is held.
 ///
@@ -9,40 +11,41 @@ import 'package:ignis/src/math.dart';
 /// cuts an image into a grid, and a [SpriteGroup] lays several of either end to
 /// end. Implement this to draw frames packed some other way.
 ///
-/// A row is the unit. Everything but [rows] answers for one, so an
-/// implementation is free to hold every row in its own image, at its own size.
+/// An entry is the unit. Everything but [length] answers for one, so an
+/// implementation is free to hold every entry in its own image, at its own
+/// size.
 ///
-/// [T] is what rows are named with, where they are named at all: an enum, a
-/// [String], anything with an `==`. Every sprite composed with another shares
-/// its key type, so [rowOf] answers for the whole tree.
+/// [T] is what entries are identified by, where they are named at all: an
+/// enum, a [String], anything with an `==`. Every sprite composed with another
+/// shares its id type, so [resolve] answers for the whole tree.
 abstract class Sprite<T> {
   const Sprite();
 
-  /// How many rows of frames this holds.
-  int get rows;
+  /// How many entries this holds.
+  int get length;
 
-  /// The image [row] is drawn from.
-  Image image(int row);
+  /// The image entry [index] is drawn from. Make this fast.
+  Image image(int index);
 
-  /// The size of one frame of [row], which a [SpriteNode] takes as its own.
-  Vector2 size(int row);
+  /// The frame size of entry [index], which a [SpriteNode] takes as its own.
+  Vector2 size(int index);
 
-  /// How many frames [row] plays.
-  int frames(int row);
+  /// How many frames entry [index] plays.
+  int frames(int index);
 
-  /// Where frame [index] of [row] sits in [image].
-  Rect rect(int row, int index);
+  /// Where [frame] of entry [index] sits in [image].
+  Rect rect(int index, int frame);
 
-  /// How long frame [index] of [row] is held, in seconds.
+  /// How long [frame] of entry [index] is held, in seconds.
   ///
   /// Infinite where the frame is never left.
-  double duration(int row, int index);
+  double duration(int index, int frame);
 
-  /// Whether [row] starts over after its last frame.
-  bool loops(int row);
+  /// Whether entry [index] starts over after its last frame.
+  bool loops(int index);
 
-  /// The row [key] names, or null where nothing here answers to it.
-  int? rowOf(T key) => null;
+  /// The entry [key] looks up, or null where nothing here answers to it.
+  SpriteEntry<T>? resolve(SpriteKey<T> key);
 
   /// Re-resolves this sprite against [Ignis.cache].
   ///

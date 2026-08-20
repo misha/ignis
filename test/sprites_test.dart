@@ -22,7 +22,7 @@ void main() {
 
       expect(sprite.image(0), same(image));
       expect(sprite.size(0), Vector2(8, 4));
-      expect(sprite.rows, 1);
+      expect(sprite.length, 1);
       expect(sprite.frames(0), 1);
       expect(sprite.rect(0, 0), const Rect.fromLTWH(0, 0, 8, 4));
       expect(sprite.duration(0, 0), double.infinity);
@@ -49,11 +49,11 @@ void main() {
     test('numbers frames from the start of their row', () async {
       final sheet = SpriteSheet(await solidAsset(4, 6), .all(2), fps: 0);
 
-      expect(sheet.rows, 3);
+      expect(sheet.length, 3);
       expect(sheet.columns, 2);
       expect(
         [
-          for (var row = 0; row < sheet.rows; row += 1)
+          for (var row = 0; row < sheet.length; row += 1)
             for (var frame = 0; frame < sheet.frames(row); frame += 1) //
               sheet.rect(row, frame),
         ],
@@ -84,7 +84,7 @@ void main() {
 
       expect(sheet.image(0), same(image));
       expect(sheet.asset, 'hero.png');
-      expect(sheet.rows, 2);
+      expect(sheet.length, 2);
       expect(sheet.frames(0), 2);
     });
 
@@ -285,20 +285,20 @@ void main() {
         .all(2),
         fps: 8,
         rows: [
-          .new(key: 'idle'),
-          .new(key: 'jump'),
+          .new(id: 'idle'),
+          .new(id: 'jump'),
         ],
       );
 
-      expect(sheet.rowOf('idle'), 0);
-      expect(sheet.rowOf('jump'), 1);
-      expect(sheet.rowOf('spit'), isNull);
+      expect(sheet.resolve(.id('idle'))?.index, 0);
+      expect(sheet.resolve(.id('jump'))?.index, 1);
+      expect(sheet.resolve(.id('spit')), isNull);
     });
 
     test('leaves an unnamed row unreachable by key', () async {
       final sheet = SpriteSheet(await solidAsset(4, 4), .all(2), fps: 8);
 
-      expect(sheet.rowOf('idle'), isNull);
+      expect(sheet.resolve(.id('idle')), isNull);
     });
 
     test('names the one row of a single-row sheet', () async {
@@ -306,57 +306,57 @@ void main() {
         await solidAsset(8, 2),
         .all(2),
         fps: 8,
-        key: 'idle',
+        id: 'idle',
       );
 
-      expect(sheet.rows, 1);
+      expect(sheet.length, 1);
       expect(sheet.frames(0), 4);
-      expect(sheet.rowOf('idle'), 0);
+      expect(sheet.resolve(.id('idle'))?.index, 0);
     });
 
     test('rejects a single-row sheet cut into more than one row', () async {
       final asset = await solidAsset(8, 4);
 
       expect(
-        () => SpriteSheet.single(asset, .all(2), fps: 8, key: 'idle'),
+        () => SpriteSheet.single(asset, .all(2), fps: 8, id: 'idle'),
         throwsArgumentError,
       );
     });
 
     test('names a whole image', () async {
-      final sprite = SpriteImage(await solidAsset(8, 4), key: 'portrait');
+      final sprite = SpriteImage(await solidAsset(8, 4), id: 'portrait');
 
-      expect(sprite.rowOf('portrait'), 0);
-      expect(sprite.rowOf('nothing'), isNull);
+      expect(sprite.resolve(.id('portrait'))?.index, 0);
+      expect(sprite.resolve(.id('nothing')), isNull);
     });
 
     test('offsets the keys a group finds in its parts', () async {
       final group = SpriteGroup<String>([
-        SpriteImage(await solidAsset(8, 4, RED), key: 'portrait'),
+        SpriteImage(await solidAsset(8, 4, RED), id: 'portrait'),
         SpriteSheet(
           await solidAsset(4, 4, BLUE),
           .all(2),
           fps: 8,
           rows: [
-            .new(key: 'idle'),
-            .new(key: 'jump'),
+            .new(id: 'idle'),
+            .new(id: 'jump'),
           ],
         ),
       ]);
 
-      expect(group.rows, 3);
-      expect(group.rowOf('portrait'), 0);
-      expect(group.rowOf('idle'), 1);
-      expect(group.rowOf('jump'), 2);
-      expect(group.rowOf('nothing'), isNull);
+      expect(group.length, 3);
+      expect(group.resolve(.id('portrait'))?.index, 0);
+      expect(group.resolve(.id('idle'))?.index, 1);
+      expect(group.resolve(.id('jump'))?.index, 2);
+      expect(group.resolve(.id('nothing')), isNull);
     });
 
     test('keeps the keys of a group through a reload', () async {
       Ignis.cache.add('first.png', await solidImage(4, 2, RED));
 
       final group = SpriteGroup<String>([
-        SpriteSheet.single('first.png', .all(2), fps: 8, key: 'first'),
-        SpriteSheet.single(await solidAsset(4, 2, BLUE), .all(2), fps: 8, key: 'second'),
+        SpriteSheet.single('first.png', .all(2), fps: 8, id: 'first'),
+        SpriteSheet.single(await solidAsset(4, 2, BLUE), .all(2), fps: 8, id: 'second'),
       ]);
 
       expect(group.reload(), same(group));
@@ -366,7 +366,7 @@ void main() {
 
       expect(reloaded, isNot(same(group)));
       expect(reloaded.frames(0), 4);
-      expect(reloaded.rowOf('second'), 1);
+      expect(reloaded.resolve(.id('second'))?.index, 1);
     });
   });
 
@@ -376,7 +376,7 @@ void main() {
       final second = SpriteSheet(await solidAsset(4, 4, BLUE), .all(2), fps: 8);
       final group = SpriteGroup([first, second]);
 
-      expect(group.rows, 4);
+      expect(group.length, 4);
       expect(group.image(1), same(first.image(1)));
       expect(group.image(3), same(second.image(1)));
       expect(group.rect(3, 1), second.rect(1, 1));
@@ -390,7 +390,7 @@ void main() {
         SpriteSheet(await solidAsset(4, 4, BLUE), .all(2), fps: 0),
       ]);
 
-      expect(group.rows, 3);
+      expect(group.length, 3);
       expect(group.size(0), Vector2(8, 4));
       expect(group.size(1), Vector2.all(2));
       expect(group.frames(0), 1);
@@ -439,11 +439,11 @@ void main() {
       ],
     );
 
-    expect(sheet.rows, 11);
+    expect(sheet.length, 11);
     expect(sheet.columns, 49);
     expect(
       [
-        for (var row = 0; row < sheet.rows; row += 1) //
+        for (var row = 0; row < sheet.length; row += 1) //
           sheet.frames(row),
       ],
       [14, 30, 25, 17, 30, 12, 13, 13, 45, 27, 49],

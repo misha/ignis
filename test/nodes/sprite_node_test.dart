@@ -11,7 +11,7 @@ void main() {
     node.mount();
 
     expect(node.sprite, same(sheet));
-    expect((node.row, node.frame), (0, 0));
+    expect((node.current.index, node.current.frame), (0, 0));
     expect((node.width, node.height), (4.0, 4.0));
   });
 
@@ -19,13 +19,13 @@ void main() {
     final sheet = SpriteSheet(await solidAsset(6, 6, BLUE), .all(2), fps: 0);
     final node = SpriteNode(sprite: sheet);
 
-    node.play(row: 2, frame: 1);
+    node.play(index: 2, frame: 1);
 
-    expect((node.row, node.frame), (2, 1));
+    expect((node.current.index, node.current.frame), (2, 1));
 
     node.mount();
 
-    expect((node.row, node.frame), (2, 1));
+    expect((node.current.index, node.current.frame), (2, 1));
   });
 
   test('takes its size from the frame, not the image', () async {
@@ -54,9 +54,9 @@ void main() {
     var image = await renderImage(node, node.width.ceil(), node.height.ceil());
     expect(await pixelAt(image, 0, 0), RED);
 
-    node.play(row: 1, frame: 1);
+    node.play(index: 1, frame: 1);
 
-    expect((node.row, node.frame), (1, 1));
+    expect((node.current.index, node.current.frame), (1, 1));
     image = await renderImage(node, node.width.ceil(), node.height.ceil());
     expect(await pixelAt(image, 0, 0), WHITE);
   });
@@ -78,7 +78,7 @@ void main() {
 
     expect(node.size, Vector2(8, 4));
 
-    node.play(row: 1);
+    node.play(index: 1);
 
     expect(node.size, Vector2.all(1), reason: 'a part brings its own frame size');
 
@@ -104,10 +104,10 @@ void main() {
     final scene = a.mount();
 
     scene.update(0.25);
-    expect(node.frame, 1);
+    expect(node.current.frame, 1);
 
     scene.update(0.25);
-    expect(node.frame, 0, reason: 'a two-frame row wraps at its own length');
+    expect(node.current.frame, 0, reason: 'a two-frame row wraps at its own length');
   });
 
   test('holds each frame for its own duration', () async {
@@ -128,13 +128,13 @@ void main() {
     final scene = a.mount();
 
     scene.update(0.4);
-    expect(node.frame, 0, reason: 'the first frame is held for half a second');
+    expect(node.current.frame, 0, reason: 'the first frame is held for half a second');
 
     scene.update(0.2);
-    expect(node.frame, 1);
+    expect(node.current.frame, 1);
 
     scene.update(0.15);
-    expect(node.frame, 2);
+    expect(node.current.frame, 2);
   });
 
   test('emits the frame index within its row', () async {
@@ -155,7 +155,7 @@ void main() {
     var loops = 0;
     node.onFrame(frames.add);
     node.onLoop(() => loops += 1);
-    node.play(row: 1);
+    node.play(index: 1);
 
     a.add(node);
     final scene = a.mount();
@@ -178,10 +178,10 @@ void main() {
     final scene = a.mount();
 
     scene.update(0.5);
-    expect(node.frame, 0, reason: 'half speed halves the advance');
+    expect(node.current.frame, 0, reason: 'half speed halves the advance');
 
     scene.update(0.5);
-    expect(node.frame, 1);
+    expect(node.current.frame, 1);
   });
 
   test('holds the current frame at no speed', () async {
@@ -196,7 +196,7 @@ void main() {
     final scene = a.mount();
 
     scene.update(10);
-    expect(node.frame, 0);
+    expect(node.current.frame, 0);
   });
 
   test('rejects a negative speed', () async {
@@ -212,15 +212,15 @@ void main() {
         .all(2),
         fps: 8,
         rows: [
-          .new(key: 'idle'),
-          .new(key: 'jump'),
+          .new(id: 'idle'),
+          .new(id: 'jump'),
         ],
       ),
     );
 
-    node.play(key: 'jump');
+    node.play(id: 'jump');
 
-    expect(node.row, 1);
+    expect(node.current.index, 1);
   });
 
   test('rejects a key no row answers to', () async {
@@ -230,12 +230,12 @@ void main() {
         .all(2),
         fps: 8,
         rows: [
-          .new(key: 'idle'),
+          .new(id: 'idle'),
         ],
       ),
     );
 
-    expect(() => node.play(key: 'jump'), throwsArgumentError);
+    expect(() => node.play(id: 'jump'), throwsArgumentError);
   });
 
   test('rejects a frame the row does not hold', () async {
@@ -244,7 +244,7 @@ void main() {
     );
 
     expect(() => node.play(frame: 2), throwsArgumentError);
-    expect(() => node.play(row: 1), throwsArgumentError);
+    expect(() => node.play(index: 1), throwsArgumentError);
   });
 
   test('finishes a row that says it does not loop', () async {
@@ -265,7 +265,7 @@ void main() {
     final scene = a.mount();
 
     scene.update(1);
-    expect(node.isFinished, isTrue);
+    expect(node.current.isFinished, isTrue);
   });
 
   test('play overrides what the row says about looping', () async {
@@ -275,16 +275,16 @@ void main() {
     final scene = a.mount();
 
     node.play(loop: false);
-    expect(node.loops, isFalse);
+    expect(node.current.loops, isFalse);
 
     scene.update(1);
-    expect(node.isFinished, isTrue);
+    expect(node.current.isFinished, isTrue);
 
     node.play();
-    expect(node.loops, isTrue, reason: 'a bare play clears the override');
+    expect(node.current.loops, isTrue, reason: 'a bare play clears the override');
 
     scene.update(10);
-    expect(node.isFinished, isFalse);
+    expect(node.current.isFinished, isFalse);
   });
 
   test('reassemble re-resolves its sprite', () async {
@@ -306,14 +306,14 @@ void main() {
 
     Ignis.cache.add('sheet.png', await solidImage(4, 4, RED));
     final node = SpriteNode(sprite: SpriteSheet('sheet.png', .all(2), fps: 0));
-    node.play(row: 1, frame: 1);
+    node.play(index: 1, frame: 1);
 
     // One row shorter.
     Ignis.cache.add('sheet.png', await solidImage(4, 2, RED));
 
     node.reassemble();
 
-    expect((node.row, node.frame), (0, 0));
+    expect((node.current.index, node.current.frame), (0, 0));
   });
 
   test('does not detach once finished, by default', () async {
@@ -324,7 +324,7 @@ void main() {
     final scene = a.mount();
 
     scene.update(1);
-    expect(node.isFinished, isTrue);
+    expect(node.current.isFinished, isTrue);
 
     scene.update(0);
     expect(a.children, [node]);
@@ -338,7 +338,7 @@ void main() {
     final scene = a.mount();
 
     scene.update(1);
-    expect(node.isFinished, isTrue);
+    expect(node.current.isFinished, isTrue);
     expect(a.children, [node]); // Still pending.
 
     scene.update(0);
@@ -353,7 +353,7 @@ void main() {
     final scene = a.mount();
 
     scene.update(10);
-    expect(node.isFinished, isFalse);
+    expect(node.current.isFinished, isFalse);
     expect(a.children, [node]);
   });
 }
