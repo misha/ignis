@@ -20,14 +20,14 @@ The demo on the right has a hidden input box. Hit `3` to find the input box, the
 
 `Ignis.debug` allows you to set a `DebugMode` bitmask. Each bit in `DebugMode` toggles a certain type of wireframe in all live `Scene` objects.
 
-| Mode         | Renders                                         |
-|--------------|-------------------------------------------------|
-| `none`       | Nothing.                                        |
-| `transforms` | `TransformNode` origins and `SizedNode` bounds. |
-| `collisions` | `ColliderNode` bounds.                          |
-| `inputs`     | `InputNode` hit areas.                          |
-| `layouts`    | `LayoutNode` boxes.                             |
-| `all`        | All debug wireframes.                           |
+| Mode         | Renders                                                      |
+|--------------|--------------------------------------------------------------|
+| `none`       | Nothing.                                                     |
+| `transforms` | `TransformNode` origins and `SpriteNode`/`ShapeNode` bounds. |
+| `collisions` | `ColliderNode` bounds.                                       |
+| `inputs`     | `InputNode` hit areas.                                       |
+| `layouts`    | `LayoutNode` boxes.                                          |
+| `all`        | All debug wireframes.                                        |
 
 You can also customize the `Paint` for each debug mode. For example, `Ignis.debug.inputPaint` specifies how `InputNode` will draw its debug visuals.
 
