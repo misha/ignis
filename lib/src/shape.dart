@@ -16,8 +16,11 @@ sealed class Shape {
   /// The height of the AABB that fully contains this shape.
   double get height => size.y;
 
-  /// This shape's size, expressed in a canvas-friendly type.
+  /// This shape's bounds at the origin, ready to hand to a [Canvas].
   Rect rect() => Rect.fromLTWH(0, 0, width, height);
+
+  /// Draws this shape onto [canvas] with [paint].
+  void draw(Canvas canvas, Paint paint);
 
   factory Shape.rectangle(Vector2 size) = Rectangle;
   factory Shape.square(double size) = Rectangle.square;
@@ -30,6 +33,9 @@ final class Rectangle extends Shape {
 
   const Rectangle(this.size);
   Rectangle.square(double size) : this(.all(size));
+
+  @override
+  void draw(Canvas canvas, Paint paint) => canvas.drawRect(rect(), paint);
 
   /// Computes this rectangle's world-space half-extents under [transform].
   void worldExtents(Matrix3 transform, MVector2 ex, MVector2 ey) {
@@ -45,6 +51,9 @@ final class Circle extends Shape {
   final Vector2 size;
 
   Circle(this.radius) : size = .all(radius * 2);
+
+  @override
+  void draw(Canvas canvas, Paint paint) => canvas.drawOval(rect(), paint);
 
   /// Computes this circle's world-space radius under [transform].
   double worldRadius(Matrix3 transform) {

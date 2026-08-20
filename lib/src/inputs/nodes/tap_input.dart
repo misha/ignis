@@ -34,7 +34,7 @@ class TapInput extends InputNode {
   bool get isDown => _down != null;
 
   TapInput({
-    required super.shape,
+    super.shape,
     this.slop = kTouchSlop,
     bool? upOnCancel,
     super.behavior,

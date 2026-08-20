@@ -104,7 +104,7 @@ class CollisionsBenchmark extends AsyncBenchmarkBase {
   Future<void> teardown() async => scene.destroy();
 }
 
-class _Wall extends TransformNode {
+class _Wall extends SpatialNode {
   final _Axis axis;
 
   _Wall({
@@ -122,7 +122,7 @@ class _Wall extends TransformNode {
   }
 }
 
-class _Ball extends TransformNode {
+class _Ball extends SpatialNode {
   final MVector2 velocity;
   int balls = 0;
 

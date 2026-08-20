@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-/// A transform matching [TransformNode.localTransform]'s construction, so
+/// A transform matching [SpatialNode.localTransform]'s construction, so
 /// these tests exercise the same shape a real collider ever sees.
 Matrix3 transform({
   Vector2? position,

@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('moves its parent at a constant velocity, forever', () {
-    final node = TransformNode(position: .new(10, 20));
+    final node = SpatialNode(position: .new(10, 20));
     final scene = node.mount();
 
     node.add(VelocityEffect(velocity: .new(4, -2)));
@@ -16,7 +16,7 @@ void main() {
   });
 
   test('re-reads velocity every tick', () {
-    final node = TransformNode(position: .zero);
+    final node = SpatialNode(position: .zero);
     final scene = node.mount();
     final velocity = MVector2(10, 0);
 
@@ -31,7 +31,7 @@ void main() {
   });
 
   test('never emits onFinish', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     final effect = VelocityEffect(velocity: .new(1, 0));
     var finishes = 0;

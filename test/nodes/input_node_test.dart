@@ -4,6 +4,49 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
+  group('a shape of its own', () {
+    test('keeps a shape it was given', () {
+      final slot = ShapeNode(shape: .rectangle(.new(30, 20)));
+      final taps = TapInput(shape: .square(6));
+
+      slot.add(taps);
+      slot.mount();
+
+      expect(taps.size, Vector2.all(6));
+    });
+
+    test('hands its shape back to the chain with null', () {
+      final slot = ShapeNode(shape: .rectangle(.new(30, 20)));
+      final taps = TapInput(shape: .square(6));
+
+      slot.add(taps);
+      slot.mount();
+      taps.shape = null;
+
+      expect(taps.shape, isA<Rectangle>());
+      expect(taps.size, Vector2(30, 20));
+    });
+
+    test('hit tests the shape it inherits', () {
+      final taps = TapInput();
+      final slot = ShapeNode(shape: .square(10), children: [taps]);
+
+      slot.mount();
+
+      expect(slot.hitTest(.all(5)).firstOrNull, same(taps));
+      expect(slot.hitTest(.all(15)).firstOrNull, isNull);
+    });
+
+    test('hit tests nothing with no shape anywhere above it', () {
+      final taps = TapInput();
+      final root = Node(children: [taps]);
+
+      root.mount();
+
+      expect(root.hitTest(.zero).firstOrNull, isNull);
+    });
+  });
+
   test(
     'excludes a point outside a rotated rectangle hit area whose AABB would otherwise contain it',
     () {

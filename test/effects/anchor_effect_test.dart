@@ -84,7 +84,7 @@ void main() {
   });
 
   test('re-resolves its target after being remounted elsewhere', () {
-    final root = TransformNode();
+    final root = SpatialNode();
     final nodeA = ShapeNode(shape: .square(0), anchor: .new(0, 0));
     final nodeB = ShapeNode(shape: .square(0), anchor: .new(100, 100));
     root.addAll([nodeA, nodeB]);

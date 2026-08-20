@@ -2,7 +2,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  test('throws without a CollisionNode ancestor', () {
+  group('a shape of its own', () {
+    test('keeps a shape it was given', () {
+      final collider = ColliderNode(shape: .circle(3), strict: false);
+      final slot = ShapeNode(shape: .rectangle(.new(30, 20)), children: [collider]);
+
+      slot.mount();
+
+      expect(collider.size, Vector2.all(6));
+    });
+
+    test('hands its shape back to the chain with null', () {
+      final collider = ColliderNode(shape: .circle(3), strict: false);
+      final slot = ShapeNode(shape: .rectangle(.new(30, 20)), children: [collider]);
+
+      slot.mount();
+      collider.shape = null;
+
+      expect(collider.shape, isA<Rectangle>());
+      expect(collider.size, Vector2(30, 20));
+    });
+  });
+
+  test('throws without a CollisionDetectionNode ancestor', () {
     final collider = ColliderNode(
       shape: .circle(1),
       position: .zero,
@@ -11,7 +33,7 @@ void main() {
     expect(collider.mount, throwsStateError);
   });
 
-  test('does nothing without a CollisionNode ancestor while not strict', () {
+  test('does nothing without a CollisionDetectionNode ancestor while not strict', () {
     final collider = ColliderNode(
       shape: .circle(1),
       position: .zero,
@@ -21,7 +43,7 @@ void main() {
     expect(() => collider.mount(), returnsNormally);
   });
 
-  test('registers with the nearest CollisionNode ancestor, not an outer one', () {
+  test('registers with the nearest CollisionDetectionNode ancestor, not an outer one', () {
     final outer = CollisionDetectionNode();
     final inner = CollisionDetectionNode();
     outer.add(inner);
@@ -61,7 +83,7 @@ void main() {
     expect(aStarted, [innerSibling]);
   });
 
-  test('unregisters from CollisionNode when detached', () {
+  test('unregisters from CollisionDetectionNode when detached', () {
     final collisions = CollisionDetectionNode();
     final a = ColliderNode(
       shape: .circle(4),

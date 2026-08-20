@@ -16,6 +16,7 @@ void main() {
         anchor: .center,
         position: .all(50),
       ),
+      debug: .spatial,
     ),
   );
 
@@ -30,6 +31,7 @@ void main() {
         anchor: .center,
         position: .all(50),
       ),
+      debug: .spatial,
     ),
   );
 }

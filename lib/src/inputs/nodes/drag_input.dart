@@ -37,7 +37,7 @@ class DragInput extends InputNode {
   _NodeDrag? _drag;
 
   DragInput({
-    required super.shape,
+    super.shape,
     bool? endOnCancel,
     super.behavior,
     super.position,

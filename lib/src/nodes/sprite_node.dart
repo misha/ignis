@@ -1,17 +1,17 @@
 import 'dart:ui';
 
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/globals.dart';
-import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/owners/speed_owner.dart';
 import 'package:ignis/src/palette.dart';
+import 'package:ignis/src/shape.dart';
 import 'package:ignis/src/sprite.dart';
 import 'package:ignis/src/sprites/sprite_entry.dart';
 
 /// What a [SpriteNode] is drawing.
 final class SpriteState<T> {
   late SpriteEntry<T> _entry;
+  late Shape _shape;
   int _frame = 0;
   bool _loops = false;
   bool _finished = false;
@@ -38,8 +38,8 @@ final class SpriteState<T> {
   /// Whether a non-looping entry has reached its final frame.
   bool get isFinished => _finished;
 
-  /// The size of one frame of the entry playing.
-  Vector2 get size => _entry.size;
+  /// One frame of the entry playing, as a rectangle.
+  Shape get shape => _shape;
 
   /// Draws [frame] next, dropping the cut taken for the one before it.
   void _seek(int frame) {
@@ -50,6 +50,7 @@ final class SpriteState<T> {
   /// Moves onto [frame] of [entry].
   void _select(SpriteEntry<T> entry, int frame) {
     _entry = entry;
+    _shape = Rectangle(entry.size);
     _frame = frame;
     _loops = _loop ?? entry.loops;
     _finished = false;
@@ -76,11 +77,11 @@ final class SpriteState<T> {
 /// );
 /// ```
 ///
-/// A sprite takes its [size] from the frame, so [anchor], hit testing and
+/// A sprite takes its [shape] from the frame, so [anchor], hit testing and
 /// layout all work off the frame rather than the image. How fast it plays and
 /// whether it loops belong to the sprite. [speed] scales the rate, and [play]
 /// chooses which entry is playing.
-class SpriteNode<T> extends SizedNode implements SpeedOwner {
+class SpriteNode<T> extends SpatialNode implements SpeedOwner {
   final SpriteState<T> _current = SpriteState._();
   Sprite<T> _sprite;
 
@@ -90,9 +91,9 @@ class SpriteNode<T> extends SizedNode implements SpeedOwner {
   /// The entry playing, the frame drawn, and everything else about it.
   SpriteState<T> get current => _current;
 
-  /// The size of one frame of the entry currently playing.
+  /// One frame of the entry currently playing, as a rectangle.
   @override
-  Vector2 get size => _current.size;
+  Shape get shape => _current.shape;
 
   /// This node's registered paints.
   final Palette palette;
@@ -108,7 +109,7 @@ class SpriteNode<T> extends SizedNode implements SpeedOwner {
 
   /// Whether to [detach] once finished. Defaults to false.
   ///
-  /// Ignored while while looping, since animation never finishes.
+  /// Ignored while looping, since animation never finishes.
   bool cleanup;
 
   /// Emitted when animation advances to a new [SpriteState.frame].
@@ -200,12 +201,6 @@ class SpriteNode<T> extends SizedNode implements SpeedOwner {
 
     draw((canvas) {
       palette.draw(canvas, painter);
-    });
-
-    debugDraw((canvas) {
-      final debug = Ignis.debug;
-      if (!debug.draws(.transforms)) return;
-      canvas.drawRect(.fromLTWH(0, 0, width, height), debug.transformPaint);
     });
   }
 

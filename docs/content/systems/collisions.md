@@ -22,6 +22,29 @@ Today, collision detection has two significant limitations:
 
 In exchange for these limitations, the arena is quite performant. See how many balls you can spawn before your FPS drops!
 
+## Collider Shape
+
+There are two ways to specify the shape of a collider.
+
+By default, `ColliderNode` will inherit the `Shape` of its `SpatialNode` parent, so simply adding one to any `SpriteNode` or `ShapeNode` will "just work".
+
+```dart
+final ball = add(ShapeNode(shape: .circle(8), anchor: .center));
+
+// It will be a circle of radius 8.
+ball.add(ColliderNode());
+```
+
+In some situations, a hitbox won't have a `SpatialNode` parent, or simply need a different shape. `ColliderNode` also holds its *own* `shape` for these situations.
+
+```dart
+// Doesn't matter what the shape of the body is, this collider will be a 12x4 rectangle.
+final feet = body.add(ColliderNode(shape: .rectangle(.new(12, 4))));
+
+// Set back to `null` to inherit the body's shape after all.
+feet.shape = null;
+```
+
 ## Layers and Masks
 
 `ColliderNode` supports specifying two bitmasks, `layer` and `mask`, to exclude certain collisions from consideration. `layer` indicates the physics layers the collider exists on, while `mask` indicates which physics layers it collides with. A pair only reports a collision to a side whose `mask` intersects the other's `layer`.

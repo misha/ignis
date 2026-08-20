@@ -20,7 +20,7 @@ final class SpriteEntry<T> {
   /// The image this is drawn from.
   final Image image;
 
-  /// The frame size of this, which a [SpriteNode] takes as its own.
+  /// The size of one frame, which a sprite node takes as its shape.
   final Vector2 size;
 
   /// Whether this starts over after its last frame.

@@ -18,6 +18,7 @@ void main() {
         anchor: .center,
         position: .all(25),
       ),
+      debug: .spatial,
     ),
   );
 
@@ -33,6 +34,7 @@ void main() {
         scale: .new(2, 1),
         position: .all(50),
       ),
+      debug: .spatial,
     ),
   );
 
@@ -48,6 +50,7 @@ void main() {
         angle: math.pi / 4,
         position: .all(50),
       ),
+      debug: .spatial,
     ),
   );
 
@@ -56,7 +59,7 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/transform_anchor_top_left.png',
-      TransformNode(
+      SpatialNode(
         position: .all(50),
         children: [
           ShapeNode(
@@ -66,6 +69,7 @@ void main() {
           ),
         ],
       ),
+      debug: .spatial,
     ),
   );
 
@@ -74,7 +78,7 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/transform_anchor_bottom_right.png',
-      TransformNode(
+      SpatialNode(
         position: .all(50),
         children: [
           ShapeNode(
@@ -84,6 +88,7 @@ void main() {
           ),
         ],
       ),
+      debug: .spatial,
     ),
   );
 }

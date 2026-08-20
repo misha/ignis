@@ -7,7 +7,7 @@ import 'package:ignis/ignis.dart';
 
 import 'runner.dart';
 
-/// Scattered nodes queried with [TransformNode.nearest], [ticks] times over.
+/// Scattered nodes queried with [SpatialNode.nearest], [ticks] times over.
 class NearestBenchmark extends AsyncBenchmarkBase {
   final int seed;
   final int targets;
@@ -33,7 +33,7 @@ class NearestBenchmark extends AsyncBenchmarkBase {
   Future<void> setup() async {
     final random = Random(seed);
     final root = Node();
-    final parents = <TransformNode>[];
+    final parents = <SpatialNode>[];
     final count = groups + targets + seekers;
     final layout = List.generate(count, (i) {
       return Vector2(
@@ -44,7 +44,7 @@ class NearestBenchmark extends AsyncBenchmarkBase {
 
     for (var i = 0; i < groups; i += 1) {
       final entry = layout[i];
-      final parent = TransformNode(position: .new(entry.x, entry.y));
+      final parent = SpatialNode(position: .new(entry.x, entry.y));
       parents.add(parent);
       root.add(parent);
     }
@@ -83,13 +83,13 @@ class NearestBenchmark extends AsyncBenchmarkBase {
   Future<void> teardown() async => scene.destroy();
 }
 
-class _TargetNode extends TransformNode {
+class _TargetNode extends SpatialNode {
   _TargetNode({
     required super.position,
   });
 }
 
-class _SeekerNode extends TransformNode {
+class _SeekerNode extends SpatialNode {
   _SeekerNode({
     required super.position,
   });

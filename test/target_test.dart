@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 /// A host that resolves its target from its own build, as every effect does.
 final class _Host extends Node {
-  late final target = EffectTarget<PositionOwner>(this);
+  late final target = Target<PositionOwner>(this);
 
   @override
   void build() {
@@ -14,19 +14,19 @@ final class _Host extends Node {
 
 void main() {
   test('resolves to the nearest ancestor implementing T once mounted', () {
-    final transform = TransformNode();
+    final node = SpatialNode();
     final host = _Host();
 
-    transform.add(host);
+    node.add(host);
     expect(host.target.value, isNull, reason: 'it has not built yet');
 
-    transform.mount();
-    expect(host.target.value, same(transform));
+    node.mount();
+    expect(host.target.value, same(node));
   });
 
   test('resolves to the nearest matching ancestor, not the outermost', () {
-    final outer = TransformNode();
-    final inner = TransformNode();
+    final outer = SpatialNode();
+    final inner = SpatialNode();
     final host = _Host();
     outer.add(inner);
     inner.add(host);
@@ -36,12 +36,12 @@ void main() {
   });
 
   test('clears once unmounted', () {
-    final transform = TransformNode();
+    final node = SpatialNode();
     final host = _Host();
 
-    transform.add(host);
-    final scene = transform.mount();
-    expect(host.target.value, same(transform));
+    node.add(host);
+    final scene = node.mount();
+    expect(host.target.value, same(node));
 
     host.detach();
     scene.update(0); // Flush the pending removal.
@@ -49,8 +49,8 @@ void main() {
   });
 
   test('re-resolves against a new parent when the host rebuilds', () {
-    final first = TransformNode();
-    final second = TransformNode();
+    final first = SpatialNode();
+    final second = SpatialNode();
     final host = _Host();
     first.add(host);
     final scene = first.mount();

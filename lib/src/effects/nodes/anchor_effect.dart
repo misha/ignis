@@ -1,13 +1,13 @@
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/effect_target.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/anchor_owner.dart';
+import 'package:ignis/src/target.dart';
 
 /// An effect that animates an [AnchorOwner]'s anchor over time.
 abstract class AnchorEffect extends ControlledEffect {
-  late final EffectTarget<AnchorOwner> _target;
+  late final Target<AnchorOwner> _target;
 
   /// The [AnchorOwner] whose anchor is mutated by this effect.
   AnchorOwner? get target => _target.value;
@@ -34,7 +34,7 @@ abstract class AnchorEffect extends ControlledEffect {
     super.cleanup,
     super.enabled,
   }) {
-    _target = EffectTarget<AnchorOwner>(this);
+    _target = Target<AnchorOwner>(this);
   }
 
   @override

@@ -11,26 +11,26 @@ typedef Wireframe = ({String label, String color, bool draws});
 /// on ctrl and meta.
 final _WIREFRAMES = [
   (
-    label: 'transforms',
-    mode: DebugMode.transforms,
+    label: 'spatial',
+    mode: DebugMode.spatial,
     key: const KeyPress(.digit1, control: false, meta: false),
-    color: _css(Ignis.debug.transformPaint),
+    color: _css(Ignis.debug.spatialPaint),
   ),
   (
-    label: 'collisions',
-    mode: DebugMode.collisions,
+    label: 'collision',
+    mode: DebugMode.collision,
     key: const KeyPress(.digit2, control: false, meta: false),
     color: _css(Ignis.debug.collisionPaint),
   ),
   (
-    label: 'inputs',
-    mode: DebugMode.inputs,
+    label: 'input',
+    mode: DebugMode.input,
     key: const KeyPress(.digit3, control: false, meta: false),
     color: _css(Ignis.debug.inputPaint),
   ),
   (
-    label: 'layouts',
-    mode: DebugMode.layouts,
+    label: 'layout',
+    mode: DebugMode.layout,
     key: const KeyPress(.digit4, control: false, meta: false),
     color: _css(Ignis.debug.layoutPaint),
   ),

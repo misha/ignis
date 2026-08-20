@@ -1,5 +1,4 @@
 export 'effects/effect_controller.dart';
-export 'effects/effect_target.dart';
 
 export 'effects/controllers/duration_effect_controller.dart';
 export 'effects/controllers/infinite_effect_controller.dart';

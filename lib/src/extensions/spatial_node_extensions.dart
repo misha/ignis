@@ -1,12 +1,12 @@
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/transform_node.dart';
+import 'package:ignis/src/nodes/spatial_node.dart';
 
-extension NearestTransformNode<T extends TransformNode> on Iterable<T> {
+extension NearestSpatialNode<T extends SpatialNode> on Iterable<T> {
   /// The element nearest to [node], or null if this is empty.
   ///
   /// Never returns [node] itself.
-  T? nearest(TransformNode node) => _nearestTo(node.absolutePosition, node);
+  T? nearest(SpatialNode node) => _nearestTo(node.absoluteCenter, node);
 
   /// The element nearest to [position], or null if this is empty.
   ///
@@ -20,7 +20,7 @@ extension NearestTransformNode<T extends TransformNode> on Iterable<T> {
     for (final element in this) {
       if (identical(element, excluded)) continue;
 
-      final distance2 = element.absolutePosition.distance2(position);
+      final distance2 = element.absoluteCenter.distance2(position);
 
       if (distance2 < closestDistance2) {
         closest = element;

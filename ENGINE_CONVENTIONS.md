@@ -15,13 +15,13 @@ Conventions for writing engine code, on top of what `dart format` and `dart anal
 Node constructors always use named parameters, listing their own fields first in declaration order, then forwarded `super.x` fields in their established order. Don't interleave.
 
 ```dart
-class ColliderNode extends SizedNode {
-  Shape shape;
+class ColliderNode extends SpatialNode {
+  Shape? _shape;
   int layer;
   int mask;
 
   ColliderNode({
-    required this.shape,
+    Shape? shape,
     int? layer,
     int? mask,
     super.position,

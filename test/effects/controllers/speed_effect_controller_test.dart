@@ -53,7 +53,7 @@ void main() {
   });
 
   test('measures lazily, after mount-time state the effect computes', () {
-    final node = TransformNode(position: .zero);
+    final node = SpatialNode(position: .zero);
     final scene = node.mount();
     final effect = MoveEffect.to(
       destination: .new(30, 40),

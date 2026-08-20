@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/layout/layout_constraints.dart';
-import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/nodes/spatial_node.dart';
+import 'package:ignis/src/shape.dart';
 
-class TextNode extends SizedNode {
+class TextNode extends SpatialNode {
   /// The default style used when no [style] is provided.
   static const DEFAULT_STYLE = TextStyle(
     color: Color(0xFFFFFFFF),
@@ -15,20 +15,20 @@ class TextNode extends SizedNode {
 
   TextPainter? _painter;
   bool _dirty = true;
-  Vector2 _size = .zero;
+  Shape _shape = const Rectangle(.zero);
   LayoutConstraints _constraints = const .unbounded();
 
   @visibleForTesting
   TextPainter get painter => _painter!;
 
-  /// This node's size, as measured from its text. Zero until it first builds.
+  /// This node's area, as measured from its text. Empty until it first builds.
   ///
   /// Reading it lays the text out if anything has changed, so the size is
   /// current for layout, anchoring, and hit testing alike.
   @override
-  Vector2 get size {
+  Shape get shape {
     _reflow();
-    return _size;
+    return _shape;
   }
 
   String _text;
@@ -138,7 +138,7 @@ class TextNode extends SizedNode {
       ..textDirection = textDirection
       ..layout(minWidth: _constraints.min.x, maxWidth: _constraints.max.x);
 
-    _size = painter.size.toVector2();
+    _shape = Rectangle(painter.size.toVector2());
     _dirty = false;
   }
 }

@@ -42,7 +42,7 @@ ShapeNode _dot(Color color) {
 }
 
 /// The two shapes as siblings, on the default priority.
-class _OrderNode extends TransformNode {
+class _OrderNode extends SpatialNode {
   _OrderNode() : super(position: _CENTER);
 
   @override
@@ -60,7 +60,7 @@ class _OrderNode extends TransformNode {
 }
 
 /// The same two, with the one added first lifted over the other.
-class _LiftedNode extends TransformNode {
+class _LiftedNode extends SpatialNode {
   _LiftedNode() : super(position: _CENTER);
 
   @override
@@ -78,7 +78,7 @@ class _LiftedNode extends TransformNode {
 }
 
 /// The same two, with the circle hanging off a box that vastly outranks it.
-class _NestedNode extends TransformNode {
+class _NestedNode extends SpatialNode {
   _NestedNode() : super(position: _CENTER);
 
   @override

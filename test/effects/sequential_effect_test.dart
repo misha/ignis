@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('only starts the next effect once the previous one finishes', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
 
     node.add(
@@ -29,7 +29,7 @@ void main() {
   });
 
   test('detaches each effect once it finishes', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     final first = MoveEffect.by(
       offset: .new(10, 0),
@@ -55,7 +55,7 @@ void main() {
   });
 
   test('emits onFinish once the last effect finishes', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     final sequence = SequentialEffect(
       effects: [
@@ -76,7 +76,7 @@ void main() {
   });
 
   test('detaches itself once the last effect finishes, when cleanup is true', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
 
     node.add(
@@ -99,7 +99,7 @@ void main() {
   });
 
   test('reset() restarts the current effect from its own start', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     final sequence = SequentialEffect(
       effects: [
@@ -130,7 +130,7 @@ void main() {
   });
 
   test('reset() after finishing replays the whole sequence', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     var finishes = 0;
 

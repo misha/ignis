@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('closes the gap to a fixed point at a constant speed', () {
-    final node = TransformNode(position: .zero);
+    final node = SpatialNode(position: .zero);
     final scene = node.mount();
 
     node.add(FollowEffect(following: .box(.new(30, 40)), speed: 10));
@@ -16,7 +16,7 @@ void main() {
   });
 
   test('lands exactly on the target without overshoot', () {
-    final node = TransformNode(position: .zero);
+    final node = SpatialNode(position: .zero);
     final scene = node.mount();
 
     node.add(FollowEffect(following: .box(.new(10, 0)), speed: 10));
@@ -26,7 +26,7 @@ void main() {
   });
 
   test('tracks a moving goal instead of a fixed prediction', () {
-    final node = TransformNode(position: .zero);
+    final node = SpatialNode(position: .zero);
     final scene = node.mount();
     final following = PositionOwner.box(.new(100, 0));
 
@@ -41,7 +41,7 @@ void main() {
   });
 
   test('emits onFinish once it first catches up, and does not re-emit while parked', () {
-    final node = TransformNode(position: .zero);
+    final node = SpatialNode(position: .zero);
     final scene = node.mount();
     final effect = FollowEffect(following: .box(.new(10, 0)), speed: 10);
     var finishes = 0;
@@ -59,7 +59,7 @@ void main() {
   });
 
   test('re-emits onFinish if it catches up again later', () {
-    final node = TransformNode(position: .zero);
+    final node = SpatialNode(position: .zero);
     final scene = node.mount();
     final following = PositionOwner.box(.new(10, 0));
     final effect = FollowEffect(following: following, speed: 10);
@@ -79,7 +79,7 @@ void main() {
   });
 
   test('detaches itself once it catches up, when cleanup is true', () {
-    final node = TransformNode(position: .zero);
+    final node = SpatialNode(position: .zero);
     final scene = node.mount();
 
     node.add(

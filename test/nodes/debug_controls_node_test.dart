@@ -74,20 +74,20 @@ void main() {
   });
 
   test('a declined control leaves that one unbound and the rest alone', () {
-    add(DebugControlsNode(inputs: const {}));
+    add(DebugControlsNode(input: const {}));
 
     expect(press(.f3), isFalse);
     expect(press(.f2), isTrue);
   });
 
   test('a remapped control takes the key the game gives it', () {
-    add(DebugControlsNode(collisions: {const KeyPress(.f9)}));
+    add(DebugControlsNode(collision: {const KeyPress(.f9)}));
 
     expect(press(.f2), isFalse, reason: 'the default went with the remap');
 
     press(.f9);
 
-    expect(Ignis.debug.draws(.collisions), isTrue);
+    expect(Ignis.debug.draws(.collision), isTrue);
   });
 
   test('a key can be remapped without touching the others', () {
@@ -141,35 +141,32 @@ void main() {
     test('each key draws its own, and no other', () {
       add(DebugControlsNode());
 
-      press(.f2);
+      press(.f1);
+      expect(Ignis.debug.mode, DebugMode.spatial);
 
-      expect(Ignis.debug.mode, DebugMode.collisions);
+      press(.f2);
+      expect(Ignis.debug.mode, DebugMode.collision);
+
+      press(.f3);
+      expect(Ignis.debug.mode, DebugMode.input);
+
+      press(.f4);
+      expect(Ignis.debug.mode, DebugMode.layout);
     });
 
-    test('they combine, so any set of them draws at once', () {
+    test('one replaces another, rather than joining it', () {
       add(DebugControlsNode());
 
       press(.f1);
       press(.f4);
 
-      expect(Ignis.debug.draws(.transforms), isTrue);
-      expect(Ignis.debug.draws(.layouts), isTrue);
-      expect(Ignis.debug.draws(.collisions), isFalse);
-      expect(Ignis.debug.draws(.inputs), isFalse);
+      expect(Ignis.debug.draws(.layout), isTrue);
+      expect(Ignis.debug.draws(.spatial), isFalse);
+      expect(Ignis.debug.draws(.collision), isFalse);
+      expect(Ignis.debug.draws(.input), isFalse);
     });
 
-    test('a second press takes one back out, and leaves the rest', () {
-      add(DebugControlsNode());
-
-      press(.f1);
-      press(.f2);
-      press(.f1);
-
-      expect(Ignis.debug.draws(.transforms), isFalse);
-      expect(Ignis.debug.draws(.collisions), isTrue);
-    });
-
-    test('the last one out leaves the overlay off', () {
+    test('a second press on the one drawing leaves the overlay off', () {
       add(DebugControlsNode());
 
       press(.f3);
@@ -177,42 +174,25 @@ void main() {
 
       press(.f3);
 
-      expect(Ignis.debug.mode, DebugMode.none);
+      expect(Ignis.debug.mode, isNull);
       expect(Ignis.debug.enabled, isFalse);
     });
 
-    test('one key fills the overlay, and the next empties it', () {
-      add(DebugControlsNode());
-
-      press(.f6);
-      expect(Ignis.debug.mode, DebugMode.all);
-
-      press(.f6);
-      expect(Ignis.debug.mode, DebugMode.none);
-    });
-
-    test('it fills from part of the way in, rather than emptying', () {
+    test('one key empties the overlay, whichever wireframe it holds', () {
       add(DebugControlsNode());
 
       press(.f2);
       press(.f6);
 
-      expect(Ignis.debug.mode, DebugMode.all, reason: 'short of full fills it');
+      expect(Ignis.debug.mode, isNull);
     });
 
-    test('every one of them at once is every wireframe there is', () {
+    test('emptying an empty overlay leaves it empty', () {
       add(DebugControlsNode());
 
-      press(.f1);
-      press(.f2);
-      press(.f3);
-      press(.f4);
+      press(.f6);
 
-      expect(Ignis.debug.mode, DebugMode.all);
-
-      for (final wireframe in DebugMode.values) {
-        expect(Ignis.debug.draws(wireframe), isTrue, reason: '$wireframe draws with the rest');
-      }
+      expect(Ignis.debug.mode, isNull);
     });
   });
 }

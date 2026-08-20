@@ -18,7 +18,7 @@ class HoverInput extends InputNode {
   final onHoverExit = Signal1<HoverEvent>();
 
   HoverInput({
-    required super.shape,
+    super.shape,
     super.behavior,
     super.position,
     super.scale,

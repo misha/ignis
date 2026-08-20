@@ -25,6 +25,7 @@ void main() {
         ],
       )..play(0, frame: 4),
       dt: 1,
+      debug: .spatial,
     ),
   );
 }

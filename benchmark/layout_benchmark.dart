@@ -60,7 +60,7 @@ class LayoutBenchmark extends AsyncBenchmarkBase {
   Future<void> teardown() async => scene.destroy();
 
   /// A random subtree [depth] levels deep, bottoming out in fixed-size leaves.
-  SizedNode generate(int depth) {
+  SpatialNode generate(int depth) {
     if (depth == 0) return ShapeNode(shape: .square(extent(4, 24)));
 
     return switch (random.nextInt(3)) {

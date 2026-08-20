@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('composites nest inside one another', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     final sequence = SequentialEffect(
       effects: [

@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('spins its parent at a constant angular speed, forever', () {
-    final node = TransformNode(angle: 1);
+    final node = SpatialNode(angle: 1);
     final scene = node.mount();
 
     node.add(SpinEffect(speed: 2));
@@ -16,7 +16,7 @@ void main() {
   });
 
   test('re-reads speed every tick', () {
-    final node = TransformNode(angle: 0);
+    final node = SpatialNode(angle: 0);
     final scene = node.mount();
     final effect = SpinEffect(speed: 1);
     node.add(effect);
@@ -30,7 +30,7 @@ void main() {
   });
 
   test('never emits onFinish', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     final effect = SpinEffect(speed: 1);
     var finishes = 0;

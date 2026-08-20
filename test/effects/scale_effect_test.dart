@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('scales its parent by an offset', () {
-    final node = TransformNode(scale: .new(10, 20));
+    final node = SpatialNode(scale: .new(10, 20));
     final scene = node.mount();
 
     node.add(
@@ -25,7 +25,7 @@ void main() {
   });
 
   test('scales its parent to a destination', () {
-    final node = TransformNode(scale: .new(10, 20));
+    final node = SpatialNode(scale: .new(10, 20));
     final scene = node.mount();
 
     node.add(
@@ -43,7 +43,7 @@ void main() {
   });
 
   test('captures the destination offset when mounted', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     node.scale.setValues(10, 0);
 
@@ -62,7 +62,7 @@ void main() {
   });
 
   test('multiple relative scale effects compose', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
 
     node.add(
@@ -84,7 +84,7 @@ void main() {
   });
 
   test('runs at a given speed, deriving its duration from the distance covered', () {
-    final node = TransformNode(scale: .new(10, 20));
+    final node = SpatialNode(scale: .new(10, 20));
     final scene = node.mount();
 
     node.add(
@@ -102,9 +102,9 @@ void main() {
   });
 
   test('re-resolves its target after being remounted elsewhere', () {
-    final root = TransformNode();
-    final nodeA = TransformNode(scale: .zero);
-    final nodeB = TransformNode(scale: .all(100));
+    final root = SpatialNode();
+    final nodeA = SpatialNode(scale: .zero);
+    final nodeB = SpatialNode(scale: .all(100));
     root.addAll([nodeA, nodeB]);
     final scene = root.mount();
     final effect = ScaleEffect.by(

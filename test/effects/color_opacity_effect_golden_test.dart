@@ -30,6 +30,7 @@ void main() {
           ],
         )..play(0, frame: 4),
         dt: 0.5,
+        debug: .spatial,
       );
     },
   );

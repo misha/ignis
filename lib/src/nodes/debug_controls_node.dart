@@ -9,18 +9,12 @@ import 'package:ignis/src/globals.dart';
 ///
 /// | Key | Parameter    | Does                                            |
 /// |-----|--------------|-------------------------------------------------|
-/// | F1  | [transforms] | Draws every drawn node's bounds.                |
-/// | F2  | [collisions] | Draws every collider's hitbox.                  |
-/// | F3  | [inputs]     | Draws every input node's hit area.              |
-/// | F4  | [layouts]    | Draws every layout node's box.                  |
+/// | F1  | [spatial]    | Draws every spatial node's bounds.              |
+/// | F2  | [collision]  | Draws every collider's hitbox.                  |
+/// | F3  | [input]      | Draws every input node's hit area.              |
+/// | F4  | [layout]     | Draws every layout node's box.                  |
 /// | F5  | [pause]      | Pauses and resumes the scene this node is in.   |
-/// | F6  | [debug]      | Draws every wireframe at once, or none of them. |
-///
-/// Each of the first four toggles its own bit of [DebugMode], so they combine:
-/// any set of wireframes draws at once, a second press takes one back out, and
-/// the overlay is off once the last one is out. [debug] toggles every bit
-/// together, so it fills the overlay from anywhere short of full and empties it
-/// from there.
+/// | F6  | [clear]      | Clears the overlay, whatever it was drawing.    |
 ///
 /// Every parameter is a set of matchers, so `DebugControlsNode(pause: const {})`
 /// declines that one and keeps the rest, and passing your own remaps just it.
@@ -29,69 +23,69 @@ import 'package:ignis/src/globals.dart';
 /// The default [priority] is lower than usual to ensure key presses prefer
 /// actual game controls, if they overlap with the debug controls.
 class DebugControlsNode extends Node {
-  /// Toggles every drawn node's bounds.
-  final Set<ControlEvent> transforms;
+  /// Toggles every spatial node's bounds.
+  final Set<ControlEvent> spatial;
 
   /// Toggles every collider's hitbox.
-  final Set<ControlEvent> collisions;
+  final Set<ControlEvent> collision;
 
   /// Toggles every input node's hit area.
-  final Set<ControlEvent> inputs;
+  final Set<ControlEvent> input;
 
   /// Toggles every layout node's box.
-  final Set<ControlEvent> layouts;
+  final Set<ControlEvent> layout;
 
   /// Pauses and resumes the scene this node is in.
   final Set<ControlEvent> pause;
 
-  /// Toggles every wireframe at once.
-  final Set<ControlEvent> debug;
+  /// Clears the overlay, whatever it was drawing.
+  final Set<ControlEvent> clear;
 
   /// The groups gating every one of them, empty where nothing does.
   final Set<String> groups;
 
   DebugControlsNode({
-    Set<ControlEvent>? transforms,
-    Set<ControlEvent>? collisions,
-    Set<ControlEvent>? inputs,
-    Set<ControlEvent>? layouts,
+    Set<ControlEvent>? spatial,
+    Set<ControlEvent>? collision,
+    Set<ControlEvent>? input,
+    Set<ControlEvent>? layout,
     Set<ControlEvent>? pause,
-    Set<ControlEvent>? debug,
+    Set<ControlEvent>? clear,
     this.groups = const {'debug'},
     super.priority = -1000,
     super.enabled,
-  }) : transforms = transforms ?? {const KeyPress(.f1)},
-       collisions = collisions ?? {const KeyPress(.f2)},
-       inputs = inputs ?? {const KeyPress(.f3)},
-       layouts = layouts ?? {const KeyPress(.f4)},
+  }) : spatial = spatial ?? {const KeyPress(.f1)},
+       collision = collision ?? {const KeyPress(.f2)},
+       input = input ?? {const KeyPress(.f3)},
+       layout = layout ?? {const KeyPress(.f4)},
        pause = pause ?? {const KeyPress(.f5)},
-       debug = debug ?? {const KeyPress(.f6)};
+       clear = clear ?? {const KeyPress(.f6)};
 
   @override
   void build() {
     super.build();
 
     Ignis.controls.bind(
-      (_) => Ignis.debug.toggle(.transforms),
-      matchers: transforms,
+      (_) => Ignis.debug.toggle(.spatial),
+      matchers: spatial,
       groups: groups,
     );
 
     Ignis.controls.bind(
-      (_) => Ignis.debug.toggle(.collisions),
-      matchers: collisions,
+      (_) => Ignis.debug.toggle(.collision),
+      matchers: collision,
       groups: groups,
     );
 
     Ignis.controls.bind(
-      (_) => Ignis.debug.toggle(.inputs),
-      matchers: inputs,
+      (_) => Ignis.debug.toggle(.input),
+      matchers: input,
       groups: groups,
     );
 
     Ignis.controls.bind(
-      (_) => Ignis.debug.toggle(.layouts),
-      matchers: layouts,
+      (_) => Ignis.debug.toggle(.layout),
+      matchers: layout,
       groups: groups,
     );
 
@@ -102,8 +96,8 @@ class DebugControlsNode extends Node {
     );
 
     Ignis.controls.bind(
-      (_) => Ignis.debug.toggle(.all),
-      matchers: debug,
+      (_) => Ignis.debug.mode = null,
+      matchers: clear,
       groups: groups,
     );
   }

@@ -18,10 +18,7 @@ void main() {
             anchor: .center,
             position: .all(25),
             children: [
-              ColliderNode(
-                shape: .circle(20),
-                anchor: .center,
-              ),
+              ColliderNode(shape: .circle(20)),
             ],
           ),
           ShapeNode(
@@ -30,14 +27,12 @@ void main() {
             anchor: .center,
             position: .all(55),
             children: [
-              ColliderNode(
-                shape: .square(50),
-                anchor: .center,
-              ),
+              ColliderNode(shape: .square(50)),
             ],
           ),
         ],
       ),
+      debug: .collision,
     ),
   );
 }

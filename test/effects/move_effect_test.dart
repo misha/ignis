@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('moves its parent by an offset', () {
-    final node = TransformNode(position: .new(10, 20));
+    final node = SpatialNode(position: .new(10, 20));
     final scene = node.mount();
 
     node.add(
@@ -25,7 +25,7 @@ void main() {
   });
 
   test('moves its parent to a destination', () {
-    final node = TransformNode(position: .new(10, 20));
+    final node = SpatialNode(position: .new(10, 20));
     final scene = node.mount();
 
     node.add(
@@ -43,7 +43,7 @@ void main() {
   });
 
   test('captures the destination offset when mounted', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     node.position.setValues(10, 0);
 
@@ -62,7 +62,7 @@ void main() {
   });
 
   test('multiple relative movement effects compose', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
 
     node.add(
@@ -84,7 +84,7 @@ void main() {
   });
 
   test('runs at a given speed, deriving its duration from the distance covered', () {
-    final node = TransformNode(position: .zero);
+    final node = SpatialNode(position: .zero);
     final scene = node.mount();
 
     node.add(
@@ -102,7 +102,7 @@ void main() {
   });
 
   test('speed uses the offset captured at mount, not a live re-measurement', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     node.position.setValues(10, 0);
 
@@ -124,9 +124,9 @@ void main() {
   });
 
   test('re-resolves its target after being remounted elsewhere', () {
-    final root = TransformNode();
-    final nodeA = TransformNode(position: .zero);
-    final nodeB = TransformNode(position: .all(100));
+    final root = SpatialNode();
+    final nodeA = SpatialNode(position: .zero);
+    final nodeB = SpatialNode(position: .all(100));
     root.addAll([nodeA, nodeB]);
     final scene = root.mount();
     final effect = MoveEffect.by(

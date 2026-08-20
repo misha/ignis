@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('rotates its parent by an angle', () {
-    final node = TransformNode(angle: 1);
+    final node = SpatialNode(angle: 1);
     final scene = node.mount();
 
     node.add(
@@ -25,7 +25,7 @@ void main() {
   });
 
   test('rotates its parent to an angle', () {
-    final node = TransformNode(angle: 1);
+    final node = SpatialNode(angle: 1);
     final scene = node.mount();
 
     node.add(
@@ -43,7 +43,7 @@ void main() {
   });
 
   test('captures the destination offset when mounted', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     node.angle = 1;
 
@@ -62,7 +62,7 @@ void main() {
   });
 
   test('multiple relative rotation effects compose', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
 
     node.add(
@@ -84,7 +84,7 @@ void main() {
   });
 
   test('runs at a given speed, deriving its duration from the angle covered', () {
-    final node = TransformNode(angle: 1);
+    final node = SpatialNode(angle: 1);
     final scene = node.mount();
 
     node.add(
@@ -102,9 +102,9 @@ void main() {
   });
 
   test('re-resolves its target after being remounted elsewhere', () {
-    final root = TransformNode();
-    final nodeA = TransformNode(angle: 0);
-    final nodeB = TransformNode(angle: 10);
+    final root = SpatialNode();
+    final nodeA = SpatialNode(angle: 0);
+    final nodeB = SpatialNode(angle: 10);
     root.addAll([nodeA, nodeB]);
     final scene = root.mount();
 

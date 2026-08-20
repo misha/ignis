@@ -7,59 +7,56 @@ void main() {
   setUp(() => debug = Debug());
 
   test('draws its own wireframe and no other', () {
-    debug.mode = .collisions;
+    debug.mode = .collision;
 
-    expect(debug.draws(.collisions), isTrue);
-    expect(debug.draws(.transforms), isFalse);
-    expect(debug.draws(.inputs), isFalse);
-    expect(debug.draws(.layouts), isFalse);
+    expect(debug.draws(.collision), isTrue);
+    expect(debug.draws(.spatial), isFalse);
+    expect(debug.draws(.input), isFalse);
+    expect(debug.draws(.layout), isFalse);
   });
 
-  test('all draws every one of them', () {
-    debug.mode = .all;
-
+  test('every wireframe draws under itself alone', () {
     for (final wireframe in DebugMode.values) {
-      expect(debug.draws(wireframe), isTrue, reason: '$wireframe draws under all');
+      debug.mode = wireframe;
+
+      expect(debug.draws(wireframe), isTrue, reason: '$wireframe draws itself');
     }
   });
 
-  test('holds two wireframes at once, and no third', () {
-    debug.mode = DebugMode.transforms | .inputs;
+  test('a second wireframe replaces the first, rather than joining it', () {
+    debug.mode = .spatial;
+    debug.mode = .input;
 
-    expect(debug.draws(.transforms), isTrue);
-    expect(debug.draws(.inputs), isTrue);
-    expect(debug.draws(.collisions), isFalse);
-    expect(debug.draws(.layouts), isFalse);
+    expect(debug.draws(.input), isTrue);
+    expect(debug.draws(.spatial), isFalse);
   });
 
   test('toggle puts a wireframe in, and takes it back out', () {
-    debug.toggle(.collisions);
+    debug.toggle(.collision);
 
-    expect(debug.draws(.collisions), isTrue);
+    expect(debug.draws(.collision), isTrue);
 
-    debug.toggle(.collisions);
+    debug.toggle(.collision);
 
-    expect(debug.draws(.collisions), isFalse);
+    expect(debug.draws(.collision), isFalse);
     expect(debug.enabled, isFalse);
   });
 
-  test('toggle leaves every wireframe beside it alone', () {
-    debug.mode = .all;
+  test('toggle moves to another wireframe, rather than clearing', () {
+    debug.mode = .spatial;
 
-    debug.toggle(.inputs);
+    debug.toggle(.input);
 
-    expect(debug.draws(.inputs), isFalse);
-    expect(debug.draws(.transforms), isTrue);
-    expect(debug.draws(.collisions), isTrue);
-    expect(debug.draws(.layouts), isTrue);
+    expect(debug.draws(.input), isTrue);
+    expect(debug.enabled, isTrue);
   });
 
-  test('is settable outright, with no cycle in sight', () {
+  test('takes a wireframe set outright', () {
     expect(debug.enabled, isFalse);
 
-    debug.mode = .layouts;
+    debug.mode = .layout;
 
     expect(debug.enabled, isTrue);
-    expect(debug.draws(.layouts), isTrue);
+    expect(debug.draws(.layout), isTrue);
   });
 }

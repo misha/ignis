@@ -1,13 +1,13 @@
 import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/effect_target.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/scale_owner.dart';
+import 'package:ignis/src/target.dart';
 
 /// An effect that animates a [ScaleOwner]'s scale over time.
 abstract class ScaleEffect extends ControlledEffect implements MeasurableEffect {
-  late final EffectTarget<ScaleOwner> _target;
+  late final Target<ScaleOwner> _target;
 
   /// The [ScaleOwner] whose scale is mutated by this effect.
   ScaleOwner? get target => _target.value;
@@ -34,7 +34,7 @@ abstract class ScaleEffect extends ControlledEffect implements MeasurableEffect 
     super.cleanup,
     super.enabled,
   }) {
-    _target = EffectTarget<ScaleOwner>(this);
+    _target = Target<ScaleOwner>(this);
   }
 
   @override

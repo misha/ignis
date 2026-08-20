@@ -2,18 +2,23 @@ import 'package:flutter/foundation.dart';
 import 'package:ignis/src/collisions/nodes/collision_detection_node.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
-import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/shape.dart';
 
 /// A hitbox that reports overlaps against other colliders registered to the
 /// same [CollisionDetectionNode].
-class ColliderNode extends SizedNode {
-  /// The shape of the collider's hitbox.
-  Shape shape;
+class ColliderNode extends SpatialNode {
+  Shape? _shape;
 
+  /// The shape of the collider's hitbox.
+  ///
+  /// Left unstated, it takes the shape in effect at its parent, so one sitting
+  /// under a shape or a sprite covers it without restating anything.
   @override
-  Vector2 get size => shape.size;
+  Shape get shape => _shape ?? super.shape;
+
+  /// Sets the shape, or hands it back to the chain with null.
+  set shape(Shape? value) => _shape = value;
 
   /// Bitmask of physics layers this collider exists on. Defaults to all 1-bits.
   int layer;
@@ -45,7 +50,7 @@ class ColliderNode extends SizedNode {
   CollisionDetectionNode? cd;
 
   ColliderNode({
-    required this.shape,
+    Shape? shape,
     int? layer,
     int? mask,
     bool? strict,
@@ -58,11 +63,14 @@ class ColliderNode extends SizedNode {
     super.children,
   }) : layer = layer ?? -1,
        mask = mask ?? -1,
-       strict = strict ?? true;
+       strict = strict ?? true {
+    _shape = shape;
+  }
 
   @override
   void build() {
     super.build();
+
     cd = ancestors.whereType<CollisionDetectionNode>().firstOrNull;
 
     if (strict && cd == null) {
@@ -79,8 +87,8 @@ class ColliderNode extends SizedNode {
 
     debugDraw((canvas) {
       final debug = Ignis.debug;
-      if (!debug.draws(.collisions)) return;
-      canvas.drawRect(shape.rect(), debug.collisionPaint);
+      if (!debug.draws(.collision)) return;
+      shape.draw(canvas, debug.paint);
     });
   }
 

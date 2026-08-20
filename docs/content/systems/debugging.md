@@ -18,16 +18,18 @@ The demo on the right has a hidden input box. Hit `3` to find the input box, the
 
 ## Debug Modes
 
-`Ignis.debug` allows you to set a `DebugMode` bitmask. Each bit in `DebugMode` toggles a certain type of wireframe in all live `Scene` objects.
+`Ignis.debug` allows you to set a `DebugMode`, or `null` to draw nothing. The mode selects which type of wireframe is drawn in all live `Scene` objects.
 
-| Mode         | Renders                                                      |
-|--------------|--------------------------------------------------------------|
-| `none`       | Nothing.                                                     |
-| `transforms` | `TransformNode` origins and `SpriteNode`/`ShapeNode` bounds. |
-| `collisions` | `ColliderNode` bounds.                                       |
-| `inputs`     | `InputNode` hit areas.                                       |
-| `layouts`    | `LayoutNode` boxes.                                          |
-| `all`        | All debug wireframes.                                        |
+| Mode        | Renders                           |
+|-------------|-----------------------------------|
+| `spatial`   | `SpatialNode` origin and extents. |
+| `collision` | `ColliderNode` shapes.            |
+| `input`     | `InputNode` hit areas.            |
+| `layout`    | `LayoutNode` boxes.               |
+
+One mode draws at a time. `spatial` shows the most, covering every node that has a shape, drawn as its bounding box. The other three narrow to a single category, and draw its true shape rather than the box around it, so reach for them when `spatial` gives you more than you want to look at, or when you need a circle drawn as a circle.
+
+Every `SpatialNode` marks its origin with a small cross under all four modes, drawn in that mode's own color, so narrowing to one category still tells you where each node sits.
 
 You can also customize the `Paint` for each debug mode. For example, `Ignis.debug.inputPaint` specifies how `InputNode` will draw its debug visuals.
 
@@ -35,14 +37,14 @@ You can also customize the `Paint` for each debug mode. For example, `Ignis.debu
 
 `DebugControlsNode` sets up standard debugging controls for any scene, binding several common debugging actions to `Ignis.controls`. The key(s) that trigger each action are completely customizable.
 
-| Key  | Action                                                |
-|------|-------------------------------------------------------|
-| `F1` | Toggles the `transforms` debug mode.                  |
-| `F2` | Toggles the `collisions` debug mode.                  |
-| `F3` | Toggles the `inputs` debug mode.                      |
-| `F4` | Toggles the `layouts` debug mode.                     |
-| `F5` | Pauses and resumes the scene.                         |
-| `F6` | Fills to the `all` debug mode, then clears to `none`. |
+| Key  | Action                              |
+|------|-------------------------------------|
+| `F1` | Toggles the `spatial` debug mode.   |
+| `F2` | Toggles the `collision` debug mode. |
+| `F3` | Toggles the `input` debug mode.     |
+| `F4` | Toggles the `layout` debug mode.    |
+| `F5` | Pauses and resumes the scene.       |
+| `F6` | Turns debug mode off.               |
 
 Add it to your scenes in debug builds for instant debuggability:
 

@@ -1,14 +1,14 @@
-import 'package:ignis/src/effects/effect_target.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/owners/position_owner.dart';
+import 'package:ignis/src/target.dart';
 
 /// An effect that moves a [PositionOwner] toward [following] at [speed].
 ///
 /// Emits [EffectNode.onFinish] on arrival, and again each time it falls
 /// behind and catches back up.
 class FollowEffect extends EffectNode {
-  late final EffectTarget<PositionOwner> _target;
+  late final Target<PositionOwner> _target;
 
   /// The [PositionOwner] whose position is mutated by this effect.
   PositionOwner? get target => _target.value;
@@ -31,7 +31,7 @@ class FollowEffect extends EffectNode {
     super.enabled,
     super.priority,
   }) {
-    _target = EffectTarget<PositionOwner>(this);
+    _target = Target<PositionOwner>(this);
   }
 
   @override

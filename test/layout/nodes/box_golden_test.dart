@@ -24,6 +24,7 @@ void main() {
           ),
         ],
       ),
+      debug: .layout,
     ),
   );
 
@@ -45,6 +46,7 @@ void main() {
           ),
         ],
       ),
+      debug: .layout,
     ),
   );
 
@@ -66,6 +68,7 @@ void main() {
           ),
         ],
       ),
+      debug: .layout,
     ),
   );
 
@@ -84,6 +87,7 @@ void main() {
           ),
         ],
       ),
+      debug: .layout,
     ),
   );
 
@@ -101,6 +105,7 @@ void main() {
           ),
         ],
       ),
+      debug: .layout,
     ),
   );
 
@@ -122,6 +127,7 @@ void main() {
           ),
         ],
       ),
+      debug: .layout,
     ),
   );
 
@@ -139,6 +145,7 @@ void main() {
           ),
         ],
       ),
+      debug: .layout,
     ),
   );
 
@@ -156,6 +163,7 @@ void main() {
           ),
         ],
       ),
+      debug: .layout,
     ),
   );
 
@@ -177,6 +185,7 @@ void main() {
           ),
         ],
       ),
+      debug: .layout,
     ),
   );
 }

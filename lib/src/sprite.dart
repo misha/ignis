@@ -3,10 +3,10 @@ import 'package:ignis/src/sprites/sprite_entry.dart';
 
 /// The frames a [SpriteNode] draws, and how long each is held.
 ///
-/// Four implementations ship: a [SpriteImage] is one image, a [SpriteSheet]
-/// cuts an image into a grid, a [SpriteGroup] lays several of either end to
-/// end, and a [SpriteMap] does the same under names of your choosing. Implement
-/// this to draw frames packed some other way.
+/// Four implementations ship: a [SpriteImage] is one image, a
+/// [SpriteAnimation] is one run of frames, a [SpriteGroup] lays several of
+/// either end to end, and a [SpriteMap] does the same under names of your
+/// choosing. Implement this to draw frames packed some other way.
 ///
 /// An entry is the unit, and a [SpriteEntry] states everything one is, so an
 /// implementation is free to hold every entry in its own image, at its own

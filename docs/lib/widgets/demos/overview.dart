@@ -11,7 +11,7 @@ final Map<String, Widget Function()> overviewDemos = {
 };
 
 /// A square turning in place, at the middle of the stage.
-class _SpinnerNode extends TransformNode {
+class _SpinnerNode extends SpatialNode {
   _SpinnerNode() : super(position: DEMO_SIZE / 2);
 
   // demo on spinner

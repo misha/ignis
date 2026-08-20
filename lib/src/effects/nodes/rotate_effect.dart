@@ -1,12 +1,12 @@
 import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/effect_target.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 import 'package:ignis/src/owners/angle_owner.dart';
+import 'package:ignis/src/target.dart';
 
 /// An effect that animates an [AngleOwner]'s angle over time.
 abstract class RotateEffect extends ControlledEffect implements MeasurableEffect {
-  late final EffectTarget<AngleOwner> _target;
+  late final Target<AngleOwner> _target;
 
   /// The [AngleOwner] whose angle is mutated by this effect.
   AngleOwner? get target => _target.value;
@@ -33,7 +33,7 @@ abstract class RotateEffect extends ControlledEffect implements MeasurableEffect
     super.cleanup,
     super.enabled,
   }) {
-    _target = EffectTarget<AngleOwner>(this);
+    _target = Target<AngleOwner>(this);
   }
 
   @override

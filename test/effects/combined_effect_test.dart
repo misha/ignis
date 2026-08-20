@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('runs its effects in parallel', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
 
     node.add(
@@ -21,7 +21,7 @@ void main() {
   });
 
   test('emits onFinish once every effect has finished', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     final combined = CombinedEffect(
       effects: [
@@ -42,7 +42,7 @@ void main() {
   });
 
   test('detaches itself once every effect finishes, when cleanup is true', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
 
     node.add(
@@ -69,7 +69,7 @@ void main() {
   });
 
   test('reset() lets it run and finish again', () {
-    final node = TransformNode();
+    final node = SpatialNode();
     final scene = node.mount();
     final combined = CombinedEffect(
       effects: [

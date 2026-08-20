@@ -54,7 +54,7 @@ Callbacks run before the node's children, so a parent paints behind them.
 
 ```dart
 debugDraw((canvas) {
-  canvas.drawRect(shape.rect(), DEBUG_TRANSFORM_PAINT);
+  canvas.drawRect(shape.rect(), Ignis.debug.paint);
 });
 ```
 

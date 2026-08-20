@@ -19,3 +19,4 @@ export 'src/palette.dart';
 export 'src/shape.dart';
 export 'src/sprite.dart';
 export 'src/sprites.dart';
+export 'src/target.dart';

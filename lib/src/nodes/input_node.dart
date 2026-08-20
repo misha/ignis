@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/shape.dart';
 
 /// A pointer hit area.
@@ -11,12 +11,18 @@ import 'package:ignis/src/shape.dart';
 /// same spot. [priority] decides who's tried first. An event a node doesn't
 /// apply to always falls through to the next one. Once a node does claim an
 /// event, the search stops there unless [behavior] is [HitBehavior.translucent].
-abstract class InputNode extends SizedNode {
-  /// The shape of the node's hit area.
-  Shape shape;
+abstract class InputNode extends SpatialNode {
+  Shape? _shape;
 
+  /// The shape of the node's hit area.
+  ///
+  /// Left unstated, it takes the shape in effect at its parent, so one sitting
+  /// under a shape or a sprite covers it without restating anything.
   @override
-  Vector2 get size => shape.size;
+  Shape get shape => _shape ?? super.shape;
+
+  /// Sets the shape, or hands it back to the chain with null.
+  set shape(Shape? value) => _shape = value;
 
   /// Whether this node blocks nodes behind it once it claims an event.
   ///
@@ -24,7 +30,7 @@ abstract class InputNode extends SizedNode {
   HitBehavior behavior;
 
   InputNode({
-    required this.shape,
+    Shape? shape,
     HitBehavior? behavior,
     super.position,
     super.scale,
@@ -33,7 +39,9 @@ abstract class InputNode extends SizedNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : behavior = behavior ?? .opaque;
+  }) : behavior = behavior ?? .opaque {
+    _shape = shape;
+  }
 
   @override
   void build() {
@@ -41,15 +49,8 @@ abstract class InputNode extends SizedNode {
 
     debugDraw((canvas) {
       final debug = Ignis.debug;
-      if (!debug.draws(.inputs)) return;
-
-      switch (shape) {
-        case Circle():
-          canvas.drawOval(shape.rect(), debug.inputPaint);
-
-        case Rectangle():
-          canvas.drawRect(shape.rect(), debug.inputPaint);
-      }
+      if (!debug.draws(.input)) return;
+      shape.draw(canvas, debug.paint);
     });
   }
 
@@ -65,14 +66,12 @@ abstract class InputNode extends SizedNode {
 
   @override
   bool containsPoint(Vector2 point) {
-    final local = toLocal(point);
-    final adjusted = Vector2(
-      local.x + anchor.x * width,
-      local.y + anchor.y * height,
-    );
+    final adjusted = toLocal(point);
 
     switch (shape) {
       case Rectangle(:final size):
+        if (size.x <= 0 || size.y <= 0) return false;
+
         return adjusted.x >= 0 && //
             adjusted.x <= size.x &&
             adjusted.y >= 0 &&
@@ -87,7 +86,7 @@ abstract class InputNode extends SizedNode {
 
   /// Converts [scenePoint] into this node's local space.
   ///
-  /// TODO: Feels bad here. Maybe a SizedNode concern?
+  /// TODO: Feels bad here. Maybe a SpatialNode concern?
   Vector2 toLocal(Vector2 scenePoint) {
     final inverse = absoluteTransform()..invert();
     return scenePoint.transformed(inverse);

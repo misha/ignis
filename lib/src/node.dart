@@ -143,9 +143,6 @@ class Node {
   }
 
   /// Runs this node's [draw] callbacks.
-  ///
-  /// Wrapped, rather than overridden, by a node that draws itself in a space
-  /// its children do not share.
   @protected
   void renderSelf(Canvas canvas) {
     final draws = _draws;
@@ -278,7 +275,7 @@ class Node {
   ///
   /// ```dart
   /// tick((dt) {
-  ///   shape.angle += pi / 4 * dt;
+  ///   turret.angle += pi / 4 * dt;
   /// });
   /// ```
   @nonVirtual

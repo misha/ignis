@@ -12,12 +12,12 @@ Future<void> expectGolden(
   double height = 100,
   Color color = WHITE,
   double dt = 0,
-  bool debug = true,
+  DebugMode? debug,
 }) async {
   assert(dt >= 0, 'dt cannot be negative.');
   final key = GlobalKey();
   Ignis.debug = Debug();
-  if (debug) Ignis.debug.mode = .all;
+  Ignis.debug.mode = debug;
 
   await tester.pumpWidget(
     Center(

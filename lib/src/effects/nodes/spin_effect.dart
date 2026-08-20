@@ -1,11 +1,11 @@
-import 'package:ignis/src/effects/effect_target.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/owners/angle_owner.dart';
 import 'package:ignis/src/owners/speed_owner.dart';
+import 'package:ignis/src/target.dart';
 
 /// An effect that spins an [AngleOwner] by [speed], every tick, forever.
 class SpinEffect extends EffectNode implements SpeedOwner {
-  late final EffectTarget<AngleOwner> _target;
+  late final Target<AngleOwner> _target;
 
   /// The [AngleOwner] whose angle is mutated by this effect.
   AngleOwner? get target => _target.value;
@@ -19,7 +19,7 @@ class SpinEffect extends EffectNode implements SpeedOwner {
     super.enabled,
     super.priority,
   }) {
-    _target = EffectTarget<AngleOwner>(this);
+    _target = Target<AngleOwner>(this);
   }
 
   @override

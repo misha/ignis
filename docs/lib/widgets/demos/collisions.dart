@@ -108,17 +108,12 @@ class _PairNode extends CollisionDetectionNode {
     final log = DemoLog();
 
     final wall = add(_still(.square(_BLOCK), position: _CENTER));
-    wall.add(ColliderNode(shape: wall.shape, anchor: wall.anchor));
+    wall.add(ColliderNode());
 
     final mover = add(_mover(.circle(_PROBE))..paint.blendMode = .plus);
 
     // demo on collision-pair
-    final collider = mover.add(
-      ColliderNode(
-        shape: mover.shape,
-        anchor: mover.anchor,
-      ),
-    );
+    final collider = mover.add(ColliderNode());
 
     collider
       ..onCollisionStart((_) => log('colliding', .red))
@@ -142,12 +137,7 @@ class _ActiveNode extends CollisionDetectionNode {
     ];
 
     for (final block in blocks) {
-      block.add(
-        ColliderNode(
-          shape: block.shape,
-          anchor: block.anchor,
-        ),
-      );
+      block.add(ColliderNode());
     }
 
     add(
@@ -169,12 +159,7 @@ class _ActiveNode extends CollisionDetectionNode {
     );
 
     // demo on collision-active
-    final collider = mover.add(
-      ColliderNode(
-        shape: mover.shape,
-        anchor: mover.anchor,
-      ),
-    );
+    final collider = mover.add(ColliderNode());
 
     tick((_) {
       log(switch (collider.active.length) {
@@ -196,12 +181,7 @@ class _SpinNode extends CollisionDetectionNode {
 
     final circle = add(_still(.circle(16), position: _CENTER / 2));
 
-    circle.add(
-      ColliderNode(
-        shape: circle.shape,
-        anchor: circle.anchor,
-      ),
-    );
+    circle.add(ColliderNode());
 
     // demo on collision-spin
     final blade = add(
@@ -213,12 +193,7 @@ class _SpinNode extends CollisionDetectionNode {
       ),
     );
 
-    final collider = blade.add(
-      ColliderNode(
-        shape: blade.shape,
-        anchor: blade.anchor,
-      ),
-    );
+    final collider = blade.add(ColliderNode());
 
     blade.add(SpinEffect(speed: pi / 2));
     // demo off
@@ -252,29 +227,9 @@ class _LayerNode extends CollisionDetectionNode {
     final mover = add(_mover(.circle(_PROBE)));
 
     // demo on collision-layer
-    blue.add(
-      ColliderNode(
-        shape: blue.shape,
-        anchor: blue.anchor,
-        layer: BLUE_LAYER,
-      ),
-    );
-
-    orange.add(
-      ColliderNode(
-        shape: orange.shape,
-        anchor: orange.anchor,
-        layer: ORANGE_LAYER,
-      ),
-    );
-
-    final collider = mover.add(
-      ColliderNode(
-        shape: mover.shape,
-        anchor: mover.anchor,
-        mask: ORANGE_LAYER,
-      ),
-    );
+    blue.add(ColliderNode(layer: BLUE_LAYER));
+    orange.add(ColliderNode(layer: ORANGE_LAYER));
+    final collider = mover.add(ColliderNode(mask: ORANGE_LAYER));
     // demo off
 
     _colorOnContact(mover, collider);
@@ -414,12 +369,7 @@ class _BallNode extends ShapeNode {
     add(VelocityEffect(velocity: velocity));
 
     // demo on collision-balls
-    final collider = add(
-      ColliderNode(
-        shape: shape,
-        anchor: anchor,
-      ),
-    );
+    final collider = add(ColliderNode());
 
     collider
       ..onCollisionStart((_) {

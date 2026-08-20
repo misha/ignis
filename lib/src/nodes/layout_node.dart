@@ -5,9 +5,10 @@ import 'package:ignis/src/layout/layout_constraints.dart';
 import 'package:ignis/src/layout/layout_flex.dart';
 import 'package:ignis/src/layout/layout_item.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/nodes/spatial_node.dart';
+import 'package:ignis/src/shape.dart';
 
-/// A [SizedNode] whose size is computed via constraint propagation, rather
+/// A [SpatialNode] whose size is computed via constraint propagation, rather
 /// than being intrinsic to its content.
 ///
 /// A [LayoutNode] whose parent is a [LayoutNode] is laid out by that parent,
@@ -18,11 +19,11 @@ import 'package:ignis/src/nodes/sized_node.dart';
 /// Layout only ever flows from a [LayoutNode] to its direct children, so a
 /// plain node in between doesn't pass constraints through - it starts a fresh
 /// layout root underneath instead.
-abstract class LayoutNode extends SizedNode {
+abstract class LayoutNode extends SpatialNode {
   final MVector2 _size = .zero();
 
   @override
-  Vector2 get size => _size;
+  late final Shape shape = Rectangle(_size);
 
   /// How an ancestor `FlexNode` shares its leftover main-axis space with this
   /// node, ignored without one. Defaults to [LayoutFlex.none].
@@ -40,9 +41,9 @@ abstract class LayoutNode extends SizedNode {
     super.children,
   }) : flex = flex ?? .none;
 
-  /// The items this node lays out: its direct [SizedNode] children.
+  /// The items this node lays out: its direct [SpatialNode] children.
   ///
-  /// Queried as [SizedNode] rather than [LayoutItem] because that is what a
+  /// Queried as [SpatialNode] rather than [LayoutItem] because that is what a
   /// layout item is *in the tree* - [LayoutItem] exists so `LayoutEngine` can
   /// work on things that aren't nodes at all.
   ///
@@ -50,7 +51,7 @@ abstract class LayoutNode extends SizedNode {
   /// than replaced, so the reference is resolved once and kept; later adds and
   /// removals show up through it.
   @protected
-  late final Iterable<LayoutItem> layoutChildren = query<SizedNode>();
+  late final Iterable<LayoutItem> layoutChildren = query<SpatialNode>();
 
   /// Whether no [LayoutNode] lays this node out, leaving it to lay itself out
   /// against the scene every frame.
@@ -82,8 +83,8 @@ abstract class LayoutNode extends SizedNode {
 
     debugDraw((canvas) {
       final debug = Ignis.debug;
-      if (!debug.draws(.layouts)) return;
-      canvas.drawRect(.fromLTWH(0, 0, width, height), debug.layoutPaint);
+      if (!debug.draws(.layout)) return;
+      canvas.drawRect(.fromLTWH(0, 0, width, height), debug.paint);
     });
   }
 

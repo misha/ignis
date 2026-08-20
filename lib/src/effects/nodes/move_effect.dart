@@ -1,13 +1,13 @@
 import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/effect_target.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/position_owner.dart';
+import 'package:ignis/src/target.dart';
 
 /// An effect that animates a [PositionOwner]'s position over time.
 abstract class MoveEffect extends ControlledEffect implements MeasurableEffect {
-  late final EffectTarget<PositionOwner> _target;
+  late final Target<PositionOwner> _target;
 
   /// The [PositionOwner] whose position is mutated by this effect.
   PositionOwner? get target => _target.value;
@@ -34,7 +34,7 @@ abstract class MoveEffect extends ControlledEffect implements MeasurableEffect {
     super.cleanup,
     super.enabled,
   }) {
-    _target = EffectTarget<PositionOwner>(this);
+    _target = Target<PositionOwner>(this);
   }
 
   @override

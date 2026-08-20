@@ -27,7 +27,6 @@ linter:
     flutter_style_todos: false
     require_trailing_commas: false
     constant_identifier_names: false
-    directives_ordering: false
     sort_unnamed_constructors_first: false
     always_put_required_named_parameters_first: false
     implementation_imports: false

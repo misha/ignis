@@ -1,13 +1,12 @@
 import 'dart:ui';
 
-import 'package:ignis/src/globals.dart';
-import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/sized_node.dart';
+import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/palette.dart';
 import 'package:ignis/src/shape.dart';
 
-class ShapeNode extends SizedNode {
+class ShapeNode extends SpatialNode {
   /// Controls the geometry drawn.
+  @override
   Shape shape;
 
   /// This node's registered paints.
@@ -15,9 +14,6 @@ class ShapeNode extends SizedNode {
 
   /// The default paint.
   Paint get paint => palette.paint;
-
-  @override
-  Vector2 get size => shape.size;
 
   ShapeNode({
     required this.shape,
@@ -35,26 +31,8 @@ class ShapeNode extends SizedNode {
   void build() {
     super.build();
 
-    void painter(Canvas canvas, Paint paint) {
-      final dest = shape.rect();
-
-      switch (shape) {
-        case Circle():
-          canvas.drawOval(dest, paint);
-
-        case Rectangle():
-          canvas.drawRect(dest, paint);
-      }
-    }
-
     draw((canvas) {
-      palette.draw(canvas, painter);
-    });
-
-    debugDraw((canvas) {
-      final debug = Ignis.debug;
-      if (!debug.draws(.transforms)) return;
-      canvas.drawRect(shape.rect(), debug.transformPaint);
+      palette.draw(canvas, shape.draw);
     });
   }
 }
