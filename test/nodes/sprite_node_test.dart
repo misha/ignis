@@ -6,20 +6,21 @@ import '../support/images.dart';
 
 void main() {
   test('starts on the first frame of the first row', () async {
-    final sheet = SpriteSheet(await solidAsset(8, 4, RED), .all(4), fps: 0);
-    final node = SpriteNode(sprite: sheet);
+    final animation = SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 0);
+    final node = SpriteNode(sprite: animation);
     node.mount();
 
-    expect(node.sprite, same(sheet));
+    expect(node.sprite, same(animation));
     expect((node.current.index, node.current.frame), (0, 0));
     expect((node.width, node.height), (4.0, 4.0));
   });
 
   test('play switches the row and frame', () async {
-    final sheet = SpriteSheet(await solidAsset(6, 6, BLUE), .all(2), fps: 0);
-    final node = SpriteNode(sprite: sheet);
+    final sheet = SpriteSheet(await solidAsset(6, 6, BLUE), .all(2));
+    final slime = sheet.animations(fps: 0);
+    final node = SpriteNode(sprite: slime);
 
-    node.play(index: 2, frame: 1);
+    node.play(2, frame: 1);
 
     expect((node.current.index, node.current.frame), (2, 1));
 
@@ -30,7 +31,7 @@ void main() {
 
   test('takes its size from the frame, not the image', () async {
     final node = SpriteNode(
-      sprite: SpriteSheet(await solidAsset(8, 4, RED), .all(4), fps: 0),
+      sprite: SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 0),
     );
 
     node.mount();
@@ -45,16 +46,15 @@ void main() {
         [BLUE, WHITE],
       ]),
       .all(1),
-      fps: 0,
     );
 
-    final node = SpriteNode(sprite: sheet);
+    final node = SpriteNode(sprite: sheet.animations(fps: 0));
     node.mount();
 
     var image = await renderImage(node, node.width.ceil(), node.height.ceil());
     expect(await pixelAt(image, 0, 0), RED);
 
-    node.play(index: 1, frame: 1);
+    node.play(1, frame: 1);
 
     expect((node.current.index, node.current.frame), (1, 1));
     image = await renderImage(node, node.width.ceil(), node.height.ceil());
@@ -64,7 +64,7 @@ void main() {
   test('plays straight through the parts of a group', () async {
     final group = SpriteGroup([
       SpriteImage(await solidAsset(8, 4, RED)),
-      SpriteSheet(
+      SpriteAnimation(
         await pixelAsset([
           [BLUE, GREEN],
         ]),
@@ -78,7 +78,7 @@ void main() {
 
     expect(node.size, Vector2(8, 4));
 
-    node.play(index: 1);
+    node.play(1);
 
     expect(node.size, Vector2.all(1), reason: 'a part brings its own frame size');
 
@@ -90,13 +90,11 @@ void main() {
     final a = Node();
 
     final node = SpriteNode(
-      sprite: SpriteSheet(
+      sprite: SpriteAnimation(
         await solidAsset(8, 2, RED),
         .all(2),
-        fps: 10,
-        rows: [
-          .new(frames: 2, fps: 4),
-        ],
+        end: 2,
+        fps: 4,
       ),
     );
 
@@ -114,13 +112,10 @@ void main() {
     final a = Node();
 
     final node = SpriteNode(
-      sprite: SpriteSheet(
+      sprite: SpriteAnimation.timed(
         await solidAsset(6, 2, RED),
         .all(2),
-        fps: 0,
-        rows: [
-          .timed([0.5, 0.2, 0.2]),
-        ],
+        [0.5, 0.2, 0.2],
       ),
     );
 
@@ -140,22 +135,21 @@ void main() {
   test('emits the frame index within its row', () async {
     final a = Node();
 
-    final node = SpriteNode(
-      sprite: SpriteSheet(
-        await pixelAsset([
-          [RED, GREEN],
-          [BLUE, WHITE],
-        ]),
-        .all(1),
-        fps: 4,
-      ),
+    final sheet = SpriteSheet(
+      await pixelAsset([
+        [RED, GREEN],
+        [BLUE, WHITE],
+      ]),
+      .all(1),
     );
+
+    final node = SpriteNode(sprite: sheet.animations(fps: 4));
 
     final frames = <int>[];
     var loops = 0;
     node.onFrame(frames.add);
     node.onLoop(() => loops += 1);
-    node.play(index: 1);
+    node.play(1);
 
     a.add(node);
     final scene = a.mount();
@@ -170,7 +164,7 @@ void main() {
     final a = Node();
 
     final node = SpriteNode(
-      sprite: SpriteSheet(await solidAsset(8, 4, RED), .all(4), fps: 2),
+      sprite: SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 2),
       speed: 0.5,
     );
 
@@ -188,7 +182,7 @@ void main() {
     final a = Node();
 
     final node = SpriteNode(
-      sprite: SpriteSheet(await solidAsset(8, 4, RED), .all(4), fps: 2),
+      sprite: SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 2),
       speed: 0,
     );
 
@@ -200,64 +194,97 @@ void main() {
   });
 
   test('rejects a negative speed', () async {
-    final sheet = SpriteSheet(await solidAsset(8, 4, RED), .all(4), fps: 0);
+    final animation = SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 0);
 
-    expect(() => SpriteNode(sprite: sheet, speed: -1), throwsAssertionError);
+    expect(() => SpriteNode(sprite: animation, speed: -1), throwsAssertionError);
   });
 
-  test('plays the row a key names', () async {
+  test('advances to the next entry, wrapping past the last', () async {
+    final sheet = SpriteSheet(await solidAsset(4, 6, RED), .all(2));
+    final node = SpriteNode(sprite: sheet.animations(fps: 0));
+
+    node.play(0, frame: 1);
+    node.playNext();
+
+    expect((node.current.index, node.current.frame), (1, 0));
+
+    node.playNext();
+    expect(node.current.index, 2);
+
+    node.playNext();
+    expect(node.current.index, 0);
+  });
+
+  test('steps back to the entry before, wrapping past the first', () async {
+    final sheet = SpriteSheet(await solidAsset(4, 6, RED), .all(2));
+    final node = SpriteNode(sprite: sheet.animations(fps: 0));
+
+    node.playPrevious();
+    expect(node.current.index, 2);
+
+    node.playPrevious();
+    expect(node.current.index, 1);
+  });
+
+  test('walks the names a map holds', () async {
     final node = SpriteNode(
-      sprite: SpriteSheet(
-        await solidAsset(4, 4, RED),
-        .all(2),
-        fps: 8,
-        rows: [
-          .new(id: 'idle'),
-          .new(id: 'jump'),
-        ],
-      ),
+      sprite: SpriteMap({
+        'idle': SpriteAnimation(await solidAsset(4, 2, RED), .all(2), fps: 0),
+        'jump': SpriteAnimation(await solidAsset(4, 2, BLUE), .all(2), fps: 0),
+      }),
     );
 
-    node.play(id: 'jump');
+    node.playNext();
+    expect(node.current.key, 'jump');
+
+    node.playNext();
+    expect(node.current.key, 'idle');
+
+    node.playPrevious();
+    expect(node.current.key, 'jump');
+  });
+
+  test('plays the entry a key names', () async {
+    final node = SpriteNode(
+      sprite: SpriteMap({
+        'idle': SpriteAnimation(await solidAsset(4, 2, RED), .all(2), fps: 8),
+        'jump': SpriteAnimation(await solidAsset(4, 2, BLUE), .all(2), fps: 8),
+      }),
+    );
+
+    node.play('jump');
 
     expect(node.current.index, 1);
   });
 
-  test('rejects a key no row answers to', () async {
+  test('rejects a key nothing answers to', () async {
     final node = SpriteNode(
-      sprite: SpriteSheet(
-        await solidAsset(4, 4, RED),
-        .all(2),
-        fps: 8,
-        rows: [
-          .new(id: 'idle'),
-        ],
-      ),
+      sprite: SpriteMap({
+        'idle': SpriteAnimation(await solidAsset(4, 2, RED), .all(2), fps: 8),
+      }),
     );
 
-    expect(() => node.play(id: 'jump'), throwsArgumentError);
+    expect(() => node.play('jump'), throwsArgumentError);
   });
 
   test('rejects a frame the row does not hold', () async {
     final node = SpriteNode(
-      sprite: SpriteSheet(await solidAsset(8, 4, RED), .all(4), fps: 0),
+      sprite: SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 0),
     );
 
-    expect(() => node.play(frame: 2), throwsArgumentError);
-    expect(() => node.play(index: 1), throwsArgumentError);
+    expect(() => node.play(0, frame: 2), throwsArgumentError);
+    expect(() => node.play(1), throwsArgumentError);
   });
 
   test('finishes a row that says it does not loop', () async {
     final a = Node();
 
     final node = SpriteNode(
-      sprite: SpriteSheet(
+      sprite: SpriteAnimation(
         await solidAsset(8, 4, RED),
         .all(4),
         fps: 2,
-        rows: [
-          .new(loop: false),
-        ],
+        loop: false,
       ),
     );
 
@@ -270,17 +297,19 @@ void main() {
 
   test('play overrides what the row says about looping', () async {
     final a = Node();
-    final node = SpriteNode(sprite: SpriteSheet(await solidAsset(8, 4, RED), .all(4), fps: 2));
+    final node = SpriteNode(
+      sprite: SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 2),
+    );
     a.add(node);
     final scene = a.mount();
 
-    node.play(loop: false);
+    node.play(0, loop: false);
     expect(node.current.loops, isFalse);
 
     scene.update(1);
     expect(node.current.isFinished, isTrue);
 
-    node.play();
+    node.play(0);
     expect(node.current.loops, isTrue, reason: 'a bare play clears the override');
 
     scene.update(10);
@@ -291,35 +320,46 @@ void main() {
     addTearDown(Ignis.cache.clear);
 
     Ignis.cache.add('sheet.png', await solidImage(8, 4, RED));
-    final node = SpriteNode(sprite: SpriteSheet('sheet.png', .all(4), fps: 0));
+    final node = SpriteNode(sprite: SpriteAnimation('sheet.png', .all(4), fps: 0));
 
     // Twice as wide.
     Ignis.cache.add('sheet.png', await solidImage(16, 4, RED));
 
     node.reassemble();
 
-    expect(node.sprite.frames(0), 4);
+    expect(node.sprite.entries[0].frames, 4);
   });
 
-  test('reassemble clamps a row the replacement no longer has', () async {
+  test('reassemble holds a row the replacement no longer reaches', () async {
     addTearDown(Ignis.cache.clear);
 
     Ignis.cache.add('sheet.png', await solidImage(4, 4, RED));
-    final node = SpriteNode(sprite: SpriteSheet('sheet.png', .all(2), fps: 0));
-    node.play(index: 1, frame: 1);
+
+    final sheet = SpriteSheet('sheet.png', .all(2));
+    final node = SpriteNode(sprite: sheet.animations(fps: 0));
+
+    node.play(1, frame: 1);
+    final held = node.sprite.entries[1].image;
 
     // One row shorter.
     Ignis.cache.add('sheet.png', await solidImage(4, 2, RED));
 
     node.reassemble();
 
-    expect((node.current.index, node.current.frame), (0, 0));
+    expect((node.current.index, node.current.frame), (1, 1));
+    expect(node.sprite.entries[1].image, same(held), reason: 'it keeps its art');
+    expect(node.sprite.entries[0].image, isNot(same(held)), reason: 'row 0 reloads');
   });
 
   test('does not detach once finished, by default', () async {
     final a = Node();
-    final sheet = SpriteSheet(await solidAsset(8, 4, RED), .all(4), fps: 2, loop: false);
-    final node = SpriteNode(sprite: sheet);
+    final animation = SpriteAnimation(
+      await solidAsset(8, 4, RED),
+      .all(4),
+      fps: 2,
+      loop: false,
+    );
+    final node = SpriteNode(sprite: animation);
     a.add(node);
     final scene = a.mount();
 
@@ -332,8 +372,13 @@ void main() {
 
   test('detaches itself once finished, when cleanup is true', () async {
     final a = Node();
-    final sheet = SpriteSheet(await solidAsset(8, 4, RED), .all(4), fps: 2, loop: false);
-    final node = SpriteNode(sprite: sheet, cleanup: true);
+    final animation = SpriteAnimation(
+      await solidAsset(8, 4, RED),
+      .all(4),
+      fps: 2,
+      loop: false,
+    );
+    final node = SpriteNode(sprite: animation, cleanup: true);
     a.add(node);
     final scene = a.mount();
 
@@ -347,8 +392,8 @@ void main() {
 
   test('ignores cleanup while looping, since a looping sprite never finishes', () async {
     final a = Node();
-    final sheet = SpriteSheet(await solidAsset(8, 4, RED), .all(4), fps: 2);
-    final node = SpriteNode(sprite: sheet, cleanup: true);
+    final animation = SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 2);
+    final node = SpriteNode(sprite: animation, cleanup: true);
     a.add(node);
     final scene = a.mount();
 

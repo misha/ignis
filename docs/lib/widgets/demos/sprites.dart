@@ -54,6 +54,12 @@ final Map<String, Widget Function()> spriteDemos = {
       builder: _RatesNode.new,
     );
   },
+  'sprite-tiles': () {
+    return DemoScene(
+      assets: const ['assets/sheets/slime.png'],
+      builder: _TilesNode.new,
+    );
+  },
   'sprite-partial': () {
     return DemoScene(
       assets: const ['assets/sheets/slime.png'],
@@ -122,7 +128,11 @@ class _BonfireNode extends Node {
 
     // demo on sprite-animation
     final fire = SpriteNode(
-      sprite: SpriteSheet('assets/sheets/bonfire.png', BONFIRE_SIZE, fps: 16),
+      sprite: SpriteAnimation(
+        'assets/sheets/bonfire.png',
+        BONFIRE_SIZE,
+        fps: 16,
+      ),
     );
     // demo off
 
@@ -143,15 +153,27 @@ class _LayeredNode extends Node {
 
     // demo on sprite-layers
     final smoke = SpriteNode(
-      sprite: SpriteSheet('assets/sheets/bonfire_smoke.png', BONFIRE_SIZE, fps: 10),
+      sprite: SpriteAnimation(
+        'assets/sheets/bonfire_smoke.png',
+        BONFIRE_SIZE,
+        fps: 10,
+      ),
     );
 
     final flame = SpriteNode(
-      sprite: SpriteSheet('assets/sheets/bonfire_flame.png', BONFIRE_SIZE, fps: 16),
+      sprite: SpriteAnimation(
+        'assets/sheets/bonfire_flame.png',
+        BONFIRE_SIZE,
+        fps: 16,
+      ),
     );
 
     final wood = SpriteNode(
-      sprite: SpriteSheet('assets/sheets/bonfire_wood.png', BONFIRE_SIZE, fps: 6),
+      sprite: SpriteAnimation(
+        'assets/sheets/bonfire_wood.png',
+        BONFIRE_SIZE,
+        fps: 6,
+      ),
     );
     // demo off
 
@@ -171,29 +193,29 @@ class _PackedNode extends Node {
     super.build();
 
     // demo on sprite-rows
+    final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
+
     final slime = SpriteNode(
-      sprite: SpriteSheet(
-        'assets/sheets/slime.png',
-        SLIME_SIZE,
+      sprite: sheet.animations(
         fps: 16,
         rows: [
-          .new(frames: 14), // idle
-          .new(frames: 30), // jump
-          .new(frames: 25), // jump_forward
-          .new(frames: 17), // spit
-          .new(frames: 30), // spike
-          .new(frames: 12), // injured1
-          .new(frames: 13), // injured2
-          .new(frames: 13), // injured3
-          .new(frames: 45), // splat_wall
-          .new(frames: 27), // recover
-          .new(frames: 49), // death
+          .new(end: 14), // idle
+          .new(end: 30), // jump
+          .new(end: 25), // jump_forward
+          .new(end: 17), // spit
+          .new(end: 30), // spike
+          .new(end: 12), // injured1
+          .new(end: 13), // injured2
+          .new(end: 13), // injured3
+          .new(end: 45), // splat_wall
+          .new(end: 27), // recover
+          .new(end: 49), // death
         ],
       ),
     );
 
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    taps.onTap(() => slime.play(index: (slime.current.index + 1) % slime.sprite.length));
+    taps.onTap(slime.playNext);
     // demo off
 
     addAll([
@@ -213,20 +235,17 @@ class _KeyedNode extends Node {
     super.build();
 
     // demo on sprite-keys
+    final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
+
     final slime = SpriteNode(
-      sprite: SpriteSheet(
-        'assets/sheets/slime.png',
-        SLIME_SIZE,
-        fps: 16,
-        rows: [
-          .new(id: 'idle', frames: 14),
-          .new(id: 'jump', frames: 30),
-        ],
-      ),
+      sprite: SpriteMap({
+        'idle': sheet.animation(row: 0, end: 14, fps: 16),
+        'jump': sheet.animation(row: 1, end: 30, fps: 16),
+      }),
     );
 
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    taps.onTap(() => slime.play(id: slime.current.index == 0 ? 'jump' : 'idle'));
+    taps.onTap(() => slime.play(slime.current.key == 'idle' ? 'jump' : 'idle'));
     // demo off
 
     addAll([
@@ -239,25 +258,17 @@ class _KeyedNode extends Node {
   }
 }
 
-/// Two sprites on one sheet, each playing a row that sets its own rate.
+/// One row of a sheet, taken twice and played at two rates.
 class _RatesNode extends Node {
   @override
   void build() {
     super.build();
 
     // demo on sprite-rates
-    final sheet = SpriteSheet(
-      'assets/sheets/slime.png',
-      SLIME_SIZE,
-      fps: 16,
-      rows: [
-        .new(frames: 14, fps: 5), // idle
-        .new(frames: 30), // jump
-      ],
-    );
+    final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
 
-    final idle = SpriteNode(sprite: sheet);
-    final jump = SpriteNode(sprite: sheet)..play(index: 1);
+    final slow = SpriteNode(sprite: sheet.animation(row: 1, end: 30, fps: 8));
+    final fast = SpriteNode(sprite: sheet.animation(row: 1, end: 30, fps: 24));
     // demo off
 
     add(
@@ -266,7 +277,45 @@ class _RatesNode extends Node {
         children: [
           RowNode(
             mainAxisSize: .min,
-            children: [idle, jump],
+            children: [slow, fast],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Four cells of the grid, drawn where they sit rather than played.
+class _TilesNode extends Node {
+  @override
+  void build() {
+    super.build();
+
+    // demo on sprite-tiles
+    final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
+
+    final crouch = SpriteNode(sprite: sheet.image(row: 1, column: 0));
+    final launch = SpriteNode(sprite: sheet.image(row: 1, column: 9));
+    final peak = SpriteNode(sprite: sheet.image(row: 1, column: 18));
+    final land = SpriteNode(sprite: sheet.image(row: 1, column: 27));
+    // demo off
+
+    add(
+      BoxNode(
+        alignment: .center,
+        children: [
+          ColumnNode(
+            mainAxisSize: .min,
+            children: [
+              RowNode(
+                mainAxisSize: .min,
+                children: [crouch, launch],
+              ),
+              RowNode(
+                mainAxisSize: .min,
+                children: [peak, land],
+              ),
+            ],
           ),
         ],
       ),
@@ -281,15 +330,10 @@ class _PartialNode extends Node {
     super.build();
 
     // demo on sprite-partial
+    final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
+
     final slime = SpriteNode(
-      sprite: SpriteSheet(
-        'assets/sheets/slime.png',
-        SLIME_SIZE,
-        fps: 12,
-        rows: [
-          .new(start: 6, frames: 6), // idle
-        ],
-      ),
+      sprite: sheet.animation(row: 0, start: 6, end: 12, fps: 12), // idle
     );
     // demo off
 
@@ -309,15 +353,10 @@ class _TimedNode extends Node {
     super.build();
 
     // demo on sprite-timed
+    final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
+
     final slime = SpriteNode(
-      sprite: SpriteSheet(
-        'assets/sheets/slime.png',
-        SLIME_SIZE,
-        fps: 0,
-        rows: [
-          .timed([0.8, 0.06, 0.06, 0.06, 0.06, 0.06]), // idle
-        ],
-      ),
+      sprite: sheet.timed([0.8, 0.06, 0.06, 0.06, 0.06, 0.06]), // idle
     );
     // demo off
 
@@ -337,10 +376,14 @@ class _SpeedNode extends Node {
     super.build();
 
     // demo on sprite-speed
-    final sheet = SpriteSheet('assets/sheets/bonfire.png', BONFIRE_SIZE, fps: 16);
+    final bonfire = SpriteAnimation(
+      'assets/sheets/bonfire.png',
+      BONFIRE_SIZE,
+      fps: 16,
+    );
 
-    final fire = SpriteNode(sprite: sheet);
-    final embers = SpriteNode(sprite: sheet, speed: 0.25);
+    final fire = SpriteNode(sprite: bonfire);
+    final embers = SpriteNode(sprite: bonfire, speed: 0.25);
     // demo off
 
     add(
@@ -365,14 +408,27 @@ class _GroupNode extends Node {
 
     // demo on sprite-group
     final creature = SpriteNode(
-      sprite: SpriteGroup([
-        SpriteImage('assets/images/bonfire.png', id: 'fire'),
-        SpriteSheet.single('assets/sheets/slime_jump.png', SLIME_SIZE, fps: 16, id: 'slime'),
-      ]),
+      sprite: SpriteMap({
+        'fire': SpriteImage('assets/images/bonfire.png'),
+        'slime': SpriteAnimation(
+          'assets/sheets/slime_jump.png',
+          SLIME_SIZE,
+          fps: 16,
+        ),
+      }),
     );
 
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    taps.onTap(() => creature.play(id: creature.current.index == 0 ? 'slime' : 'fire'));
+
+    taps.onTap(() {
+      switch (creature.current.key) {
+        case 'fire':
+          creature.play('slime');
+
+        case 'slime':
+          creature.play('fire');
+      }
+    });
     // demo off
 
     addAll([
@@ -396,7 +452,7 @@ class _ExplosionsNode extends Node {
     taps.onTapDown((event) {
       add(
         SpriteNode(
-          sprite: SpriteSheet(
+          sprite: SpriteAnimation(
             'assets/sheets/explosion.png',
             EXPLOSION_SIZE,
             fps: 20,
@@ -425,7 +481,11 @@ class _SignalsNode extends Node {
 
     // demo on sprite-signals
     final slime = SpriteNode(
-      sprite: SpriteSheet('assets/sheets/slime_jump.png', SLIME_SIZE, fps: 16),
+      sprite: SpriteAnimation(
+        'assets/sheets/slime_jump.png',
+        SLIME_SIZE,
+        fps: 16,
+      ),
     );
 
     var count = 0;

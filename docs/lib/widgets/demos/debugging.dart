@@ -26,44 +26,41 @@ class _WireframesNode extends Node {
 
     // demo on debug-wireframes
     final slime = SpriteNode(
-      sprite: SpriteGroup([
-        SpriteSheet.single(
+      sprite: SpriteMap({
+        'idle': SpriteAnimation(
           'assets/sheets/slime_idle.png',
           SLIME_SIZE,
           fps: 16,
-          id: 'idle',
         ),
-        SpriteSheet.single(
+        'death': SpriteAnimation(
           'assets/sheets/slime_death.png',
           SLIME_SIZE,
           fps: 16,
-          id: 'death',
           loop: false,
         ),
-        SpriteSheet.single(
+        'recover': SpriteAnimation(
           'assets/sheets/slime_recover.png',
           SLIME_SIZE,
           fps: 16,
-          id: 'recover',
           loop: false,
         ),
-      ]),
+      }),
     );
 
     final taps = TapInput(shape: .rectangle(.all(28)));
 
     taps.onTap(() {
       taps.enabled = false;
-      slime.play(id: 'death');
+      slime.play('death');
     });
 
     slime.onFinish(() {
-      switch (slime.current.id) {
+      switch (slime.current.key) {
         case 'death':
-          slime.play(id: 'recover');
+          slime.play('recover');
 
         case 'recover':
-          slime.play(id: 'idle');
+          slime.play('idle');
           taps.enabled = true;
       }
     });

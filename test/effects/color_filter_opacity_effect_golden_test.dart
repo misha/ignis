@@ -19,7 +19,7 @@ void main() {
         tester,
         'goldens/color_filter_opacity_effect_fade_in.png',
         SpriteNode(
-          sprite: SpriteSheet('test/assets/fire.png', .new(32, 48), fps: 0),
+          sprite: SpriteAnimation('test/assets/fire.png', .new(32, 48), fps: 0),
           anchor: .center,
           position: .all(50),
           paint: paint,
@@ -30,7 +30,7 @@ void main() {
               controller: .duration(1),
             ),
           ],
-        )..play(frame: 4),
+        )..play(0, frame: 4),
         dt: 1,
       );
     },

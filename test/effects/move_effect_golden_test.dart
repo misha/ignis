@@ -15,7 +15,7 @@ void main() {
       tester,
       'goldens/move_effect_by.png',
       SpriteNode(
-        sprite: SpriteSheet('test/assets/fire.png', .new(32, 48), fps: 0),
+        sprite: SpriteAnimation('test/assets/fire.png', .new(32, 48), fps: 0),
         anchor: .center,
         position: .all(50),
         children: [
@@ -24,7 +24,7 @@ void main() {
             controller: .duration(1),
           ),
         ],
-      )..play(frame: 4),
+      )..play(0, frame: 4),
       dt: 1,
     ),
   );

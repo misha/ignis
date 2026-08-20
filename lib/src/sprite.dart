@@ -1,55 +1,33 @@
-import 'dart:ui';
-
 import 'package:ignis/src/globals.dart';
-import 'package:ignis/src/math.dart';
 import 'package:ignis/src/sprites/sprite_entry.dart';
-import 'package:ignis/src/sprites/sprite_key.dart';
 
 /// The frames a [SpriteNode] draws, and how long each is held.
 ///
-/// Three implementations ship: a [SpriteImage] is one image, a [SpriteSheet]
-/// cuts an image into a grid, and a [SpriteGroup] lays several of either end to
-/// end. Implement this to draw frames packed some other way.
+/// Four implementations ship: a [SpriteImage] is one image, a [SpriteSheet]
+/// cuts an image into a grid, a [SpriteGroup] lays several of either end to
+/// end, and a [SpriteMap] does the same under names of your choosing. Implement
+/// this to draw frames packed some other way.
 ///
-/// An entry is the unit. Everything but [length] answers for one, so an
+/// An entry is the unit, and a [SpriteEntry] states everything one is, so an
 /// implementation is free to hold every entry in its own image, at its own
 /// size.
 ///
-/// [T] is what entries are identified by, where they are named at all: an
-/// enum, a [String], anything with an `==`. Every sprite composed with another
-/// shares its id type, so [resolve] answers for the whole tree.
+/// A sprite only has one name at a time, and that name is [T]. [SpriteNode]
+/// then enforces that all sprites use the same naming scheme.
 abstract class Sprite<T> {
   const Sprite();
 
-  /// How many entries this holds.
-  int get length;
-
-  /// The image entry [index] is drawn from. Make this fast.
-  Image image(int index);
-
-  /// The frame size of entry [index], which a [SpriteNode] takes as its own.
-  Vector2 size(int index);
-
-  /// How many frames entry [index] plays.
-  int frames(int index);
-
-  /// Where [frame] of entry [index] sits in [image].
-  Rect rect(int index, int frame);
-
-  /// How long [frame] of entry [index] is held, in seconds.
+  /// What this holds, in the order its entries are numbered.
   ///
-  /// Infinite where the frame is never left.
-  double duration(int index, int frame);
+  /// Every entry sits at its own place in this, so `entries[i].index` is `i`.
+  List<SpriteEntry<T>> get entries;
 
-  /// Whether entry [index] starts over after its last frame.
-  bool loops(int index);
-
-  /// The entry [key] looks up, or null where nothing here answers to it.
-  SpriteEntry<T>? resolve(SpriteKey<T> key);
+  /// The entry [key] names, or null where nothing here answers to it.
+  SpriteEntry<T>? resolve(T key);
 
   /// Re-resolves this sprite against [Ignis.cache].
   ///
-  /// Returns this unless what it was built from has since been replaced, so a
-  /// caller can tell whether anything changed by identity.
+  /// Returns `this` unless what it was built from has since been replaced, so
+  /// the caller can tell whether anything changed by identity.
   Sprite<T> reload() => this;
 }

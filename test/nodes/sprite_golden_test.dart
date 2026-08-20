@@ -15,12 +15,12 @@ void main() {
       tester,
       'goldens/sprite_frame.png',
       SpriteNode(
-        sprite: SpriteSheet(
+        sprite: SpriteAnimation(
           'test/assets/fire.png',
           .new(32, 48),
           fps: 0,
         ),
-      )..play(frame: 4),
+      )..play(0, frame: 4),
     ),
   );
 }

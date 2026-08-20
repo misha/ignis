@@ -15,7 +15,7 @@ void main() {
       tester,
       'goldens/anchor_effect_to.png',
       SpriteNode(
-        sprite: SpriteSheet('test/assets/fire.png', .new(32, 48), fps: 0),
+        sprite: SpriteAnimation('test/assets/fire.png', .new(32, 48), fps: 0),
         position: .all(50),
         children: [
           AnchorEffect.to(
@@ -23,7 +23,7 @@ void main() {
             controller: .duration(1),
           ),
         ],
-      )..play(frame: 4),
+      )..play(0, frame: 4),
       dt: 1,
     ),
   );
