@@ -3,16 +3,10 @@ import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_content/theme.dart';
 import 'package:jaspr_flutter_embed/jaspr_flutter_embed.dart';
 
-// Flutter is only imported on the web, since the server cannot import it, and
-// deferred so it does not block hydration of the rest of the page.
 @Import.onWeb('../widgets/demo_view.dart', show: [#DemoView])
 import 'scene_demo.imports.dart' deferred as demo_view;
 
 /// How large every demo is, in pixels. Demos are square.
-///
-/// The view is sized by its host element rather than by `ViewConstraints`,
-/// which leave the unnamed axis unbounded - and a scene handed an unbounded
-/// axis has no size to lay out against.
 const DEMO_EMBEDDED_SIZE = 250.0;
 
 /// One live scene, embedded in the page.
@@ -51,7 +45,6 @@ class SceneDemo extends StatelessComponent {
     css('.demo-scene').styles(
       width: DEMO_EMBEDDED_SIZE.px,
       height: DEMO_EMBEDDED_SIZE.px,
-      radius: .circular(0.5.rem),
       overflow: .hidden,
     ),
     css('.demo-loader').styles(

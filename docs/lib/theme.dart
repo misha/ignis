@@ -229,6 +229,10 @@ abstract final class IgnisStyles {
     // display. The column holds a comfortable measure instead, and the layout
     // centers what it no longer uses.
     css('.docs .main-container .content-container').styles(maxWidth: 46.rem),
+    // A scene strokes its outermost wireframe along its own edge, so a demo
+    // squares its corners rather than clip it, and the code beside it follows
+    // so a page reads as one set of rectangles.
+    css('.docs .content pre').styles(radius: .circular(Unit.zero)),
     css('.docs .header-container .header').styles(
       border: .only(
         bottom: BorderSide(width: 1.px, color: IgnisColors.border),

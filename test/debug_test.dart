@@ -23,6 +23,37 @@ void main() {
     }
   });
 
+  test('holds two wireframes at once, and no third', () {
+    debug.mode = DebugMode.transforms | .inputs;
+
+    expect(debug.draws(.transforms), isTrue);
+    expect(debug.draws(.inputs), isTrue);
+    expect(debug.draws(.collisions), isFalse);
+    expect(debug.draws(.layouts), isFalse);
+  });
+
+  test('toggle puts a wireframe in, and takes it back out', () {
+    debug.toggle(.collisions);
+
+    expect(debug.draws(.collisions), isTrue);
+
+    debug.toggle(.collisions);
+
+    expect(debug.draws(.collisions), isFalse);
+    expect(debug.enabled, isFalse);
+  });
+
+  test('toggle leaves every wireframe beside it alone', () {
+    debug.mode = .all;
+
+    debug.toggle(.inputs);
+
+    expect(debug.draws(.inputs), isFalse);
+    expect(debug.draws(.transforms), isTrue);
+    expect(debug.draws(.collisions), isTrue);
+    expect(debug.draws(.layouts), isTrue);
+  });
+
   test('is settable outright, with no cycle in sight', () {
     expect(debug.enabled, isFalse);
 

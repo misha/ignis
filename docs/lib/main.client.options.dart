@@ -6,6 +6,7 @@
 
 import 'package:jaspr/client.dart';
 
+import 'package:docs/components/debug_panel.dart' deferred as _debug_panel;
 import 'package:docs/components/scene_demo.dart' deferred as _scene_demo;
 import 'package:jaspr_content/components/_internal/code_block_copy_button.dart'
     deferred as _code_block_copy_button;
@@ -34,6 +35,10 @@ import 'package:jaspr_content/components/sidebar_toggle_button.dart'
 /// ```
 ClientOptions get defaultClientOptions => ClientOptions(
   clients: {
+    'debug_panel': ClientLoader(
+      (p) => _debug_panel.DebugPanel(),
+      loader: _debug_panel.loadLibrary,
+    ),
     'scene_demo': ClientLoader(
       (p) => _scene_demo.SceneDemo(name: p['name'] as String),
       loader: _scene_demo.loadLibrary,

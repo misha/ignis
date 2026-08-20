@@ -18,6 +18,7 @@ import 'package:jaspr_content/jaspr_content.dart';
 
 import 'components/callouts.dart';
 import 'components/coverage.dart';
+import 'components/debug_panel.dart';
 import 'components/demo.dart';
 import 'components/reference.dart';
 import 'components/related.dart';
@@ -116,6 +117,7 @@ void main() {
             title: 'Ignis',
             logo: '/images/ignis-mark.webp',
             items: [
+              DebugPanel(),
               // The generated API reference, beside the repo it is cut from.
               // The mark is lucide's `code-xml`, inlined rather than linked so
               // its `currentColor` stroke tracks the link's own color.
@@ -177,7 +179,8 @@ void main() {
                   SidebarLink(text: 'Assets', href: '/systems/assets'),
                   SidebarLink(text: 'Live Reload', href: '/systems/live-reload'),
                   SidebarLink(text: 'Shapes and Anchors', href: '/systems/shapes-anchors'),
-                  SidebarLink(text: 'Globals and DI', href: '/systems/globals-di'),
+                  SidebarLink(text: 'Globals', href: '/systems/globals'),
+                  SidebarLink(text: 'Dependency Injection', href: '/systems/dependency-injection'),
                   SidebarLink(text: 'Debugging', href: '/systems/debugging'),
                 ],
               ),

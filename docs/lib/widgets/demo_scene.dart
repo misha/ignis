@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:ignis/ignis.dart';
 
+import 'debug_shortcuts.dart';
+
 const DEMO_BACKGROUND = Color(0xFF1B1815);
 const DEMO_SIZE = Vector2.all(125);
 
@@ -69,6 +71,7 @@ class _DemoSceneState extends State<DemoScene> {
   @override
   void initState() {
     super.initState();
+    DebugShortcuts.install();
 
     _load(widget.assets).then((_) {
       if (!mounted) return;

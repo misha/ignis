@@ -1,23 +1,40 @@
 part of 'core.dart';
 
-/// What the debug overlay draws, one mode at a time.
+/// What the debug overlay draws, as one bit per wireframe.
 ///
-/// [Debug]'s methods will cycle through these.
-enum DebugMode {
-  /// Every wireframe at once.
-  all,
+/// The bits combine, so a mode is any set of wireframes at once: [none] holds
+/// no wireframe, [all] holds every one, and `transforms | inputs` holds the two
+/// it names.
+extension type const DebugMode._(int _bits) {
+  /// No wireframe at all.
+  static const none = DebugMode._(0);
 
   /// Every drawn node's bounds.
-  transforms,
+  static const transforms = DebugMode._(1 << 0);
 
   /// Every collider's hitbox.
-  collisions,
+  static const collisions = DebugMode._(1 << 1);
 
   /// Every input node's hit area.
-  inputs,
+  static const inputs = DebugMode._(1 << 2);
 
   /// Every layout node's box.
-  layouts,
+  static const layouts = DebugMode._(1 << 3);
+
+  /// Every wireframe at once.
+  static const all = DebugMode._(0xF);
+
+  /// Each wireframe on its own, in bit order.
+  static const values = [transforms, collisions, inputs, layouts];
+
+  /// The wireframes of both.
+  DebugMode operator |(DebugMode other) => DebugMode._(_bits | other._bits);
+
+  /// The wireframes of this one that [other] leaves out.
+  DebugMode operator -(DebugMode other) => DebugMode._(_bits & ~other._bits);
+
+  /// Whether every wireframe of [other] is in this one.
+  bool draws(DebugMode other) => _bits & other._bits == other._bits;
 }
 
 /// Holds debug settings used across all Ignis scenes.
@@ -32,14 +49,14 @@ class Debug {
   /// a global.
   static Debug get instance => Ignis.debug;
 
-  /// What the overlay draws, or null while it draws nothing.
-  DebugMode? mode;
+  /// What the overlay draws, which [DebugMode.none] leaves bare.
+  DebugMode mode = .none;
 
   /// Whether the overlay draws at all.
   ///
   /// Every [Node.debugDraw] runs while this is on, whatever [mode] is, so a
   /// drawing of your own shows in every mode there is.
-  bool get enabled => mode != null;
+  bool get enabled => mode != DebugMode.none;
 
   /// What the [DebugMode.transforms] wireframe draws with.
   Paint transformPaint = Paint()
@@ -65,20 +82,15 @@ class Debug {
     ..style = .stroke
     ..strokeWidth = 0;
 
-  /// Whether [mode] draws, which [DebugMode.all] answers for every one.
-  bool draws(DebugMode mode) => this.mode == .all || this.mode == mode;
+  /// Whether [mode] is currently active.
+  bool draws(DebugMode mode) => this.mode.draws(mode);
 
-  /// Steps to the next mode, or to the first from off.
-  void next() {
-    const modes = DebugMode.values;
-    final current = mode;
-    mode = current == null ? modes.first : modes[(current.index + 1) % modes.length];
-  }
-
-  /// Steps back a mode, or to the last from off.
-  void previous() {
-    const modes = DebugMode.values;
-    final current = mode;
-    mode = current == null ? modes.last : modes[(current.index - 1) % modes.length];
+  /// Toggles [mode]'s bits.
+  void toggle(DebugMode mode) {
+    if (draws(mode)) {
+      this.mode -= mode;
+    } else {
+      this.mode |= mode;
+    }
   }
 }

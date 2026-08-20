@@ -58,6 +58,14 @@ debugDraw((canvas) {
 });
 ```
 
+## Enabled
+
+Nodes have an `enabled` flag, allowing you to dynamically activate or deactivate them in the tree. When disabled, the node will no longer tick or draw.
+
+<Demo name="node-enabled" hint="Try tapping!"/>
+
+Use the `enabled` flag to avoid micromanaging nodes that only need to run intermittently.
+
 ## Priority
 
 A node's children are sorted by `priority`. Priority dictates the order in which children of the same node are processed, covering updating and rendering.

@@ -7,6 +7,7 @@
 import 'package:jaspr/server.dart';
 import 'package:docs/components/callouts.dart' as _callouts;
 import 'package:docs/components/coverage.dart' as _coverage;
+import 'package:docs/components/debug_panel.dart' as _debug_panel;
 import 'package:docs/components/demo.dart' as _demo;
 import 'package:docs/components/reference.dart' as _reference;
 import 'package:docs/components/related.dart' as _related;
@@ -43,6 +44,9 @@ import 'package:jaspr_content/components/sidebar_toggle_button.dart'
 ServerOptions get defaultServerOptions => ServerOptions(
   clientId: 'main.client.dart.js',
   clients: {
+    _debug_panel.DebugPanel: ClientTarget<_debug_panel.DebugPanel>(
+      'debug_panel',
+    ),
     _scene_demo.SceneDemo: ClientTarget<_scene_demo.SceneDemo>(
       'scene_demo',
       params: __scene_demoSceneDemo,
@@ -68,6 +72,7 @@ ServerOptions get defaultServerOptions => ServerOptions(
     ..._theme.IgnisStyles.styles,
     ..._callouts.Callouts.styles,
     ..._coverage.Coverage.styles,
+    ..._debug_panel.DebugPanel.styles,
     ..._demo.Demo.styles,
     ..._reference.Reference.styles,
     ..._related.Related.styles,

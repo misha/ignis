@@ -42,21 +42,23 @@ void main() {
   test('one call installs the lot on their default keys', () {
     add(DebugControlsNode());
 
-    expect(press(.f2), isTrue);
-    expect(press(.f2, shift: true), isTrue);
-    expect(press(.f3), isTrue);
     expect(press(.f1), isTrue);
+    expect(press(.f2), isTrue);
+    expect(press(.f3), isTrue);
+    expect(press(.f4), isTrue);
+    expect(press(.f5), isTrue);
+    expect(press(.f6), isTrue);
   });
 
   test('pause freezes the scene the node is in, and no other', () {
     add(DebugControlsNode());
     final other = Node().mount();
 
-    press(.f1);
+    press(.f5);
     expect(scene.paused, isTrue);
     expect(other.paused, isFalse, reason: 'a node speaks for its own scene');
 
-    press(.f1);
+    press(.f5);
     expect(scene.paused, isFalse);
     other.destroy();
   });
@@ -64,35 +66,34 @@ void main() {
   test('a paused scene still reaches the node that resumes it', () {
     add(DebugControlsNode());
 
-    press(.f1);
+    press(.f5);
     expect(scene.paused, isTrue);
 
-    expect(press(.f1), isTrue, reason: 'dispatch never reads paused');
+    expect(press(.f5), isTrue, reason: 'dispatch never reads paused');
     expect(scene.paused, isFalse);
   });
 
   test('a declined control leaves that one unbound and the rest alone', () {
-    add(DebugControlsNode(off: const {}));
+    add(DebugControlsNode(inputs: const {}));
 
     expect(press(.f3), isFalse);
     expect(press(.f2), isTrue);
   });
 
   test('a remapped control takes the key the game gives it', () {
-    add(DebugControlsNode(off: {const KeyPress(.f4)}));
+    add(DebugControlsNode(collisions: {const KeyPress(.f9)}));
 
-    press(.f2);
-    expect(Ignis.debug.enabled, isTrue);
+    expect(press(.f2), isFalse, reason: 'the default went with the remap');
 
-    expect(press(.f3), isFalse, reason: 'the default went with the remap');
-    expect(press(.f4), isTrue);
-    expect(Ignis.debug.enabled, isFalse);
+    press(.f9);
+
+    expect(Ignis.debug.draws(.collisions), isTrue);
   });
 
   test('a key can be remapped without touching the others', () {
     add(DebugControlsNode(pause: {const KeyPress(.escape)}));
 
-    expect(press(.f1), isFalse);
+    expect(press(.f5), isFalse);
     expect(press(.escape), isTrue);
     expect(scene.paused, isTrue);
   });
@@ -100,9 +101,9 @@ void main() {
   test('a game node outranks the debug node on the same key', () {
     var mine = 0;
     add(DebugControlsNode());
-    add(_Mine(const KeyPress(.f1), () => mine += 1));
+    add(_Mine(const KeyPress(.f5), () => mine += 1));
 
-    press(.f1);
+    press(.f5);
 
     expect(mine, 1);
     expect(scene.paused, isFalse, reason: 'debug sits at -1000, so it never ran');
@@ -117,7 +118,7 @@ void main() {
     Ignis.controls.disable('debug');
 
     expect(press(.f2), isFalse);
-    expect(press(.f1), isFalse);
+    expect(press(.f5), isFalse);
     expect(scene.paused, isFalse);
   });
 
@@ -131,136 +132,86 @@ void main() {
     expect(press(.f1), isFalse);
     expect(press(.f2), isFalse);
     expect(press(.f3), isFalse);
-    expect(press(.f2, shift: true), isFalse, reason: 'the build owned the lot');
+    expect(press(.f4), isFalse);
+    expect(press(.f5), isFalse);
+    expect(press(.f6), isFalse, reason: 'the build owned the lot');
   });
 
-  group('the cycle', () {
-    test('opens on every wireframe at once', () {
-      expect(Ignis.debug.enabled, isFalse);
+  group('the wireframes', () {
+    test('each key draws its own, and no other', () {
       add(DebugControlsNode());
 
       press(.f2);
 
-      expect(Ignis.debug.mode, DebugMode.all);
-    });
-
-    test('then takes them one at a time, in order', () {
-      add(DebugControlsNode());
-
-      press(.f2);
-      press(.f2);
-      expect(Ignis.debug.mode, DebugMode.transforms);
-      expect(Ignis.debug.draws(.collisions), isFalse, reason: 'only that one now');
-
-      press(.f2);
       expect(Ignis.debug.mode, DebugMode.collisions);
-
-      press(.f2);
-      expect(Ignis.debug.mode, DebugMode.inputs);
-
-      press(.f2);
-      expect(Ignis.debug.mode, DebugMode.layouts);
     });
 
-    test('wraps from the last mode straight back to the first', () {
+    test('they combine, so any set of them draws at once', () {
       add(DebugControlsNode());
 
-      for (var i = 0; i < DebugMode.values.length; i += 1) {
-        press(.f2);
-      }
+      press(.f1);
+      press(.f4);
 
-      expect(Ignis.debug.mode, DebugMode.layouts, reason: 'the last mode');
-
-      press(.f2);
-
-      expect(Ignis.debug.mode, DebugMode.all, reason: 'round to the first again');
-    });
-
-    test('never passes through off, however far it goes round', () {
-      add(DebugControlsNode());
-
-      for (var i = 0; i < DebugMode.values.length * 3; i += 1) {
-        press(.f2);
-        expect(Ignis.debug.enabled, isTrue, reason: 'off is not a step in the round');
-      }
-    });
-
-    test('shift steps it backwards', () {
-      add(DebugControlsNode());
-
-      press(.f2);
-      press(.f2);
-      press(.f2);
-      expect(Ignis.debug.mode, DebugMode.collisions);
-
-      press(.f2, shift: true);
-      expect(Ignis.debug.mode, DebugMode.transforms);
-
-      press(.f2, shift: true);
-      expect(Ignis.debug.mode, DebugMode.all);
-    });
-
-    test('shift wraps backwards past the first, skipping off', () {
-      add(DebugControlsNode());
-
-      press(.f2);
-      expect(Ignis.debug.mode, DebugMode.all);
-
-      press(.f2, shift: true);
-
-      expect(Ignis.debug.mode, DebugMode.layouts, reason: 'round to the last, not off');
-    });
-
-    test('shift from off opens on the last mode', () {
-      add(DebugControlsNode());
-
-      press(.f2, shift: true);
-
-      expect(Ignis.debug.mode, DebugMode.layouts);
-    });
-  });
-
-  group('off', () {
-    test('is one press out from wherever the cycle stopped', () {
-      add(DebugControlsNode());
-
-      press(.f2);
-      press(.f2);
-      press(.f3);
-
-      expect(Ignis.debug.mode, isNull);
-      expect(Ignis.debug.enabled, isFalse);
-    });
-
-    test('leaves the next press opening on the first mode again', () {
-      add(DebugControlsNode());
-
-      press(.f2);
-      press(.f2);
-      press(.f2);
-      press(.f3);
-      press(.f2);
-
-      expect(Ignis.debug.mode, DebugMode.all, reason: 'F3 then F2 is a reset');
-    });
-
-    test('on an overlay already off does nothing', () {
-      add(DebugControlsNode());
-
-      expect(press(.f3), isTrue, reason: 'the action still ran');
-      expect(Ignis.debug.mode, isNull);
-    });
-
-    test('stops every wireframe drawing', () {
-      add(DebugControlsNode());
-
-      press(.f2);
       expect(Ignis.debug.draws(.transforms), isTrue);
+      expect(Ignis.debug.draws(.layouts), isTrue);
+      expect(Ignis.debug.draws(.collisions), isFalse);
+      expect(Ignis.debug.draws(.inputs), isFalse);
+    });
+
+    test('a second press takes one back out, and leaves the rest', () {
+      add(DebugControlsNode());
+
+      press(.f1);
+      press(.f2);
+      press(.f1);
+
+      expect(Ignis.debug.draws(.transforms), isFalse);
+      expect(Ignis.debug.draws(.collisions), isTrue);
+    });
+
+    test('the last one out leaves the overlay off', () {
+      add(DebugControlsNode());
 
       press(.f3);
+      expect(Ignis.debug.enabled, isTrue);
+
+      press(.f3);
+
+      expect(Ignis.debug.mode, DebugMode.none);
+      expect(Ignis.debug.enabled, isFalse);
+    });
+
+    test('one key fills the overlay, and the next empties it', () {
+      add(DebugControlsNode());
+
+      press(.f6);
+      expect(Ignis.debug.mode, DebugMode.all);
+
+      press(.f6);
+      expect(Ignis.debug.mode, DebugMode.none);
+    });
+
+    test('it fills from part of the way in, rather than emptying', () {
+      add(DebugControlsNode());
+
+      press(.f2);
+      press(.f6);
+
+      expect(Ignis.debug.mode, DebugMode.all, reason: 'short of full fills it');
+    });
+
+    test('every one of them at once is every wireframe there is', () {
+      add(DebugControlsNode());
+
+      press(.f1);
+      press(.f2);
+      press(.f3);
+      press(.f4);
+
+      expect(Ignis.debug.mode, DebugMode.all);
 
       for (final wireframe in DebugMode.values) {
-        expect(Ignis.debug.draws(wireframe), isFalse, reason: '$wireframe is off with it');
+        expect(Ignis.debug.draws(wireframe), isTrue, reason: '$wireframe draws with the rest');
       }
     });
   });

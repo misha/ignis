@@ -6,5 +6,7 @@
 
 // ignore_for_file: directives_ordering, non_constant_identifier_names
 
+dynamic DebugShortcuts;
+typedef DebugShortcutsOrStubbed = dynamic;
 dynamic DemoView;
 typedef DemoViewOrStubbed = dynamic;
