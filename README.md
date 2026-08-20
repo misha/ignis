@@ -33,7 +33,6 @@ I'm currently working on the following:
 - Camera
 - Audio
 - Particles
-- Debugging tools
 - More nodes
 - More effects
 - More examples
