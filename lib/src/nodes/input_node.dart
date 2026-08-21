@@ -30,7 +30,7 @@ abstract class InputNode extends SpatialNode {
   HitBehavior behavior;
 
   InputNode({
-    Shape? shape,
+    this._shape,
     HitBehavior? behavior,
     super.position,
     super.scale,
@@ -39,9 +39,7 @@ abstract class InputNode extends SpatialNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : behavior = behavior ?? .opaque {
-    _shape = shape;
-  }
+  }) : behavior = behavior ?? .opaque;
 
   @override
   void build() {
