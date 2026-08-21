@@ -39,6 +39,7 @@ class Demo extends CustomComponentBase {
     'sprite-keys': 'sprites.dart',
     'sprite-rates': 'sprites.dart',
     'sprite-partial': 'sprites.dart',
+    'sprite-tiles': 'sprites.dart',
     'sprite-timed': 'sprites.dart',
     'sprite-speed': 'sprites.dart',
     'sprite-group': 'sprites.dart',
