@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/collisions/nodes/collision_detection_node.dart';
 import 'package:ignis/src/core.dart';
@@ -12,12 +14,13 @@ class ColliderNode extends SpatialNode {
 
   /// The shape of the collider's hitbox.
   ///
-  /// Left unstated, it takes the shape in effect at its parent, so one sitting
-  /// under a shape or a sprite covers it without restating anything.
+  /// If not explicitly set, defaults to the parent's shape.
   @override
   Shape get shape => _shape ?? super.shape;
 
-  /// Sets the shape, or hands it back to the chain with null.
+  /// Sets this collider's shape.
+  ///
+  /// If null, defaults back to the parent's shape.
   set shape(Shape? value) => _shape = value;
 
   /// Bitmask of physics layers this collider exists on. Defaults to all 1-bits.
@@ -29,7 +32,8 @@ class ColliderNode extends SpatialNode {
   /// Whether building without a [CollisionDetectionNode] ancestor throws a
   /// [StateError]. Defaults to true.
   ///
-  /// While false, such a collider builds and reports nothing.
+  /// While false, this collider will simply no-op (no collisions, no drawing)
+  /// when added to a tree without a [CollisionDetectionNode] ancestor.
   bool strict;
 
   /// Emitted with the other collider when this collider starts overlapping it.
@@ -50,7 +54,7 @@ class ColliderNode extends SpatialNode {
   CollisionDetectionNode? cd;
 
   ColliderNode({
-    Shape? shape,
+    this._shape,
     int? layer,
     int? mask,
     bool? strict,
@@ -63,9 +67,7 @@ class ColliderNode extends SpatialNode {
     super.children,
   }) : layer = layer ?? -1,
        mask = mask ?? -1,
-       strict = strict ?? true {
-    _shape = shape;
-  }
+       strict = strict ?? true;
 
   @override
   void build() {
@@ -73,8 +75,12 @@ class ColliderNode extends SpatialNode {
 
     cd = ancestors.whereType<CollisionDetectionNode>().firstOrNull;
 
-    if (strict && cd == null) {
-      throw StateError('ColliderNode requires a CollisionDetectionNode ancestor.');
+    if (cd == null) {
+      if (strict) {
+        throw StateError('ColliderNode requires a CollisionDetectionNode ancestor.');
+      } else {
+        return;
+      }
     }
 
     cd?.register(this);

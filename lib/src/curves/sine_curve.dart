@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'dart:math' as math;
 
 import 'package:flutter/animation.dart';

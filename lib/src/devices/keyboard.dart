@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:flutter/services.dart';
 import 'package:ignis/src/core.dart';
 
@@ -93,8 +95,7 @@ final class KeyboardDevice extends ControlDevice {
   @override
   void stop() => HardwareKeyboard.instance.removeHandler(_handle);
 
-  /// Turns a key down into a press, ignoring the platform's repeats so an
-  /// action runs once per press.
+  /// Turns a key down into a press, ignoring repeat events.
   bool _handle(KeyEvent event) {
     if (event is! KeyDownEvent) return false;
     final keyboard = HardwareKeyboard.instance;

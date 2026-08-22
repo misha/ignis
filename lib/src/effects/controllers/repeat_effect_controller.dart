@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 
@@ -23,8 +25,9 @@ class RepeatEffectController extends EffectController {
 
   @override
   double? get duration {
-    final childDuration = child.duration;
-    return childDuration == null ? null : childDuration * times;
+    final duration = child.duration;
+    if (duration == null) return null;
+    return duration * times;
   }
 
   @override

@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/collisions/collision_detection.dart';
 import 'package:ignis/src/collisions/nodes/collider_node.dart';
 import 'package:ignis/src/core.dart';
@@ -18,6 +20,7 @@ class CollisionDetectionNode extends Node {
   @override
   void build() {
     super.build();
+
     tick((_) {
       _arena.process();
     });

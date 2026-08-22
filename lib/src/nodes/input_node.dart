@@ -16,12 +16,13 @@ abstract class InputNode extends SpatialNode {
 
   /// The shape of the node's hit area.
   ///
-  /// Left unstated, it takes the shape in effect at its parent, so one sitting
-  /// under a shape or a sprite covers it without restating anything.
+  /// If not explicitly set, defaults to the parent's shape.
   @override
   Shape get shape => _shape ?? super.shape;
 
-  /// Sets the shape, or hands it back to the chain with null.
+  /// Sets this collider's shape.
+  ///
+  /// If null, defaults back to the parent's shape.
   set shape(Shape? value) => _shape = value;
 
   /// Whether this node blocks nodes behind it once it claims an event.

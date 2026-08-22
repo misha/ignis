@@ -125,18 +125,15 @@ void main() {
     });
 
     test('fires onCollisionEnd on both colliders when a pair stops overlapping', () {
-      final a = ColliderNode(shape: .square(10), position: .zero, strict: false);
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
-      Node(children: [a, b]).mount();
+      final a = ColliderNode(shape: .square(10), position: .zero);
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
       final aEnded = <ColliderNode>[];
       final bEnded = <ColliderNode>[];
       a.onCollisionEnd(aEnded.add);
       b.onCollisionEnd(bEnded.add);
 
-      arena
-        ..add(a)
-        ..add(b)
-        ..process();
+      arena.process();
 
       a.position.x = 200;
       arena.process();
@@ -146,15 +143,13 @@ void main() {
     });
 
     test('does not fire onCollisionEnd for a pair that never overlapped', () {
-      final a = ColliderNode(shape: .square(10), position: .zero, strict: false);
-      final b = ColliderNode(shape: .square(10), position: .new(100, 0), strict: false);
-      Node(children: [a, b]).mount();
+      final a = ColliderNode(shape: .square(10), position: .zero);
+      final b = ColliderNode(shape: .square(10), position: .new(100, 0));
+      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
       final aEnded = <ColliderNode>[];
       a.onCollisionEnd(aEnded.add);
 
       arena
-        ..add(a)
-        ..add(b)
         ..process()
         ..process();
 
@@ -162,14 +157,11 @@ void main() {
     });
 
     test('does not fire onCollisionEnd for a pair with a detached member', () {
-      final a = ColliderNode(shape: .square(10), position: .zero, strict: false);
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
-      final scene = Node(children: [a, b]).mount();
+      final a = ColliderNode(shape: .square(10), position: .zero);
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      final scene = CollisionDetectionNode(arena: arena, children: [a, b]).mount();
 
-      arena
-        ..add(a)
-        ..add(b)
-        ..process();
+      arena.process();
 
       final bEnded = <ColliderNode>[];
       b.onCollisionEnd(bEnded.add);
@@ -179,7 +171,6 @@ void main() {
       // queues the removal, so it needs an update to actually take effect.
       a.detach();
       scene.update(0);
-      arena.remove(a);
       arena.process();
 
       expect(bEnded, isEmpty);
@@ -188,14 +179,11 @@ void main() {
 
   group('active / isColliding', () {
     test('adds the other collider to active while overlapping', () {
-      // Mounted, because tracking `active` is declared in build.
-      final a = ColliderNode(shape: .square(10), strict: false)..mount();
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false)..mount();
+      final a = ColliderNode(shape: .square(10));
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
 
-      arena
-        ..add(a)
-        ..add(b)
-        ..process();
+      arena.process();
 
       expect(a.active, {b});
       expect(b.active, {a});
@@ -204,14 +192,11 @@ void main() {
     });
 
     test('removes the other collider from active once they stop overlapping', () {
-      final a = ColliderNode(shape: .square(10), strict: false);
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
-      Node(children: [a, b]).mount();
+      final a = ColliderNode(shape: .square(10));
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
 
-      arena
-        ..add(a)
-        ..add(b)
-        ..process();
+      arena.process();
 
       a.position.x = 200;
       arena.process();
@@ -225,21 +210,17 @@ void main() {
     test(
       'drops a detached partner from the survivor\'s active set without firing onCollisionEnd',
       () {
-        final a = ColliderNode(shape: .square(10), strict: false);
-        final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
-        final scene = Node(children: [a, b]).mount();
+        final a = ColliderNode(shape: .square(10));
+        final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+        final scene = CollisionDetectionNode(arena: arena, children: [a, b]).mount();
 
-        arena
-          ..add(a)
-          ..add(b)
-          ..process();
+        arena.process();
 
         final bEnded = <ColliderNode>[];
         b.onCollisionEnd(bEnded.add);
 
         a.detach();
         scene.update(0);
-        arena.remove(a);
         arena.process();
 
         expect(bEnded, isEmpty);
@@ -249,8 +230,8 @@ void main() {
     );
 
     test('holds the other collider in active already inside onCollisionStart', () {
-      final a = ColliderNode(shape: .square(10), strict: false);
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
+      final a = ColliderNode(shape: .square(10));
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
       final seen = <int>[];
 
       // Subscribed before the collider builds, so this handler runs ahead of
@@ -259,31 +240,25 @@ void main() {
         seen.add(a.active.length);
       });
 
-      Node(children: [a, b]).mount();
+      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
 
-      arena
-        ..add(a)
-        ..add(b)
-        ..process();
+      arena.process();
 
       expect(seen, [1]);
     });
 
     test('has dropped the other collider from active already inside onCollisionEnd', () {
-      final a = ColliderNode(shape: .square(10), strict: false);
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
+      final a = ColliderNode(shape: .square(10));
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
       final colliding = <bool>[];
 
       a.onCollisionEnd((_) {
         colliding.add(a.isColliding);
       });
 
-      Node(children: [a, b]).mount();
+      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
 
-      arena
-        ..add(a)
-        ..add(b)
-        ..process();
+      arena.process();
 
       a.position.x = 200;
       arena.process();
@@ -292,14 +267,11 @@ void main() {
     });
 
     test('clears active when this collider itself is unmounted', () {
-      final a = ColliderNode(shape: .square(10), strict: false);
-      final b = ColliderNode(shape: .square(10), position: .new(6, 0), strict: false);
-      final scene = Node(children: [a, b]).mount();
+      final a = ColliderNode(shape: .square(10));
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      final scene = CollisionDetectionNode(arena: arena, children: [a, b]).mount();
 
-      arena
-        ..add(a)
-        ..add(b)
-        ..process();
+      arena.process();
 
       expect(a.active, isNotEmpty);
 
@@ -542,7 +514,6 @@ void main() {
         position: .zero,
         layer: 1,
         mask: 2,
-        strict: false,
       );
 
       final b = ColliderNode(
@@ -550,19 +521,15 @@ void main() {
         position: .new(6, 0),
         layer: 2,
         mask: 0,
-        strict: false,
       );
 
-      Node(children: [a, b]).mount();
+      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
       final aEnded = <ColliderNode>[];
       final bEnded = <ColliderNode>[];
       a.onCollisionEnd(aEnded.add);
       b.onCollisionEnd(bEnded.add);
 
-      arena
-        ..add(a)
-        ..add(b)
-        ..process();
+      arena.process();
 
       a.position.x = 200;
       arena.process();

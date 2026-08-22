@@ -1,8 +1,8 @@
 import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 
-/// Runs [children] one after another, advancing to the next once the
-/// current one finishes.
+/// Runs [children] one after another, advancing to the next once the current
+/// one finishes.
 class SequenceEffectController extends EffectController {
   /// The controllers run in sequence.
   final List<EffectController> children;

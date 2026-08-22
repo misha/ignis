@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/effects/controllers/duration_effect_controller.dart';
 
 /// Holds progress at 1 for [duration], without moving it. Used as a generic

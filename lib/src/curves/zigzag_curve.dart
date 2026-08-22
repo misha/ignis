@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:flutter/animation.dart';
 
 /// Oscillates as a triangle wave between -1 and 1, completing one full cycle

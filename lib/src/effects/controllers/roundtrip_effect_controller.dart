@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 import 'dart:math' as math;
 
 import 'package:ignis/src/effects/effect_controller.dart';

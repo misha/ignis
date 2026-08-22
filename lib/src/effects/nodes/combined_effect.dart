@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/nodes/effect_node.dart';
 
 /// A node that runs [effects] together, exposing [onFinish] once every one
@@ -20,6 +22,7 @@ class CombinedEffect extends EffectNode {
   @override
   void build() {
     super.build();
+
     for (final effect in effects) {
       effect.onFinish(_track);
     }

@@ -4,19 +4,19 @@ import 'package:ignis/ignis.dart';
 void main() {
   group('a shape of its own', () {
     test('keeps a shape it was given', () {
-      final collider = ColliderNode(shape: .circle(3), strict: false);
+      final collider = ColliderNode(shape: .circle(3));
       final slot = ShapeNode(shape: .rectangle(.new(30, 20)), children: [collider]);
 
-      slot.mount();
+      CollisionDetectionNode(children: [slot]).mount();
 
       expect(collider.size, Vector2.all(6));
     });
 
     test('hands its shape back to the chain with null', () {
-      final collider = ColliderNode(shape: .circle(3), strict: false);
+      final collider = ColliderNode(shape: .circle(3));
       final slot = ShapeNode(shape: .rectangle(.new(30, 20)), children: [collider]);
 
-      slot.mount();
+      CollisionDetectionNode(children: [slot]).mount();
       collider.shape = null;
 
       expect(collider.shape, isA<Rectangle>());

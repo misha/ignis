@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 

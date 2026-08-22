@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 import 'package:ignis/src/collisions/intersection_system.dart';
 import 'package:ignis/src/collisions/nodes/collider_node.dart';
 import 'package:ignis/src/math.dart';
@@ -7,8 +9,8 @@ import 'package:ignis/src/shape.dart';
 /// [CollisionDetection.process].
 ///
 /// [extentX]/[extentY] are only meaningful for rectangles, [radius] only for
-/// circles. Every field is owned and mutated in place - never replace this
-/// object to update it.
+/// circles. Every field is mutated in place. This object is never replaced,
+/// just assigned to new nodes and overwritten.
 final class _NarrowphaseGeometry {
   final MVector2 center = .zero();
   final MVector2 extentX = .zero();

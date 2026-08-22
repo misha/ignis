@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 /// An effect with a well-defined "distance".
 ///
 /// Effects that implement this interface becomes compatible for composition

@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/core.dart';
 
 class FpsNode extends Node {

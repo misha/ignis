@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 import 'package:ignis/src/math.dart';
 
 abstract class IntersectionSystem {
