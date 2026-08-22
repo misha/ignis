@@ -33,3 +33,6 @@ wip/
 
 # Golden test failure-diff artifacts (only written when a comparison fails).
 test/failures/
+
+# The AI disclosure report, generated whenever the site is built.
+docs/content/_data/disclosure.json

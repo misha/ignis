@@ -38,7 +38,9 @@ flutter:
 
 scripts:
   analyze: dart analyze
-  build: jaspr build
+  build:
+    $before: cd .. && rps disclosure
+    $script: jaspr build
   clean: rm -rf build .dart_tool/build
   format: dart format lib
   generate: dart run build_runner build --delete-conflicting-outputs

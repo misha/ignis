@@ -30,11 +30,11 @@ jobs:
       - run: dart pub global activate jaspr_cli
       - run: flutter pub get
       - run: dart analyze
-      - run: dart pub global run jaspr_cli:jaspr build
-      # The API reference the site links out to, nested inside the site's own
-      # output so one Pages artifact carries both.
       - run: flutter pub get
         working-directory: .
+      - run: dart run tool/disclosure.dart
+        working-directory: .
+      - run: dart pub global run jaspr_cli:jaspr build
       - run: dart doc --output docs/build/jaspr/api
         working-directory: .
       - run: cp logo_light.png logo_dark.png docs/build/jaspr/api/

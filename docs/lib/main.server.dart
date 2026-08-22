@@ -20,6 +20,7 @@ import 'components/callouts.dart';
 import 'components/coverage.dart';
 import 'components/debug_panel.dart';
 import 'components/demo.dart';
+import 'components/disclosure.dart';
 import 'components/reference.dart';
 import 'components/related.dart';
 import 'components/status_banner.dart';
@@ -107,6 +108,8 @@ void main() {
         Coverage(),
         // Every <Demo name="..."/> slot on the site.
         Demo(),
+        // The per-group provenance table on the AI disclosure page.
+        Disclosure(),
         // Adds zooming and caption support to images.
         Image(zoom: true),
       ],
@@ -192,6 +195,7 @@ void main() {
                   SidebarLink(text: 'Layout Engine', href: '/internals/layout'),
                   SidebarLink(text: 'Input Routing', href: '/internals/inputs'),
                   SidebarLink(text: 'Documentation', href: '/internals/documentation'),
+                  SidebarLink(text: 'AI Disclosure', href: '/internals/ai-disclosure'),
                 ],
               ),
             ],

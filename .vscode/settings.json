@@ -1,3 +1,4 @@
+// SPDX-AI-Disclosure: none
 {
   "editor.tabSize": 2,
   "editor.insertSpaces": true,
@@ -36,12 +37,14 @@
     "broadphase",
     "broadphased",
     "cheatsheet",
+    "codegen",
     "despawning",
     "desyncs",
     "footguns",
     "frontmatter",
     "gamepads",
     "glsl",
+    "goldens",
     "hitbox",
     "hitboxes",
     "inspectable",
@@ -51,6 +54,7 @@
     "lifecycles",
     "linecap",
     "linejoin",
+    "Lockfiles",
     "LTWH",
     "lucide",
     "Mewyn",
