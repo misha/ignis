@@ -1,0 +1,91 @@
+// Per-file, per-scope disclosure tags.
+// See AI_DISCLOSURE.md for details.
+{
+  // Slash-based comments
+  "Disclosure: none (slash)": {
+    "scope": "dart,javascript,typescript,json,jsonc,c,cpp",
+    "prefix": "ai-none",
+    "body": [
+      "// SPDX-AI-Disclosure: none"
+    ],
+  },
+  "Disclosure: assisted (slash)": {
+    "scope": "dart,javascript,typescript,json,jsonc,c,cpp",
+    "prefix": "ai-assisted",
+    "body": [
+      "// SPDX-AI-Disclosure: ai-assisted"
+    ],
+  },
+  "Disclosure: generated (slash)": {
+    "scope": "dart,javascript,typescript,json,jsonc,c,cpp",
+    "prefix": "ai-generated",
+    "body": [
+      "// SPDX-AI-Disclosure: ai-generated"
+    ],
+  },
+  "Disclosure: autonomous (slash)": {
+    "scope": "dart,javascript,typescript,json,jsonc,c,cpp",
+    "prefix": "ai-autonomous",
+    "body": [
+      "// SPDX-AI-Disclosure: autonomous"
+    ],
+  },
+  // Hash-based comments
+  "Disclosure: none (hash)": {
+    "scope": "yaml,shellscript,ignore,cmake,properties,dockerfile,python",
+    "prefix": "ai-none",
+    "body": [
+      "# SPDX-AI-Disclosure: none"
+    ],
+  },
+  "Disclosure: assisted (hash)": {
+    "scope": "yaml,shellscript,ignore,cmake,properties,dockerfile,python",
+    "prefix": "ai-assisted",
+    "body": [
+      "# SPDX-AI-Disclosure: ai-assisted"
+    ],
+  },
+  "Disclosure: generated (hash)": {
+    "scope": "yaml,shellscript,ignore,cmake,properties,dockerfile,python",
+    "prefix": "ai-generated",
+    "body": [
+      "# SPDX-AI-Disclosure: ai-generated"
+    ],
+  },
+  "Disclosure: autonomous (hash)": {
+    "scope": "yaml,shellscript,ignore,cmake,properties,dockerfile,python",
+    "prefix": "ai-autonomous",
+    "body": [
+      "# SPDX-AI-Disclosure: autonomous"
+    ],
+  },
+  // Markup-up based comments
+  "Disclosure: none (markup)": {
+    "scope": "markdown,html,xml",
+    "prefix": "ai-none",
+    "body": [
+      "<!-- SPDX-AI-Disclosure: none -->"
+    ],
+  },
+  "Disclosure: assisted (markup)": {
+    "scope": "markdown,html,xml",
+    "prefix": "ai-assisted",
+    "body": [
+      "<!-- SPDX-AI-Disclosure: ai-assisted -->"
+    ],
+  },
+  "Disclosure: generated (markup)": {
+    "scope": "markdown,html,xml",
+    "prefix": "ai-generated",
+    "body": [
+      "<!-- SPDX-AI-Disclosure: ai-generated -->"
+    ],
+  },
+  "Disclosure: autonomous (markup)": {
+    "scope": "markdown,html,xml",
+    "prefix": "ai-autonomous",
+    "body": [
+      "<!-- SPDX-AI-Disclosure: autonomous -->"
+    ],
+  }
+}

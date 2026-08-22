@@ -4,8 +4,8 @@ description: Documents human-AI authorship.
 lane: internals
 category: internal
 status: complete
-spdx-ai-disclosure: none
 ---
+<!-- SPDX-AI-Disclosure: none -->
 
 I, [@misha](https://github.com/misha), am not a proponent of generative AI, especially in the context of game development. I will **never** use AI to create game assets like art and music. Despite this predisposition, I recognize that in the context of software engineering, generative AI can be a potent tool. I also believe its usage does not excuse the programmer from reviewing, and ultimately understanding, the generated code.
 
