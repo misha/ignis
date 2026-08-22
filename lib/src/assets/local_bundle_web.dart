@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-generated
+
 import 'package:flutter/services.dart';
 
 /// The `dart:io`-free stand-in for [LocalAssetBundle].

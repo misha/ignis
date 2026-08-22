@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-generated
+
 import 'dart:async';
 import 'dart:io';
 
