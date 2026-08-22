@@ -1,13 +1,10 @@
+// SPDX-AI-Disclosure: none
+
 import 'dart:ui';
 
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 
 /// An effect that animates a [Paint]'s opacity by mutating its alpha.
-///
-/// Every variant is the same line - `base + span * progress` - so the
-/// constructors differ only in what they put in those two fields. A null
-/// [_base] means the alpha is read when the effect builds rather than being
-/// fixed up front.
 class ColorOpacityEffect extends ControlledEffect {
   /// The paint whose alpha channel is mutated as this effect progresses.
   final Paint paint;

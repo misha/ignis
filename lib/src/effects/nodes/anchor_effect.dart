@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
@@ -58,6 +60,7 @@ class _AnchorByEffect extends AnchorEffect {
   @override
   void build() {
     super.build();
+
     onProgress((progress) {
       final delta = _offset.scaled(progress - previousProgress);
       final next = target!.anchor + delta;
@@ -81,6 +84,7 @@ class _AnchorToEffect extends AnchorEffect {
   @override
   void build() {
     super.build();
+
     _offset
       ..setFrom(_destination)
       ..subtract(target!.anchor);

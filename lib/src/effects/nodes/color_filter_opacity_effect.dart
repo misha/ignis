@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'dart:ui';
 
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
@@ -11,6 +13,9 @@ class ColorFilterOpacityEffect extends ControlledEffect {
   /// The color applied via [ColorFilter.mode].
   final Color color;
 
+  final double? _from;
+  final double? _to;
+
   /// Fades [color] in on [paint] from fully transparent to fully opaque.
   ColorFilterOpacityEffect.fadeIn({
     required this.paint,
@@ -18,11 +23,8 @@ class ColorFilterOpacityEffect extends ControlledEffect {
     required super.controller,
     super.cleanup,
     super.enabled,
-  }) {
-    onProgress((progress) {
-      paint.colorFilter = .mode(color.withValues(alpha: color.a * progress), .srcIn);
-    });
-  }
+  }) : _from = 0,
+       _to = null;
 
   /// Fades [color] out on [paint] from fully opaque to fully transparent.
   ColorFilterOpacityEffect.fadeOut({
@@ -31,11 +33,8 @@ class ColorFilterOpacityEffect extends ControlledEffect {
     required super.controller,
     super.cleanup,
     super.enabled,
-  }) {
-    onProgress((progress) {
-      paint.colorFilter = .mode(color.withValues(alpha: color.a * (1 - progress)), .srcIn);
-    });
-  }
+  }) : _from = null,
+       _to = 0;
 
   /// Fades a [color]-tinted `ColorFilter` on [paint] from [fromAlpha]
   /// [toAlpha]. If [fromAlpha] is not supplied, it animates from zero.
@@ -51,14 +50,17 @@ class ColorFilterOpacityEffect extends ControlledEffect {
     required super.controller,
     super.cleanup,
     super.enabled,
-  }) {
-    final from = fromAlpha ?? 0;
+  }) : _from = fromAlpha ?? 0,
+       _to = toAlpha;
+
+  @override
+  void build() {
+    super.build();
+    final from = _from ?? color.a;
+    final to = _to ?? color.a;
 
     onProgress((progress) {
-      paint.colorFilter = .mode(
-        color.withValues(alpha: from + (toAlpha - from) * progress),
-        .srcIn,
-      );
+      paint.colorFilter = .mode(color.withValues(alpha: from + (to - from) * progress), .srcIn);
     });
   }
 }

@@ -1,7 +1,8 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/nodes/effect_node.dart';
 
-/// A node that chains [effects] one after another, adding the next only
-/// once the previous one finishes.
+/// A node that chains [effects] one after another.
 class SequentialEffect extends EffectNode {
   /// The effects run in sequence.
   final List<EffectNode> effects;
@@ -18,8 +19,15 @@ class SequentialEffect extends EffectNode {
   @override
   void build() {
     super.build();
-    for (var i = 0; i < effects.length; i += 1) {
-      effects[i].onFinish(() => _track(i));
+
+    for (var index = 0; index < effects.length; index += 1) {
+      effects[index].onFinish(() {
+        if (index == _current) {
+          effects[_current].detach();
+          _current += 1;
+          _advance();
+        }
+      });
     }
 
     _advance();
@@ -46,13 +54,5 @@ class SequentialEffect extends EffectNode {
     }
 
     add(effects[_current]);
-  }
-
-  void _track(int index) {
-    if (index == _current) {
-      effects[_current].detach();
-      _current += 1;
-      _advance();
-    }
   }
 }

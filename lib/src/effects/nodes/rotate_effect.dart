@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
@@ -56,6 +58,7 @@ class _RotateByEffect extends RotateEffect {
   @override
   void build() {
     super.build();
+
     onProgress((progress) {
       target!.angle += _angle * (progress - previousProgress);
     });
