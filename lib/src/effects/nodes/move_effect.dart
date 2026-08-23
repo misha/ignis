@@ -1,18 +1,18 @@
 // SPDX-AI-Disclosure: none
 
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/position_owner.dart';
-import 'package:ignis/src/target.dart';
 
 /// An effect that animates a [PositionOwner]'s position over time.
 abstract class MoveEffect extends ControlledEffect implements MeasurableEffect {
   late final Target<PositionOwner> _target;
 
   /// The [PositionOwner] whose position is mutated by this effect.
-  PositionOwner? get target => _target.value;
+  PositionOwner get target => _target.value;
 
   /// Moves the closest [PositionOwner] ancestor by [offset], relative to its
   /// position when the effect is mounted.
@@ -38,12 +38,6 @@ abstract class MoveEffect extends ControlledEffect implements MeasurableEffect {
   }) {
     _target = Target<PositionOwner>(this);
   }
-
-  @override
-  void build() {
-    super.build();
-    _target.resolve();
-  }
 }
 
 class _MoveByEffect extends MoveEffect {
@@ -62,7 +56,7 @@ class _MoveByEffect extends MoveEffect {
     super.build();
 
     onProgress((progress) {
-      target!.position.addScaled(_offset, progress - previousProgress);
+      target.position.addScaled(_offset, progress - previousProgress);
     });
   }
 
@@ -88,10 +82,10 @@ class _MoveToEffect extends MoveEffect {
 
     _offset
       ..setFrom(_destination)
-      ..subtract(target!.position);
+      ..subtract(target.position);
 
     onProgress((progress) {
-      target!.position.addScaled(_offset, progress - previousProgress);
+      target.position.addScaled(_offset, progress - previousProgress);
     });
   }
 

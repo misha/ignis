@@ -36,3 +36,6 @@ test/failures/
 
 # The AI disclosure report, generated whenever the site is built.
 docs/content/_data/disclosure.json
+
+# Temporarily ignore example/ for testing.
+example/

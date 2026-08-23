@@ -21,7 +21,7 @@ There are several kinds of `Sprite`, depending on what you need to draw.
 - `SpriteGroup` lays several `Sprite`s together, end to end.
 - `SpriteMap` names them.
 
-These `Sprite` implementations automatically work with the [local asset bundle](/systems/live-reload#reloading-assets), allowing `SpriteNode` to reload images in live scenes as they change on disk.
+These `Sprite` implementations automatically work with the [local asset bundle](/systems/assets), allowing `SpriteNode` to reload images in live scenes as they change on disk.
 
 `Sprite` itself is `abstract`, so it is straightforward to implement one for images stored in complex ways, such as when packed optimally by an art application or sprite packer.
 

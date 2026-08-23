@@ -31,9 +31,9 @@ typedef Cleanup = void Function();
 /// signal subscribed inside that method call. If you create resources that
 /// should be disposed, place it into the [trash] to prevent leaks.
 ///
-/// Lastly, the [rebuild] method is provided as a way to "reboot" the internals
-/// of any node. This method will remove added nodes, unsubscribe from signals,
-/// and process the [trash]. Then, it will call [build] again.
+/// Lastly, a reload reboots the internals of every node: added children are
+/// removed, signals unsubscribed, the [trash] processed, and [build] run
+/// again. What survives is the node itself, and whatever it named with [Live.keep].
 ///
 /// **Do not make [build] `async`.** An asynchronous build breaks engine
 /// invariants in multiple, devastating ways.
@@ -77,14 +77,13 @@ typedef Cleanup = void Function();
 ///
 /// **Reassembly**
 ///
-/// When the world changes out from under a live tree, the scene walks it
-/// calling [reassemble]. Unlike [update] and [render], the walk ignores the
-/// [enabled] flag, so even disabled nodes are asked.
+/// When code is reloaded, the scene walks the tree rebuilding every node.
+/// Unlike [update] and [render], the walk ignores the [enabled] flag, so even
+/// disabled nodes are rebuilt. It runs whenever the `SceneWidget` reassembles
+/// in the Flutter tree.
 ///
-/// Currently, the walk runs in two, distinct situations:
-///
-///   - Whenever the `SceneWidget` reassembles in the Flutter tree.
-///   - Whenever [Ignis.cache] changes, such as via the local asset bundle.
+/// There is nothing to opt into and nothing to override: name what should
+/// carry across with [Live.keep], and everything else is made again.
 ///
 /// Each node answers for itself, and the default answer is nothing, so a save
 /// leaves a running game exactly as it was.
@@ -194,9 +193,17 @@ class Node {
   /// How a [Signal] subscribed inside a [build] finds the node that owns it.
   static Node? _builder;
 
+  /// Which reassembly is running, bumped once per [Scene.reassemble].
+  ///
+  /// A node records the pass it last built in, so a subtree the walk mounts on
+  /// its way down is not built a second time when the walk reaches it.
+  static int _generation = 0;
+
+  int _built = -1;
+
   /// Declares this node's children and behavior.
   ///
-  /// Runs once on mount, and again on every [rebuild].
+  /// Runs once on mount, and again whenever the code reassembles.
   ///
   /// `super.build()` is required, as skipping it drops whatever the superclass
   /// declared.
@@ -217,13 +224,11 @@ class Node {
   /// re-evaluated exactly like a statement is. What survives is this node
   /// itself: its members, its position, and anything added to it imperatively.
   ///
-  /// A child the new body [add]s back is preserved rather than replaced, which
-  /// makes a child held on the instance a boundary this rebuild stops at.
+  /// A child the new body [add]s back is preserved rather than replaced, as is
+  /// everything the body named with [Live.keep].
   ///
-  /// Call this inside [reassemble] when your node knows how to reboot itself
-  /// directly from its instance members to witness *true* live reload.
-  @nonVirtual
-  void rebuild() {
+  void _rebuild() {
+    _built = _generation;
     _discardDeclared();
 
     // Dropped rather than cleared, so a rebuild from inside an [onUpdate]
@@ -238,12 +243,14 @@ class Node {
 
     try {
       build();
+      if (this case final Live live) live._sweep();
       final scene = _scene;
 
       if (scene != null && scene.hasSize) {
         onSceneResize.emit(scene.size);
       }
     } finally {
+      if (this case final Live live) live._claimed = null;
       _builder = builder;
     }
   }
@@ -492,7 +499,19 @@ class Node {
     node._parent = this;
     node._pendingParent = null;
     final scene = _scene;
-    if (scene != null) node._mount(scene);
+    if (scene == null) return;
+
+    // A node moved here from another scene leaves that one first. One moved
+    // within this scene is already standing, and must not be rebuilt.
+    if (node.isMounted && !identical(node._scene, scene)) node._unmount();
+    node._mount(scene);
+  }
+
+  /// Unhooks [node] without unmounting it, so it can stand under a new parent.
+  void _release(Node node) {
+    _egg?.remove(node);
+    node._parent = null;
+    node._pendingRemoval = false;
   }
 
   void _disown(Node node) {
@@ -512,14 +531,25 @@ class Node {
   // #region Mounting
 
   void _mount(Scene scene) {
-    // TODO: Assert null _scene?
+    // Already standing here, which is how a moved subtree is left alone.
+    if (identical(_scene, scene)) return;
     _scene = scene;
-    rebuild();
+    _rebuild();
     onMount.emit();
+    final targets = _targets;
+
+    if (targets != null) {
+      for (final target in targets) {
+        target._resolve();
+      }
+    }
+
     final children = _egg?.nodes;
 
     if (children != null && children.isNotEmpty) {
-      for (final child in children) {
+      // Snapshotted: a handler is free to move a child to another parent,
+      // which takes it out of the list being walked.
+      for (final child in children.toList(growable: false)) {
         child._mount(scene);
       }
     }
@@ -530,7 +560,8 @@ class Node {
     final children = _egg?.nodes;
 
     if (children != null && children.isNotEmpty) {
-      for (final child in children) {
+      // Snapshotted, for the same reason as [_mount].
+      for (final child in children.toList(growable: false)) {
         child._unmount();
       }
     }
@@ -542,7 +573,7 @@ class Node {
     _debugDraws = null;
     _declared = null;
     _scene = null;
-    _dependencies = null;
+    _dropAncestry();
   }
 
   // #endregion
@@ -553,7 +584,7 @@ class Node {
   ///
   /// Nodes cannot be added to themselves or their descendants. Adding a child
   /// to its current parent is a no-op, and cancels its pending removal, so a
-  /// child held on the instance survives the [rebuild] that discarded it.
+  /// child held on the instance survives the reload that discarded it.
   ///
   /// Called from this node's own [build], the child is additionally recorded
   /// as declared, so the next rebuild discards it before running the body
@@ -570,13 +601,18 @@ class Node {
       throw StateError('Cannot add a node to itself.');
     }
 
-    if (node.hasParent || node._pendingParent != null) {
-      // TODO: Why not? Isn't this just a reparenting operation?
-      throw StateError('Cannot add a node that already has a parent.');
-    }
-
     if (cycles(node)) {
       throw StateError('Cannot add a node to its descendant.');
+    }
+
+    // Already somewhere else, so this is a move. Cancel whatever was queued
+    // for it there, unhook it without unmounting, and drop the ancestry it
+    // had cached.
+    node._pendingParent = null;
+
+    if (node.hasParent) {
+      node._parent!._release(node);
+      node._forgetAncestry();
     }
 
     if (isMounted) {
@@ -645,44 +681,31 @@ class Node {
 
   // #region Reassembly
 
-  /// What this node does when the tree is reassembled.
-  ///
-  /// By default, this does nothing; Ignis cannot and does not track the
-  /// external dependencies of arbitrary node implementations. Override this
-  /// method to refresh those dependencies whenever your code changes.
-  ///
-  /// For nodes that are capable of completely reconstructing themselves using
-  /// their [build] method, consider implementing it with [rebuild]:
-  ///
-  /// ```dart
-  /// @override
-  /// void reassemble() => rebuild();
-  /// ```
-  ///
-  /// This will enable the highest form of live reload: *everything* the node
-  /// does will update as you write code.
-  @visibleForOverriding
-  void reassemble() {}
-
   void _reassemble() {
-    // A mid-edit build throws, and must not take the rest of the walk down.
-    try {
-      reassemble();
-    } catch (exception, stack) {
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: exception,
-          stack: stack,
-          library: 'ignis',
-          context: ErrorDescription('while reassembling $runtimeType'),
-        ),
-      );
+    // Already built by the flush that mounted it, against this same code.
+    if (this is Live && _built != _generation) {
+      // A mid-edit build throws, and must not take the rest of the walk down.
+      try {
+        _rebuild();
+      } catch (exception, stack) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: exception,
+            stack: stack,
+            library: 'ignis',
+            context: ErrorDescription('while reassembling $runtimeType'),
+          ),
+        );
+      }
     }
 
+    // Settle what the pass just declared, so the walk descends into the tree
+    // as it now stands rather than as it stood before the rebuild.
+    if (isMounted) scene._tree.flush();
     final children = _egg?.nodes;
     if (children == null || children.isEmpty) return;
 
-    for (final child in children) {
+    for (final child in children.toList(growable: false)) {
       // A rebuild above queued this one's removal, so it is already gone. Its
       // replacement built against the current code and is not in this list.
       if (child._pendingRemoval) continue;
@@ -730,6 +753,35 @@ class Node {
 
   Map<Type, dynamic>? _providers;
   Map<Type, dynamic>? _dependencies;
+  // TODO: Not quite part of DI.
+  List<Target<Object?>>? _targets;
+
+  /// Registers [target] to be dropped whenever this node's ancestry changes.
+  void _track(Target<Object?> target) {
+    (_targets ??= []).add(target);
+  }
+
+  /// Drops what this node resolved through its ancestors.
+  void _dropAncestry() {
+    _dependencies = null;
+    final targets = _targets;
+    if (targets == null) return;
+
+    for (final target in targets) {
+      target._invalidate();
+    }
+  }
+
+  /// Drops the same across this subtree, for a node that just moved.
+  void _forgetAncestry() {
+    _dropAncestry();
+    final children = _egg?.nodes;
+    if (children == null || children.isEmpty) return;
+
+    for (final child in children) {
+      child._forgetAncestry();
+    }
+  }
 
   /// Provides [value] as this node's instance of [T], overwriting any value
   /// previously provided for [T].

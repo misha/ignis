@@ -1,17 +1,17 @@
 // SPDX-AI-Disclosure: none
 
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 import 'package:ignis/src/owners/angle_owner.dart';
-import 'package:ignis/src/target.dart';
 
 /// An effect that animates an [AngleOwner]'s angle over time.
 abstract class RotateEffect extends ControlledEffect implements MeasurableEffect {
   late final Target<AngleOwner> _target;
 
   /// The [AngleOwner] whose angle is mutated by this effect.
-  AngleOwner? get target => _target.value;
+  AngleOwner get target => _target.value;
 
   /// Rotates the closest [AngleOwner] ancestor by [angle], relative to its
   /// angle when the effect starts.
@@ -37,12 +37,6 @@ abstract class RotateEffect extends ControlledEffect implements MeasurableEffect
   }) {
     _target = Target<AngleOwner>(this);
   }
-
-  @override
-  void build() {
-    super.build();
-    _target.resolve();
-  }
 }
 
 class _RotateByEffect extends RotateEffect {
@@ -60,7 +54,7 @@ class _RotateByEffect extends RotateEffect {
     super.build();
 
     onProgress((progress) {
-      target!.angle += _angle * (progress - previousProgress);
+      target.angle += _angle * (progress - previousProgress);
     });
   }
 
@@ -83,10 +77,10 @@ class _RotateToEffect extends RotateEffect {
   @override
   void build() {
     super.build();
-    _offset = _destination - target!.angle;
+    _offset = _destination - target.angle;
 
     onProgress((progress) {
-      target!.angle += _offset * (progress - previousProgress);
+      target.angle += _offset * (progress - previousProgress);
     });
   }
 

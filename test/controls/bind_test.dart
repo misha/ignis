@@ -29,14 +29,11 @@ final class _Answers extends Node {
 }
 
 /// A node whose build binds an event, and which can be rebuilt on demand.
-final class _Binder extends Node {
+final class _Binder extends Node with Live {
   final void Function() onJump;
   int builds = 0;
 
   _Binder(this.onJump);
-
-  @override
-  void reassemble() => rebuild();
 
   @override
   void build() {

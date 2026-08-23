@@ -2,35 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-/// A node whose [build] body can be swapped between builds, which is what a
-/// hot reload does to a real one, and which reboots to pick the swap up.
-final class _Node extends Node {
-  void Function(_Node node) builder;
-  int builds = 0;
-
-  _Node(this.builder);
-
-  @override
-  void reassemble() => rebuild();
-
-  @override
-  void build() {
-    super.build();
-    builds += 1;
-    builder(this);
-  }
-}
-
-/// A node that answers a reassembly the default way, which is not at all.
-final class _Silent extends Node {
-  int builds = 0;
-
-  @override
-  void build() {
-    super.build();
-    builds += 1;
-  }
-}
+import '../support/test_node.dart';
 
 /// Two distinguishable node types, for watching a declaration change shape.
 final class _A extends Node {}
@@ -62,13 +34,13 @@ List<FlutterErrorDetails> _reported(void Function() body) {
 void main() {
   group('builds', () {
     test('build runs on mount', () {
-      final node = _Node((_) {})..mount();
+      final node = LiveTestNode(builder: (_) {})..mount();
 
       expect(node.builds, 1);
     });
 
     test('build runs again on every reassembly', () {
-      final node = _Node((_) {});
+      final node = LiveTestNode(builder: (_) {});
       final scene = node.mount();
 
       scene.reassemble();
@@ -78,22 +50,22 @@ void main() {
     });
 
     test('a build that throws on mount throws out of mount', () {
-      final node = _Node((_) => throw StateError('no ancestor'));
+      final node = LiveTestNode(builder: (_) => throw StateError('no ancestor'));
 
       expect(node.mount, throwsStateError);
     });
 
     test('a build that throws on a live add throws out of update', () {
-      final root = _Node((_) {});
+      final root = LiveTestNode(builder: (_) {});
       final scene = root.mount();
-      root.add(_Node((_) => throw StateError('no ancestor')));
+      root.add(LiveTestNode(builder: (_) => throw StateError('no ancestor')));
 
       expect(() => scene.update(0), throwsStateError);
     });
 
     test('a throwing reassembly is reported and contained', () {
-      final a = _Node((_) {});
-      final b = _Node((_) {});
+      final a = LiveTestNode(builder: (_) {});
+      final b = LiveTestNode(builder: (_) {});
       a.add(b);
       final scene = a.mount();
       a.builder = (_) => throw StateError('mid-edit');
@@ -107,20 +79,30 @@ void main() {
   });
 
   group('reassembly', () {
-    test('leaves a node that says nothing alone', () {
-      final node = _Silent();
-      final scene = node.mount();
+    test('rebuilds every node that mixes in Live', () {
+      final child = LiveTestNode(builder: (_) {});
+      final parent = LiveTestNode(builder: (node) => node.add(child));
+      final scene = parent.mount()..update(0);
 
       scene.reassemble();
-      scene.reassemble();
 
-      expect(node.builds, 1, reason: 'only the one on mount');
+      expect(parent.builds, 2);
+      expect(child.builds, 2);
     });
 
-    test('walks past a node that says nothing to one that does not', () {
-      final quiet = _Silent();
-      final loud = _Node((_) {});
-      quiet.add(loud);
+    test('holds the body of a node without Live', () {
+      final quiet = TestNode();
+      final scene = quiet.mount();
+
+      scene.reassemble();
+      scene.reassemble();
+
+      expect(quiet.builds, 1, reason: 'only the one on mount');
+    });
+
+    test('walks past a node without Live to one with it', () {
+      final loud = LiveTestNode(builder: (_) {});
+      final quiet = TestNode()..add(loud);
       final scene = quiet.mount();
 
       scene.reassemble();
@@ -130,8 +112,10 @@ void main() {
     });
 
     test('leaves out the children a rebuild above just discarded', () {
-      late _Node declared;
-      final parent = _Node((node) => declared = node.add(_Node((_) {})));
+      late LiveTestNode declared;
+      final parent = LiveTestNode(
+        builder: (node) => declared = node.add(LiveTestNode(builder: (_) {})),
+      );
       final scene = parent.mount()..update(0);
 
       // The one declared on mount, before the rebuild replaces it.
@@ -149,7 +133,7 @@ void main() {
   group('declarations', () {
     test('re-runs constructor arguments, not just statements', () {
       var size = 10.0;
-      final node = _Node((n) => n.add(_Sized(size)));
+      final node = LiveTestNode(builder: (n) => n.add(_Sized(size)));
       final scene = node.mount()..update(0);
 
       expect((node.children.single as _Sized).size, 10);
@@ -165,10 +149,12 @@ void main() {
       Node? given;
       Node? returned;
 
-      final node = _Node((n) {
-        given = _A();
-        returned = n.add(given!);
-      });
+      final node = LiveTestNode(
+        builder: (n) {
+          given = _A();
+          returned = n.add(given!);
+        },
+      );
 
       final scene = node.mount()..update(0);
       expect(returned, same(given));
@@ -181,7 +167,7 @@ void main() {
     });
 
     test('destroys the children the previous build declared', () {
-      final node = _Node((n) => n.add(_A()));
+      final node = LiveTestNode(builder: (n) => n.add(_A()));
       final scene = node.mount()..update(0);
       final first = node.children.single;
 
@@ -195,9 +181,11 @@ void main() {
     test('a child that stops being declared does not come back', () {
       var declared = true;
 
-      final node = _Node((n) {
-        if (declared) n.add(_A());
-      });
+      final node = LiveTestNode(
+        builder: (n) {
+          if (declared) n.add(_A());
+        },
+      );
 
       final scene = node.mount()..update(0);
       expect(node.children, hasLength(1));
@@ -210,7 +198,7 @@ void main() {
     });
 
     test('leaves imperative additions alone', () {
-      final node = _Node((n) => n.add(_A()));
+      final node = LiveTestNode(builder: (n) => n.add(_A()));
       final scene = node.mount()..update(0);
       final spawned = node.add(_B());
       scene.update(0);
@@ -223,8 +211,8 @@ void main() {
     });
 
     test('preserves a child the new build declared again', () {
-      final held = _Silent();
-      final node = _Node((n) => n.add(held));
+      final held = TestNode();
+      final node = LiveTestNode(builder: (n) => n.add(held));
       final scene = node.mount()..update(0);
 
       expect(held.builds, 1);
@@ -234,11 +222,11 @@ void main() {
 
       expect(node.children.single, same(held));
       expect(held.isMounted, isTrue, reason: 'it never left the tree');
-      expect(held.builds, 1, reason: 'a preserved child is a rebuild boundary');
+      expect(held.builds, 1, reason: 'a node without Live holds its body');
     });
 
     test('rebuilds queued before a flush settle to one generation', () {
-      final node = _Node((n) => n.add(_A()));
+      final node = LiveTestNode(builder: (n) => n.add(_A()));
       final scene = node.mount()..update(0);
 
       scene.reassemble();
@@ -251,11 +239,13 @@ void main() {
 
     test('a preserved child still goes when the body stops declaring it', () {
       var declared = true;
-      final held = _Silent();
+      final held = TestNode();
 
-      final node = _Node((n) {
-        if (declared) n.add(held);
-      });
+      final node = LiveTestNode(
+        builder: (n) {
+          if (declared) n.add(held);
+        },
+      );
 
       final scene = node.mount()..update(0);
       scene.reassemble();
@@ -275,7 +265,7 @@ void main() {
   group('onUpdate', () {
     test('runs its callback every update', () {
       var elapsed = 0.0;
-      final scene = _Node((node) => node.tick((dt) => elapsed += dt)).mount();
+      final scene = LiveTestNode(builder: (node) => node.tick((dt) => elapsed += dt)).mount();
 
       scene.update(0.5);
       scene.update(0.5);
@@ -286,7 +276,7 @@ void main() {
     test('a reassembly swaps in the callback the new build declared', () {
       final log = <String>[];
       var edited = false;
-      final node = _Node((n) => n.tick((_) => log.add(edited ? 'new' : 'old')));
+      final node = LiveTestNode(builder: (n) => n.tick((_) => log.add(edited ? 'new' : 'old')));
       final scene = node.mount();
 
       scene.update(0);
@@ -301,9 +291,11 @@ void main() {
       var ticks = 0;
       var declared = true;
 
-      final node = _Node((n) {
-        if (declared) n.tick((_) => ticks += 1);
-      });
+      final node = LiveTestNode(
+        builder: (n) {
+          if (declared) n.tick((_) => ticks += 1);
+        },
+      );
 
       final scene = node.mount();
       scene.update(0);
@@ -318,7 +310,7 @@ void main() {
   group('trash', () {
     test('empties when the build that filled it is superseded', () {
       final log = <String>[];
-      final node = _Node((node) => node.trash(() => log.add('cleaned')));
+      final node = LiveTestNode(builder: (node) => node.trash(() => log.add('cleaned')));
       final scene = node.mount();
 
       expect(log, isEmpty, reason: 'the build is still current');
@@ -329,7 +321,7 @@ void main() {
 
     test('empties at unmount', () {
       final log = <String>[];
-      final scene = _Node((node) => node.trash(() => log.add('cleaned'))).mount();
+      final scene = LiveTestNode(builder: (node) => node.trash(() => log.add('cleaned'))).mount();
 
       scene.destroy();
 
@@ -339,11 +331,13 @@ void main() {
     test('empties in reverse order', () {
       final log = <String>[];
 
-      final scene = _Node((node) {
-        node.trash(() => log.add('a'));
-        node.trash(() => log.add('b'));
-        node.trash(() => log.add('c'));
-      }).mount();
+      final scene = LiveTestNode(
+        builder: (node) {
+          node.trash(() => log.add('a'));
+          node.trash(() => log.add('b'));
+          node.trash(() => log.add('c'));
+        },
+      ).mount();
 
       scene.destroy();
 
@@ -353,10 +347,12 @@ void main() {
     test('a throwing cleanup is reported and contained', () {
       final log = <String>[];
 
-      final scene = _Node((node) {
-        node.trash(() => log.add('after'));
-        node.trash(() => throw StateError('bad'));
-      }).mount();
+      final scene = LiveTestNode(
+        builder: (node) {
+          node.trash(() => log.add('after'));
+          node.trash(() => throw StateError('bad'));
+        },
+      ).mount();
 
       final reported = _reported(scene.destroy);
 
@@ -370,7 +366,7 @@ void main() {
     test('a subscription made in build lives and dies with the node', () {
       final signal = Signal0();
       var emissions = 0;
-      final node = _Node((_) => signal(() => emissions += 1));
+      final node = LiveTestNode(builder: (_) => signal(() => emissions += 1));
       final scene = node.mount();
 
       signal.emit();
@@ -385,9 +381,11 @@ void main() {
       final log = <String>[];
       var edited = false;
 
-      final node = _Node((_) {
-        signal((value) => log.add('${edited ? 'new' : 'old'} $value'));
-      });
+      final node = LiveTestNode(
+        builder: (_) {
+          signal((value) => log.add('${edited ? 'new' : 'old'} $value'));
+        },
+      );
 
       final scene = node.mount();
       signal.emit(1);
@@ -400,7 +398,7 @@ void main() {
 
     test('onMount subscribed in build hears the mount that ran it', () {
       var mounted = 0;
-      final node = _Node((node) => node.onMount(() => mounted += 1));
+      final node = LiveTestNode(builder: (node) => node.onMount(() => mounted += 1));
 
       node.mount();
 
@@ -409,7 +407,7 @@ void main() {
 
     test('onUnmount subscribed in build fires once, at unmount', () {
       var unmounted = 0;
-      final node = _Node((node) => node.onUnmount(() => unmounted += 1));
+      final node = LiveTestNode(builder: (node) => node.onUnmount(() => unmounted += 1));
       final scene = node.mount();
 
       scene.reassemble();
@@ -418,10 +416,35 @@ void main() {
       expect(unmounted, 1);
     });
 
+    test('a rebuild does not report the unmount it causes', () {
+      var keep = true;
+      var unmounted = 0;
+
+      final node = LiveTestNode(
+        builder: (node) {
+          if (!keep) return;
+          final child = Node();
+          node.add(child);
+          child.onUnmount(() => unmounted += 1);
+        },
+      );
+
+      final scene = node.mount();
+      scene.update(0);
+
+      keep = false;
+      scene.reassemble();
+      scene.update(0);
+
+      expect(node.children, isEmpty, reason: 'the child did leave');
+
+      expect(unmounted, 0, reason: 'a reassembly is not an unmount');
+    });
+
     test('onSceneResize fires again for the handler a rebuild installed', () {
       final scene = Node().mount()..resize(100, 80);
       final sizes = <Vector2>[];
-      final node = _Node((n) => n.onSceneResize(sizes.add));
+      final node = LiveTestNode(builder: (n) => n.onSceneResize(sizes.add));
 
       scene.node.add(node);
       scene.update(0);
@@ -440,7 +463,7 @@ void main() {
       final scene = Node().mount();
       scene.resize(100, 80);
       Vector2? heard;
-      final node = _Node((node) => node.onSceneResize((size) => heard = size));
+      final node = LiveTestNode(builder: (node) => node.onSceneResize((size) => heard = size));
 
       scene.node.add(node);
       scene.update(0);
@@ -458,6 +481,331 @@ void main() {
       signal.emit();
 
       expect(emissions, 1);
+    });
+  });
+
+  group('keep', () {
+    test('runs create once and hands the same value back', () {
+      var creates = 0;
+
+      final node = LiveTestNode(
+        builder: (node) {
+          node.keep(#value, () {
+            creates += 1;
+            return _A();
+          });
+        },
+      );
+
+      final scene = node.mount()..update(0);
+      scene.reassemble();
+      scene.reassemble();
+
+      expect(creates, 1);
+    });
+
+    test('preserves a kept child while a plain declaration is replaced', () {
+      late Node kept;
+      late Node fresh;
+
+      final node = LiveTestNode(
+        builder: (node) {
+          kept = node.add(node.keep(#kept, () => _A()));
+          fresh = node.add(_B());
+        },
+      );
+
+      final scene = node.mount()..update(0);
+      final firstKept = kept;
+      final firstFresh = fresh;
+
+      scene.reassemble();
+      scene.update(0);
+
+      expect(kept, same(firstKept));
+      expect(firstKept.isMounted, isTrue, reason: 'a name is not a slot');
+      expect(fresh, isNot(same(firstFresh)));
+    });
+
+    test('replaces the value once its keys stop matching', () {
+      var size = 10.0;
+      late Node square;
+
+      final node = LiveTestNode(
+        builder: (node) {
+          square = node.add(node.keep(#square, () => _A(), keys: [size]));
+        },
+      );
+
+      final scene = node.mount()..update(0);
+      final first = square;
+
+      scene.reassemble();
+      scene.update(0);
+      expect(square, same(first), reason: 'the keys still match');
+
+      size = 20;
+      scene.reassemble();
+      scene.update(0);
+
+      expect(square, isNot(same(first)));
+      expect(first.isMounted, isFalse, reason: 'what the keys replaced is gone');
+    });
+
+    test('replaces a kept value when the name starts building another type', () {
+      var swapped = false;
+      late Node thing;
+
+      final node = LiveTestNode(
+        builder: (node) {
+          if (swapped) {
+            thing = node.add(node.keep(#thing, _B.new));
+          } else {
+            thing = node.add(node.keep(#thing, _A.new));
+          }
+        },
+      );
+
+      final scene = node.mount()..update(0);
+      final first = thing;
+      expect(first, isA<_A>());
+
+      swapped = true;
+      scene.reassemble();
+      scene.update(0);
+
+      expect(thing, isA<_B>());
+      expect(first.isMounted, isFalse, reason: 'what it replaced is gone');
+    });
+
+    test('sweeps a name the new pass stopped declaring', () {
+      var keep = true;
+      late Node dot;
+
+      final node = LiveTestNode(
+        builder: (node) {
+          if (!keep) return;
+          dot = node.add(node.keep(#dot, () => _A()));
+        },
+      );
+
+      final scene = node.mount()..update(0);
+      final first = dot;
+
+      keep = false;
+      scene.reassemble();
+      scene.update(0);
+
+      expect(first.isMounted, isFalse);
+      expect(node.children, isEmpty);
+    });
+
+    test('a pass that throws part-way sweeps nothing', () {
+      var boom = false;
+      var creates = 0;
+      late Node other;
+
+      final node = LiveTestNode(
+        builder: (node) {
+          node.add(node.keep(#dot, () => _A()));
+          if (boom) throw StateError('mid-edit');
+
+          other = node.add(
+            node.keep(#other, () {
+              creates += 1;
+              return _B();
+            }),
+          );
+        },
+      );
+
+      final scene = node.mount()..update(0);
+      final first = other;
+
+      boom = true;
+      _reported(() {
+        scene.reassemble();
+        scene.update(0);
+      });
+
+      // The name was never reached, so its value is still kept, and the pass
+      // that fixes the error finds it rather than building a second one.
+      boom = false;
+      scene.reassemble();
+      scene.update(0);
+
+      expect(creates, 1);
+      expect(other, same(first));
+      expect(first.isMounted, isTrue);
+    });
+
+    test('asserts when one pass declares the same name twice', () {
+      final node = LiveTestNode(
+        builder: (node) {
+          node.keep(#value, () => _A());
+          node.keep(#value, () => _B());
+        },
+      );
+
+      expect(node.mount, throwsAssertionError);
+    });
+
+    test('runs create outside the pass, so the child owns its own subscriptions', () {
+      late TestNode child;
+
+      // TestNode watches its own onUnmount from its constructor, which is
+      // where ownership goes wrong if a pass is left current during creation.
+      final node = LiveTestNode(
+        builder: (node) {
+          child = node.add(node.keep(#child, TestNode.new));
+        },
+      );
+
+      final scene = node.mount()..update(0);
+      scene.reassemble();
+      scene.update(0);
+      scene.destroy();
+
+      expect(child.unmounts, 1, reason: 'the parent rebuild did not revoke it');
+    });
+
+    test('moves a kept child into the container the new pass built', () {
+      late TestNode kid;
+
+      final node = LiveTestNode(
+        builder: (node) {
+          kid = node.keep(#kid, TestNode.new);
+          node.add(Node(children: [kid]));
+        },
+      );
+
+      final scene = node.mount()..update(0);
+      final first = kid;
+
+      scene.reassemble();
+      scene.update(0);
+
+      expect(kid, same(first));
+      expect(kid.isMounted, isTrue, reason: 'a move never unmounts it');
+      expect(kid.builds, 1, reason: 'and never rebuilds it');
+      expect(node.children.single.children.single, same(kid));
+    });
+
+    test('builds a Live child the pass just declared exactly once', () {
+      late LiveTestNode child;
+
+      final root = LiveTestNode(
+        builder: (node) {
+          child = node.add(LiveTestNode());
+        },
+      );
+
+      final scene = root.mount()..update(0);
+      expect(child.builds, 1);
+
+      scene.reassemble();
+      scene.update(0);
+
+      expect(child.builds, 1, reason: 'mounted by the flush, not built again by the walk');
+    });
+
+    test('reassembles a kept node the pass moved into a fresh container', () {
+      late LiveTestNode deep;
+
+      final root = LiveTestNode(
+        builder: (node) {
+          deep = node.keep(#deep, LiveTestNode.new);
+          node.add(Node(children: [deep]));
+        },
+      );
+
+      final scene = root.mount()..update(0);
+      expect(deep.builds, 1);
+
+      scene.reassemble();
+      scene.update(0);
+
+      expect(root.builds, 2);
+      expect(deep.builds, 2, reason: 'the walk reached it through the new container');
+    });
+
+    group('collections', () {
+      test('creates one value per id, and only for the ids it has not seen', () {
+        var ids = [1, 2];
+        var creates = 0;
+
+        final node = LiveTestNode(
+          builder: (node) {
+            for (final id in ids) {
+              node.add(
+                node.keep(#item, () {
+                  creates += 1;
+                  return _A();
+                }, id: id),
+              );
+            }
+          },
+        );
+
+        final scene = node.mount()..update(0);
+        expect(creates, 2);
+
+        ids = [1, 2, 3];
+        scene.reassemble();
+        scene.update(0);
+
+        expect(creates, 3, reason: 'only the new id was built');
+        expect(node.children, hasLength(3));
+      });
+
+      test('sweeps exactly the id that stopped being declared', () {
+        var ids = [1, 2, 3];
+        final seen = <int, Node>{};
+
+        final node = LiveTestNode(
+          builder: (node) {
+            for (final id in ids) {
+              seen[id] = node.add(node.keep(#item, () => _A(), id: id));
+            }
+          },
+        );
+
+        final scene = node.mount()..update(0);
+        final before = Map.of(seen);
+
+        ids = [1, 3];
+        scene.reassemble();
+        scene.update(0);
+
+        expect(before[2]!.isMounted, isFalse);
+        expect(before[1]!.isMounted, isTrue);
+        expect(before[3]!.isMounted, isTrue);
+        expect(node.children, hasLength(2));
+      });
+
+      test('keeps every instance across a reorder of the source data', () {
+        var ids = [1, 2, 3];
+        final seen = <int, Node>{};
+
+        final node = LiveTestNode(
+          builder: (node) {
+            for (final id in ids) {
+              seen[id] = node.add(node.keep(#item, () => _A(), id: id));
+            }
+          },
+        );
+
+        final scene = node.mount()..update(0);
+        final before = Map.of(seen);
+
+        ids = [3, 1, 2];
+        scene.reassemble();
+        scene.update(0);
+
+        expect(seen[1], same(before[1]));
+        expect(seen[2], same(before[2]));
+        expect(seen[3], same(before[3]));
+      });
     });
   });
 }

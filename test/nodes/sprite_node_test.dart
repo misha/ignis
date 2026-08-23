@@ -316,35 +316,33 @@ void main() {
     expect(node.current.isFinished, isFalse);
   });
 
-  test('reassemble re-resolves its sprite', () async {
+  test('re-resolves its sprite when the cache changes', () async {
     addTearDown(Ignis.cache.clear);
 
     Ignis.cache.add('sheet.png', await solidImage(8, 4, RED));
     final node = SpriteNode(sprite: SpriteAnimation('sheet.png', .all(4), fps: 0));
+    node.mount();
 
     // Twice as wide.
     Ignis.cache.add('sheet.png', await solidImage(16, 4, RED));
 
-    node.reassemble();
-
     expect(node.sprite.entries[0].frames, 4);
   });
 
-  test('reassemble holds a row the replacement no longer reaches', () async {
+  test('holds a row the replacement no longer reaches', () async {
     addTearDown(Ignis.cache.clear);
 
     Ignis.cache.add('sheet.png', await solidImage(4, 4, RED));
 
     final sheet = SpriteSheet('sheet.png', .all(2));
     final node = SpriteNode(sprite: sheet.animations(fps: 0));
+    node.mount();
 
     node.play(1, frame: 1);
     final held = node.sprite.entries[1].image;
 
     // One row shorter.
     Ignis.cache.add('sheet.png', await solidImage(4, 2, RED));
-
-    node.reassemble();
 
     expect((node.current.index, node.current.frame), (1, 1));
     expect(node.sprite.entries[1].image, same(held), reason: 'it keeps its art');

@@ -1,8 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:ignis/src/assets/cache.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/flutter/scene_render_box.dart';
-import 'package:ignis/src/globals.dart';
 
 class SceneWidget extends StatefulWidget {
   final Scene scene;
@@ -24,7 +22,6 @@ class SceneWidget extends StatefulWidget {
 
 class _SceneWidgetState extends State<SceneWidget> {
   late FocusNode _focusNode;
-  late Cache _cache;
   bool _primed = false;
 
   @override
@@ -32,8 +29,6 @@ class _SceneWidgetState extends State<SceneWidget> {
     super.initState();
     _focusNode = FocusNode();
     if (widget.autofocus) _focusNode.requestFocus();
-    _cache = Ignis.cache;
-    _cache.addListener(_reassemble);
   }
 
   @override
@@ -47,7 +42,6 @@ class _SceneWidgetState extends State<SceneWidget> {
 
   @override
   void dispose() {
-    _cache.removeListener(_reassemble);
     _focusNode.dispose();
     widget.scene.destroy();
     super.dispose();
@@ -56,10 +50,6 @@ class _SceneWidgetState extends State<SceneWidget> {
   @override
   void reassemble() {
     super.reassemble();
-    _reassemble();
-  }
-
-  void _reassemble() {
     widget.scene.reassemble();
   }
 

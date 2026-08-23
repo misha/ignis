@@ -152,10 +152,11 @@ flutter:
     expect(entry.image, same(cached('assets/hero.png')));
   });
 
-  test('carries a live change into a SpriteNode when it is reassembled', () async {
+  test('carries a live change into a mounted SpriteNode', () async {
     await start();
 
     final node = SpriteNode(sprite: SpriteAnimation('assets/hero.png', .all(1), fps: 0));
+    node.mount();
     expect(node.sprite.entries[0].frames, 2);
 
     await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
@@ -164,8 +165,6 @@ flutter:
       () => cached('assets/hero.png')!.width == 4,
       'the changed asset never reached the cache',
     );
-
-    node.reassemble();
 
     final entry = node.sprite.entries[0];
 
@@ -179,6 +178,7 @@ flutter:
     await start();
 
     final node = SpriteNode(sprite: SpriteAnimation('assets/hero.png', .all(1), fps: 0));
+    node.mount();
     node.play(0, frame: 3);
     expect(node.current.frame, 3);
 
@@ -189,8 +189,6 @@ flutter:
       () => cached('assets/hero.png')!.width == 2,
       'the changed asset never reached the cache',
     );
-
-    node.reassemble();
 
     expect(node.sprite.entries[0].frames, 2);
     expect(node.current.frame, 0, reason: 'the stale frame index was not clamped');

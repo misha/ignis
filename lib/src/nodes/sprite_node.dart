@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/owners/speed_owner.dart';
 import 'package:ignis/src/palette.dart';
@@ -202,25 +203,22 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
     draw((canvas) {
       palette.draw(canvas, painter);
     });
-  }
 
-  /// Re-resolves [sprite] through [Sprite.reload], so an image replaced in
-  /// the cache reaches the screen without rebuilding this node.
-  @override
-  void reassemble() {
-    _sprite = _sprite.reload();
+    Ignis.cache.onChanged(() {
+      _sprite = _sprite.reload();
 
-    // Follow the entry by name. An entry the replacement dropped takes its
-    // frame with it, and one that grew shorter starts over.
-    final entry = _sprite.resolve(_current.key);
+      // Follow the entry by name. An entry the replacement dropped takes its
+      // frame with it, and one that grew shorter starts over.
+      final entry = _sprite.resolve(_current.key);
 
-    if (entry == null) {
-      _current._select(_sprite.entries.first, 0);
-      return;
-    }
+      if (entry == null) {
+        _current._select(_sprite.entries.first, 0);
+        return;
+      }
 
-    final frame = _current.frame;
-    _current._select(entry, frame < entry.frames ? frame : 0);
+      final frame = _current.frame;
+      _current._select(entry, frame < entry.frames ? frame : 0);
+    });
   }
 
   /// Plays the entry [key] names, from the given [frame].

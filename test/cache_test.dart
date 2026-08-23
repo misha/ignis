@@ -68,7 +68,7 @@ void main() {
 
     setUp(() {
       notifications = 0;
-      cache.addListener(() => notifications += 1);
+      cache.onChanged(() => notifications += 1);
     });
 
     test('notifies when a value is added', () {

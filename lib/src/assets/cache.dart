@@ -1,10 +1,13 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:flutter/foundation.dart';
+import 'package:ignis/src/core.dart';
 
 /// Storage for arbitrary assets.
-class Cache extends ChangeNotifier {
+class Cache {
   final Map<String, dynamic> _entries = {};
+
+  /// Emitted whenever the cache is modified.
+  final onChanged = Signal0();
 
   int get length => _entries.length;
   bool contains(String key) => _entries.containsKey(key);
@@ -12,7 +15,7 @@ class Cache extends ChangeNotifier {
 
   void add<T>(String key, T value) {
     _entries[key] = value;
-    notifyListeners();
+    onChanged.emit();
   }
 
   T retrieve<T>(String key) {
@@ -35,13 +38,13 @@ class Cache extends ChangeNotifier {
   bool evict(String key) {
     final contained = contains(key);
     _entries.remove(key);
-    if (contained) notifyListeners();
+    if (contained) onChanged.emit();
     return contained;
   }
 
   void clear() {
     if (_entries.isEmpty) return;
     _entries.clear();
-    notifyListeners();
+    onChanged.emit();
   }
 }

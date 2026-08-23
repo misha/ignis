@@ -195,45 +195,8 @@ void main() {
     expect(scene.node.elapsed, 0);
   });
 
-  testWidgets('reassembles the scene when the cache changes', (tester) async {
-    addTearDown(Ignis.cache.clear);
-    final scene = TestNode().mount();
-
-    await tester.pumpWidget(
-      SizedBox.square(
-        dimension: 100,
-        child: SceneWidget(scene),
-      ),
-    );
-
-    expect(scene.node.builds, 1, reason: 'the build on mount');
-
-    Ignis.cache.add('hero.png', 1);
-    expect(scene.node.builds, 2);
-
-    Ignis.cache.evict('hero.png');
-    expect(scene.node.builds, 3);
-  });
-
-  testWidgets('stops reassembling once removed from the tree', (tester) async {
-    addTearDown(Ignis.cache.clear);
-    final scene = TestNode().mount();
-
-    await tester.pumpWidget(
-      SizedBox.square(
-        dimension: 100,
-        child: SceneWidget(scene),
-      ),
-    );
-
-    await tester.pumpWidget(const SizedBox.square(dimension: 100));
-
-    Ignis.cache.add('hero.png', 1);
-    expect(scene.node.builds, 1, reason: 'the build on mount, and nothing since');
-  });
-
   testWidgets('reassembles the scene on hot reload', (tester) async {
-    final scene = TestNode().mount();
+    final scene = LiveTestNode().mount();
 
     await tester.pumpWidget(
       SizedBox.square(

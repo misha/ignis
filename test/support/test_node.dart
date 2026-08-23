@@ -8,7 +8,7 @@ final class TestLog {
   final builds = <String>[];
 }
 
-final class TestNode extends Node {
+class TestNode extends Node {
   final String name;
   TestLog? log;
   int mounts = 0;
@@ -18,9 +18,16 @@ final class TestNode extends Node {
   int renders = 0;
   int builds = 0;
   void Function()? action;
-  void Function()? buildAction;
+  void Function(TestNode node)? builder;
 
-  TestNode([this.name = 'test', this.log]) {
+  TestNode({
+    this.name = 'test',
+    this.log,
+    this.builder,
+    super.enabled,
+    super.priority,
+    super.children,
+  }) {
     onMount(() {
       mounts += 1;
       log?.mounts.add(name);
@@ -31,9 +38,6 @@ final class TestNode extends Node {
       log?.unmounts.add(name);
     });
   }
-
-  @override
-  void reassemble() => rebuild();
 
   @override
   void build() {
@@ -52,6 +56,21 @@ final class TestNode extends Node {
 
     builds += 1;
     log?.builds.add(name);
-    buildAction?.call();
+    builder?.call(this);
   }
+}
+
+final class LiveTestNode extends TestNode with Live {
+  LiveTestNode({
+    super.name,
+    super.log,
+    void Function(LiveTestNode node)? builder,
+    super.enabled,
+    super.priority,
+    super.children,
+  }) : super(
+         builder: builder == null
+             ? null //
+             : (node) => builder(node as LiveTestNode),
+       );
 }

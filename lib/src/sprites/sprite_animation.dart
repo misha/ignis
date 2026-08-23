@@ -148,6 +148,8 @@ class SpriteAnimation extends Sprite<int> {
 
   @override
   Sprite<int> reload() {
+    // Art evicted rather than replaced keeps whatever it last cut.
+    if (!region.isLoaded) return this;
     final entry = entries.single;
     if (identical(region.image, entry.image)) return this;
 

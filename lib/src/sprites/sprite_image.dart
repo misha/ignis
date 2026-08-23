@@ -46,6 +46,8 @@ class SpriteImage extends Sprite<int> {
 
   @override
   SpriteImage reload() {
+    // Art evicted rather than replaced keeps whatever it last cut.
+    if (!region.isLoaded) return this;
     if (identical(region.image, entries.single.image)) return this;
 
     // Art replaced by something this region no longer sits inside keeps the

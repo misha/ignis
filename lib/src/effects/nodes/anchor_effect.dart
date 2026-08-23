@@ -1,18 +1,18 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:ignis/src/anchor.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/nodes/controlled_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/anchor_owner.dart';
-import 'package:ignis/src/target.dart';
 
 /// An effect that animates an [AnchorOwner]'s anchor over time.
 abstract class AnchorEffect extends ControlledEffect {
   late final Target<AnchorOwner> _target;
 
   /// The [AnchorOwner] whose anchor is mutated by this effect.
-  AnchorOwner? get target => _target.value;
+  AnchorOwner get target => _target.value;
 
   /// Anchors the closest [AnchorOwner] ancestor by [offset], relative to its
   /// anchor when the effect is mounted.
@@ -38,12 +38,6 @@ abstract class AnchorEffect extends ControlledEffect {
   }) {
     _target = Target<AnchorOwner>(this);
   }
-
-  @override
-  void build() {
-    super.build();
-    _target.resolve();
-  }
 }
 
 class _AnchorByEffect extends AnchorEffect {
@@ -63,8 +57,8 @@ class _AnchorByEffect extends AnchorEffect {
 
     onProgress((progress) {
       final delta = _offset.scaled(progress - previousProgress);
-      final next = target!.anchor + delta;
-      target!.anchor = Anchor(next.x, next.y);
+      final next = target.anchor + delta;
+      target.anchor = Anchor(next.x, next.y);
     });
   }
 }
@@ -87,12 +81,12 @@ class _AnchorToEffect extends AnchorEffect {
 
     _offset
       ..setFrom(_destination)
-      ..subtract(target!.anchor);
+      ..subtract(target.anchor);
 
     onProgress((progress) {
       final delta = _offset.scaled(progress - previousProgress);
-      final next = target!.anchor + delta;
-      target!.anchor = Anchor(next.x, next.y);
+      final next = target.anchor + delta;
+      target.anchor = Anchor(next.x, next.y);
     });
   }
 }

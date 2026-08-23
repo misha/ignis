@@ -70,8 +70,8 @@ void main() {
   });
 
   test('reassembles the whole tree', () {
-    final a = TestNode('A');
-    final b = TestNode('B');
+    final a = LiveTestNode(name: 'A');
+    final b = LiveTestNode(name: 'B');
     a.add(b);
     final scene = a.mount();
 
@@ -82,9 +82,9 @@ void main() {
   });
 
   test('drops a reassemble triggered from inside a reassemble', () {
-    final node = TestNode();
+    final node = LiveTestNode();
     final scene = node.mount();
-    node.buildAction = () => scene.reassemble();
+    node.builder = (_) => scene.reassemble();
 
     scene.reassemble();
 

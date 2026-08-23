@@ -1,9 +1,9 @@
 // SPDX-AI-Disclosure: none
 
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/owners/position_owner.dart';
-import 'package:ignis/src/target.dart';
 
 /// An effect that moves a [PositionOwner] toward [following] at [speed].
 ///
@@ -13,7 +13,7 @@ class FollowEffect extends EffectNode {
   late final Target<PositionOwner> _target;
 
   /// The [PositionOwner] whose position is mutated by this effect.
-  PositionOwner? get target => _target.value;
+  PositionOwner get target => _target.value;
 
   /// Where [target] moves toward.
   final PositionOwner following;
@@ -39,10 +39,9 @@ class FollowEffect extends EffectNode {
   @override
   void build() {
     super.build();
-    _target.resolve();
 
     tick((dt) {
-      final position = target!.position;
+      final position = target.position;
       final offset = destination - position;
       final distance = offset.length;
       final step = speed * dt;

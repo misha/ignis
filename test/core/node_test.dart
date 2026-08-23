@@ -15,14 +15,17 @@ void main() {
     expect(a.children, [b]);
   });
 
-  test('prevents children from having two parents', () {
+  test('moves a child to its new parent rather than sharing it', () {
     final a = Node();
     final b = Node();
     final c = Node();
     a.add(c);
 
-    expect(() => b.add(c), throwsStateError);
-    expect(c.parent, same(a));
+    b.add(c);
+
+    expect(c.parent, same(b));
+    expect(a.children, isEmpty);
+    expect(b.children.single, same(c));
   });
 
   test('cannot own itself', () {
@@ -89,10 +92,10 @@ void main() {
 
   test('updates and renders children in priority order', () {
     final log = TestLog();
-    final a = TestNode('A', log);
-    final b = TestNode('B', log);
-    final c = TestNode('C', log);
-    final d = TestNode('D', log);
+    final a = TestNode(name: 'A', log: log);
+    final b = TestNode(name: 'B', log: log);
+    final c = TestNode(name: 'C', log: log);
+    final d = TestNode(name: 'D', log: log);
     b.priority = 1;
     c.priority = -1;
     d.priority = 1;
@@ -110,10 +113,10 @@ void main() {
 
   test('reassembles children in priority order', () {
     final log = TestLog();
-    final a = TestNode('A', log);
-    final b = TestNode('B', log);
-    final c = TestNode('C', log);
-    final d = TestNode('D', log);
+    final a = LiveTestNode(name: 'A', log: log);
+    final b = LiveTestNode(name: 'B', log: log);
+    final c = LiveTestNode(name: 'C', log: log);
+    final d = LiveTestNode(name: 'D', log: log);
     b.priority = 1;
     c.priority = -1;
     a.add(b);
@@ -127,9 +130,9 @@ void main() {
   });
 
   test('reassembles disabled nodes, unlike update and render', () {
-    final a = TestNode('A');
-    final b = TestNode('B');
-    final c = TestNode('C');
+    final a = LiveTestNode(name: 'A');
+    final b = LiveTestNode(name: 'B');
+    final c = LiveTestNode(name: 'C');
     a.add(b);
     b.add(c);
     final scene = a.mount();
@@ -142,8 +145,8 @@ void main() {
   });
 
   test('a disabled root skips update and render for itself and its subtree', () {
-    final a = TestNode('A');
-    final b = TestNode('B');
+    final a = TestNode(name: 'A');
+    final b = TestNode(name: 'B');
     a.add(b);
     final scene = a.mount();
     a.enabled = false;
@@ -161,9 +164,9 @@ void main() {
   test(
     'a disabled child skips update and render for itself and its subtree, without affecting its siblings',
     () {
-      final a = TestNode('A');
-      final b = TestNode('B');
-      final c = TestNode('C');
+      final a = TestNode(name: 'A');
+      final b = TestNode(name: 'B');
+      final c = TestNode(name: 'C');
       a.add(b);
       a.add(c);
       a.mount();
@@ -180,7 +183,7 @@ void main() {
   );
 
   test('enable() and disable() set enabled', () {
-    final a = TestNode('A');
+    final a = TestNode(name: 'A');
 
     a.disable();
     expect(a.enabled, isFalse);
@@ -193,9 +196,9 @@ void main() {
     'a child removed during an update still ticks that same pass, but is gone by the next flush',
     () {
       final log = TestLog();
-      final a = TestNode('A', log);
-      final b = TestNode('B', log);
-      final c = TestNode('C', log);
+      final a = TestNode(name: 'A', log: log);
+      final b = TestNode(name: 'B', log: log);
+      final c = TestNode(name: 'C', log: log);
       b.action = () => a.remove(c);
       a.add(b);
       a.add(c);
@@ -215,9 +218,9 @@ void main() {
 
   test('defers children added during an update until the next update', () {
     final log = TestLog();
-    final a = TestNode('A', log);
-    final b = TestNode('B', log);
-    final c = TestNode('C', log);
+    final a = TestNode(name: 'A', log: log);
+    final b = TestNode(name: 'B', log: log);
+    final c = TestNode(name: 'C', log: log);
     b.action = () => a.add(c);
     a.add(b);
     final scene = a.mount();
@@ -233,10 +236,10 @@ void main() {
 
   test('defers priority changes during an update until the next update', () {
     final log = TestLog();
-    final a = TestNode('A', log);
-    final b = TestNode('B', log);
-    final c = TestNode('C', log);
-    final d = TestNode('D', log);
+    final a = TestNode(name: 'A', log: log);
+    final b = TestNode(name: 'B', log: log);
+    final c = TestNode(name: 'C', log: log);
+    final d = TestNode(name: 'D', log: log);
     c.priority = 1;
     d.priority = 2;
     b.action = () => d.priority = -1;
@@ -371,9 +374,9 @@ void main() {
   group('mounting', () {
     test('mounts a node and its subtree from the root downward', () {
       final log = TestLog();
-      final a = TestNode('A', log);
-      final b = TestNode('B', log);
-      final c = TestNode('C', log);
+      final a = TestNode(name: 'A', log: log);
+      final b = TestNode(name: 'B', log: log);
+      final c = TestNode(name: 'C', log: log);
       a.add(b);
       b.add(c);
       a.mount();
@@ -386,9 +389,9 @@ void main() {
 
     test('unmounts a node and its subtree from the leaves upward', () {
       final log = TestLog();
-      final a = TestNode('A', log);
-      final b = TestNode('B', log);
-      final c = TestNode('C', log);
+      final a = TestNode(name: 'A', log: log);
+      final b = TestNode(name: 'B', log: log);
+      final c = TestNode(name: 'C', log: log);
       a.add(b);
       b.add(c);
       final scene = a.mount();
@@ -402,9 +405,9 @@ void main() {
 
     test('adding a child to a mounted node mounts its whole subtree on the next flush', () {
       final log = TestLog();
-      final a = TestNode('A', log);
-      final b = TestNode('B', log);
-      final c = TestNode('C', log);
+      final a = TestNode(name: 'A', log: log);
+      final b = TestNode(name: 'B', log: log);
+      final c = TestNode(name: 'C', log: log);
       b.add(c);
       final scene = a.mount();
 
@@ -420,9 +423,9 @@ void main() {
 
     test('removing a child from a mounted node unmounts its whole subtree on the next flush', () {
       final log = TestLog();
-      final a = TestNode('A', log);
-      final b = TestNode('B', log);
-      final c = TestNode('C', log);
+      final a = TestNode(name: 'A', log: log);
+      final b = TestNode(name: 'B', log: log);
+      final c = TestNode(name: 'C', log: log);
       a.add(b);
       b.add(c);
       final scene = a.mount();
@@ -439,8 +442,8 @@ void main() {
 
     test('nodes added to an unmounted tree are not mounted', () {
       final log = TestLog();
-      final a = TestNode('A', log);
-      final b = TestNode('B', log);
+      final a = TestNode(name: 'A', log: log);
+      final b = TestNode(name: 'B', log: log);
       a.add(b);
 
       expect(log.mounts, isEmpty);
@@ -485,7 +488,7 @@ void main() {
 
     test('a node can be unmounted and remounted', () {
       final log = TestLog();
-      final a = TestNode('A', log);
+      final a = TestNode(name: 'A', log: log);
       final scene = a.mount();
       scene.destroy();
       final newScene = a.mount();
@@ -559,23 +562,25 @@ void main() {
       },
     );
 
-    test('reparenting from within onMount throws because the node still has a parent', () {
+    test('reparenting from within onMount moves the node without remounting it', () {
       final a = Node();
       final b = Node();
       final c = Node();
       a.add(b);
-      Object? caught;
+      a.add(c);
+      var mounts = 0;
+      b.onMount(() => mounts += 1);
 
       b.onMount(() {
-        try {
-          c.add(b);
-        } catch (error) {
-          caught = error;
-        }
+        if (b.parent != c) c.add(b);
       });
 
-      a.mount();
-      expect(caught, isStateError);
+      final scene = a.mount();
+      scene.update(0);
+
+      expect(b.parent, same(c));
+      expect(b.isMounted, isTrue);
+      expect(mounts, 1, reason: 'a move is not a mount');
     });
 
     test('mounting a node reentrantly from within its own onMount is a no-op', () {
@@ -704,7 +709,7 @@ void main() {
 
   group('query', () {
     test('returns only the direct children of the queried type', () {
-      final matching = TestNode('a', TestLog());
+      final matching = TestNode(name: 'a', log: TestLog());
       final other = Node();
       final node = Node(children: [matching, other]);
 
@@ -712,7 +717,7 @@ void main() {
     });
 
     test('does not descend past a direct child', () {
-      final buried = TestNode('a', TestLog());
+      final buried = TestNode(name: 'a', log: TestLog());
       final node = Node(
         children: [
           Node(children: [buried]),
@@ -723,7 +728,9 @@ void main() {
     });
 
     test('matches by subtype, not exact runtime type', () {
-      final node = Node(children: [TestNode('a', TestLog())]);
+      final node = Node(
+        children: [TestNode(name: 'a', log: TestLog())],
+      );
       expect(node.query<Node>().length, 1);
     });
 
@@ -731,13 +738,13 @@ void main() {
       final node = Node();
       expect(node.query<TestNode>(), isEmpty);
 
-      final added = TestNode('a', TestLog());
+      final added = TestNode(name: 'a', log: TestLog());
       node.add(added);
       expect(node.query<TestNode>(), [added]);
     });
 
     test('drops a child removed after the first call', () {
-      final removed = TestNode('a', TestLog());
+      final removed = TestNode(name: 'a', log: TestLog());
       final node = Node(children: [removed]);
       expect(node.query<TestNode>(), [removed]);
 
@@ -747,8 +754,8 @@ void main() {
 
     test('keeps results in priority order as children are added', () {
       final log = TestLog();
-      final last = TestNode('last', log)..priority = 10;
-      final first = TestNode('first', log)..priority = -10;
+      final last = TestNode(name: 'last', log: log)..priority = 10;
+      final first = TestNode(name: 'first', log: log)..priority = -10;
       final node = Node(children: [last]);
 
       // Registers the query before the lower-priority child exists, so an
@@ -761,8 +768,8 @@ void main() {
 
     test('reorders results when a child changes priority', () {
       final log = TestLog();
-      final a = TestNode('a', log);
-      final b = TestNode('b', log);
+      final a = TestNode(name: 'a', log: log);
+      final b = TestNode(name: 'b', log: log);
       final node = Node(children: [a, b]);
       expect(node.query<TestNode>(), [a, b]);
 
@@ -773,7 +780,7 @@ void main() {
     test('returns the same live view on every call', () {
       final node = Node();
       final first = node.query<TestNode>();
-      final added = TestNode('a', TestLog());
+      final added = TestNode(name: 'a', log: TestLog());
 
       node.add(added);
       expect(first, [added]);
