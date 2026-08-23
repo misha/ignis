@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/owners/angle_owner.dart';

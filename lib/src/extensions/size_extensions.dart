@@ -1,4 +1,6 @@
-import 'dart:ui';
+// SPDX-AI-Disclosure: none
+
+import 'dart:ui' show Size;
 
 import 'package:ignis/src/math.dart';
 

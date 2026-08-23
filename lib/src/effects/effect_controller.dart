@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-none
+
 import 'package:flutter/animation.dart';
 import 'package:ignis/src/effects/controllers/duration_effect_controller.dart';
 import 'package:ignis/src/effects/controllers/infinite_effect_controller.dart';

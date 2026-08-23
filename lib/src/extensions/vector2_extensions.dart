@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:flutter/rendering.dart' show Axis;
 import 'package:ignis/src/math.dart';
 

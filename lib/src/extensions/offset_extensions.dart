@@ -1,4 +1,6 @@
-import 'dart:ui';
+// SPDX-AI-Disclosure: none
+
+import 'dart:ui' show Offset;
 
 import 'package:ignis/src/math.dart';
 
