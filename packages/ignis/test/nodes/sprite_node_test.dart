@@ -132,7 +132,7 @@ void main() {
     expect(node.current.frame, 2);
   });
 
-  test('emits the frame index within its row', () async {
+  test('emits once per loop', () async {
     final a = Node();
 
     final sheet = SpriteSheet(
@@ -145,9 +145,7 @@ void main() {
 
     final node = SpriteNode(sprite: sheet.animations(fps: 4));
 
-    final frames = <int>[];
     var loops = 0;
-    node.onFrame(frames.add);
     node.onLoop(() => loops += 1);
     node.play(1);
 
@@ -156,7 +154,6 @@ void main() {
 
     scene.update(0.5);
 
-    expect(frames, [1, 0]);
     expect(loops, 1);
   });
 

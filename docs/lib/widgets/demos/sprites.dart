@@ -476,8 +476,7 @@ class _SignalsNode extends Node {
   void build() {
     super.build();
 
-    final log1 = DemoLog();
-    final log2 = DemoLog();
+    final log = DemoLog();
 
     // demo on sprite-signals
     final slime = SpriteNode(
@@ -490,8 +489,7 @@ class _SignalsNode extends Node {
 
     var count = 0;
 
-    slime.onFrame((frame) => log1('onFrame $frame'));
-    slime.onLoop(() => log2('onLoop ${count += 1}', .orange));
+    slime.onLoop(() => log('onLoop ${count += 1}', .orange));
     // demo off
 
     addAll([
@@ -502,14 +500,7 @@ class _SignalsNode extends Node {
       BoxNode(
         padding: .all(4),
         alignment: .topRight,
-        children: [
-          ColumnNode(
-            mainAxisSize: .min,
-            crossAxisAlignment: .end,
-            spacing: 2,
-            children: [log1, log2],
-          ),
-        ],
+        children: [log],
       ),
     ]);
   }

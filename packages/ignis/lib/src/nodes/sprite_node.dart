@@ -115,12 +115,6 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
   /// Ignored while looping, since animation never finishes.
   bool cleanup;
 
-  /// Emitted when animation advances to a new [SpriteState.frame].
-  ///
-  /// TODO: A relatively rare signal, and completely pollable from a `tick`.
-  ///   Consider removal prior to release, if benchmarking shows it's heavy.
-  final onFrame = Signal1<int>();
-
   /// Emitted when a looping animation wraps to the start of its entry.
   final onLoop = Signal0();
 
@@ -175,10 +169,8 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
 
         if (next < state._entry.frames) {
           state._seek(next);
-          onFrame.emit(next);
         } else if (state.loops) {
           state._seek(0);
-          onFrame.emit(0);
           onLoop.emit();
         } else {
           state._elapsed = 0;

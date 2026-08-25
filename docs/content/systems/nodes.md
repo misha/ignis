@@ -17,7 +17,7 @@ status: complete
 | `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.             | `onFpsChange`                           |
 | `ShapeNode`              | Draws a `Shape`.                                                 | -                                       |
 | `SpatialNode`            | Base spatial node with a transform and a `Shape`.                | -                                       |
-| `SpriteNode`             | Animates a `Sprite`. See [Sprites](/systems/sprites).            | `onFrame`, `onLoop`, `onFinish`         |
+| `SpriteNode`             | Animates a `Sprite`. See [Sprites](/systems/sprites).            | `onLoop`, `onFinish`                    |
 | `TextNode`               | Draws text with `TextPainter`, wrapping to fit.                  | -                                       |
 | `TimerNode`              | Tracks time to power its signal.                                 | `onTrigger`                             |
 
