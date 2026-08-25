@@ -1,3 +1,4 @@
+// SPDX-AI-Disclosure: none
 part of 'core.dart';
 
 // Backdoors: reaches into core internals when a subsystem requires it.

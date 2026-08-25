@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/anchor.dart';
 
 /// Something with an anchor.

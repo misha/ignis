@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:flutter/gestures.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/extensions.dart';

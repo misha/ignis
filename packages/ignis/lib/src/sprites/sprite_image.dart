@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 import 'package:ignis/src/sprite.dart';
 import 'package:ignis/src/sprites/sprite_entry.dart';
 import 'package:ignis/src/sprites/sprite_region.dart';
@@ -52,7 +54,7 @@ class SpriteImage extends Sprite<int> {
 
     // Art replaced by something this region no longer sits inside keeps the
     // frame it last cut, rather than drawing outside the image.
-    // TODO: Consider if this is intuitive or not after a few games.
+    // TODO: Evaluate if this is intuitive or not after a few games.
     if (!region.fits) return this;
 
     return SpriteImage.of(region);

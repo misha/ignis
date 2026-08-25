@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'dart:ui';
 
 import 'package:ignis/src/math.dart';

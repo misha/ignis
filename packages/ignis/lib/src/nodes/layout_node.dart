@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
@@ -77,8 +79,13 @@ abstract class LayoutNode extends SpatialNode {
     super.build();
 
     tick((_) {
-      if (!isLayoutRoot) return;
-      layout(_rootConstraints());
+      if (!isLayoutRoot) {
+        return;
+      } else if (!isMounted || !scene.hasSize) {
+        layout(const .unbounded());
+      } else {
+        layout(.loose(scene.size));
+      }
     });
 
     debugDraw((canvas) {
@@ -86,13 +93,5 @@ abstract class LayoutNode extends SpatialNode {
       if (!debug.draws(.layout)) return;
       canvas.drawRect(.fromLTWH(0, 0, width, height), debug.paint);
     });
-  }
-
-  /// A layout root is given the scene loosely, not tightly, so a node that
-  /// asks for a size gets it. Filling is opt-in: set an `alignment`, a
-  /// `mainAxisSize`, or a `crossAxisAlignment` that asks for the room.
-  LayoutConstraints _rootConstraints() {
-    if (!isMounted || !scene.hasSize) return .unbounded();
-    return .loose(scene.size);
   }
 }

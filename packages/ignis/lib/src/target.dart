@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 part of 'core.dart';
 
 /// Resolves to the nearest ancestor implementing [T].

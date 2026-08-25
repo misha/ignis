@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/sprites/sprite_entry.dart';
 

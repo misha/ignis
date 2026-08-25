@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 import 'package:ignis/src/sprite.dart';
 import 'package:ignis/src/sprites/sprite_entry.dart';
 

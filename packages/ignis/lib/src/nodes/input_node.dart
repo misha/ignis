@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:ignis/src/globals.dart';

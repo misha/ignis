@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/math.dart';
 
 /// Represents a relative position inside some 2D object with a rectangular

@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 import 'dart:math' as math;
 import 'dart:ui';
 

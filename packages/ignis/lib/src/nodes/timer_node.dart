@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/core.dart';
 
 /// A node that emits [onTrigger] every [interval] seconds.

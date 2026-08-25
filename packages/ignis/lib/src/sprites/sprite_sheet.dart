@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 import 'dart:ui';
 
 import 'package:ignis/src/globals.dart';

@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/math.dart';
 
 /// Something with a scale.

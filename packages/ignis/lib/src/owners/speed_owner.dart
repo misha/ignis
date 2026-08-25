@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 /// Something with a speed.
 abstract interface class SpeedOwner {
   double get speed;

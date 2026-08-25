@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/core.dart';
 
 /// A [Node] with a concept of being finished. Also called `effect`.

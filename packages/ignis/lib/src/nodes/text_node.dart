@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 import 'package:ignis/src/extensions.dart';
@@ -7,6 +9,8 @@ import 'package:ignis/src/shape.dart';
 
 class TextNode extends SpatialNode {
   /// The default style used when no [style] is provided.
+  ///
+  /// TODO: Consider making this mutable, or better yet, inheritable.
   static const DEFAULT_STYLE = TextStyle(
     color: Color(0xFFFFFFFF),
     fontFamily: 'Arial',

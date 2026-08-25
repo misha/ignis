@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 part of 'core.dart';
 
 /// Advances a node by the seconds elapsed since the last frame.

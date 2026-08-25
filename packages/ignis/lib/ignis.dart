@@ -1,4 +1,3 @@
-// SPDX-AI-Disclosure: none
 export 'dart:ui' show Canvas, Paint;
 
 export 'src/anchor.dart';

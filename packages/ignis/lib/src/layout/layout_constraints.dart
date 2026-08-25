@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 import 'dart:math' as math;
 
 import 'package:flutter/painting.dart' show EdgeInsets;

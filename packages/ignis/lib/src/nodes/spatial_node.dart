@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -52,6 +54,9 @@ class SpatialNode extends Node
   /// A node that states no shape of its own takes its parent's, and that
   /// parent's parent's, so an area is inherited by pass-through rather than
   /// copied. A node with nothing above it covers no area at all.
+  ///
+  /// TODO: Consider *not* chaining all the way up, and only accepting the
+  ///   immediate parent's shape. Pending a review of actual engine usage.
   Shape get shape {
     final parent = this.parent;
     if (parent is SpatialNode) return parent.shape;

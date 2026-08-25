@@ -42,6 +42,23 @@ groups:
       - .github/**
 
 excluded:
+  - label: Barrels
+    reason: Export lists.
+    paths:
+      - packages/ignis/lib/ignis.dart
+      - packages/ignis/lib/src/assets.dart
+      - packages/ignis/lib/src/collisions.dart
+      - packages/ignis/lib/src/curves.dart
+      - packages/ignis/lib/src/devices.dart
+      - packages/ignis/lib/src/effects.dart
+      - packages/ignis/lib/src/extensions.dart
+      - packages/ignis/lib/src/inputs.dart
+      - packages/ignis/lib/src/layout.dart
+      - packages/ignis/lib/src/math.dart
+      - packages/ignis/lib/src/nodes.dart
+      - packages/ignis/lib/src/owners.dart
+      - packages/ignis/lib/src/sprites.dart
+
   - label: Project Configuration
     reason: Structured data.
     paths:

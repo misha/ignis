@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:ignis/src/layout/nodes/flex_node.dart';
 
 /// Lays its children out horizontally, equivalent to Flutter's `Row`.

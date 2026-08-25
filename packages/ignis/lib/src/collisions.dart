@@ -1,5 +1,3 @@
-// SPDX-AI-Disclosure: none
-
 export 'collisions/collision_detection.dart';
 export 'collisions/intersection_system.dart';
 

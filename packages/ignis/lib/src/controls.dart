@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 part of 'core.dart';
 
 /// Something a device emits: a key going down, a button pressed, a stick moved.

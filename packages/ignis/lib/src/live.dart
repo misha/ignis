@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-generated
+
 part of 'core.dart';
 
 /// What a [Node.keep] declaration is filed under: its name, plus the id that

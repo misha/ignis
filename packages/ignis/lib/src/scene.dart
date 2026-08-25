@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 part of 'core.dart';
 
 /// A controller for a mounted [Node] tree.

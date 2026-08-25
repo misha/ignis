@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 import 'package:flutter/rendering.dart' show FlexFit;
 
 /// The share of a flex layout's leftover main-axis space an item asks for,

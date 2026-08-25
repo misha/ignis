@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 part of 'core.dart';
 
 /// What the debug overlay draws, one wireframe at a time.

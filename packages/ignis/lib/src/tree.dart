@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 part of 'core.dart';
 
 enum _OperationKind {

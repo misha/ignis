@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 /// Something with an angle.
 abstract interface class AngleOwner {
   double get angle;

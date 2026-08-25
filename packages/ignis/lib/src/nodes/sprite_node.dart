@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-assisted
+
 import 'dart:ui';
 
 import 'package:ignis/src/core.dart';
@@ -114,6 +116,9 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
   bool cleanup;
 
   /// Emitted when animation advances to a new [SpriteState.frame].
+  ///
+  /// TODO: A relatively rare signal, and completely pollable from a `tick`.
+  ///   Consider removal prior to release, if benchmarking shows it's heavy.
   final onFrame = Signal1<int>();
 
   /// Emitted when a looping animation wraps to the start of its entry.

@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: none
+
 import 'package:flutter/painting.dart' show EdgeInsets;
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/layout/layout_constraints.dart';
