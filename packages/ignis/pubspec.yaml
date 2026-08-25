@@ -1,0 +1,32 @@
+name: ignis
+description: A 2D Flutter game engine built on nodes and signals.
+version: 0.0.1
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  ivector_math: ^0.1.1
+  path: ^1.9.1
+  pool: ^1.5.2
+  watcher: ^1.2.1
+  yaml: ^3.1.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  leak_tracker: ^11.0.2
+
+scripts:
+  analyze: dart analyze
+  coverage:
+    $script: flutter test --coverage
+    $after: genhtml coverage/lcov.info -o coverage/html
+  goldens: flutter test --update-goldens
+  open-coverage: open coverage/html/index.html
+  test: flutter test

@@ -7,8 +7,6 @@ analyzer:
     parameter_assignments: ignore
     prefer_function_declarations_over_variables: ignore
   exclude:
-    - "**/*.g.dart"
-    - test/*.pickled.dart
     - build/**
     - android/**
     - ios/**
@@ -36,6 +34,13 @@ linter:
     avoid_escaping_inner_quotes: false
     prefer_const_literals_to_create_immutables: false
     curly_braces_in_flow_control_structures: false
+plugins:
+  jaspr_lints:
+    version: ^0.7.2
+    diagnostics:
+      prefer_html_components: true
+      sort_children_last: true
+      styles_ordering: true
 formatter:
   page_width: 100
   trailing_commas: preserve

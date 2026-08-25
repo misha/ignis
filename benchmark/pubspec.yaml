@@ -2,13 +2,13 @@ name: benchmark
 description: Ignis benchmarks, as their own runnable Linux app.
 publish_to: none
 version: 0.0.1
+resolution: workspace
 environment:
   sdk: ^3.12.0
 dependencies:
   flutter:
     sdk: flutter
-  ignis:
-    path: ..
+  ignis: ^0.0.1
   benchmark_harness: ^2.3.1
   vm_service: ^15.2.0
 dev_dependencies:

@@ -23,8 +23,6 @@ wip/
 #.vscode/
 
 # Flutter/Dart/Pub related
-# Libraries should not include pubspec.lock, per https://dart.dev/guides/libraries/private-files#pubspeclock.
-/pubspec.lock
 **/doc/api/
 .dart_tool/
 .flutter-plugins-dependencies
@@ -32,7 +30,7 @@ wip/
 **/coverage/
 
 # Golden test failure-diff artifacts (only written when a comparison fails).
-test/failures/
+**/test/failures/
 
 # The AI disclosure report, generated whenever the site is built.
 docs/content/_data/disclosure.json

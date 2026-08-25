@@ -221,8 +221,8 @@ List<_Entry> _entries(YamlMap config, String key) {
 
 /// Every file in the working tree that git does not ignore.
 ///
-/// Untracked files count, so a new file is accounted for before it is
-/// committed rather than the run after.
+/// Untracked files count and deleted ones do not, so a change is accounted for
+/// before it is committed rather than the run after.
 List<String> _tracked() {
   final result = Process.runSync('git', [
     'ls-files',
@@ -238,7 +238,7 @@ List<String> _tracked() {
 
   return [
     for (final file in '${result.stdout}'.split('\x00'))
-      if (file.isNotEmpty) file,
+      if (file.isNotEmpty && File(file).existsSync()) file,
   ];
 }
 

@@ -9,6 +9,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/ignis
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -30,14 +33,13 @@ jobs:
       - run: dart pub global activate jaspr_cli
       - run: flutter pub get
       - run: dart analyze
-      - run: flutter pub get
         working-directory: .
       - run: dart run tool/disclosure.dart
         working-directory: .
       - run: dart pub global run jaspr_cli:jaspr build
-      - run: dart doc --output docs/build/jaspr/api
-        working-directory: .
-      - run: cp logo_light.png logo_dark.png docs/build/jaspr/api/
+      - run: dart doc --output ../../docs/build/jaspr/api
+        working-directory: packages/ignis
+      - run: cp assets/logo_light.png assets/logo_dark.png docs/build/jaspr/api/
         working-directory: .
       - uses: actions/upload-pages-artifact@v3
         with:

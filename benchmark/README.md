@@ -7,7 +7,6 @@ Its own Flutter project, so a benchmark can be run three ways:
 ./bench.sh update           # just that one
 ./bench.sh -p update        # under the VM's CPU sampling profiler
 ./bench.sh -r update        # compiled to a release binary, then run
-./bench.sh -r flame_update  # the Flame comparison, same way
 ```
 
 A bare name resolves to `<name>_benchmark.dart`, or to the same under `flame/`.
@@ -38,7 +37,6 @@ System details:
 - OS: Ubuntu 26.04 LTS, Linux 7.0.0-29-generic
 - Flutter 3.47.0 (stable) • Dart 3.13.0
 
-## Disclaimers
+## Flame Benchmarks
 
-- Tests are executed with `flutter test`, so it's expected that actual performance is slightly different. Unfortunately, it is extraordinarily annoying to set up benchmarks for a Flutter library using `flutter run`.
-- Some tests have a Flame version (see `flame/`), but Ignis and Flame are not strictly compatible so comparing their performance is apples-to-oranges. Nonetheless, it is useful to the maintainer to have a general sense of what Flame is capable of using the exact same environment.
+Some tests have a Flame version (see `flame/`), but Ignis and Flame are not strictly compatible so comparing their performance is apples-to-oranges. Nonetheless, it is sometimes useful to have a general sense of what Flame is capable of using the exact same environment.
