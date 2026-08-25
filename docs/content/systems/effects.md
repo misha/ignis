@@ -6,3 +6,5 @@ category: system
 status: stub
 reference: [EffectNode, MoveEffect, ScaleEffect, RotateEffect, SequentialEffect, CombinedEffect]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

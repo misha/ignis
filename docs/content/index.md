@@ -7,6 +7,7 @@ lane: usage
 category: essay
 status: complete
 ---
+<!-- SPDX-AI-Disclosure: none -->
 
 - **Embrace composition.** *Everything* is a `Node`. Compose behavior and graphics with trees.
 - **Completely synchronous.** Nodes are built and rendered in a synchronous loop. Errors are reported at the source.

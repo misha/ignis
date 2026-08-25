@@ -6,3 +6,5 @@ category: system
 status: stub
 reference: [Shape, Circle, Rectangle]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

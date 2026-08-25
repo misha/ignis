@@ -5,6 +5,7 @@ lane: usage
 category: concept
 status: complete
 ---
+<!-- SPDX-AI-Disclosure: none -->
 
 ## Types
 

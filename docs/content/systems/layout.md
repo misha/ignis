@@ -7,3 +7,5 @@ status: stub
 reference: [LayoutNode, BoxNode, FlexNode, RowNode, ColumnNode]
 internals: [/internals/layout]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

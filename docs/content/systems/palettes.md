@@ -6,3 +6,5 @@ category: system
 status: stub
 reference: [Palette, PaletteEntry]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

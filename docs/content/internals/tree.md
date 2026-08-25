@@ -6,3 +6,5 @@ category: internal
 status: stub
 reference: [Node, Scene]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

@@ -6,6 +6,7 @@ category: essay
 status: complete
 related: [/concepts/nodes, /concepts/signals, /concepts/math]
 ---
+<!-- SPDX-AI-Disclosure: none -->
 
 ## Why a New Engine
 

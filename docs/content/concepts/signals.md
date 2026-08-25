@@ -6,6 +6,7 @@ category: concept
 status: complete
 related: [/concepts/nodes, /systems/nodes]
 ---
+<!-- SPDX-AI-Disclosure: none -->
 
 Nodes communicate time-sensitive events through `Signal`, a lightweight message emitter.
 

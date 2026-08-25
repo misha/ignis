@@ -7,3 +7,5 @@ status: stub
 reference: [InputNode, TapInput, DragInput, HoverInput]
 internals: [/internals/inputs]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

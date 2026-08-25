@@ -6,3 +6,5 @@ category: system
 status: stub
 reference: [EffectController, DurationEffectController, RepeatEffectController, RoundtripEffectController, SequenceEffectController]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

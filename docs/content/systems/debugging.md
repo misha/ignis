@@ -7,6 +7,7 @@ status: complete
 related: [/systems/globals, /systems/controls]
 reference: [Debug, DebugControlsNode]
 ---
+<!-- SPDX-AI-Disclosure: none -->
 
 <Demo name="debug-wireframes" hero/>
 

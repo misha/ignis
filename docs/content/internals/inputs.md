@@ -6,3 +6,5 @@ category: internal
 status: stub
 reference: [InputNode, SpatialNode]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

@@ -7,6 +7,7 @@ status: complete
 reference: [SpriteNode, Sprite, SpriteImage, SpriteAnimation, SpriteRegion, SpriteSheet, SpriteMap, SpriteGroup]
 related: [/systems/assets, /concepts/nodes, /systems/live-reload]
 ---
+<!-- SPDX-AI-Disclosure: none -->
 
 <Demo name="sprite-animation" hero/>
 

@@ -6,3 +6,5 @@ category: system
 status: stub
 reference: [Cache, Preload, Loader, LocalAssetBundle]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

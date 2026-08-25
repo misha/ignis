@@ -8,6 +8,7 @@ reference: [CollisionDetectionNode, ColliderNode, Shape]
 related: [/systems/shapes-anchors, /concepts/signals]
 internals: [/internals/collisions]
 ---
+<!-- SPDX-AI-Disclosure: none -->
 
 <Demo name="collision-balls" hero hint="Try dragging!"/>
 

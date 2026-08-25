@@ -88,6 +88,7 @@ excluded:
   - label: Site Configuration
     reason: Structured data.
     paths:
+      - docs/content/_data/*.yaml
       - docs/web/CNAME
 
   - label: Flutter Scaffolding

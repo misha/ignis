@@ -6,4 +6,5 @@ category: system
 status: stub
 reference: [Controls, ControlEvent, ControlDevice, KeyPress, KeyboardDevice]
 ---
+<!-- SPDX-AI-Disclosure: none -->
 

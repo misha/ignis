@@ -6,3 +6,5 @@ category: internal
 status: stub
 reference: [LayoutEngine, LayoutConstraints, LayoutItem]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

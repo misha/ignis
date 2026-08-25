@@ -6,3 +6,5 @@ category: internal
 status: stub
 reference: [CollisionDetection, StandardIntersectionSystem]
 ---
+<!-- SPDX-AI-Disclosure: none -->
+

@@ -7,6 +7,7 @@ status: complete
 related: [/systems/nodes, /concepts/scenes, /concepts/signals]
 internals: [/internals/tree]
 ---
+<!-- SPDX-AI-Disclosure: none -->
 
 `Node` is the primitive of Ignis.
 
