@@ -1,6 +1,6 @@
 <p align="center">
-  <img src="assets/logo_light.png#gh-light-mode-only" alt="Light Mode Logo">
-  <img src="assets/logo_dark.png#gh-dark-mode-only" alt="Dark Mode Logo">
+  <img src="https://raw.githubusercontent.com/misha/ignis/main/assets/logo_light.png#gh-light-mode-only" alt="Light Mode Logo">
+  <img src="https://raw.githubusercontent.com/misha/ignis/main/assets/logo_dark.png#gh-dark-mode-only" alt="Dark Mode Logo">
 </p>
 
 <p align="center">
