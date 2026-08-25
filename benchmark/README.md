@@ -27,6 +27,8 @@ Measured with `flutter test` on 2026/08/26, average of 3 or more runs.
 | Lifecycle Events              | 46558.53 us |
 | Nearest                       | 9161.10 us  |
 | Signal Emissions              | 2563.62 us  |
+| Tick                          | 40907.14 us |
+| Tick 2                        | 48466.64 us |
 | Update                        | 16015.22 us |
 | Update + Render               | 31606.76 us |
 
