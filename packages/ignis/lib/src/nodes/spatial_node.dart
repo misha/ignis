@@ -49,19 +49,14 @@ class SpatialNode extends Node
        angle = angle ?? 0,
        anchor = anchor ?? .topLeft;
 
+  late final _target = Target<SpatialNode?>(this);
+
   /// The shape in effect at this node.
   ///
-  /// A node that states no shape of its own takes its parent's, and that
-  /// parent's parent's, so an area is inherited by pass-through rather than
-  /// copied. A node with nothing above it covers no area at all.
-  ///
-  /// TODO: Consider *not* chaining all the way up, and only accepting the
-  ///   immediate parent's shape. Pending a review of actual engine usage.
-  Shape get shape {
-    final parent = this.parent;
-    if (parent is SpatialNode) return parent.shape;
-    return const Rectangle(.zero);
-  }
+  /// A node that states no shape of its own takes its nearest spatial
+  /// ancestor's, so an area is inherited by pass-through rather than copied.
+  /// A node with nothing above it covers no area at all.
+  Shape get shape => _target.value?.shape ?? const Rectangle(.zero);
 
   /// This node's size, which is the size of the [shape] in effect at it.
   @override

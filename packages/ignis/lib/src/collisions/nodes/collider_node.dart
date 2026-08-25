@@ -50,8 +50,11 @@ class ColliderNode extends SpatialNode {
   /// Whether this node currently overlaps anything.
   bool get isColliding => _active.isNotEmpty;
 
+  late final _target = Target<CollisionDetectionNode?>(this);
+
+  /// The detection this collider reports to, if there is one above it.
   @internal
-  CollisionDetectionNode? cd;
+  CollisionDetectionNode? get cd => _target.value;
 
   ColliderNode({
     this._shape,
@@ -73,7 +76,7 @@ class ColliderNode extends SpatialNode {
   void build() {
     super.build();
 
-    cd = ancestors.whereType<CollisionDetectionNode>().firstOrNull;
+    final cd = this.cd;
 
     if (cd == null) {
       if (strict) {
@@ -83,11 +86,10 @@ class ColliderNode extends SpatialNode {
       }
     }
 
-    cd?.register(this);
+    cd.register(this);
 
     trash(() {
-      cd?.unregister(this);
-      cd = null;
+      cd.unregister(this);
       _active.clear();
     });
 

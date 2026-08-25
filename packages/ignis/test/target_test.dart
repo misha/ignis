@@ -12,6 +12,15 @@ final class _Host extends Node {
   }
 }
 
+/// A host whose ancestor is optional.
+final class _OptionalHost extends Node {
+  late final Target<PositionOwner?> target;
+
+  _OptionalHost() {
+    target = Target<PositionOwner?>(this);
+  }
+}
+
 void main() {
   test('resolves to the nearest ancestor implementing T once mounted', () {
     final node = SpatialNode();
@@ -71,6 +80,24 @@ void main() {
     root.add(host);
 
     expect(root.mount, throwsStateError);
+  });
+
+  test('a nullable T resolves to null instead of throwing', () {
+    final host = _OptionalHost();
+    expect(host.target.value, isNull, reason: 'it has not mounted yet');
+
+    Node(children: [host]).mount();
+    expect(host.target.value, isNull, reason: 'nothing above it implements T');
+  });
+
+  test('a nullable T still resolves to the nearest ancestor', () {
+    final node = SpatialNode();
+    final host = _OptionalHost();
+    node.add(host);
+
+    node.mount();
+
+    expect(host.target.value, same(node));
   });
 
   test('a kept effect follows the host its container was rebuilt into', () {

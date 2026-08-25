@@ -43,6 +43,15 @@ void main() {
       expect(node.shape, isA<Circle>());
     });
 
+    test('reaches through a node that is not spatial', () {
+      final node = SpatialNode();
+      final group = Node(children: [node]);
+
+      ShapeNode(shape: .circle(15), children: [group]).mount();
+
+      expect(node.shape, isA<Circle>());
+    });
+
     test('takes a circle from a circle, not a box around it', () {
       final node = SpatialNode();
 

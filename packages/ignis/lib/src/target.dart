@@ -15,6 +15,9 @@ part of 'core.dart';
 /// The host resolves it on mount and drops it whenever its ancestry changes,
 /// so a node moved under a new parent finds the new one on its next read.
 /// There is nothing to call and nothing to keep in sync.
+///
+/// A nullable [T] makes the ancestor optional: [value] is null while the host
+/// is unmounted or has no such ancestor, instead of throwing.
 class Target<T> {
   final Node _host;
   T? _value;
@@ -26,21 +29,22 @@ class Target<T> {
   /// The nearest ancestor implementing [T].
   ///
   /// Throws a [StateError] if the host is not mounted, or if nothing in its
-  /// ancestry implements [T].
+  /// ancestry implements [T], unless [T] is nullable.
   T get value => _value ??= _find();
 
   T _find() {
     if (!_host.isMounted) {
+      if (null is T) return null as T;
       throw StateError('Cannot resolve $T because ${_host.runtimeType} is not mounted.');
     }
 
     final found = _host.ancestors.whereType<T>().firstOrNull;
 
-    if (found == null) {
+    if (found == null && null is! T) {
       throw StateError('${_host.runtimeType} has no ancestor implementing $T.');
     }
 
-    return found;
+    return found as T;
   }
 
   void _resolve() => _value ??= _find();
