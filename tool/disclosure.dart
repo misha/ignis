@@ -1,3 +1,5 @@
+// SPDX-AI-Disclosure: ai-generated
+
 // Generates the AI disclosure report the documentation site renders.
 //
 //   dart run tool/disclosure.dart
@@ -64,11 +66,16 @@ Map<String, Object?> _generate() {
   final groups = _entries(config, 'groups');
   final excluded = _entries(config, 'excluded');
   final tracked = _tracked();
-
-  final counts = {for (final group in groups) group.label: <String, int>{}};
-  final sizes = {
-    for (final entry in [...groups, ...excluded]) entry.label: 0,
+  final counts = {
+    for (final group in groups) //
+      group.label: <String, int>{},
   };
+
+  final sizes = {
+    for (final entry in [...groups, ...excluded]) //
+      entry.label: 0,
+  };
+
   final unclaimed = <String>[];
   final contested = <String, List<String>>{};
   final invalid = <String, String>{};
@@ -186,7 +193,10 @@ Map<String, Object?> _generate() {
 /// One row of the report, and the paths it answers for.
 class _Entry {
   _Entry(this.label, this.reason, List<String> patterns)
-    : _globs = [for (final pattern in patterns) Glob(pattern, context: path.posix)];
+    : _globs = [
+        for (final pattern in patterns) //
+          Glob(pattern, context: path.posix),
+      ];
 
   final String label;
   final String? reason;
@@ -252,7 +262,10 @@ Map<String, Object?> _frontmatter(File file) {
 
   final parsed = loadYaml(lines.sublist(1, end).join('\n')) as YamlMap;
 
-  return {for (final entry in parsed.entries) '${entry.key}': entry.value};
+  return {
+    for (final entry in parsed.entries) //
+      '${entry.key}': entry.value,
+  };
 }
 
 /// The file's own disclosure, when it declares one.
