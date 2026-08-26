@@ -240,7 +240,7 @@ class _LayerNode extends CollisionDetectionNode {
 class _LabelNode extends BoxNode {
   final _fill = DemoLog();
   final _outline = TextNode(
-    style: DEMO_TEXT_STYLE.copyWith(
+    style: TextStyle(
       foreground: Paint()
         ..style = .stroke
         ..strokeWidth = 1.5

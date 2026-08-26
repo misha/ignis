@@ -21,10 +21,11 @@ void main() {
     node.mount();
     const style = TextStyle(color: RED, fontSize: 30);
     node.style = style;
+    final expected = TextNode.DEFAULT_STYLE.merge(style);
 
-    expect(node.style, style);
+    expect(node.style, expected);
     node.layout(.unbounded());
-    expect(node.painter.text?.style, style);
+    expect(node.painter.text?.style, expected);
   });
 
   test('setting textAlign reaches the painter on the next reflow', () {

@@ -7,4 +7,5 @@ export 'nodes/shape_node.dart';
 export 'nodes/spatial_node.dart';
 export 'nodes/sprite_node.dart';
 export 'nodes/text_node.dart';
+export 'nodes/text_style_node.dart';
 export 'nodes/timer_node.dart';

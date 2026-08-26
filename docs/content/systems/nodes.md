@@ -19,6 +19,7 @@ status: complete
 | `SpatialNode`            | Base spatial node with a transform and a `Shape`.                | -                                       |
 | `SpriteNode`             | Animates a `Sprite`. See [Sprites](/systems/sprites).            | `onLoop`, `onFinish`                    |
 | `TextNode`               | Draws text with `TextPainter`, wrapping to fit.                  | -                                       |
+| `TextStyleNode`          | Holds the base `TextStyle` every descendant `TextNode` extends.  | `onStyleChange`                         |
 | `TimerNode`              | Tracks time to power its signal.                                 | `onTrigger`                             |
 
 `SpatialNode` is particularly impactful. Any system that integrates with 2D space typically *starts* from `SpatialNode`. This includes shapes, sprites, text, collisions, and layouts.

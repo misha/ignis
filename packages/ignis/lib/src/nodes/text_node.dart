@@ -2,15 +2,15 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/layout/layout_constraints.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
+import 'package:ignis/src/nodes/text_style_node.dart';
 import 'package:ignis/src/shape.dart';
 
 class TextNode extends SpatialNode {
-  /// The default style used when no [style] is provided.
-  ///
-  /// TODO: Consider making this mutable, or better yet, inheritable.
+  /// The style beneath every [TextNode], in effect when nothing is declared.
   static const DEFAULT_STYLE = TextStyle(
     color: Color(0xFFFFFFFF),
     fontFamily: 'Arial',
@@ -21,6 +21,7 @@ class TextNode extends SpatialNode {
   bool _dirty = true;
   Shape _shape = const Rectangle(.zero);
   LayoutConstraints _constraints = const .unbounded();
+  late final _target = Target<TextStyleNode?>(this);
 
   @visibleForTesting
   TextPainter get painter => _painter!;
@@ -36,13 +37,14 @@ class TextNode extends SpatialNode {
   }
 
   String _text;
-  TextStyle _style;
+  TextStyle? _style;
+  TextStyle? _resolved;
   TextAlign _textAlign;
   TextDirection _textDirection;
 
   TextNode({
     String? text,
-    TextStyle? style,
+    this._style,
     TextAlign? textAlign,
     TextDirection? textDirection,
     super.position,
@@ -53,7 +55,6 @@ class TextNode extends SpatialNode {
     super.priority,
     super.children,
   }) : _text = text ?? '',
-       _style = style ?? DEFAULT_STYLE,
        _textAlign = textAlign ?? .start,
        _textDirection = textDirection ?? .ltr;
 
@@ -71,6 +72,12 @@ class TextNode extends SpatialNode {
       _painter = null;
     });
 
+    _target.value?.onStyleChange(() {
+      _resolved = null;
+      _dirty = true;
+    });
+
+    _resolved = null;
     _dirty = true;
 
     draw((canvas) {
@@ -87,12 +94,18 @@ class TextNode extends SpatialNode {
     _dirty = true;
   }
 
-  /// The style used to draw the text.
-  TextStyle get style => _style;
+  /// The style in effect: the nearest [TextStyleNode]'s, extended by this
+  /// node's own.
+  TextStyle get style => _resolved ??=
+      DEFAULT_STYLE //
+          .merge(_target.value?.style)
+          .merge(_style);
 
-  set style(TextStyle style) {
+  /// Sets this node's own style. Null falls back to the inherited style alone.
+  set style(TextStyle? style) {
     if (_style == style) return;
     _style = style;
+    _resolved = null;
     _dirty = true;
   }
 

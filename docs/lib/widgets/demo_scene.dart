@@ -41,11 +41,11 @@ const DEMO_TEXT_STYLE = TextStyle(
 );
 
 class DemoLog extends TextNode {
-  DemoLog() : super(style: DEMO_TEXT_STYLE.copyWith(color: LogColor.muted.value));
+  DemoLog() : super(style: TextStyle(color: LogColor.muted.value));
 
   void call(String line, [LogColor color = .muted]) {
     text = line;
-    style = style.copyWith(color: color.value);
+    style = TextStyle(color: color.value);
   }
 }
 
@@ -77,7 +77,10 @@ class _DemoSceneState extends State<DemoScene> {
       if (!mounted) return;
 
       setState(() {
-        scene = widget.builder().mount();
+        scene = TextStyleNode(
+          style: DEMO_TEXT_STYLE,
+          children: [widget.builder()],
+        ).mount();
       });
     });
   }
