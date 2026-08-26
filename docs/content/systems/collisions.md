@@ -4,7 +4,7 @@ description: Hitboxes, layers, and the two signals that report contact.
 lane: usage
 category: system
 status: complete
-reference: [CollisionDetectionNode, ColliderNode, Shape]
+reference: [CollisionArenaNode, ColliderNode, Shape]
 related: [/systems/shapes-anchors, /concepts/signals]
 internals: [/internals/collisions]
 ---
@@ -12,9 +12,9 @@ internals: [/internals/collisions]
 
 <Demo name="collision-balls" hero hint="Try dragging!"/>
 
-Collisions work using two nodes, `CollisionDetectionNode` and `ColliderNode`.
+Collisions work using two nodes, `CollisionArenaNode` and `ColliderNode`.
 
-`CollisionDetectionNode` sets up a collision detection arena. Whenever a `ColliderNode` is added to a scene, it finds the closest `CollisionDetectionNode` above it and registers itself.
+`CollisionArenaNode` sets up a collision detection arena. Whenever a `ColliderNode` is added to a scene, it finds the closest `CollisionArenaNode` above it and registers itself.
 
 Today, collision detection has two significant limitations:
 

@@ -15,7 +15,7 @@ enum _Axis {
   y,
 }
 
-/// Steps a [CollisionDetectionNode] full of shapes bouncing around a walled box.
+/// Steps a [CollisionArenaNode] full of shapes bouncing around a walled box.
 ///
 /// Keep parameters in sync with `FlameCollisionsBenchmark`.
 class CollisionsBenchmark extends AsyncBenchmarkBase {
@@ -27,7 +27,7 @@ class CollisionsBenchmark extends AsyncBenchmarkBase {
   final double maxSize;
   final double speed;
 
-  late Scene<CollisionDetectionNode> scene;
+  late Scene<CollisionArenaNode> scene;
 
   CollisionsBenchmark({
     this.seed = 12345,
@@ -41,7 +41,7 @@ class CollisionsBenchmark extends AsyncBenchmarkBase {
 
   @override
   Future<void> setup() async {
-    final root = CollisionDetectionNode();
+    final root = CollisionArenaNode();
     final layout = generateCollisionLayout(
       seed: seed,
       count: count,

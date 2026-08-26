@@ -1,14 +1,14 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:flutter/foundation.dart';
-import 'package:ignis/src/collisions/nodes/collision_detection_node.dart';
+import 'package:ignis/src/collisions/nodes/collision_arena_node.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/shape.dart';
 
 /// A hitbox that reports overlaps against other colliders registered to the
-/// same [CollisionDetectionNode].
+/// same [CollisionArenaNode].
 class ColliderNode extends SpatialNode {
   Shape? _shape;
 
@@ -29,11 +29,11 @@ class ColliderNode extends SpatialNode {
   /// Bitmask of physics layers this collider collides with. Defaults to all 1-bits.
   int mask;
 
-  /// Whether building without a [CollisionDetectionNode] ancestor throws a
+  /// Whether building without a [CollisionArenaNode] ancestor throws a
   /// [StateError]. Defaults to true.
   ///
   /// While false, this collider will simply no-op (no collisions, no drawing)
-  /// when added to a tree without a [CollisionDetectionNode] ancestor.
+  /// when added to a tree without a [CollisionArenaNode] ancestor.
   bool strict;
 
   /// Emitted with the other collider when this collider starts overlapping it.
@@ -50,11 +50,11 @@ class ColliderNode extends SpatialNode {
   /// Whether this node currently overlaps anything.
   bool get isColliding => _active.isNotEmpty;
 
-  late final _target = Target<CollisionDetectionNode?>(this);
+  late final _target = Target<CollisionArenaNode?>(this);
 
-  /// The detection this collider reports to, if there is one above it.
+  /// The arena this collider reports to, if there is one above it.
   @internal
-  CollisionDetectionNode? get cd => _target.value;
+  CollisionArenaNode? get arena => _target.value;
 
   ColliderNode({
     this._shape,
@@ -76,20 +76,20 @@ class ColliderNode extends SpatialNode {
   void build() {
     super.build();
 
-    final cd = this.cd;
+    final arena = this.arena;
 
-    if (cd == null) {
+    if (arena == null) {
       if (strict) {
-        throw StateError('ColliderNode requires a CollisionDetectionNode ancestor.');
+        throw StateError('ColliderNode requires a CollisionArenaNode ancestor.');
       } else {
         return;
       }
     }
 
-    cd.register(this);
+    arena.register(this);
 
     trash(() {
-      cd.unregister(this);
+      arena.unregister(this);
       _active.clear();
     });
 

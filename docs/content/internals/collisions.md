@@ -4,7 +4,7 @@ description: Broadphase, narrowphase, and the intersection system.
 lane: internals
 category: internal
 status: stub
-reference: [CollisionDetection, StandardIntersectionSystem]
+reference: [CollisionArena, StandardIntersectionSystem]
 ---
 <!-- SPDX-AI-Disclosure: none -->
 

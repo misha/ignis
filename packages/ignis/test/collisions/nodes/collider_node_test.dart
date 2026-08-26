@@ -7,7 +7,7 @@ void main() {
       final collider = ColliderNode(shape: .circle(3));
       final slot = ShapeNode(shape: .rectangle(.new(30, 20)), children: [collider]);
 
-      CollisionDetectionNode(children: [slot]).mount();
+      CollisionArenaNode(children: [slot]).mount();
 
       expect(collider.size, Vector2.all(6));
     });
@@ -16,7 +16,7 @@ void main() {
       final collider = ColliderNode(shape: .circle(3));
       final slot = ShapeNode(shape: .rectangle(.new(30, 20)), children: [collider]);
 
-      CollisionDetectionNode(children: [slot]).mount();
+      CollisionArenaNode(children: [slot]).mount();
       collider.shape = null;
 
       expect(collider.shape, isA<Rectangle>());
@@ -24,7 +24,7 @@ void main() {
     });
   });
 
-  test('throws without a CollisionDetectionNode ancestor', () {
+  test('throws without a CollisionArenaNode ancestor', () {
     final collider = ColliderNode(
       shape: .circle(1),
       position: .zero,
@@ -33,7 +33,7 @@ void main() {
     expect(collider.mount, throwsStateError);
   });
 
-  test('does nothing without a CollisionDetectionNode ancestor while not strict', () {
+  test('does nothing without a CollisionArenaNode ancestor while not strict', () {
     final collider = ColliderNode(
       shape: .circle(1),
       position: .zero,
@@ -43,9 +43,9 @@ void main() {
     expect(() => collider.mount(), returnsNormally);
   });
 
-  test('registers with the nearest CollisionDetectionNode ancestor, not an outer one', () {
-    final outer = CollisionDetectionNode();
-    final inner = CollisionDetectionNode();
+  test('registers with the nearest CollisionArenaNode ancestor, not an outer one', () {
+    final outer = CollisionArenaNode();
+    final inner = CollisionArenaNode();
     outer.add(inner);
 
     final a = ColliderNode(
@@ -83,8 +83,8 @@ void main() {
     expect(aStarted, [innerSibling]);
   });
 
-  test('unregisters from CollisionDetectionNode when detached', () {
-    final collisions = CollisionDetectionNode();
+  test('unregisters from CollisionArenaNode when detached', () {
+    final collisions = CollisionArenaNode();
     final a = ColliderNode(
       shape: .circle(4),
       position: .zero,

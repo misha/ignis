@@ -2,10 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  late CollisionDetection arena;
+  late CollisionArena arena;
 
   setUp(() {
-    arena = CollisionDetection();
+    arena = CollisionArena();
   });
 
   group('overlap detection', () {
@@ -127,7 +127,7 @@ void main() {
     test('fires onCollisionEnd on both colliders when a pair stops overlapping', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [a, b]).mount();
       final aEnded = <ColliderNode>[];
       final bEnded = <ColliderNode>[];
       a.onCollisionEnd(aEnded.add);
@@ -145,7 +145,7 @@ void main() {
     test('does not fire onCollisionEnd for a pair that never overlapped', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(100, 0));
-      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [a, b]).mount();
       final aEnded = <ColliderNode>[];
       a.onCollisionEnd(aEnded.add);
 
@@ -159,7 +159,7 @@ void main() {
     test('does not fire onCollisionEnd for a pair with a detached member', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final scene = CollisionDetectionNode(arena: arena, children: [a, b]).mount();
+      final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
       arena.process();
 
@@ -181,7 +181,7 @@ void main() {
     test('adds the other collider to active while overlapping', () {
       final a = ColliderNode(shape: .square(10));
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
       arena.process();
 
@@ -194,7 +194,7 @@ void main() {
     test('removes the other collider from active once they stop overlapping', () {
       final a = ColliderNode(shape: .square(10));
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
       arena.process();
 
@@ -212,7 +212,7 @@ void main() {
       () {
         final a = ColliderNode(shape: .square(10));
         final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-        final scene = CollisionDetectionNode(arena: arena, children: [a, b]).mount();
+        final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
         arena.process();
 
@@ -240,7 +240,7 @@ void main() {
         seen.add(a.active.length);
       });
 
-      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
       arena.process();
 
@@ -256,7 +256,7 @@ void main() {
         colliding.add(a.isColliding);
       });
 
-      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
       arena.process();
 
@@ -269,7 +269,7 @@ void main() {
     test('clears active when this collider itself is unmounted', () {
       final a = ColliderNode(shape: .square(10));
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final scene = CollisionDetectionNode(arena: arena, children: [a, b]).mount();
+      final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
       arena.process();
 
@@ -523,7 +523,7 @@ void main() {
         mask: 0,
       );
 
-      CollisionDetectionNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [a, b]).mount();
       final aEnded = <ColliderNode>[];
       final bEnded = <ColliderNode>[];
       a.onCollisionEnd(aEnded.add);

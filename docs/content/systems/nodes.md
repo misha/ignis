@@ -9,18 +9,18 @@ status: complete
 
 ## Core Nodes
 
-| Node                     | Purpose                                                          | Signals                                 |
-|--------------------------|------------------------------------------------------------------|-----------------------------------------|
-| `Node`                   | Base node specifying `enabled`, `priority`, and `children`.      | `onMount`, `onUnmount`, `onSceneResize` |
-| `ColliderNode`           | Registers its `Shape` with the nearest `CollisionDetectionNode`. | `onCollisionStart`, `onCollisionEnd`    |
-| `CollisionDetectionNode` | Holds a `CollisionDetection` arena.                              | -                                       |
-| `FpsNode`                | Tracks a rolling-window average frame rate in `fps`.             | `onFpsChange`                           |
-| `ShapeNode`              | Draws a `Shape`.                                                 | -                                       |
-| `SpatialNode`            | Base spatial node with a transform and a `Shape`.                | -                                       |
-| `SpriteNode`             | Animates a `Sprite`. See [Sprites](/systems/sprites).            | `onLoop`, `onFinish`                    |
-| `TextNode`               | Draws text with `TextPainter`, wrapping to fit.                  | -                                       |
-| `TextStyleNode`          | Holds the base `TextStyle` every descendant `TextNode` extends.  | `onStyleChange`                         |
-| `TimerNode`              | Tracks time to power its signal.                                 | `onTrigger`                             |
+| Node                 | Purpose                                                         | Signals                                 |
+|----------------------|-----------------------------------------------------------------|-----------------------------------------|
+| `Node`               | Base node specifying `enabled`, `priority`, and `children`.     | `onMount`, `onUnmount`, `onSceneResize` |
+| `ColliderNode`       | Registers its `Shape` with the nearest `CollisionArenaNode`.    | `onCollisionStart`, `onCollisionEnd`    |
+| `CollisionArenaNode` | Holds a `CollisionArena`.                                       | -                                       |
+| `FpsNode`            | Tracks a rolling-window average frame rate in `fps`.            | `onFpsChange`                           |
+| `ShapeNode`          | Draws a `Shape`.                                                | -                                       |
+| `SpatialNode`        | Base spatial node with a transform and a `Shape`.               | -                                       |
+| `SpriteNode`         | Animates a `Sprite`. See [Sprites](/systems/sprites).           | `onLoop`, `onFinish`                    |
+| `TextNode`           | Draws text with `TextPainter`, wrapping to fit.                 | -                                       |
+| `TextStyleNode`      | Holds the base `TextStyle` every descendant `TextNode` extends. | `onStyleChange`                         |
+| `TimerNode`          | Tracks time to power its signal.                                | `onTrigger`                             |
 
 `SpatialNode` is particularly impactful. Any system that integrates with 2D space typically *starts* from `SpatialNode`. This includes shapes, sprites, text, collisions, and layouts.
 

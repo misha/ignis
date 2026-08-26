@@ -101,7 +101,7 @@ void _colorOnContact(ShapeNode node, ColliderNode collider) {
 }
 
 /// A circle sliding through a square, reporting each edge as it crosses.
-class _PairNode extends CollisionDetectionNode {
+class _PairNode extends CollisionArenaNode {
   @override
   void build() {
     super.build();
@@ -126,7 +126,7 @@ class _PairNode extends CollisionDetectionNode {
 }
 
 /// A circle crossing three squares, counting what it touches every tick.
-class _ActiveNode extends CollisionDetectionNode {
+class _ActiveNode extends CollisionArenaNode {
   @override
   void build() {
     super.build();
@@ -174,7 +174,7 @@ class _ActiveNode extends CollisionDetectionNode {
 }
 
 /// A long hitbox turning through a circle its bounding box never leaves.
-class _SpinNode extends CollisionDetectionNode {
+class _SpinNode extends CollisionArenaNode {
   @override
   void build() {
     super.build();
@@ -204,7 +204,7 @@ class _SpinNode extends CollisionDetectionNode {
 }
 
 /// A circle that reports over one of the two squares it crosses, not the other.
-class _LayerNode extends CollisionDetectionNode {
+class _LayerNode extends CollisionArenaNode {
   @override
   void build() {
     super.build();
@@ -270,7 +270,7 @@ class _LabelNode extends BoxNode {
 }
 
 /// An arena that pours balls from the middle, and from wherever you hold.
-class _ArenaNode extends CollisionDetectionNode {
+class _ArenaNode extends CollisionArenaNode {
   final MVector2 _source = .zero();
 
   final _count = _LabelNode(alignment: .topRight);

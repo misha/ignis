@@ -6,7 +6,7 @@ import 'package:ignis/src/math.dart';
 import 'package:ignis/src/shape.dart';
 
 /// A collider's cached narrowphase geometry, refreshed once per
-/// [CollisionDetection.process].
+/// [CollisionArena.process].
 ///
 /// [extentX]/[extentY] are only meaningful for rectangles, [radius] only for
 /// circles. Every field is mutated in place. This object is never replaced,
@@ -23,7 +23,7 @@ final class _NarrowphaseGeometry {
 /// Registered colliders are broadphased with a sort-and-sweep over their
 /// AABBs to produce candidate pairs, which are then narrowphased against
 /// their actual shapes to power the node signals.
-final class CollisionDetection {
+final class CollisionArena {
   /// Used for narrowphase intersection tests.
   final IntersectionSystem system;
 
@@ -63,7 +63,7 @@ final class CollisionDetection {
   /// Pairs confirmed overlapping as of the last [process], by key.
   final Map<int, (ColliderNode, ColliderNode)> _overlapping = {};
 
-  CollisionDetection({
+  CollisionArena({
     IntersectionSystem? system,
   }) : system = system ?? const StandardIntersectionSystem();
 
@@ -123,7 +123,7 @@ final class CollisionDetection {
 
       for (final collider in _colliders) {
         final slot = _mapping[collider]!;
-        final transform = _transformIndex[slot] = collider.absoluteTransform(collider.cd);
+        final transform = _transformIndex[slot] = collider.absoluteTransform(collider.arena);
         _boundsIndex[slot] = collider.worldBounds(collider.shape, transform);
         _order.add(slot);
       }
@@ -134,7 +134,7 @@ final class CollisionDetection {
     } else {
       for (final collider in _colliders) {
         final slot = _mapping[collider]!;
-        final transform = _transformIndex[slot] = collider.absoluteTransform(collider.cd);
+        final transform = _transformIndex[slot] = collider.absoluteTransform(collider.arena);
         _boundsIndex[slot] = collider.worldBounds(collider.shape, transform);
         _resettle(slot);
       }

@@ -10,7 +10,7 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/collider_overlap.png',
-      CollisionDetectionNode(
+      CollisionArenaNode(
         children: [
           ShapeNode(
             shape: .circle(20),
