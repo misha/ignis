@@ -31,6 +31,9 @@ class ControlledEffect extends EffectNode {
   /// This effect's progress as of the previous [onProgress] emission.
   double get previousProgress => _previousProgress;
 
+  /// This effect's current progress.
+  double get progress => controller.progress;
+
   /// Whether this effect has started progressing.
   bool get isRunning => _started;
 
