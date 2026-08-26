@@ -671,7 +671,10 @@ void main() {
   });
 
   test('cuts the packed slime sheet into eleven ragged rows', () async {
-    await Preload.run(loaders: [.image()], paths: ['test/assets/slime.png']);
+    await Preload.run(
+      loaders: [ImageLoader()],
+      paths: ['test/assets/slime.png'],
+    );
 
     final sheet = SpriteSheet('test/assets/slime.png', .all(56));
 

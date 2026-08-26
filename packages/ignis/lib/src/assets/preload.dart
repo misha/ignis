@@ -20,8 +20,8 @@ const _TIMEOUT = Duration(seconds: 10);
 ///
 /// ```dart
 /// Ignis.preload
-///   ..register(.image()..extensions(['.png']))
-///   ..register(.json()..extensions(['.json']));
+///   ..register(ImageLoader()..extensions(['.png']))
+///   ..register(JsonLoader()..extensions(['.json']));
 ///
 /// final request = await Ignis.preload.load(manifest: true);
 /// ```
@@ -54,7 +54,7 @@ class Preload {
   /// request included, so this is for loads with nothing to keep around:
   ///
   /// ```dart
-  /// await Preload.run(loaders: [Loader.image()], manifest: true);
+  /// await Preload.run(loaders: [ImageLoader()], manifest: true);
   /// ```
   ///
   /// The request is still returned, so progress is available for as long as the

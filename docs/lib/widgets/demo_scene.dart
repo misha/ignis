@@ -13,7 +13,7 @@ Future<void> _load(Iterable<String> assets) {
     for (final asset in assets)
       if (!Ignis.cache.contains(asset))
         _loads[asset] ??= Preload.run(
-          loaders: [.image()],
+          loaders: [ImageLoader()],
           paths: [asset],
         ),
   ]);

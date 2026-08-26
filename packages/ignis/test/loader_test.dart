@@ -87,7 +87,7 @@ void main() {
   test('does nothing at all when noop', () async {
     final cache = Cache();
 
-    await Loader.noop().run(
+    await NoopLoader().run(
       LoadingContext(
         cache: cache,
         bundle: bundle,

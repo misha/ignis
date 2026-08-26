@@ -33,15 +33,6 @@ class LoadingContext {
 // #region Loaders
 
 abstract class Loader {
-  /// A loader that does nothing. Useful for stubbing and testing.
-  factory Loader.noop() => NoopLoader();
-
-  /// The built-in loader for JSON files.
-  factory Loader.json() => JsonLoader();
-
-  /// The built-in loader for images.
-  factory Loader.image() => ImageLoader();
-
   final List<LoadingFilter> _filters = [];
 
   Loader();
@@ -67,11 +58,13 @@ abstract class Loader {
   FutureOr<void> load(LoadingContext context);
 }
 
+/// A loader that does nothing. Useful for stubbing and testing.
 class NoopLoader extends Loader {
   @override
   void load(LoadingContext context) {}
 }
 
+/// The built-in loader for JSON files.
 class JsonLoader extends Loader {
   @override
   Future<void> load(LoadingContext context) async {
@@ -80,6 +73,7 @@ class JsonLoader extends Loader {
   }
 }
 
+/// The built-in loader for images.
 class ImageLoader extends Loader {
   @override
   Future<void> load(LoadingContext context) async {

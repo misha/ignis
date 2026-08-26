@@ -77,7 +77,7 @@ flutter:
 
     local = LocalAssetBundle(root: root.path, delegate: TestBundle());
     Ignis.bundle = local;
-    Ignis.preload = Preload()..register(.image()..extensions(['.png']));
+    Ignis.preload = Preload()..register(ImageLoader()..extensions(['.png']));
   });
 
   tearDown(() async {
