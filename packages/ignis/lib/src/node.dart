@@ -755,7 +755,6 @@ class Node {
 
   Map<Type, dynamic>? _providers;
   Map<Type, dynamic>? _dependencies;
-  // TODO: Not quite part of DI.
   List<Target<Object?>>? _targets;
 
   /// Registers [target] to be dropped whenever this node's ancestry changes.
