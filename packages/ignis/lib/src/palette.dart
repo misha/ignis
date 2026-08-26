@@ -99,11 +99,14 @@ class Palette {
     for (final entry in _paints) {
       if (!entry.enabled) continue;
       final offset = entry.offset;
-      // TODO: Profile the different ways to do this.
-      final hasOffset = !offset.isZero;
-      if (hasOffset) canvas.translate(offset.x, offset.y);
-      painter(canvas, entry.paint);
-      if (hasOffset) canvas.translate(-offset.x, -offset.y);
+
+      if (!offset.isZero) {
+        canvas.translate(offset.x, offset.y);
+        painter(canvas, entry.paint);
+        canvas.translate(-offset.x, -offset.y);
+      } else {
+        painter(canvas, entry.paint);
+      }
     }
   }
 

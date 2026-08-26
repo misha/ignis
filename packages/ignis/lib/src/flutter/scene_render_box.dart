@@ -138,9 +138,13 @@ class SceneRenderBox extends RenderBox {
   @override
   void paint(PaintingContext context, Offset offset) {
     final canvas = context.canvas;
-    // TODO: What's faster, manually un-translating or save/restore?
-    canvas.translate(offset.dx, offset.dy);
-    scene.render(canvas);
-    canvas.translate(-offset.dx, -offset.dy);
+
+    if (offset.dx != 0 || offset.dy != 0) {
+      canvas.translate(offset.dx, offset.dy);
+      scene.render(canvas);
+      canvas.translate(-offset.dx, -offset.dy);
+    } else {
+      scene.render(canvas);
+    }
   }
 }
