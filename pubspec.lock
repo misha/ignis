@@ -367,10 +367,10 @@ packages:
     dependency: transitive
     description:
       name: ivector_math
-      sha256: e901741e8aee40f5aad8e2e42e82c90b7fb7cd9ceeb00805000334b3f47ec4e8
+      sha256: "144bfe6766d957f1c7108bc08f02bf70f84498f3e19740fddcd490e3959c4d5b"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.1"
+    version: "0.2.0"
   jaspr:
     dependency: transitive
     description:

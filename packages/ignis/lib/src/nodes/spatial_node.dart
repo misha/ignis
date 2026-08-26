@@ -292,7 +292,7 @@ class SpatialNode extends Node
     // Compute the shape's half-extents, adjusted for absolute rotation (*not* transform).
     _HALF_EXTENTS_SCRATCH
       ..setValues(width / 2, height / 2)
-      ..absoluteRotate2(transform);
+      ..absoluteRotate(transform);
 
     bounds.setCenterAndHalfExtents(_CENTER_SCRATCH, _HALF_EXTENTS_SCRATCH);
     return bounds;
