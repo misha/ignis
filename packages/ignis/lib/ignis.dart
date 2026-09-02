@@ -2,6 +2,7 @@ export 'dart:ui' show Canvas, Paint;
 
 export 'src/anchor.dart';
 export 'src/assets.dart';
+export 'src/backdrop.dart';
 export 'src/collisions.dart';
 export 'src/core.dart';
 export 'src/curves.dart';
