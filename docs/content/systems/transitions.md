@@ -4,7 +4,7 @@ description: Animating the swap of two nodes.
 lane: usage
 category: system
 status: partial
-reference: [TransitionEffect, CutTransitionEffect, CurtainTransitionEffect, WipeTransitionEffect, SlideTransitionEffect, FadeTransitionEffect]
+reference: [TransitionNode, TransitionGroupNode, Transition, CutTransition, CurtainTransition, WipeTransition, SlideTransition, FadeTransition]
 related: [/systems/effects, /systems/effect-controllers]
 ---
 <!-- SPDX-AI-Disclosure: ai-none -->

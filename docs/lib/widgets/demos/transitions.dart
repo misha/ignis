@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart' hide FadeTransition, SlideTransition;
 import 'package:ignis/ignis.dart';
 
 import '../demo_scene.dart';
@@ -41,31 +41,26 @@ class _CutNode extends Node {
 
     // demo on transitions-cut
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    final ember = _screen(_EMBER);
-    final spark = _screen(_SPARK);
-    SpatialNode top = add(ember);
+
+    final host = TransitionNode<String>(
+      transition: CutTransition.new,
+      children: [
+        TransitionGroupNode(name: 'ember', children: [_screen(_EMBER)]),
+        TransitionGroupNode(name: 'spark', children: [_screen(_SPARK)]),
+      ],
+    );
 
     taps.onTap(() {
-      final from = top;
-      final to = identical(from, ember) ? spark : ember;
-      add(to);
-      top = to;
-      taps.disable();
-
-      add(
-        CutTransitionEffect(to, from, cleanup: true)..onFinish(() {
-          remove(from);
-          taps.enable();
-        }),
-      );
+      host.show(host.shown == 'ember' ? 'spark' : 'ember');
     });
     // demo off
 
-    add(taps);
+    addAll([host, taps]);
   }
 }
 
-/// The same trade, through a fade to black and back.
+/// The same trade, through a fade to black and back. Tapping mid-swap turns
+/// it around.
 class _CurtainNode extends Node {
   @override
   void build() {
@@ -73,31 +68,25 @@ class _CurtainNode extends Node {
 
     // demo on transitions-curtain
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    final ember = _screen(_EMBER);
-    final spark = _screen(_SPARK);
-    SpatialNode top = add(ember);
+
+    final host = TransitionNode<String>(
+      transition: CurtainTransition.new,
+      children: [
+        TransitionGroupNode(name: 'ember', children: [_screen(_EMBER)]),
+        TransitionGroupNode(name: 'spark', children: [_screen(_SPARK)]),
+      ],
+    );
 
     taps.onTap(() {
-      final from = top;
-      final to = identical(from, ember) ? spark : ember;
-      add(to);
-      top = to;
-      taps.disable();
-
-      add(
-        CurtainTransitionEffect(to, from, cleanup: true)..onFinish(() {
-          remove(from);
-          taps.enable();
-        }),
-      );
+      host.show(host.shown == 'ember' ? 'spark' : 'ember');
     });
     // demo off
 
-    add(taps);
+    addAll([host, taps]);
   }
 }
 
-/// A panel that sweeps across, swapping the screens under full cover.
+/// A panel that sweeps across, trading the screens under full cover.
 class _WipeNode extends Node {
   @override
   void build() {
@@ -105,27 +94,21 @@ class _WipeNode extends Node {
 
     // demo on transitions-wipe
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    final ember = _screen(_EMBER);
-    final spark = _screen(_SPARK);
-    SpatialNode top = add(ember);
+
+    final host = TransitionNode<String>(
+      transition: WipeTransition.new,
+      children: [
+        TransitionGroupNode(name: 'ember', children: [_screen(_EMBER)]),
+        TransitionGroupNode(name: 'spark', children: [_screen(_SPARK)]),
+      ],
+    );
 
     taps.onTap(() {
-      final from = top;
-      final to = identical(from, ember) ? spark : ember;
-      add(to);
-      top = to;
-      taps.disable();
-
-      add(
-        WipeTransitionEffect(to, from, cleanup: true)..onFinish(() {
-          remove(from);
-          taps.enable();
-        }),
-      );
+      host.show(host.shown == 'ember' ? 'spark' : 'ember');
     });
     // demo off
 
-    add(taps);
+    addAll([host, taps]);
   }
 }
 
@@ -137,31 +120,25 @@ class _SlideNode extends Node {
 
     // demo on transitions-slide
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    final ember = _screen(_EMBER);
-    final spark = _screen(_SPARK);
-    SpatialNode top = add(ember);
+
+    final host = TransitionNode<String>(
+      transition: SlideTransition.new,
+      children: [
+        TransitionGroupNode(name: 'ember', children: [_screen(_EMBER)]),
+        TransitionGroupNode(name: 'spark', children: [_screen(_SPARK)]),
+      ],
+    );
 
     taps.onTap(() {
-      final from = top;
-      final to = identical(from, ember) ? spark : ember;
-      add(to);
-      top = to;
-      taps.disable();
-
-      add(
-        SlideTransitionEffect(to, from, cleanup: true)..onFinish(() {
-          remove(from);
-          taps.enable();
-        }),
-      );
+      host.show(host.shown == 'ember' ? 'spark' : 'ember');
     });
     // demo off
 
-    add(taps);
+    addAll([host, taps]);
   }
 }
 
-/// The incoming screen fades in as one layer over the outgoing one.
+/// The two screens crossfade, either direction.
 class _FadeNode extends Node {
   @override
   void build() {
@@ -169,26 +146,20 @@ class _FadeNode extends Node {
 
     // demo on transitions-fade
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-    final ember = _screen(_EMBER);
-    final spark = _screen(_SPARK);
-    SpatialNode top = add(ember);
+
+    final host = TransitionNode<String>(
+      transition: () => FadeTransition(crossFade: true),
+      children: [
+        TransitionGroupNode(name: 'ember', children: [_screen(_EMBER)]),
+        TransitionGroupNode(name: 'spark', children: [_screen(_SPARK)]),
+      ],
+    );
 
     taps.onTap(() {
-      final from = top;
-      final to = identical(from, ember) ? spark : ember;
-      add(to);
-      top = to;
-      taps.disable();
-
-      add(
-        FadeTransitionEffect(to, from, cleanup: true)..onFinish(() {
-          remove(from);
-          taps.enable();
-        }),
-      );
+      host.show(host.shown == 'ember' ? 'spark' : 'ember');
     });
     // demo off
 
-    add(taps);
+    addAll([host, taps]);
   }
 }

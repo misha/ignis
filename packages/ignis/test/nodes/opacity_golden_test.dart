@@ -10,7 +10,7 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/opacity_fade.png',
-      SpatialNode(
+      OpacityNode(
         opacity: 0.5,
         children: [
           ShapeNode(
@@ -33,7 +33,7 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/opacity_transform.png',
-      SpatialNode(
+      OpacityNode(
         opacity: 0.5,
         position: .new(20, 10),
         children: [
@@ -51,10 +51,10 @@ void main() {
     (tester) => expectGolden(
       tester,
       'goldens/opacity_nested.png',
-      SpatialNode(
+      OpacityNode(
         opacity: 0.5,
         children: [
-          SpatialNode(
+          OpacityNode(
             opacity: 0.5,
             children: [
               ShapeNode(

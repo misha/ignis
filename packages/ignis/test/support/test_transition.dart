@@ -1,34 +1,25 @@
 import 'package:ignis/ignis.dart';
 
 /// A fully knobbed transition that records what it was driven with.
-final class TestTransition extends TransitionEffect {
-  @override
-  final double swapAt;
-
+final class TestTransition extends Transition {
   final applies = <double>[];
-  int builds = 0;
-  void Function(TestTransition transition)? onBuild;
+  final chromes = <double>[];
 
-  TestTransition(
-    super.to,
-    super.from, {
-    EffectController? controller,
-    this.swapAt = 0.5,
-    this.onBuild,
-    super.cleanup,
-    super.priority,
-    super.enabled,
-  }) : super(controller: controller ?? .duration(1));
+  TestTransition({EffectController? controller}) //
+    : super(controller: controller ?? .duration(1));
 
   @override
-  void build() {
-    super.build();
-    builds += 1;
-    onBuild?.call(this);
+  void apply(
+    double progress,
+    Vector2 size, {
+    required TransitionGroupNode incoming,
+    required TransitionGroupNode outgoing,
+  }) {
+    applies.add(progress);
   }
 
   @override
-  void apply(double progress) {
-    applies.add(progress);
+  void paintChrome(Canvas canvas, double progress, Vector2 size) {
+    chromes.add(progress);
   }
 }

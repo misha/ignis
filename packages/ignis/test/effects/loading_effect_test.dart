@@ -166,37 +166,48 @@ void main() {
     Ignis.bundle = TestBundle(['world.png']);
     final boot = LoadingEffect(request: Ignis.preload.load(paths: ['ui.png']));
     final main = LoadingEffect(request: Ignis.preload.load(manifest: true));
-    final root = Node();
+    final host = TransitionNode<String>();
     final game = TestNode(name: 'game');
-    SpatialNode? view;
-    SpatialNode? content;
+    final view = TestNode(name: 'view');
+    TransitionGroupNode<String>? booting;
 
     boot.onFinish(() {
-      view = root.add(
-        SpatialNode(
-          children: [
-            TestNode(name: 'view'),
-          ],
+      booting = host.add(
+        TransitionGroupNode(
+          name: 'boot',
+          children: [view],
         ),
       );
     });
 
     main.onFinish(() {
-      content = root.add(SpatialNode(children: [game]));
-
-      root.add(
-        CutTransitionEffect(content!, view, cleanup: true) //
-          ..onFinish(() => view!.detach()),
+      host.add(
+        TransitionGroupNode(
+          name: 'game',
+          children: [game],
+        ),
       );
     });
 
-    root.add(SequentialEffect(effects: [boot, main], cleanup: true));
-    final scene = root.mount();
-    await drain(scene);
+    final scene = Node(
+      children: [
+        host,
+        SequentialEffect(
+          effects: [boot, main],
+          cleanup: true,
+        ),
+      ],
+    ).mount();
 
+    await drain(scene);
     expect(loader.loaded, containsAll(['ui.png', 'world.png']));
+    expect(host.shown, 'boot', reason: 'the first group to register shows');
+    expect(view.isMounted, isTrue);
+
+    host.show('game');
+    await drain(scene);
+    expect(host.shown, 'game');
     expect(game.isMounted, isTrue);
-    expect(view!.isMounted, isFalse);
-    expect(root.children.single, same(content));
+    expect(booting!.enabled, isFalse, reason: 'settling disabled the boot group');
   });
 }
