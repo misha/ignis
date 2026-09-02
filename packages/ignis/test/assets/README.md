@@ -1,14 +1,16 @@
 # Test Assets
 
-| Asset       | Type        | Attribution                                              |
-|-------------|-------------|----------------------------------------------------------|
-| `data.json` | json        | -                                                        |
-| `data.txt`  | plaintext   | -                                                        |
-| `fire.gif`  | gif         | [DevKidd](https://devkidd.itch.io/pixel-fire-asset-pack) |
-| `fire.png`  | spritesheet | [DevKidd](https://devkidd.itch.io/pixel-fire-asset-pack) |
-| `slime.png` | spritesheet | [Infected Tribe](https://infectedtribe.itch.io/)         |
+| Asset       | Type        | Attribution                                                      |
+|-------------|-------------|------------------------------------------------------------------|
+| `data.json` | json        | -                                                                |
+| `data.txt`  | plaintext   | -                                                                |
+| `fire.gif`  | gif         | [DevKidd](https://devkidd.itch.io/pixel-fire-asset-pack)         |
+| `fire.png`  | spritesheet | [DevKidd](https://devkidd.itch.io/pixel-fire-asset-pack)         |
+| `key_*.png` | image       | [Karsiori](https://karsiori.itch.io/pixel-art-key-pack-animated) |
+| `slime.png` | spritesheet | [Infected Tribe](https://infectedtribe.itch.io/)                 |
 
 # The Slime
+
 `slime.png` is 49 columns by 11 rows of 56x56 frames, and every row is a
 different length:
 

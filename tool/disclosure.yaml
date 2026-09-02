@@ -118,7 +118,7 @@ excluded:
       - conventions/*.md
       - docs/README.md
       - example/README.md
-      - notes/SPRITES.md
+      - notes/*.md
       - packages/*/*.md
       - packages/*/test/assets/README.md
 

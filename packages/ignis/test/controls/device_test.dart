@@ -1,54 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-/// An event no keyboard could produce, to prove dispatch never assumes one.
-final class _ButtonPress implements ControlEvent {
-  final int button;
-
-  const _ButtonPress(this.button);
-
-  @override
-  bool accepts(ControlEvent emitted) {
-    return emitted is _ButtonPress && emitted.button == button;
-  }
-}
-
-/// A device the engine knows nothing about, whose events are the buttons that
-/// went down together, so one event can stand for any number of triggers.
-final class _FakeDevice extends ControlDevice {
-  int starts = 0;
-  int stops = 0;
-
-  @override
-  void start() => starts += 1;
-
-  @override
-  void stop() => stops += 1;
-
-  /// Drives the device by hand, standing in for a platform listener.
-  ///
-  /// One call stands for one of the device's own events, which may turn into
-  /// any number of control events.
-  bool press(List<int> buttons) {
-    var handled = false;
-
-    for (final button in buttons) {
-      if (emit(_ButtonPress(button))) handled = true;
-    }
-
-    return handled;
-  }
-}
+import '../support/test_device.dart';
 
 void main() {
   late Controls controls;
-  late _FakeDevice device;
+  late TestDevice device;
   late List<ControlEvent> fired;
 
   setUp(() {
     fired = [];
-    device = _FakeDevice();
-    controls = Controls()..bind(fired.add, matchers: {const _ButtonPress(3)});
+    device = TestDevice();
+    controls = Controls()
+      ..bind(
+        fired.add,
+        matchers: {
+          const ButtonEvent(3),
+        },
+      );
   });
 
   group('installing', () {
@@ -88,7 +57,7 @@ void main() {
     });
 
     test('disposing stops every attached device', () {
-      final other = _FakeDevice();
+      final other = TestDevice();
 
       controls
         ..install(device)
@@ -106,12 +75,19 @@ void main() {
       controls.install(device);
 
       expect(device.press([3]), isTrue);
-      expect(fired.single, isA<_ButtonPress>());
+      expect(fired.single, isA<ButtonEvent>());
     });
 
     test('one device event yielding several control events runs each', () {
       controls = Controls()
-        ..bind(fired.add, matchers: {const _ButtonPress(3), const _ButtonPress(4)});
+        ..bind(
+          fired.add,
+          matchers: {
+            const ButtonEvent(3),
+            const ButtonEvent(4),
+          },
+        );
+
       controls.install(device);
 
       expect(device.press([3, 4]), isTrue);

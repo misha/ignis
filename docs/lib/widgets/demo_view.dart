@@ -5,6 +5,7 @@ import 'demos/debugging.dart';
 import 'demos/nodes.dart';
 import 'demos/overview.dart';
 import 'demos/sprites.dart';
+import 'demos/transitions.dart';
 
 /// Every demo scene on the site, by the name its `<Demo/>` slot carries.
 final Map<String, Widget Function()> _demos = {
@@ -13,6 +14,7 @@ final Map<String, Widget Function()> _demos = {
   ...nodeDemos,
   ...overviewDemos,
   ...spriteDemos,
+  ...transitionsDemos,
 };
 
 /// The scene one `<Demo name="..."/>` slot resolves to.

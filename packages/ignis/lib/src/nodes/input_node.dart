@@ -22,7 +22,7 @@ abstract class InputNode extends SpatialNode {
   @override
   Shape get shape => _shape ?? super.shape;
 
-  /// Sets this collider's shape.
+  /// Sets this input's shape.
   ///
   /// If null, defaults back to the parent's shape.
   set shape(Shape? value) => _shape = value;

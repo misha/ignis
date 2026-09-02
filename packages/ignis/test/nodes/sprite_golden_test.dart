@@ -27,4 +27,20 @@ void main() {
       debug: .spatial,
     ),
   );
+
+  testWidgets(
+    'plays its animation, wrapping at the end of the row',
+    (tester) => expectGoldenGif(
+      tester,
+      'goldens/sprite_playback.gif',
+      SpriteNode(
+        sprite: SpriteAnimation(
+          'test/assets/fire.png',
+          .new(32, 48),
+          fps: 8,
+        ),
+      )..play(0),
+      debug: .spatial,
+    ),
+  );
 }

@@ -8,7 +8,7 @@ void main() {
     Ignis.cache.clear();
     await Preload.run(
       loaders: [ImageLoader()],
-      paths: ['test/assets/fire.png'],
+      paths: ['test/assets/key_gold.png'],
     );
   });
 
@@ -17,11 +17,11 @@ void main() {
     (tester) {
       final paint = Paint();
 
-      return expectGolden(
+      return expectGoldenGif(
         tester,
-        'goldens/color_opacity_effect_fade_out.png',
+        'goldens/color_opacity_effect_fade_out.gif',
         SpriteNode(
-          sprite: SpriteAnimation('test/assets/fire.png', .new(32, 48), fps: 0),
+          sprite: SpriteImage('test/assets/key_gold.png'),
           anchor: .center,
           position: .all(50),
           paint: paint,
@@ -31,8 +31,7 @@ void main() {
               controller: .duration(1),
             ),
           ],
-        )..play(0, frame: 4),
-        dt: 0.5,
+        ),
         debug: .spatial,
       );
     },

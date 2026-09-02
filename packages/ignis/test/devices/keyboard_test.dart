@@ -3,13 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-/// Stands in for a gamepad or a plugin's event.
-final class _Other implements ControlEvent {
-  const _Other();
-
-  @override
-  bool accepts(ControlEvent emitted) => emitted is _Other;
-}
+import '../support/test_device.dart';
 
 void main() {
   group('KeyPress', () {
@@ -76,7 +70,7 @@ void main() {
       });
 
       test('an event of another kind never matches', () {
-        expect(const KeyPress(.space).accepts(const _Other()), isFalse);
+        expect(const KeyPress(.space).accepts(const TestEvent()), isFalse);
       });
     });
 

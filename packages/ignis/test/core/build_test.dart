@@ -1,20 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import 'package:flutter/foundation.dart';
+
 import '../support/test_node.dart';
-
-/// Two distinguishable node types, for watching a declaration change shape.
-final class _A extends Node {}
-
-final class _B extends Node {}
-
-/// A node configured entirely by its constructor, as a composed node is.
-final class _Sized extends Node {
-  final double size;
-
-  _Sized(this.size);
-}
 
 /// Runs [body] with error reporting captured instead of presented.
 List<FlutterErrorDetails> _reported(void Function() body) {
@@ -29,6 +18,18 @@ List<FlutterErrorDetails> _reported(void Function() body) {
   }
 
   return reported;
+}
+
+/// Two distinguishable node types, for watching a declaration change shape.
+final class _A extends Node {}
+
+final class _B extends Node {}
+
+/// A node configured entirely by its constructor, as a composed node is.
+final class _Sized extends Node {
+  final double size;
+
+  _Sized(this.size);
 }
 
 void main() {

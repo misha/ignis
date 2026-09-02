@@ -8,17 +8,17 @@ void main() {
     Ignis.cache.clear();
     await Preload.run(
       loaders: [ImageLoader()],
-      paths: ['test/assets/fire.png'],
+      paths: ['test/assets/key_gold.png'],
     );
   });
 
   testWidgets(
     'scales a sprite by an offset',
-    (tester) => expectGolden(
+    (tester) => expectGoldenGif(
       tester,
-      'goldens/scale_effect_by.png',
+      'goldens/scale_effect_by.gif',
       SpriteNode(
-        sprite: SpriteAnimation('test/assets/fire.png', .new(32, 48), fps: 0),
+        sprite: SpriteImage('test/assets/key_gold.png'),
         anchor: .center,
         position: .all(50),
         children: [
@@ -27,8 +27,7 @@ void main() {
             controller: .duration(1),
           ),
         ],
-      )..play(0, frame: 4),
-      dt: 1,
+      ),
       debug: .spatial,
     ),
   );

@@ -188,4 +188,43 @@ void main() {
       debug: .layout,
     ),
   );
+
+  testWidgets(
+    'grows to fit the padding alone',
+    (tester) => expectGolden(
+      tester,
+      'goldens/box_padding_alone.png',
+      BoxNode(padding: .all(10)),
+      debug: .layout,
+    ),
+  );
+
+  testWidgets(
+    'accounts for a non-default child anchor when aligning',
+    (tester) => expectGolden(
+      tester,
+      'goldens/align_anchor.png',
+      BoxNode(
+        alignment: .center,
+        children: [
+          ShapeNode(
+            shape: .square(20),
+            anchor: .center,
+            paint: Paint()..color = BLACK,
+          ),
+        ],
+      ),
+      debug: .layout,
+    ),
+  );
+
+  testWidgets(
+    'fills the largest constraint with no child when aligned',
+    (tester) => expectGolden(
+      tester,
+      'goldens/align_empty.png',
+      BoxNode(alignment: .center),
+      debug: .layout,
+    ),
+  );
 }

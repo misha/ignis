@@ -45,6 +45,11 @@ class Demo extends CustomComponentBase {
     'sprite-group': 'sprites.dart',
     'sprite-signals': 'sprites.dart',
     'sprite-finish': 'sprites.dart',
+    'transitions-cut': 'transitions.dart',
+    'transitions-curtain': 'transitions.dart',
+    'transitions-wipe': 'transitions.dart',
+    'transitions-slide': 'transitions.dart',
+    'transitions-fade': 'transitions.dart',
   };
 
   static hl.Highlighter? _dart;

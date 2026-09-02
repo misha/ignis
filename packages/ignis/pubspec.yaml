@@ -21,6 +21,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   leak_tracker: ^11.0.2
+  image: ^4.9.2
 
 scripts:
   analyze: dart analyze

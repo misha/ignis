@@ -115,7 +115,7 @@ class LocalAssetBundle extends CachingAssetBundle {
       request.dispose();
     }
 
-    if (request.accepted == 0) {
+    if (request.value.accepted == 0) {
       // Either nothing is registered on Ignis.preload, or every loader filtered
       // this out. Common for editor scratch files that land in the assets
       // directory, but it also catches loaders registered on the wrong preload.

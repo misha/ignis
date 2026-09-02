@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -5,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 import 'package:leak_tracker/leak_tracker.dart';
 
+import 'support/test_loader.dart';
 import 'support/test_bundle.dart';
 
 void main() {
@@ -19,13 +21,14 @@ void main() {
     final preload = Preload();
     preload.register(ImageLoader());
     final request = preload.load(paths: ['test/assets/fire.png']);
-    await request;
+    final snapshot = await request;
 
+    expect(snapshot.succeeded, isTrue);
     expect(Ignis.cache.retrieve('test/assets/fire.png'), isA<Image>());
-    expect(request.total, 1);
-    expect(request.completed, 1);
-    expect(request.progress, 1);
-    expect(request.done, isTrue);
+    expect(request.value.total, 1);
+    expect(request.value.completed, 1);
+    expect(request.value.progress, 1);
+    expect(request.value.done, isTrue);
     request.dispose();
   });
 
@@ -42,8 +45,8 @@ void main() {
 
     await request;
 
-    expect(request.total, 2);
-    expect(request.completed, 2);
+    expect(request.value.total, 2);
+    expect(request.value.completed, 2);
     expect(Ignis.cache.contains('test/assets/fire.png'), isTrue);
     expect(Ignis.cache.contains('test/assets/fire.gif'), isTrue);
     request.dispose();
@@ -60,7 +63,7 @@ void main() {
     final request = preload.load(manifest: true);
     await request;
 
-    expect(request.total, 2);
+    expect(request.value.total, 2);
     expect(Ignis.cache.contains('test/assets/fire.png'), isTrue);
     expect(Ignis.cache.contains('test/assets/fire.gif'), isTrue);
     request.dispose();
@@ -79,7 +82,7 @@ void main() {
 
     await request;
 
-    expect(request.total, 2);
+    expect(request.value.total, 2);
     expect(Ignis.cache.contains('test/assets/fire.png'), isTrue);
     expect(Ignis.cache.contains('test/assets/fire.gif'), isTrue);
     request.dispose();
@@ -148,17 +151,17 @@ void main() {
       ],
     );
 
-    expect(request.done, isFalse);
-    expect(request.progress, 0);
+    expect(request.value.done, isFalse);
+    expect(request.value.progress, 0);
 
     final updates = <double>[];
-    request.addListener(() => updates.add(request.progress));
+    request.addListener(() => updates.add(request.value.progress));
     await request;
 
     expect(updates, isNotEmpty);
     expect(updates.last, 1);
-    expect(request.progress, 1);
-    expect(request.done, isTrue);
+    expect(request.value.progress, 1);
+    expect(request.value.done, isTrue);
     request.dispose();
   });
 
@@ -172,35 +175,15 @@ void main() {
     preload.register(ImageLoader());
 
     final request = preload.load(manifest: true);
-    expect(request.total, 0);
+    expect(request.value.total, 0);
 
     final totals = <int>[];
-    request.addListener(() => totals.add(request.total));
+    request.addListener(() => totals.add(request.value.total));
     await request;
 
     expect(totals.first, 2, reason: 'the manifest should report before loading');
-    expect(request.total, 2);
+    expect(request.value.total, 2);
     request.dispose();
-  });
-
-  test('stops notifying once disposed mid-load', () async {
-    final preload = Preload();
-    preload.register(ImageLoader());
-
-    final request = preload.load(
-      paths: [
-        'test/assets/fire.png',
-        'test/assets/fire.gif',
-      ],
-    );
-
-    var triggers = 0;
-    request.addListener(() => triggers += 1);
-    request.dispose();
-    await request;
-
-    expect(triggers, 0);
-    expect(request.done, isTrue);
   });
 
   test('runs overlapping requests without contention', () async {
@@ -213,9 +196,9 @@ void main() {
 
     await Future.wait([first, second, third]);
 
-    expect(first.total, 1);
-    expect(second.total, 1);
-    expect(third.total, 1);
+    expect(first.value.total, 1);
+    expect(second.value.total, 1);
+    expect(third.value.total, 1);
     expect(Ignis.cache.contains('test/assets/fire.png'), isTrue);
     expect(Ignis.cache.contains('test/assets/fire.gif'), isTrue);
 
@@ -247,7 +230,7 @@ void main() {
     await request;
 
     expect(Ignis.cache.contains('test/assets/data.json'), isFalse);
-    expect(request.completed, 1);
+    expect(request.value.completed, 1);
     request.dispose();
   });
 
@@ -277,8 +260,8 @@ void main() {
 
     expect(Ignis.cache.retrieve('test/assets/fire.png'), isA<Image>());
     expect(Ignis.cache.contains('test/assets/data.json'), isFalse);
-    expect(request.total, 2);
-    expect(request.done, isTrue);
+    expect(request.value.total, 2);
+    expect(request.value.done, isTrue);
 
     // The request disposed itself on the way out, so listening now throws.
     expect(() => request.addListener(() {}), throwsFlutterError);
@@ -288,7 +271,7 @@ void main() {
     final request = Preload.run(loaders: [ImageLoader()], paths: ['test/assets/fire.png']);
 
     final updates = <double>[];
-    request.addListener(() => updates.add(request.progress));
+    request.addListener(() => updates.add(request.value.progress));
     await request;
 
     expect(updates, isNotEmpty);
@@ -299,6 +282,64 @@ void main() {
     // JSON fed to the image loader, so decoding blows up.
     final request = Preload.run(loaders: [ImageLoader()], paths: ['test/assets/data.json']);
     await expectLater(request, throwsA(isA<Exception>()));
+  });
+
+  test('records what a load failed with', () async {
+    final preload = Preload();
+    preload.register(ImageLoader());
+    final request = preload.load(paths: ['test/assets/data.json']);
+    await expectLater(request, throwsA(isA<Exception>()));
+
+    expect(request.value.done, isTrue);
+    expect(request.value.error, isA<Exception>());
+    expect(request.value.stackTrace, isNotNull);
+    request.dispose();
+  });
+
+  test('disposing a running request cancels it', () async {
+    final loader = TestLoader()..gates['a.png'] = Completer<void>();
+    final preload = Preload(concurrency: 1);
+    preload.register(loader);
+    final request = preload.load(paths: ['a.png', 'b.png']);
+
+    // Two turns let the pool hand `a.png` to the loader; `b.png` stays queued.
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+
+    final snapshots = <PreloadSnapshot>[];
+    request.addListener(() => snapshots.add(request.value));
+    request.dispose();
+
+    expect(snapshots, hasLength(1));
+    expect(snapshots.single.done, isTrue);
+    expect(snapshots.single.cancelled, isTrue);
+
+    final result = await request;
+    expect(result.cancelled, isTrue);
+
+    loader.gates['a.png']!.complete();
+
+    for (var i = 0; i < 10; i += 1) {
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    expect(loader.loaded, ['a.png'], reason: 'the queued asset must never start');
+    expect(Ignis.cache.contains('a.png'), isTrue, reason: 'the in-flight asset still lands');
+    await preload.dispose();
+  });
+
+  test('disposing a finished request notifies nothing further', () async {
+    final preload = Preload();
+    preload.register(ImageLoader());
+    final request = preload.load(paths: ['test/assets/fire.png']);
+    final snapshot = await request;
+    expect(snapshot.succeeded, isTrue);
+
+    var notifies = 0;
+    request.addListener(() => notifies += 1);
+    request.dispose();
+
+    expect(notifies, 0);
   });
 
   test('rejects loading once disposed', () async {

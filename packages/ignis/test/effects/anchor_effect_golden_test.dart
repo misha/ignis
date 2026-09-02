@@ -8,17 +8,17 @@ void main() {
     Ignis.cache.clear();
     await Preload.run(
       loaders: [ImageLoader()],
-      paths: ['test/assets/fire.png'],
+      paths: ['test/assets/key_gold.png'],
     );
   });
 
   testWidgets(
     'anchors a sprite to a destination',
-    (tester) => expectGolden(
+    (tester) => expectGoldenGif(
       tester,
-      'goldens/anchor_effect_to.png',
+      'goldens/anchor_effect_to.gif',
       SpriteNode(
-        sprite: SpriteAnimation('test/assets/fire.png', .new(32, 48), fps: 0),
+        sprite: SpriteImage('test/assets/key_gold.png'),
         position: .all(50),
         children: [
           AnchorEffect.to(
@@ -26,8 +26,7 @@ void main() {
             controller: .duration(1),
           ),
         ],
-      )..play(0, frame: 4),
-      dt: 1,
+      ),
       debug: .spatial,
     ),
   );

@@ -1,13 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-/// The simplest event there is: it matches its own kind.
-final class _Event implements ControlEvent {
-  const _Event();
-
-  @override
-  bool accepts(ControlEvent emitted) => emitted is _Event;
-}
+import '../support/test_device.dart';
 
 /// A node whose build binds the event, logging its name when it answers.
 final class _Answers extends Node {
@@ -24,7 +18,12 @@ final class _Answers extends Node {
   @override
   void build() {
     super.build();
-    Ignis.controls.bind((_) => log.add(name), matchers: {const _Event()});
+    Ignis.controls.bind(
+      (_) => log.add(name),
+      matchers: {
+        const TestEvent(),
+      },
+    );
   }
 }
 
@@ -39,16 +38,25 @@ final class _Binder extends Node with Live {
   void build() {
     super.build();
     builds += 1;
-    Ignis.controls.bind((_) => onJump(), matchers: {const _Event()});
+    Ignis.controls.bind(
+      (_) => onJump(),
+      matchers: {
+        const TestEvent(),
+      },
+    );
   }
 }
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() => Ignis.controls = Controls());
+  setUp(() {
+    Ignis.controls = Controls();
+  });
 
-  bool press() => Ignis.controls.dispatch(const _Event());
+  bool press() {
+    return Ignis.controls.dispatch(const TestEvent());
+  }
 
   test('a bind made in build answers once the node is mounted', () {
     var jumps = 0;
@@ -84,7 +92,13 @@ void main() {
 
   test('a bind made outside a build is the caller to release', () {
     var jumps = 0;
-    final release = Ignis.controls.bind((_) => jumps += 1, matchers: {const _Event()});
+
+    final release = Ignis.controls.bind(
+      (_) => jumps += 1,
+      matchers: {
+        const TestEvent(),
+      },
+    );
 
     expect(press(), isTrue);
     release();
@@ -145,9 +159,14 @@ void main() {
     });
 
     test('any node beats a bind made outside a build', () {
-      Ignis.controls.bind((_) => log.add('loose'), matchers: {const _Event()});
-      _Answers('node', log).mount();
+      Ignis.controls.bind(
+        (_) => log.add('loose'),
+        matchers: {
+          const TestEvent(),
+        },
+      );
 
+      _Answers('node', log).mount();
       press();
 
       expect(log, ['node']);
@@ -207,7 +226,7 @@ final class _Gated extends Node {
     super.build();
     Ignis.controls.bind(
       (_) => log.add(name),
-      matchers: {const _Event()},
+      matchers: {const TestEvent()},
       groups: {'ui'},
     );
   }

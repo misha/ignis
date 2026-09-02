@@ -8,6 +8,7 @@ import 'package:path/path.dart' as p;
 
 import 'support/colors.dart';
 import 'support/images.dart';
+import 'support/expect.dart';
 import 'support/test_bundle.dart';
 
 /// End-to-end coverage for local asset reloading.
@@ -46,16 +47,6 @@ void main() {
   Image? cached(String key) {
     if (!Ignis.cache.contains(key)) return null;
     return Ignis.cache.retrieve<Image>(key);
-  }
-
-  /// Waits until [condition] holds, failing the test if it never does.
-  Future<void> eventually(bool Function() condition, String reason) async {
-    final deadline = DateTime.now().add(const Duration(seconds: 1));
-
-    while (!condition()) {
-      if (DateTime.now().isAfter(deadline)) fail(reason);
-      await Future.delayed(const Duration(milliseconds: 5));
-    }
   }
 
   setUp(() async {
@@ -121,7 +112,7 @@ flutter:
 
     await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
 
-    await eventually(
+    await expectEventually(
       () => !identical(cached('assets/hero.png'), original),
       'the changed asset never reached the cache',
     );
@@ -139,7 +130,7 @@ flutter:
 
     await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
 
-    await eventually(
+    await expectEventually(
       () => cached('assets/hero.png')!.width == 4,
       'the changed asset never reached the cache',
     );
@@ -161,7 +152,7 @@ flutter:
 
     await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
 
-    await eventually(
+    await expectEventually(
       () => cached('assets/hero.png')!.width == 4,
       'the changed asset never reached the cache',
     );
@@ -185,7 +176,7 @@ flutter:
     // Down to two frames, leaving frame 3 out of range.
     await write(['assets', 'hero.png'], await solidImage(2, 1, BLUE));
 
-    await eventually(
+    await expectEventually(
       () => cached('assets/hero.png')!.width == 2,
       'the changed asset never reached the cache',
     );
@@ -205,7 +196,7 @@ flutter:
     // landed, the ignored event has had its chance too.
     await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
 
-    await eventually(
+    await expectEventually(
       () => !identical(cached('assets/hero.png'), original),
       'the control asset never reloaded',
     );
@@ -221,7 +212,7 @@ flutter:
     await File(p.join(root.path, 'assets', 'notes.txt')).writeAsString('hello');
     await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
 
-    await eventually(
+    await expectEventually(
       () => !identical(cached('assets/hero.png'), original),
       'the control asset never reloaded',
     );
@@ -240,8 +231,8 @@ flutter:
     final request = Ignis.preload.load(paths: ['assets/hero.png']);
     await request;
 
-    expect(request.completed, 1);
-    expect(request.accepted, 0, reason: 'a bare preload cannot load anything');
+    expect(request.value.completed, 1);
+    expect(request.value.accepted, 0, reason: 'a bare preload cannot load anything');
     request.dispose();
   });
 
@@ -257,8 +248,8 @@ flutter:
 
     await request;
 
-    expect(request.completed, 2);
-    expect(request.accepted, 1);
+    expect(request.value.completed, 2);
+    expect(request.value.accepted, 1);
     request.dispose();
   });
 
@@ -277,7 +268,7 @@ flutter:
     final original = cached('art/exported/villain.png')!;
     await write(['art', 'exported', 'villain.png'], await solidImage(4, 1, BLUE));
 
-    await eventually(
+    await expectEventually(
       () => !identical(cached('art/exported/villain.png'), original),
       'the second asset root was never watched',
     );
@@ -299,14 +290,14 @@ flutter:
     - art/
 ''');
 
-    await eventually(
+    await expectEventually(
       () => local.watching.contains('art'),
       'the watcher never picked up the new manifest entry',
     );
 
     await write(['art', 'villain.png'], await solidImage(4, 1, BLUE));
 
-    await eventually(
+    await expectEventually(
       () => Ignis.cache.contains('art/villain.png'),
       'the newly declared directory was never watched',
     );
@@ -317,7 +308,7 @@ flutter:
 
     await write(['assets', 'villain.png'], await solidImage(2, 1, BLUE));
 
-    await eventually(
+    await expectEventually(
       () => Ignis.cache.contains('assets/villain.png'),
       'a newly created asset never reached the cache',
     );

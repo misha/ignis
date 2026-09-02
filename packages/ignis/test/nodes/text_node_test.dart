@@ -6,6 +6,16 @@ import '../support/colors.dart';
 import '../support/images.dart';
 
 void main() {
+  test('repaints changed text without an explicit layout', () async {
+    final node = TextNode(text: 'I');
+    node.mount();
+    await renderImage(node, 40, 20);
+
+    node.text = 'Ignis';
+    await renderImage(node, 40, 20);
+    expect(node.painter.plainText, 'Ignis');
+  });
+
   test('setting text reaches the painter on the next reflow', () {
     final node = TextNode(text: 'I');
     node.mount();
@@ -118,22 +128,5 @@ void main() {
     node.mount();
 
     expect(node.size, isNot(Vector2.zero));
-  });
-
-  test('renders styled text', () async {
-    final node = TextNode(
-      text: 'I',
-      style: const TextStyle(
-        color: RED,
-        fontSize: 30,
-      ),
-    );
-
-    node.mount();
-    node.layout(.unbounded());
-
-    final image = await renderImage(node, node.width.ceil(), node.height.ceil());
-    final pixels = await pixelsOf(image);
-    expect(pixels, contains(isNot(0)));
   });
 }

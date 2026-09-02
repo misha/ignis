@@ -81,6 +81,7 @@ class TextNode extends SpatialNode {
     _dirty = true;
 
     draw((canvas) {
+      _reflow();
       painter.paint(canvas, .zero);
     });
   }

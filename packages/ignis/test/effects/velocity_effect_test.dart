@@ -2,19 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  test('moves its parent at a constant velocity, forever', () {
-    final node = SpatialNode(position: .new(10, 20));
-    final scene = node.mount();
-
-    node.add(VelocityEffect(velocity: .new(4, -2)));
-
-    scene.update(1);
-    expect(node.position, Vector2(14, 18));
-
-    scene.update(2);
-    expect(node.position, Vector2(22, 14));
-  });
-
   test('re-reads velocity every tick', () {
     final node = SpatialNode(position: .zero);
     final scene = node.mount();

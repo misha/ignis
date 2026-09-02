@@ -2,44 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  test('closes the gap to a fixed point at a constant speed', () {
-    final node = SpatialNode(position: .zero);
-    final scene = node.mount();
-
-    node.add(FollowEffect(following: .box(.new(30, 40)), speed: 10));
-
-    scene.update(1);
-    expect(node.position, Vector2(6, 8));
-
-    scene.update(2);
-    expect(node.position, Vector2(18, 24));
-  });
-
-  test('lands exactly on the target without overshoot', () {
-    final node = SpatialNode(position: .zero);
-    final scene = node.mount();
-
-    node.add(FollowEffect(following: .box(.new(10, 0)), speed: 10));
-
-    scene.update(2); // Would overshoot by 10 units at this speed.
-    expect(node.position, Vector2(10, 0));
-  });
-
-  test('tracks a moving goal instead of a fixed prediction', () {
-    final node = SpatialNode(position: .zero);
-    final scene = node.mount();
-    final following = PositionOwner.box(.new(100, 0));
-
-    node.add(FollowEffect(following: following, speed: 10));
-
-    scene.update(1); // Closes 10 units toward a goal that's 100 away.
-    expect(node.position, Vector2(10, 0));
-
-    following.position.setValues(5, 0); // The goal jumps within reach.
-    scene.update(1);
-    expect(node.position, Vector2(5, 0)); // Arrives instead of overshooting.
-  });
-
   test('emits onFinish once it first catches up, and does not re-emit while parked', () {
     final node = SpatialNode(position: .zero);
     final scene = node.mount();

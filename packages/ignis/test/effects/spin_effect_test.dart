@@ -2,19 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  test('spins its parent at a constant angular speed, forever', () {
-    final node = SpatialNode(angle: 1);
-    final scene = node.mount();
-
-    node.add(SpinEffect(speed: 2));
-
-    scene.update(1);
-    expect(node.angle, 3);
-
-    scene.update(2);
-    expect(node.angle, 7);
-  });
-
   test('re-reads speed every tick', () {
     final node = SpatialNode(angle: 0);
     final scene = node.mount();

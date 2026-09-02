@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/src/assets/watchers/asset_watcher.dart';
 import 'package:path/path.dart' as p;
 
+import 'support/expect.dart';
+
 void main() {
   late Directory root;
 
@@ -13,16 +15,6 @@ void main() {
     final file = File(at(parts));
     await file.parent.create(recursive: true);
     await file.writeAsString(contents, flush: true);
-  }
-
-  /// Waits until [condition] holds, failing the test if it never does.
-  Future<void> eventually(bool Function() condition, String reason) async {
-    final deadline = DateTime.now().add(const Duration(seconds: 1));
-
-    while (!condition()) {
-      if (DateTime.now().isAfter(deadline)) fail(reason);
-      await Future.delayed(const Duration(milliseconds: 5));
-    }
   }
 
   setUp(() async {
@@ -45,7 +37,7 @@ void main() {
 
     await write(['art', 'hero.txt'], 'blue');
 
-    await eventually(
+    await expectEventually(
       () => changes.any((path) => p.equals(path, at(['art', 'hero.txt']))),
       'the change was never reported',
     );
@@ -69,7 +61,7 @@ void main() {
 
     await write(['notes.txt'], 'two');
 
-    await eventually(
+    await expectEventually(
       () => changes.isNotEmpty,
       'the file change was never reported',
     );

@@ -174,6 +174,7 @@ void main() {
                   SidebarLink(text: 'Layout', href: '/systems/layout'),
                   SidebarLink(text: 'Effects', href: '/systems/effects'),
                   SidebarLink(text: 'Effect Controllers', href: '/systems/effect-controllers'),
+                  SidebarLink(text: 'Transitions', href: '/systems/transitions'),
                   SidebarLink(text: 'Sprites', href: '/systems/sprites'),
                   SidebarLink(text: 'Palettes', href: '/systems/palettes'),
                   SidebarLink(text: 'Collisions', href: '/systems/collisions'),

@@ -1,16 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import 'support/test_loader.dart';
 import 'support/test_bundle.dart';
-
-class _RecordingLoader extends Loader {
-  final List<String> loaded = [];
-
-  @override
-  void load(LoadingContext context) {
-    loaded.add(context.asset);
-  }
-}
 
 void main() {
   // JsonLoader reads through the bundle, which needs a binding.
@@ -23,7 +15,7 @@ void main() {
   }
 
   test('loads anything when unfiltered', () async {
-    final loader = _RecordingLoader();
+    final loader = TestLoader();
 
     await loader.run(contextFor('test/assets/fire.png'));
     await loader.run(contextFor('test/assets/data.json'));
@@ -32,7 +24,7 @@ void main() {
   });
 
   test('skips assets an extension filter rejects', () async {
-    final loader = _RecordingLoader()..extensions(['png']);
+    final loader = TestLoader()..extensions(['png']);
 
     await loader.run(contextFor('test/assets/fire.png'));
     await loader.run(contextFor('test/assets/data.json'));
@@ -41,7 +33,7 @@ void main() {
   });
 
   test('accepts any of the listed extensions', () async {
-    final loader = _RecordingLoader()..extensions(['png', 'gif']);
+    final loader = TestLoader()..extensions(['png', 'gif']);
 
     await loader.run(contextFor('test/assets/fire.png'));
     await loader.run(contextFor('test/assets/fire.gif'));
@@ -50,7 +42,7 @@ void main() {
   });
 
   test('skips assets a prefix filter rejects', () async {
-    final loader = _RecordingLoader()..prefix('test/assets/');
+    final loader = TestLoader()..prefix('test/assets/');
 
     await loader.run(contextFor('test/assets/fire.png'));
     await loader.run(contextFor('other/fire.png'));
@@ -59,7 +51,7 @@ void main() {
   });
 
   test('requires every filter to pass', () async {
-    final loader = _RecordingLoader()
+    final loader = TestLoader()
       ..prefix('test/')
       ..extensions(['png']);
 

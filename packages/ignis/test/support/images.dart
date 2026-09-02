@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:ignis/ignis.dart';
@@ -57,12 +56,6 @@ Future<Image> renderImage(Node node, int width, int height) {
   final recorder = PictureRecorder();
   node.render(Canvas(recorder));
   return recorder.endRecording().toImage(width, height);
-}
-
-/// Reads the raw ARGB pixels of [image], row by row.
-Future<Uint32List> pixelsOf(Image image) async {
-  final data = await image.toByteData();
-  return data!.buffer.asUint32List();
 }
 
 /// Reads the color of the pixel at ([x], [y]) in [image].

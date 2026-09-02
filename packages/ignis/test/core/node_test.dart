@@ -1,5 +1,7 @@
 import 'dart:ui';
 
+import '../support/canvas.dart';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
@@ -107,7 +109,7 @@ void main() {
     a.update(1);
     expect(log.updates, ['A', 'C', 'B', 'D']);
 
-    _render(a);
+    a.render(RecordingCanvas());
     expect(log.renders, ['A', 'C', 'B', 'D']);
   });
 
@@ -176,7 +178,7 @@ void main() {
       expect(b.updates, 0);
       expect(c.updates, 1);
 
-      _render(a);
+      a.render(RecordingCanvas());
       expect(b.renders, 0);
       expect(c.renders, 1);
     },
@@ -787,10 +789,4 @@ void main() {
       expect(node.query<TestNode>(), same(first));
     });
   });
-}
-
-void _render(Node node) {
-  final recorder = PictureRecorder();
-  node.render(Canvas(recorder));
-  recorder.endRecording();
 }
