@@ -5,6 +5,7 @@ import 'package:jaspr_content/jaspr_content.dart';
 import 'package:jaspr_content/theme.dart';
 import 'package:syntax_highlight_lite/syntax_highlight_lite.dart' as hl;
 
+import '../colors.dart';
 import '../source.dart';
 import '../theme.dart';
 import 'scene_demo.dart';
@@ -143,13 +144,13 @@ class Demo extends CustomComponentBase {
       css('pre::-webkit-scrollbar-track').styles(backgroundColor: Colors.transparent),
       css('pre::-webkit-scrollbar-thumb').styles(
         radius: .circular(0.25.rem),
-        backgroundColor: const Color('#2E2823'),
+        backgroundColor: BORDER,
       ),
       css('pre:hover::-webkit-scrollbar-thumb').styles(
-        backgroundColor: const Color('#6B6156'),
+        backgroundColor: DIM,
       ),
       css('.demo-hint, .demo-origin').styles(
-        color: IgnisColors.muted,
+        color: IgnisTokens.muted,
         fontFamily: ContentTheme.currentCodeFont,
         fontSize: 0.75.rem,
       ),
@@ -166,7 +167,7 @@ class Demo extends CustomComponentBase {
       css('.demo-hint').styles(
         display: .block,
         margin: .only(top: 0.375.rem),
-        color: IgnisColors.muted,
+        color: IgnisTokens.muted,
         fontFamily: ContentTheme.currentCodeFont,
         fontSize: 0.75.rem,
       ),

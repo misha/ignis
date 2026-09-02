@@ -131,16 +131,7 @@ class Node {
   /// Renders this node and its children to [canvas].
   void render(Canvas canvas) {
     renderSelf(canvas);
-    final children = _egg?.nodes;
-    if (children == null || children.isEmpty) return;
-
-    for (final child in children) {
-      // Rendering is recursive, so this is the only way to stop it.
-      // A disabled child must never have `render` called on it.
-      if (child._enabled) {
-        child.render(canvas);
-      }
-    }
+    renderChildren(canvas);
   }
 
   /// Runs this node's [draw] callbacks.
@@ -151,6 +142,21 @@ class Node {
 
     for (var i = 0; i < draws.length; i += 1) {
       draws[i](canvas);
+    }
+  }
+
+  /// Renders this node's enabled children to [canvas], in [priority] order.
+  @protected
+  void renderChildren(Canvas canvas) {
+    final children = _egg?.nodes;
+    if (children == null || children.isEmpty) return;
+
+    for (final child in children) {
+      // Rendering is recursive, so this is the only way to stop it.
+      // A disabled child must never have `render` called on it.
+      if (child._enabled) {
+        child.render(canvas);
+      }
     }
   }
 

@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:ignis/ignis.dart';
 
+import 'colors.dart';
 import 'debug_shortcuts.dart';
 
-const DEMO_BACKGROUND = Color(0xFF1B1815);
 const DEMO_SIZE = Vector2.all(125);
 
 final Map<String, Future<void>> _loads = {};
@@ -19,19 +19,6 @@ Future<void> _load(Iterable<String> assets) {
   ]);
 }
 
-enum LogColor {
-  muted(Color(0xFF9A9186)),
-  white(Color(0xFFEDE7DD)),
-  orange(Color(0xFFC78F30)),
-  blue(Color(0xFF7FA6C4)),
-  green(Color(0xFF8FB07A)),
-  red(Color(0xFFC4756A));
-
-  final Color value;
-
-  const LogColor(this.value);
-}
-
 /// The type every demo sets text in, with no color of its own so a caller can
 /// give it either a [color] or a [TextStyle.foreground].
 const DEMO_TEXT_STYLE = TextStyle(
@@ -41,11 +28,11 @@ const DEMO_TEXT_STYLE = TextStyle(
 );
 
 class DemoLog extends TextNode {
-  DemoLog() : super(style: TextStyle(color: LogColor.muted.value));
+  DemoLog() : super(style: TextStyle(color: GREY));
 
-  void call(String line, [LogColor color = .muted]) {
+  void call(String line, [Color color = GREY]) {
     text = line;
-    style = TextStyle(color: color.value);
+    style = TextStyle(color: color);
   }
 }
 
@@ -90,7 +77,7 @@ class _DemoSceneState extends State<DemoScene> {
     final scene = this.scene;
 
     if (scene == null) {
-      return const ColoredBox(color: DEMO_BACKGROUND);
+      return const ColoredBox(color: INK);
     }
 
     final stage = FittedBox(
@@ -99,7 +86,7 @@ class _DemoSceneState extends State<DemoScene> {
         height: DEMO_SIZE.y,
         child: SceneWidget(
           scene,
-          color: DEMO_BACKGROUND,
+          color: INK,
           autofocus: false,
         ),
       ),
@@ -108,7 +95,7 @@ class _DemoSceneState extends State<DemoScene> {
     return Directionality(
       textDirection: .ltr,
       child: ColoredBox(
-        color: DEMO_BACKGROUND,
+        color: INK,
         child: stage,
       ),
     );

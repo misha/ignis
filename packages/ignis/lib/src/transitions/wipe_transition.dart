@@ -1,53 +1,42 @@
-// SPDX-AI-Disclosure: ai-generated
-
-import 'dart:ui';
+// SPDX-AI-Disclosure: none
 
 import 'package:flutter/animation.dart';
 import 'package:flutter/painting.dart' show AxisDirection;
-import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/transition_group_node.dart';
+import 'package:ignis/src/core.dart';
+import 'package:ignis/src/nodes/opacity_node.dart';
 import 'package:ignis/src/transition.dart';
 
-/// A hard-edged panel sweeps in from the leading edge to full cover, trades
+/// A hard-edged [panel] sweeps in from the leading edge to full cover, trades
 /// the sides, then exits the trailing edge.
 class WipeTransition extends Transition {
   /// The direction the panel travels. Defaults to [AxisDirection.right].
   final AxisDirection direction;
 
-  /// The panel's color. Defaults to black.
-  final Color color;
+  /// What sweeps across.
+  final Node panel;
 
   /// The progress at which the sides trade places. Defaults to 0.5.
   final double swapAt;
 
-  final Paint _paint = Paint();
+  @override
+  late final OpacityNode chrome = .new(children: [panel]);
 
   WipeTransition({
+    required this.panel,
     AxisDirection? direction,
-    Color? color,
     double? duration,
     Curve? curve,
     double? swapAt,
   }) : direction = direction ?? .right,
-       color = color ?? const Color(0xFF000000),
        swapAt = swapAt ?? 0.5,
        super(controller: .duration(duration ?? 1, curve));
 
   @override
-  void apply(
-    double progress,
-    Vector2 size, {
-    required TransitionGroupNode incoming,
-    required TransitionGroupNode outgoing,
-  }) {
+  void apply(progress, incoming, outgoing) {
     final covering = progress < swapAt;
     incoming.opacity = covering ? 0 : 1;
     outgoing.opacity = covering ? 1 : 0;
-  }
 
-  @override
-  void paintChrome(Canvas canvas, double progress, Vector2 size) {
-    final covering = progress < swapAt;
     final double sweep;
 
     if (covering) {
@@ -58,30 +47,23 @@ class WipeTransition extends Transition {
       sweep = 1;
     }
 
-    final w = size.x;
-    final h = size.y;
+    final size = incoming.size;
+    final width = size.x;
+    final height = size.y;
+    final position = chrome.position;
 
-    _paint.color = color;
+    switch (direction) {
+      case .right:
+        position.setValues(covering ? (sweep - 1) * width : sweep * width, 0);
 
-    final panel = switch (direction) {
-      .right =>
-        covering //
-            ? Rect.fromLTRB(0, 0, sweep * w, h)
-            : Rect.fromLTRB(sweep * w, 0, w, h),
-      .left =>
-        covering //
-            ? Rect.fromLTRB(w - sweep * w, 0, w, h)
-            : Rect.fromLTRB(0, 0, w - sweep * w, h),
-      .down =>
-        covering //
-            ? Rect.fromLTRB(0, 0, w, sweep * h)
-            : Rect.fromLTRB(0, sweep * h, w, h),
-      .up =>
-        covering //
-            ? Rect.fromLTRB(0, h - sweep * h, w, h)
-            : Rect.fromLTRB(0, 0, w, h - sweep * h),
-    };
+      case .left:
+        position.setValues(covering ? width - sweep * width : -sweep * width, 0);
 
-    canvas.drawRect(panel, _paint);
+      case .down:
+        position.setValues(0, covering ? (sweep - 1) * height : sweep * height);
+
+      case .up:
+        position.setValues(0, covering ? height - sweep * height : -sweep * height);
+    }
   }
 }

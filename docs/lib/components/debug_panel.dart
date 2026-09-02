@@ -2,7 +2,7 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_content/theme.dart';
 
-import '../theme.dart';
+import '../colors.dart';
 
 @Import.onWeb('../widgets/debug_shortcuts.dart', show: [#DebugShortcuts])
 import 'debug_panel.imports.dart' deferred as debug_shortcuts;
@@ -53,7 +53,7 @@ class DebugPanel extends StatefulComponent {
         ),
         css('&.on').styles(fontWeight: .w700),
       ]),
-      css('.debug-slash').styles(color: IgnisColors.dim),
+      css('.debug-slash').styles(color: DIM),
     ]),
     // The title and the items close on the middle well before this, and the
     // panel would be read over them.
@@ -112,7 +112,7 @@ class _DebugPanelState extends State<DebugPanel> {
   Component _mode(_Wireframe wireframe, int index) {
     return button(
       classes: wireframe.draws ? 'debug-mode on' : 'debug-mode',
-      styles: Styles(color: wireframe.draws ? Color(wireframe.color) : IgnisColors.grey),
+      styles: Styles(color: wireframe.draws ? Color(wireframe.color) : GREY),
       attributes: {'title': 'Toggle with ${index + 1}'},
       onClick: () => debug_shortcuts.DebugShortcuts.toggle(index),
       [.text(wireframe.label)],

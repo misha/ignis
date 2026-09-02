@@ -1,34 +1,29 @@
-// SPDX-AI-Disclosure: none
+// SPDX-AI-Disclosure: ai-generated
 
 import 'dart:ui';
 
 import 'package:ignis/src/nodes/spatial_node.dart';
-import 'package:ignis/src/palette.dart';
 import 'package:ignis/src/shape.dart';
 
-class ShapeNode extends SpatialNode {
+/// Clips its subtree to its [shape].
+///
+/// Hit-testing is not clipped: a child outside the area still answers.
+class ClipNode extends SpatialNode {
   Shape? _shape;
 
-  /// The geometry drawn.
+  /// The area clipped to.
   ///
   /// If not explicitly set, defaults to the parent's shape.
   @override
   Shape get shape => _shape ?? super.shape;
 
-  /// Sets the geometry drawn.
+  /// Sets the area clipped to.
   ///
   /// If null, defaults back to the parent's shape.
   set shape(Shape? value) => _shape = value;
 
-  /// This node's registered paints.
-  final Palette palette;
-
-  /// The default paint.
-  Paint get paint => palette.paint;
-
-  ShapeNode({
+  ClipNode({
     this._shape,
-    Paint? paint,
     super.position,
     super.scale,
     super.angle,
@@ -36,14 +31,11 @@ class ShapeNode extends SpatialNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : palette = Palette(paint: paint);
+  });
 
   @override
-  void build() {
-    super.build();
-
-    draw((canvas) {
-      palette.draw(canvas, shape.draw);
-    });
+  void renderChildren(Canvas canvas) {
+    shape.clip(canvas);
+    super.renderChildren(canvas);
   }
 }

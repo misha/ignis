@@ -2,30 +2,19 @@ import 'package:jaspr/dom.dart';
 import 'package:jaspr_content/theme.dart';
 import 'package:syntax_highlight_lite/syntax_highlight_lite.dart' as hl;
 
-abstract final class Fire {
-  static const ember = Color('#FF4B33');
-  static const flare = Color('#FF8A3D');
-  static const spark = Color('#FFC53D');
-  static const glow = Color('#FFE9A8');
-}
+import 'colors.dart';
 
-abstract final class IgnisColors {
-  static const ink = Color('#1B1815');
-  static const dim = Color('#6B6156');
-  static const grey = Color('#9A9186');
-  static const bright = Color('#EDE7DD');
+abstract final class IgnisTokens {
+  static final surface = ColorToken('surface', INK);
+  static final border = ColorToken('border', BORDER);
+  static final muted = ColorToken('muted', GREY);
+  static final primaryHi = ColorToken('primary-hi', SPARK);
 
-  static final surface = ColorToken('surface', ink);
-  static final border = ColorToken('border', Color('#2E2823'));
-  static final muted = ColorToken('muted', grey);
-  static final primaryHi = ColorToken('primary-hi', Fire.spark);
+  static const _background = ThemeColor(BACKGROUND);
+  static const _text = ThemeColor(BRIGHT);
+  static const _headings = ThemeColor(HEADINGS);
+  static const _primary = ThemeColor(FLARE);
 
-  static const _background = ThemeColor(Color('#12100E'));
-  static const _text = ThemeColor(bright);
-  static const _headings = ThemeColor(Color('#F5F0E8'));
-  static const _primary = ThemeColor(Fire.flare);
-
-  /// Every token the site defines.
   static List<ColorToken> get all => [
     surface,
     border,
@@ -44,19 +33,19 @@ abstract final class IgnisColors {
     ContentColors.hr.apply(border),
     ContentColors.thBorders.apply(border),
     ContentColors.tdBorders.apply(border),
-    ContentColors.code.apply(const ThemeColor(Fire.glow)),
+    ContentColors.code.apply(const ThemeColor(GLOW)),
     ContentColors.kbd.apply(_headings),
-    ContentColors.preBg.apply(const ThemeColor(IgnisColors.ink)),
-    ContentColors.preCode.apply(const ThemeColor(bright)),
+    ContentColors.preBg.apply(const ThemeColor(INK)),
+    ContentColors.preCode.apply(const ThemeColor(BRIGHT)),
   ];
 }
 
 /// The site theme.
 ContentTheme get ignisTheme => ContentTheme(
-  primary: IgnisColors._primary,
-  background: IgnisColors._background,
-  text: IgnisColors._text,
-  colors: IgnisColors.all,
+  primary: IgnisTokens._primary,
+  background: IgnisTokens._background,
+  text: IgnisTokens._text,
+  colors: IgnisTokens.all,
   font: FontFamily.list([
     FontFamily('EB Garamond'),
     FontFamilies.serif,
@@ -86,18 +75,20 @@ ContentTheme get ignisTheme => ContentTheme(
 final ignisCodeTheme = hl.HighlighterTheme.fromConfiguration(
   '''
 {"settings":[
-  {"settings":{"foreground":"${IgnisColors.bright.value}"}},
-  {"scope":["comment","punctuation.definition.comment"],"settings":{"foreground":"${IgnisColors.dim.value}","fontStyle":"italic"}},
-  {"scope":["keyword","storage","storage.type","keyword.control","modifier"],"settings":{"foreground":"${Fire.ember.value}"}},
-  {"scope":["entity.name.type","entity.name.class","support.class","support.type"],"settings":{"foreground":"${Fire.flare.value}"}},
-  {"scope":["string","string.quoted","constant.character"],"settings":{"foreground":"${Fire.flare.value}"}},
-  {"scope":["constant.numeric","constant.language"],"settings":{"foreground":"${Fire.spark.value}"}},
-  {"scope":["entity.name.function","support.function","meta.function-call"],"settings":{"foreground":"${Fire.spark.value}"}},
-  {"scope":["variable","variable.parameter","meta.definition.variable"],"settings":{"foreground":"${IgnisColors.bright.value}"}},
-  {"scope":["keyword.operator","punctuation","meta.brace"],"settings":{"foreground":"${IgnisColors.grey.value}"}},
-  {"scope":["meta.declaration.annotation","storage.type.annotation"],"settings":{"foreground":"${Fire.ember.value}"}}
+  {"settings":{"foreground":"${BRIGHT.value}"}},
+  {"scope":["comment","punctuation.definition.comment"],"settings":{"foreground":"${DIM.value}","fontStyle":"italic"}},
+  {"scope":["keyword","storage","storage.type","keyword.control","modifier"],"settings":{"foreground":"${EMBER.value}"}},
+  {"scope":["entity.name.type","entity.name.class","support.class","support.type"],"settings":{"foreground":"${FLARE.value}"}},
+  {"scope":["string","string.quoted","constant.character"],"settings":{"foreground":"${FLARE.value}"}},
+  {"scope":["constant.numeric","constant.language"],"settings":{"foreground":"${SPARK.value}"}},
+  {"scope":["entity.name.function","support.function","meta.function-call"],"settings":{"foreground":"${SPARK.value}"}},
+  {"scope":["variable","variable.parameter","meta.definition.variable"],"settings":{"foreground":"${BRIGHT.value}"}},
+  {"scope":["keyword.operator","punctuation","meta.brace"],"settings":{"foreground":"${GREY.value}"}},
+  {"scope":["meta.declaration.annotation","storage.type.annotation"],"settings":{"foreground":"${EMBER.value}"}}
 ]}''',
-  hl.TextStyle(foreground: hl.Color(0xFFEDE7DD)),
+  hl.TextStyle(
+    foreground: hl.Color(0xFF000000 | int.parse(BRIGHT.value.substring(1), radix: 16)),
+  ),
 );
 
 /// Site-wide rules: the bundled faces, and the package styling we have to beat.
@@ -235,7 +226,7 @@ abstract final class IgnisStyles {
     css('.docs .content pre').styles(radius: .circular(Unit.zero)),
     css('.docs .header-container .header').styles(
       border: .only(
-        bottom: BorderSide(width: 1.px, color: IgnisColors.border),
+        bottom: BorderSide(width: 1.px, color: IgnisTokens.border),
       ),
     ),
     // Matches the package's own `.docs .main-container .sidebar-container`
@@ -243,7 +234,7 @@ abstract final class IgnisStyles {
     // mobile-only, so this also gives the sidebar an edge on desktop.
     css('.docs .main-container .sidebar-container').styles(
       border: .only(
-        right: BorderSide(width: 1.px, color: IgnisColors.border),
+        right: BorderSide(width: 1.px, color: IgnisTokens.border),
       ),
     ),
     // A page's `description` stays in frontmatter, where it is the page's
@@ -303,7 +294,7 @@ abstract final class IgnisStyles {
         letterSpacing: 0.02.em,
         lineHeight: 1.2.em,
       ),
-      css('&:hover').styles(backgroundColor: IgnisColors.surface),
+      css('&:hover').styles(backgroundColor: IgnisTokens.surface),
       css('svg').styles(width: 1.2.rem, height: 1.2.rem),
     ]),
     // Garamond sets its middle dot small and low, which reads as a full stop
@@ -315,7 +306,7 @@ abstract final class IgnisStyles {
     css('.docs .header .header-separator').styles(
       display: .flex,
       alignItems: .center,
-      color: IgnisColors.muted,
+      color: IgnisTokens.muted,
       fontFamily: ContentTheme.currentCodeFont,
       fontSize: 1.rem,
       raw: {'user-select': 'none', 'transform': 'translateY(-0.08em)'},
@@ -323,7 +314,7 @@ abstract final class IgnisStyles {
     css('.docs .sidebar-container').styles(
       raw: {
         'scrollbar-width': 'thin',
-        'scrollbar-color': '#2E2823 transparent',
+        'scrollbar-color': '${BORDER.value} transparent',
       },
     ),
     css('.docs .sidebar-container::-webkit-scrollbar').styles(width: 0.5.rem),
@@ -332,13 +323,13 @@ abstract final class IgnisStyles {
     ),
     css('.docs .sidebar-container::-webkit-scrollbar-thumb').styles(
       radius: .circular(0.25.rem),
-      backgroundColor: const Color('#2E2823'),
+      backgroundColor: BORDER,
     ),
     css('.docs .sidebar-container:hover::-webkit-scrollbar-thumb').styles(
-      backgroundColor: IgnisColors.dim,
+      backgroundColor: DIM,
     ),
-    css('.docs .sidebar li > div:hover').styles(backgroundColor: IgnisColors.surface),
-    css('.docs .sidebar li > div.active').styles(backgroundColor: IgnisColors.surface),
+    css('.docs .sidebar li > div:hover').styles(backgroundColor: IgnisTokens.surface),
+    css('.docs .sidebar li > div.active').styles(backgroundColor: IgnisTokens.surface),
     css('.docs .toc a, .related a').styles(
       raw: {
         'text-decoration': 'underline',
@@ -348,7 +339,7 @@ abstract final class IgnisStyles {
       },
     ),
     css('.docs .toc a:hover, .related a:hover').styles(
-      color: IgnisColors.primaryHi,
+      color: IgnisTokens.primaryHi,
       raw: {'text-decoration-color': 'currentColor'},
     ),
     // The header is fixed and frosted, and the package puts its height at 4rem
@@ -369,20 +360,20 @@ abstract final class IgnisStyles {
   /// site sets that attribute, so it never applies.
   static List<StyleRule> get _callouts => [
     css('.content .callout', [
-      css('&').styles(backgroundColor: IgnisColors.surface),
+      css('&').styles(backgroundColor: IgnisTokens.surface),
       for (final variant in _calloutEdges.entries)
         css('&.callout-${variant.key}').styles(
           border: .all(width: 1.px, color: variant.value),
           color: ContentColors.text,
-          backgroundColor: IgnisColors.surface,
+          backgroundColor: IgnisTokens.surface,
         ),
     ]),
   ];
 
   static Map<String, Color> get _calloutEdges => {
-    'info': IgnisColors.border,
+    'info': IgnisTokens.border,
     'warning': ContentColors.primary,
-    'error': Fire.ember,
-    'success': IgnisColors.muted,
+    'error': EMBER,
+    'success': IgnisTokens.muted,
   };
 }

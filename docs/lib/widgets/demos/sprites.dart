@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:ignis/ignis.dart';
 
+import '../colors.dart';
 import '../demo_scene.dart';
 
 /// One frame of a bonfire sheet.
@@ -489,7 +490,7 @@ class _SignalsNode extends Node {
 
     var count = 0;
 
-    slime.onLoop(() => log('onLoop ${count += 1}', .orange));
+    slime.onLoop(() => log('onLoop ${count += 1}', ORANGE));
     // demo off
 
     addAll([

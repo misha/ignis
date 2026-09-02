@@ -1,10 +1,8 @@
 import 'package:flutter/widgets.dart' hide FadeTransition, SlideTransition;
 import 'package:ignis/ignis.dart';
 
+import '../colors.dart';
 import '../demo_scene.dart';
-
-const _EMBER = Color(0xFFFF4B33);
-const _SPARK = Color(0xFFFFC53D);
 
 /// The demos on the Transitions page, by the name their `<Demo/>` slot carries.
 final Map<String, Widget Function()> transitionsDemos = {
@@ -25,14 +23,6 @@ final Map<String, Widget Function()> transitionsDemos = {
   },
 };
 
-/// A screen-filling panel of one color.
-ShapeNode _screen(Color color) {
-  return ShapeNode(
-    shape: .rectangle(DEMO_SIZE),
-    paint: Paint()..color = color,
-  );
-}
-
 /// Two screens traded on every tap, with no animation between them.
 class _CutNode extends Node {
   @override
@@ -43,15 +33,21 @@ class _CutNode extends Node {
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
     final host = TransitionNode<String>(
-      transition: CutTransition.new,
+      transition: CutTransition(),
       children: [
-        TransitionGroupNode(name: 'ember', children: [_screen(_EMBER)]),
-        TransitionGroupNode(name: 'spark', children: [_screen(_SPARK)]),
+        TransitionGroupNode(
+          name: 'red',
+          children: [ShapeNode(paint: Paint()..color = RED)],
+        ),
+        TransitionGroupNode(
+          name: 'green',
+          children: [ShapeNode(paint: Paint()..color = GREEN)],
+        ),
       ],
     );
 
     taps.onTap(() {
-      host.show(host.shown == 'ember' ? 'spark' : 'ember');
+      host.show(host.shown == 'red' ? 'green' : 'red');
     });
     // demo off
 
@@ -70,15 +66,25 @@ class _CurtainNode extends Node {
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
     final host = TransitionNode<String>(
-      transition: CurtainTransition.new,
+      transition: CurtainTransition(
+        veil: ShapeNode(
+          paint: Paint()..color = INK,
+        ),
+      ),
       children: [
-        TransitionGroupNode(name: 'ember', children: [_screen(_EMBER)]),
-        TransitionGroupNode(name: 'spark', children: [_screen(_SPARK)]),
+        TransitionGroupNode(
+          name: 'red',
+          children: [ShapeNode(paint: Paint()..color = RED)],
+        ),
+        TransitionGroupNode(
+          name: 'green',
+          children: [ShapeNode(paint: Paint()..color = GREEN)],
+        ),
       ],
     );
 
     taps.onTap(() {
-      host.show(host.shown == 'ember' ? 'spark' : 'ember');
+      host.show(host.shown == 'red' ? 'green' : 'red');
     });
     // demo off
 
@@ -96,15 +102,25 @@ class _WipeNode extends Node {
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
     final host = TransitionNode<String>(
-      transition: WipeTransition.new,
+      transition: WipeTransition(
+        panel: ShapeNode(
+          paint: Paint()..color = INK,
+        ),
+      ),
       children: [
-        TransitionGroupNode(name: 'ember', children: [_screen(_EMBER)]),
-        TransitionGroupNode(name: 'spark', children: [_screen(_SPARK)]),
+        TransitionGroupNode(
+          name: 'red',
+          children: [ShapeNode(paint: Paint()..color = RED)],
+        ),
+        TransitionGroupNode(
+          name: 'green',
+          children: [ShapeNode(paint: Paint()..color = GREEN)],
+        ),
       ],
     );
 
     taps.onTap(() {
-      host.show(host.shown == 'ember' ? 'spark' : 'ember');
+      host.show(host.shown == 'red' ? 'green' : 'red');
     });
     // demo off
 
@@ -122,15 +138,21 @@ class _SlideNode extends Node {
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
     final host = TransitionNode<String>(
-      transition: SlideTransition.new,
+      transition: SlideTransition(),
       children: [
-        TransitionGroupNode(name: 'ember', children: [_screen(_EMBER)]),
-        TransitionGroupNode(name: 'spark', children: [_screen(_SPARK)]),
+        TransitionGroupNode(
+          name: 'red',
+          children: [ShapeNode(paint: Paint()..color = RED)],
+        ),
+        TransitionGroupNode(
+          name: 'green',
+          children: [ShapeNode(paint: Paint()..color = GREEN)],
+        ),
       ],
     );
 
     taps.onTap(() {
-      host.show(host.shown == 'ember' ? 'spark' : 'ember');
+      host.show(host.shown == 'red' ? 'green' : 'red');
     });
     // demo off
 
@@ -148,15 +170,21 @@ class _FadeNode extends Node {
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
     final host = TransitionNode<String>(
-      transition: () => FadeTransition(crossFade: true),
+      transition: FadeTransition(crossFade: true),
       children: [
-        TransitionGroupNode(name: 'ember', children: [_screen(_EMBER)]),
-        TransitionGroupNode(name: 'spark', children: [_screen(_SPARK)]),
+        TransitionGroupNode(
+          name: 'red',
+          children: [ShapeNode(paint: Paint()..color = RED)],
+        ),
+        TransitionGroupNode(
+          name: 'green',
+          children: [ShapeNode(paint: Paint()..color = GREEN)],
+        ),
       ],
     );
 
     taps.onTap(() {
-      host.show(host.shown == 'ember' ? 'spark' : 'ember');
+      host.show(host.shown == 'red' ? 'green' : 'red');
     });
     // demo off
 

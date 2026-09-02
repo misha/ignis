@@ -1,11 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:ignis/ignis.dart';
 
+import '../colors.dart';
 import '../demo_scene.dart';
 
-const _RED = Color(0xFFC4756A);
-const _GREEN = Color(0xFF8FB07A);
-const _BLUE = Color(0xFF7FA6C4);
 const _CENTER = Vector2.all(62.5);
 
 /// The demos on the Nodes page, by the name their `<Demo/>` slot carries.
@@ -19,7 +17,7 @@ final Map<String, Widget Function()> nodeDemos = {
 ShapeNode _circle() {
   return ShapeNode(
     shape: .circle(20),
-    paint: Paint()..color = _RED,
+    paint: Paint()..color = RED,
     position: Vector2(-10, -10),
     anchor: .center,
   );
@@ -28,7 +26,7 @@ ShapeNode _circle() {
 ShapeNode _box() {
   return ShapeNode(
     shape: .square(40),
-    paint: Paint()..color = _BLUE,
+    paint: Paint()..color = BLUE,
     position: Vector2(10, 10),
     anchor: .center,
   );
@@ -101,8 +99,8 @@ class _EnabledNode extends Node {
   void build() {
     super.build();
 
-    final green = _dot(_GREEN);
-    final red = _dot(_RED);
+    final green = _dot(GREEN);
+    final red = _dot(RED);
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
     // demo on node-enabled

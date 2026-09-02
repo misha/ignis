@@ -1,36 +1,31 @@
 // SPDX-AI-Disclosure: ai-generated
 
 import 'package:flutter/foundation.dart';
-import 'package:ignis/src/core.dart';
 import 'package:ignis/src/nodes/opacity_node.dart';
 import 'package:ignis/src/nodes/transition_node.dart';
 
-/// One of the subtrees a [TransitionNode] swaps between, registered under
-/// [name] with the closest one above it.
+/// One of the subtrees a [TransitionNode] swaps between, a direct child of it
+/// named for [TransitionNode.show].
 ///
-/// Its transform and opacity belong to the swap: a transition writes them
-/// mid-flight, and settling returns them to [reset].
+/// Its transform, opacity, enablement, and priority belong to the host: a
+/// transition writes the pose mid-flight, and settling returns it to [reset].
 class TransitionGroupNode<T> extends OpacityNode {
-  /// The name this group registers under.
+  /// The name [TransitionNode.show] swaps to.
   final T name;
-
-  late final _target = Target<TransitionNode<T>?>(this);
 
   TransitionGroupNode({
     required this.name,
-    super.enabled,
-    super.priority,
     super.children,
   });
 
   @override
   void build() {
     super.build();
-    final host = _target.value;
+    final host = parent;
 
     // TODO: Maybe needs a `strict` parameter.
-    if (host == null) {
-      throw StateError('TransitionGroupNode requires a TransitionNode<$T> ancestor.');
+    if (host is! TransitionNode<T>) {
+      throw StateError('TransitionGroupNode must be a direct child of a TransitionNode<$T>.');
     }
 
     host.register(this);

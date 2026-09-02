@@ -4,12 +4,11 @@ import 'package:docs/rng.dart';
 import 'package:flutter/material.dart';
 import 'package:ignis/ignis.dart';
 
+import '../colors.dart';
 import '../demo_scene.dart';
 
-const _IDLE_COLOR = Color(0xFF8FB07A);
-const _HIT_COLOR = Color(0xFFC4756A);
-const _BLUE = Color(0xFF7FA6C4);
-const _ORANGE = Color(0xFFC78F30);
+const _IDLE_COLOR = GREEN;
+const _HIT_COLOR = RED;
 
 const _BLOCK = 20.0;
 const _PROBE = 8.0;
@@ -49,7 +48,7 @@ PaletteEntry _stroke() {
 ShapeNode _still(
   Shape shape, {
   Vector2? position,
-  Color color = _BLUE,
+  Color color = BLUE,
 }) {
   final node = ShapeNode(
     shape: shape,
@@ -116,11 +115,11 @@ class _PairNode extends CollisionArenaNode {
     final collider = mover.add(ColliderNode());
 
     collider
-      ..onCollisionStart((_) => log('colliding', .red))
-      ..onCollisionEnd((_) => log('not colliding', .green));
+      ..onCollisionStart((_) => log('colliding', RED))
+      ..onCollisionEnd((_) => log('not colliding', GREEN));
     // demo off
 
-    log('not colliding', .green);
+    log('not colliding', GREEN);
     add(_caption(log));
   }
 }
@@ -209,7 +208,7 @@ class _LayerNode extends CollisionArenaNode {
   void build() {
     super.build();
     final blue = _still(.square(_BLOCK));
-    final orange = _still(.square(_BLOCK), color: _ORANGE);
+    final orange = _still(.square(_BLOCK), color: ORANGE);
 
     add(
       BoxNode(
@@ -265,7 +264,7 @@ class _LabelNode extends BoxNode {
 
   void call(String text) {
     _outline.text = text;
-    _fill(text, .white);
+    _fill(text, BRIGHT);
   }
 }
 

@@ -3,7 +3,7 @@ import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_content/jaspr_content.dart';
 import 'package:jaspr_content/theme.dart';
 
-import '../theme.dart';
+import '../colors.dart';
 
 /// The mark each `<Lineage>` source wears.
 const _MARKS = {
@@ -102,10 +102,10 @@ class Callouts extends CustomComponentBase {
     css('.aside-warning', [
       css('&').styles(
         border: .only(
-          left: BorderSide(width: 3.px, color: Fire.flare),
+          left: BorderSide(width: 3.px, color: FLARE),
         ),
       ),
-      css('.aside-label').styles(color: Fire.flare),
+      css('.aside-label').styles(color: FLARE),
     ]),
     // An aside inside a list entry belongs to that entry rather than to the
     // page, so it gives back most of the room it takes between paragraphs and

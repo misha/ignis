@@ -24,6 +24,9 @@ sealed class Shape {
   /// Draws this shape onto [canvas] with [paint].
   void draw(Canvas canvas, Paint paint);
 
+  /// Clips [canvas] to this shape.
+  void clip(Canvas canvas);
+
   factory Shape.rectangle(Vector2 size) = Rectangle;
   factory Shape.square(double size) = Rectangle.square;
   factory Shape.circle(double radius) = Circle;
@@ -38,6 +41,9 @@ final class Rectangle extends Shape {
 
   @override
   void draw(Canvas canvas, Paint paint) => canvas.drawRect(rect(), paint);
+
+  @override
+  void clip(Canvas canvas) => canvas.clipRect(rect());
 
   /// Computes this rectangle's world-space half-extents under [transform].
   void worldExtents(Matrix3 transform, MVector2 ex, MVector2 ey) {
@@ -56,6 +62,12 @@ final class Circle extends Shape {
 
   @override
   void draw(Canvas canvas, Paint paint) => canvas.drawOval(rect(), paint);
+
+  @override
+  void clip(Canvas canvas) {
+    // TODO: Should this really be a rounded rectangle? Strange, as this is a circle.
+    canvas.clipRRect(RRect.fromRectAndRadius(rect(), Radius.circular(radius)));
+  }
 
   /// Computes this circle's world-space radius under [transform].
   double worldRadius(Matrix3 transform) {

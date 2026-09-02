@@ -1,35 +1,39 @@
 // SPDX-AI-Disclosure: ai-generated
 
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/math.dart';
+import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/nodes/transition_group_node.dart';
+import 'package:ignis/src/shape.dart';
 import 'package:ignis/src/transition.dart';
 import 'package:ignis/src/transitions/cut_transition.dart';
 
-/// Builds a fresh [Transition] per swap. A default-configured constructor can
-/// always be used directly as a tear-off, e.g. `CurtainTransition.new`.
-typedef TransitionFactory = Transition Function();
-
-/// A permanent layer that swaps between the [TransitionGroupNode]s registered
-/// beneath it, playing a [Transition] per swap.
+/// A permanent layer that swaps between its [TransitionGroupNode] children,
+/// playing a [Transition] per swap. It owns their enablement, priority, and
+/// pose. A transition may be reused: each swap restarts its clock and
+/// re-mounts its chrome.
+///
+/// The region swapped is the [shape] in effect above this node, or the scene's
+/// when nothing spatial is above, as a layout root takes it. The groups and
+/// the transition's chrome fill that region.
 ///
 /// Exactly one group shows at a time; the rest are disabled, so they neither
-/// tick, hit-test, nor hear their binds. Anything beneath this node that is
-/// not inside a group is unaffected by swapping. Mid-swap both sides are live
+/// tick, hit-test, nor hear their binds. Mid-swap both sides are live, the
+/// outgoing one painting below the incoming one and the chrome above both,
 /// and their pose is a pure function of the transition's progress, so a swap
 /// can be reversed at any moment: [show] with the name being left reverses,
 /// with the current target runs forward, and with a third name completes the
 /// running swap and starts fresh.
-class TransitionNode<T> extends Node {
-  /// Builds the transition a swap plays when [show] names none.
-  /// Null cuts straight from group to group.
-  final TransitionFactory? transition;
+class TransitionNode<T> extends SpatialNode {
+  /// The transition a swap plays when [show] names none. Defaults to a
+  /// [CutTransition].
+  final Transition transition;
 
-  final Map<T, TransitionGroupNode<T>> _groups = {};
+  final MVector2 _room = .zero();
+  late final Shape _roomShape = Rectangle(_room);
+  late final _above = Target<SpatialNode?>(this);
   T? _shown;
-  (T, TransitionFactory?)? _pending;
   Transition? _transition;
   bool _forward = true;
   TransitionGroupNode<T>? _incoming;
@@ -37,26 +41,40 @@ class TransitionNode<T> extends Node {
 
   TransitionNode({
     this._shown,
-    this.transition,
+    Transition? transition,
+    super.position,
+    super.scale,
+    super.angle,
+    super.anchor,
     super.enabled,
     super.priority,
     super.children,
-  });
+  }) : transition = transition ?? CutTransition();
 
-  /// The name of the showing group. Commits at the [show] call, before the
-  /// visuals settle.
+  /// The area swapped: the shape in effect above this node, or the scene's
+  /// when nothing spatial is above.
+  @override
+  Shape get shape => _above.value?.shape ?? _roomShape;
+
+  Iterable<TransitionGroupNode<T>> get _groups => query<TransitionGroupNode<T>>();
+
+  /// The name of the showing group, the first child's until [show] names
+  /// another. Commits at the [show] call, before the visuals settle.
   T get shown {
-    if (_pending case (final name, _)) return name;
-    assert(_shown != null, 'No group has registered yet.');
-    return _shown as T;
+    assert(_groups.isNotEmpty, 'No group has been added yet.');
+    return _shown ??= _groups.first.name;
   }
 
   /// Whether a swap's transition is in flight.
   bool get isTransitioning => _transition != null;
 
+  /// The in-flight swap's progress, or 1 between swaps.
+  double get progress => _transition?.controller.progress ?? 1;
+
   @override
   void build() {
     super.build();
+    onSceneResize(_room.setFrom);
 
     tick((dt) {
       final flight = _transition;
@@ -79,31 +97,27 @@ class TransitionNode<T> extends Node {
         }
       }
 
-      flight.apply(controller.progress, scene.size, incoming: _incoming!, outgoing: _outgoing!);
+      flight.apply(controller.progress, _incoming!, _outgoing!);
     });
   }
 
-  /// Swaps to the group registered under [name], playing [transition] over
-  /// the default. Mid-flight, naming the group being left reverses the swap,
-  /// naming the current target keeps it running forward, and naming a third
-  /// group completes the running swap first.
+  /// Swaps to the group named [name], playing [transition] over the default.
+  /// Mid-flight, naming the group being left reverses the swap, naming the
+  /// current target keeps it running forward, and naming a third group
+  /// completes the running swap first.
   ///
-  /// Callable before mounting: the swap begins once its groups register.
-  void show(T name, {TransitionFactory? transition}) {
-    if (!isMounted) {
-      _pending = (name, transition);
-      return;
-    }
-
-    assert(_groups.containsKey(name), 'No group is registered under "$name".');
+  /// Callable before mounting.
+  void show(T name, {Transition? transition}) {
+    final target = _group(name);
+    assert(target != null, 'No group is named "$name".');
 
     if (_transition != null) {
-      if (name == _shown) {
+      if (name == shown) {
         _forward = true;
         return;
       }
 
-      if (identical(_groups[name], _outgoing)) {
+      if (identical(target, _outgoing)) {
         _shown = name;
         _forward = false;
         return;
@@ -112,72 +126,61 @@ class TransitionNode<T> extends Node {
       _settle(loser: (_forward ? _outgoing : _incoming)!);
     }
 
-    if (name == _shown) return;
-    _swap(name, transition);
+    if (name == shown) return;
+    _swap(target!, transition);
   }
 
-  void _swap(T name, TransitionFactory? transition) {
-    final outgoing = _groups[_shown]!;
-    final incoming = _groups[name]!;
+  TransitionGroupNode<T>? _group(T name) {
+    for (final group in _groups) {
+      if (group.name == name) return group;
+    }
+
+    return null;
+  }
+
+  void _swap(TransitionGroupNode<T> incoming, Transition? transition) {
+    final outgoing = _group(shown)!;
     incoming.enable();
+    outgoing.priority = 0;
+    incoming.priority = 1;
     _outgoing = outgoing;
     _incoming = incoming;
-    _shown = name;
+    _shown = incoming.name;
     _forward = true;
 
-    final flight = (transition ?? this.transition ?? CutTransition.new)();
+    final flight = transition ?? this.transition;
     _transition = flight;
-    flight.apply(flight.controller.progress, scene.size, incoming: incoming, outgoing: outgoing);
-  }
-
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    final flight = _transition;
-    if (flight != null) flight.paintChrome(canvas, flight.controller.progress, scene.size);
+    flight.controller.setToStart();
+    flight.apply(flight.controller.progress, incoming, outgoing);
+    final chrome = flight.chrome;
+    if (chrome == null) return;
+    chrome.priority = 2;
+    chrome.enable();
+    add(chrome);
   }
 
   @internal
   void register(TransitionGroupNode<T> group) {
     assert(
-      !_groups.containsKey(group.name),
-      'A group is already registered under "${group.name}".',
+      _groups.where((other) => other.name == group.name).length == 1,
+      'A group is already named "${group.name}".',
     );
 
-    _groups[group.name] = group;
     _shown ??= group.name;
-
-    if (group.name == _shown) {
-      group.enable();
-    } else {
-      group.disable();
-    }
-
-    _startPending();
-  }
-
-  /// Starts a swap shown before mounting, once its groups have registered.
-  void _startPending() {
-    final pending = _pending;
-    if (pending == null) return;
-    final (name, transition) = pending;
-    if (!_groups.containsKey(name)) return;
-    _pending = null;
-    if (name == _shown) return;
-    _swap(name, transition);
+    if (identical(group, _incoming) || identical(group, _outgoing)) return;
+    group.enabled = group.name == _shown;
   }
 
   @internal
   void unregister(TransitionGroupNode<T> group) {
-    _groups.remove(group.name);
-
     if (identical(group, _incoming) || identical(group, _outgoing)) {
       _settle(loser: group);
     }
   }
 
   void _settle({required TransitionGroupNode<T> loser}) {
-    if (_transition == null) return;
+    final flight = _transition;
+    if (flight == null) return;
     final incoming = _incoming!;
     final outgoing = _outgoing!;
     _transition = null;
@@ -186,5 +189,9 @@ class TransitionNode<T> extends Node {
     incoming.reset();
     outgoing.reset();
     loser.disable();
+    final chrome = flight.chrome;
+    if (chrome == null) return;
+    chrome.disable();
+    remove(chrome);
   }
 }

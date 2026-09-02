@@ -1,9 +1,7 @@
-// SPDX-AI-Disclosure: ai-generated
+// SPDX-AI-Disclosure: none
 
 import 'package:flutter/animation.dart';
 import 'package:flutter/painting.dart' show AxisDirection;
-import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/transition_group_node.dart';
 import 'package:ignis/src/transition.dart';
 
 /// Slides the incoming side in and the outgoing side out, as if being shoved.
@@ -19,12 +17,8 @@ class SlideTransition extends Transition {
        super(controller: .duration(duration ?? 1, curve));
 
   @override
-  void apply(
-    double progress,
-    Vector2 size, {
-    required TransitionGroupNode incoming,
-    required TransitionGroupNode outgoing,
-  }) {
+  void apply(progress, incoming, outgoing) {
+    final size = incoming.size;
     final remaining = 1 - progress;
 
     switch (direction) {
