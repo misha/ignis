@@ -9,8 +9,8 @@ final class TestTransition extends Transition {
 
   TestTransition({
     this.chrome,
-    EffectController? controller,
-  }) : super(controller: controller ?? .duration(1));
+    Timeline? timeline,
+  }) : super(timeline: timeline ?? .duration(1));
 
   @override
   void apply(progress, _, _) {

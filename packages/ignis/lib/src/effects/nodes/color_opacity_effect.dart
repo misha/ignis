@@ -2,10 +2,10 @@
 
 import 'dart:ui';
 
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 
 /// An effect that animates a [Paint]'s opacity by mutating its alpha.
-class ColorOpacityEffect extends ControlledEffect {
+class ColorOpacityEffect extends TimelineEffect {
   /// The paint whose alpha channel is mutated as this effect progresses.
   final Paint paint;
 
@@ -15,7 +15,7 @@ class ColorOpacityEffect extends ControlledEffect {
   /// Fades [paint] in from fully transparent to fully opaque.
   ColorOpacityEffect.fadeIn({
     required this.paint,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _base = 0,
@@ -24,7 +24,7 @@ class ColorOpacityEffect extends ControlledEffect {
   /// Fades [paint] out from fully opaque to fully transparent.
   ColorOpacityEffect.fadeOut({
     required this.paint,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _base = 1,
@@ -35,7 +35,7 @@ class ColorOpacityEffect extends ControlledEffect {
   ColorOpacityEffect.by({
     required this.paint,
     required double opacity,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _base = null,

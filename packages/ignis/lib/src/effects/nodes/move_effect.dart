@@ -1,14 +1,14 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/position_owner.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// An effect that animates a [PositionOwner]'s position over time.
-abstract class MoveEffect extends ControlledEffect implements MeasurableEffect {
+abstract class MoveEffect extends TimelineEffect implements MeasurableEffect {
   late final Target<PositionOwner> _target;
 
   /// The [PositionOwner] whose position is mutated by this effect.
@@ -18,7 +18,7 @@ abstract class MoveEffect extends ControlledEffect implements MeasurableEffect {
   /// position when the effect is mounted.
   factory MoveEffect.by({
     required Vector2 offset,
-    required EffectController controller,
+    required Timeline timeline,
     bool? cleanup,
     bool? enabled,
   }) = _MoveByEffect;
@@ -26,13 +26,13 @@ abstract class MoveEffect extends ControlledEffect implements MeasurableEffect {
   /// Moves the closest [PositionOwner] ancestor to [destination].
   factory MoveEffect.to({
     required Vector2 destination,
-    required EffectController controller,
+    required Timeline timeline,
     bool? cleanup,
     bool? enabled,
   }) = _MoveToEffect;
 
   MoveEffect._({
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) {
@@ -45,7 +45,7 @@ class _MoveByEffect extends MoveEffect {
 
   _MoveByEffect({
     required Vector2 offset,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _offset = offset.clone(),
@@ -70,7 +70,7 @@ class _MoveToEffect extends MoveEffect {
 
   _MoveToEffect({
     required Vector2 destination,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _destination = destination.clone(),

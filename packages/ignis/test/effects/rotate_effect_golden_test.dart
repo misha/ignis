@@ -26,7 +26,7 @@ void main() {
         children: [
           RotateEffect.by(
             angle: math.pi / 2,
-            controller: .duration(1),
+            timeline: .duration(1),
           ),
         ],
       ),

@@ -1,24 +1,21 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// Runs [children] one after another, advancing to the next once the current
 /// one finishes.
-class SequenceEffectController extends EffectController {
-  /// The controllers run in sequence.
-  final List<EffectController> children;
+class SequenceTimeline extends Timeline {
+  /// The timelines run in sequence.
+  final List<Timeline> children;
 
   int _currentIndex = 0;
 
-  SequenceEffectController(this.children)
-    : assert(children.isNotEmpty, 'At least 1 child is required.'),
-      super.empty();
+  SequenceTimeline(this.children) : assert(children.isNotEmpty, 'At least 1 child is required.');
 
   @override
-  void attach(ControlledEffect effect) {
+  void fit(double distance) {
     for (final child in children) {
-      child.attach(effect);
+      child.fit(distance);
     }
   }
 

@@ -69,7 +69,7 @@ class TransitionNode<T> extends SpatialNode {
   bool get isTransitioning => _transition != null;
 
   /// The in-flight swap's progress, or 1 between swaps.
-  double get progress => _transition?.controller.progress ?? 1;
+  double get progress => _transition?.timeline.progress ?? 1;
 
   @override
   void build() {
@@ -79,25 +79,25 @@ class TransitionNode<T> extends SpatialNode {
     tick((dt) {
       final flight = _transition;
       if (flight == null) return;
-      final controller = flight.controller;
+      final timeline = flight.timeline;
 
       if (_forward) {
-        controller.advance(dt);
+        timeline.advance(dt);
 
-        if (controller.isFinished) {
+        if (timeline.isFinished) {
           _settle(loser: _outgoing!);
           return;
         }
       } else {
-        controller.recede(dt);
+        timeline.recede(dt);
 
-        if (controller.progress == 0 || controller.duration == 0) {
+        if (timeline.progress == 0 || timeline.duration == 0) {
           _settle(loser: _incoming!);
           return;
         }
       }
 
-      flight.apply(controller.progress, _incoming!, _outgoing!);
+      flight.apply(timeline.progress, _incoming!, _outgoing!);
     });
   }
 
@@ -150,8 +150,8 @@ class TransitionNode<T> extends SpatialNode {
 
     final flight = transition ?? this.transition;
     _transition = flight;
-    flight.controller.setToStart();
-    flight.apply(flight.controller.progress, incoming, outgoing);
+    flight.timeline.setToStart();
+    flight.apply(flight.timeline.progress, incoming, outgoing);
     final chrome = flight.chrome;
     if (chrome == null) return;
     chrome.priority = 2;

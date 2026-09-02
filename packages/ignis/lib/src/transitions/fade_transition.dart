@@ -17,7 +17,7 @@ class FadeTransition extends Transition {
     Curve? curve,
     bool? crossFade,
   }) : crossFade = crossFade ?? false,
-       super(controller: .duration(duration ?? 1, curve));
+       super(timeline: .duration(duration ?? 1, curve));
 
   @override
   void apply(progress, incoming, outgoing) {

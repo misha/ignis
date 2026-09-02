@@ -5,7 +5,7 @@ lane: usage
 category: system
 status: partial
 reference: [TransitionNode, TransitionGroupNode, Transition, CutTransition, CurtainTransition, WipeTransition, SlideTransition, FadeTransition]
-related: [/systems/effects, /systems/effect-controllers]
+related: [/systems/effects, /systems/timelines]
 ---
 <!-- SPDX-AI-Disclosure: ai-none -->
 

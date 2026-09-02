@@ -26,7 +26,7 @@ class CurtainTransition extends Transition {
     Curve? curve,
     double? swapAt,
   }) : swapAt = swapAt ?? 0.5,
-       super(controller: .duration(duration ?? 1, curve));
+       super(timeline: .duration(duration ?? 1, curve));
 
   @override
   void apply(progress, incoming, outgoing) {

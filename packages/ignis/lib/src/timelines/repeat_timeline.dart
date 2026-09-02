@@ -1,27 +1,25 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// Runs [child] [times] times before finishing, restarting it from the
 /// beginning after each completed run.
-class RepeatEffectController extends EffectController {
-  /// The controller run repeatedly.
-  final EffectController child;
+class RepeatTimeline extends Timeline {
+  /// The timeline run repeatedly.
+  final Timeline child;
 
   /// How many times to run [child] before finishing.
   final int times;
 
   int _remaining;
 
-  RepeatEffectController(this.child, this.times)
+  RepeatTimeline(this.child, this.times)
     : assert(times > 0, 'Times must be positive.'),
-      assert(!child.isInfinite, 'Cannot repeat an infinite controller.'),
-      _remaining = times,
-      super.empty();
+      assert(!child.isInfinite, 'Cannot repeat an infinite timeline.'),
+      _remaining = times;
 
   @override
-  void attach(ControlledEffect effect) => child.attach(effect);
+  void fit(double distance) => child.fit(distance);
 
   @override
   double? get duration {

@@ -23,7 +23,7 @@ void main() {
         children: [
           AnchorEffect.to(
             destination: .center,
-            controller: .duration(1),
+            timeline: .duration(1),
           ),
         ],
       ),

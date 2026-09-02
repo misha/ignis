@@ -1,12 +1,11 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:flutter/animation.dart';
-import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// Progresses from 0 to 1 over [duration], shaped by [curve].
-class DurationEffectController extends EffectController {
-  /// How long this controller takes to complete.
+class DurationTimeline extends Timeline {
+  /// How long this timeline takes to complete.
   @override
   final double duration;
 
@@ -15,14 +14,10 @@ class DurationEffectController extends EffectController {
 
   double _elapsed;
 
-  DurationEffectController(this.duration, [Curve? curve])
+  DurationTimeline(this.duration, [Curve? curve])
     : assert(duration > 0, 'Duration must be positive.'),
       curve = curve ?? Curves.linear,
-      _elapsed = 0,
-      super.empty();
-
-  @override
-  void attach(ControlledEffect effect) {}
+      _elapsed = 0;
 
   @override
   bool get hasStarted => true;

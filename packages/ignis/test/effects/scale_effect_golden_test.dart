@@ -24,7 +24,7 @@ void main() {
         children: [
           ScaleEffect.by(
             offset: .all(0.5),
-            controller: .duration(1),
+            timeline: .duration(1),
           ),
         ],
       ),

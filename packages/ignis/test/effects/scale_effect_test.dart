@@ -10,7 +10,7 @@ void main() {
     node.add(
       ScaleEffect.to(
         destination: .new(20, 10),
-        controller: .sequence([.once(.wait(0.5)), .duration(1)]),
+        timeline: .sequence([.once(.wait(0.5)), .duration(1)]),
       ),
     );
 
@@ -28,14 +28,14 @@ void main() {
     node.add(
       ScaleEffect.by(
         offset: .new(10, 0),
-        controller: .duration(1),
+        timeline: .duration(1),
       ),
     );
 
     node.add(
       ScaleEffect.by(
         offset: .new(0, 20),
-        controller: .duration(1),
+        timeline: .duration(1),
       ),
     );
 
@@ -50,7 +50,7 @@ void main() {
     node.add(
       ScaleEffect.to(
         destination: .new(40, 60), // Offset (30, 40): distance 50, at speed 10 -> duration 5.
-        controller: .speed(10),
+        timeline: .speed(10),
       ),
     );
 
@@ -69,7 +69,7 @@ void main() {
     final scene = root.mount();
     final effect = ScaleEffect.by(
       offset: .new(10, 0),
-      controller: .duration(1),
+      timeline: .duration(1),
     );
 
     nodeA.add(effect);

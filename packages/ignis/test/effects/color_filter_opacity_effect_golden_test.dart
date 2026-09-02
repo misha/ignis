@@ -30,7 +30,7 @@ void main() {
             ColorFilterOpacityEffect.fadeIn(
               paint: paint,
               color: BLUE,
-              controller: .duration(1),
+              timeline: .duration(1),
             ),
           ],
         ),

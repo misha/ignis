@@ -32,7 +32,7 @@ See [Effects](/systems/effects).
 |--------------------|------------------------------------------------------------------|-------------------------------------------|
 | `EffectNode`       | Base node for time-driven effects, with a `cleanup` and `reset`. | `onFinish`                                |
 | `CombinedEffect`   | Runs its effects together, finishing once every one has.         | `onFinish`                                |
-| `ControlledEffect` | An effect driven by an `EffectController`.                       | `onStart`, `onProgress`, `onMax`, `onMin` |
+| `TimelineEffect`   | An effect driven by a `Timeline`.                                | `onStart`, `onProgress`, `onMax`, `onMin` |
 | `FollowEffect`     | Moves a `PositionOwner` toward what it follows, at a `speed`.    | `onFinish`                                |
 | `SequentialEffect` | Chains its effects, adding the next once the previous ends.      | `onFinish`                                |
 | `SpinEffect`       | Spins an `AngleOwner` by `speed`, every tick, forever.           | -                                         |

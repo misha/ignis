@@ -10,7 +10,7 @@ void main() {
     node.add(
       MoveEffect.to(
         destination: .new(20, 10),
-        controller: .sequence([.once(.wait(0.5)), .duration(1)]),
+        timeline: .sequence([.once(.wait(0.5)), .duration(1)]),
       ),
     );
 
@@ -28,14 +28,14 @@ void main() {
     node.add(
       MoveEffect.by(
         offset: .new(10, 0),
-        controller: .duration(1),
+        timeline: .duration(1),
       ),
     );
 
     node.add(
       MoveEffect.by(
         offset: .new(0, 20),
-        controller: .duration(1),
+        timeline: .duration(1),
       ),
     );
 
@@ -50,7 +50,7 @@ void main() {
     node.add(
       MoveEffect.to(
         destination: .new(30, 40), // Distance 50, at speed 10 -> duration 5.
-        controller: .speed(10),
+        timeline: .speed(10),
       ),
     );
 
@@ -69,7 +69,7 @@ void main() {
     node.add(
       MoveEffect.to(
         destination: .all(40), // Offset (30, 40) from (10, 0): distance 50.
-        controller: .sequence([
+        timeline: .sequence([
           .once(.wait(0.5)),
           .speed(10),
         ]), // Duration 5 once started.
@@ -91,7 +91,7 @@ void main() {
     final scene = root.mount();
     final effect = MoveEffect.by(
       offset: .new(10, 0),
-      controller: .duration(1),
+      timeline: .duration(1),
     );
 
     nodeA.add(effect);

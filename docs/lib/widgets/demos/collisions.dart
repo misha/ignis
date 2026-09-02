@@ -76,7 +76,7 @@ ShapeNode _mover(
     ..add(
       MoveEffect.by(
         offset: .new(DEMO_SIZE.x - shape.width, 0),
-        controller: .infinite(.roundtrip(.duration(seconds))),
+        timeline: .infinite(.roundtrip(.duration(seconds))),
       ),
     );
 }

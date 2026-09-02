@@ -19,5 +19,7 @@ export 'src/palette.dart';
 export 'src/shape.dart';
 export 'src/sprite.dart';
 export 'src/sprites.dart';
+export 'src/timeline.dart';
+export 'src/timelines.dart';
 export 'src/transition.dart';
 export 'src/transitions.dart';

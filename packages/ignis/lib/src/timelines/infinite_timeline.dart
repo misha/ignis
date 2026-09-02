@@ -1,17 +1,16 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// Runs [child] forever, restarting it from the beginning after each run.
-class InfiniteEffectController extends EffectController {
-  /// The controller to run infinitely.
-  final EffectController child;
+class InfiniteTimeline extends Timeline {
+  /// The timeline to run infinitely.
+  final Timeline child;
 
-  InfiniteEffectController(this.child) : super.empty();
+  InfiniteTimeline(this.child);
 
   @override
-  void attach(ControlledEffect effect) => child.attach(effect);
+  void fit(double distance) => child.fit(distance);
 
   @override
   double? get duration => double.infinity;

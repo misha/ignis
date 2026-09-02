@@ -14,7 +14,7 @@ class SlideTransition extends Transition {
     double? duration,
     Curve? curve,
   }) : direction = direction ?? .up,
-       super(controller: .duration(duration ?? 1, curve));
+       super(timeline: .duration(duration ?? 1, curve));
 
   @override
   void apply(progress, incoming, outgoing) {

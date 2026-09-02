@@ -2,13 +2,13 @@
 
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/anchor_owner.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// An effect that animates an [AnchorOwner]'s anchor over time.
-abstract class AnchorEffect extends ControlledEffect {
+abstract class AnchorEffect extends TimelineEffect {
   late final Target<AnchorOwner> _target;
 
   /// The [AnchorOwner] whose anchor is mutated by this effect.
@@ -18,7 +18,7 @@ abstract class AnchorEffect extends ControlledEffect {
   /// anchor when the effect is mounted.
   factory AnchorEffect.by({
     required Anchor offset,
-    required EffectController controller,
+    required Timeline timeline,
     bool? cleanup,
     bool? enabled,
   }) = _AnchorByEffect;
@@ -26,13 +26,13 @@ abstract class AnchorEffect extends ControlledEffect {
   /// Anchors the closest [AnchorOwner] ancestor to [destination].
   factory AnchorEffect.to({
     required Anchor destination,
-    required EffectController controller,
+    required Timeline timeline,
     bool? cleanup,
     bool? enabled,
   }) = _AnchorToEffect;
 
   AnchorEffect._({
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) {
@@ -45,7 +45,7 @@ class _AnchorByEffect extends AnchorEffect {
 
   _AnchorByEffect({
     required Anchor offset,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _offset = offset.clone(),
@@ -69,7 +69,7 @@ class _AnchorToEffect extends AnchorEffect {
 
   _AnchorToEffect({
     required Anchor destination,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _destination = destination.clone(),

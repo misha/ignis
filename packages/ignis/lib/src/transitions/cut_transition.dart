@@ -4,7 +4,7 @@ import 'package:ignis/src/transition.dart';
 
 /// Swaps instantly with no visuals, finishing on the first tick.
 class CutTransition extends Transition {
-  CutTransition() : super(controller: .terminal());
+  CutTransition() : super(timeline: .terminal());
 
   @override
   void apply(_, _, outgoing) {

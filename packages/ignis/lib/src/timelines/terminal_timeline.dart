@@ -1,14 +1,10 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// Always finished, at progress 1, consuming no time.
-class TerminalEffectController extends EffectController {
-  const TerminalEffectController() : super.empty();
-
-  @override
-  void attach(ControlledEffect effect) {}
+class TerminalTimeline extends Timeline {
+  const TerminalTimeline();
 
   @override
   double? get duration => 0;

@@ -2,11 +2,11 @@
 
 import 'dart:ui';
 
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 
 /// An effect that fades a [color] in or out on a [Paint] by animating a
 /// [ColorFilter], varying [color]'s alpha with progress.
-class ColorFilterOpacityEffect extends ControlledEffect {
+class ColorFilterOpacityEffect extends TimelineEffect {
   /// The paint whose [Paint.colorFilter] is mutated as this effect progresses.
   final Paint paint;
 
@@ -20,7 +20,7 @@ class ColorFilterOpacityEffect extends ControlledEffect {
   ColorFilterOpacityEffect.fadeIn({
     required this.paint,
     required this.color,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _from = 0,
@@ -30,7 +30,7 @@ class ColorFilterOpacityEffect extends ControlledEffect {
   ColorFilterOpacityEffect.fadeOut({
     required this.paint,
     required this.color,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _from = null,
@@ -47,7 +47,7 @@ class ColorFilterOpacityEffect extends ControlledEffect {
     required this.color,
     double? fromAlpha,
     required double toAlpha,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _from = fromAlpha ?? 0,

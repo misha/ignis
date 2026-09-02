@@ -173,7 +173,7 @@ void main() {
                   SidebarLink(text: 'Built-in Nodes', href: '/systems/nodes'),
                   SidebarLink(text: 'Layout', href: '/systems/layout'),
                   SidebarLink(text: 'Effects', href: '/systems/effects'),
-                  SidebarLink(text: 'Effect Controllers', href: '/systems/effect-controllers'),
+                  SidebarLink(text: 'Timelines', href: '/systems/timelines'),
                   SidebarLink(text: 'Transitions', href: '/systems/transitions'),
                   SidebarLink(text: 'Sprites', href: '/systems/sprites'),
                   SidebarLink(text: 'Palettes', href: '/systems/palettes'),

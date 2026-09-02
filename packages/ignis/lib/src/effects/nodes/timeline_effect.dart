@@ -2,13 +2,14 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/effects/effect_controller.dart';
+import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
+import 'package:ignis/src/timeline.dart';
 
-/// An effect driven by an [EffectController].
-class ControlledEffect extends EffectNode {
+/// An effect driven by a [Timeline].
+class TimelineEffect extends EffectNode {
   /// Drives this effect.
-  final EffectController controller;
+  final Timeline timeline;
 
   /// Emitted once, when this effect starts progressing.
   final onStart = Signal0();
@@ -27,12 +28,13 @@ class ControlledEffect extends EffectNode {
   bool _started = false;
   bool _finished = false;
   bool _forward = true;
+  bool _fitted = false;
 
   /// This effect's progress as of the previous [onProgress] emission.
   double get previousProgress => _previousProgress;
 
   /// This effect's current progress.
-  double get progress => controller.progress;
+  double get progress => timeline.progress;
 
   /// Whether this effect has started progressing.
   bool get isRunning => _started;
@@ -47,15 +49,13 @@ class ControlledEffect extends EffectNode {
   bool get isReverse => !_forward;
 
   @visibleForTesting
-  ControlledEffect({
-    required this.controller,
+  TimelineEffect({
+    required this.timeline,
     super.cleanup,
     super.enabled,
     super.priority,
     super.children,
-  }) {
-    controller.attach(this);
-  }
+  });
 
   /// Run this effect in its forward direction.
   ///
@@ -75,7 +75,7 @@ class ControlledEffect extends EffectNode {
 
   @override
   void reset() {
-    controller.setToStart();
+    timeline.setToStart();
     _previousProgress = 0;
     _started = false;
     _finished = false;
@@ -85,14 +85,23 @@ class ControlledEffect extends EffectNode {
   @override
   void build() {
     super.build();
+
     tick((dt) {
-      if (_forward) {
-        controller.advance(dt);
-      } else {
-        controller.recede(dt);
+      if (!_fitted) {
+        _fitted = true;
+
+        if (this case final MeasurableEffect measurable) {
+          timeline.fit(measurable.measure());
+        }
       }
 
-      if (!controller.hasStarted) {
+      if (_forward) {
+        timeline.advance(dt);
+      } else {
+        timeline.recede(dt);
+      }
+
+      if (!timeline.hasStarted) {
         _started = false;
         return;
       }
@@ -102,7 +111,7 @@ class ControlledEffect extends EffectNode {
         onStart.emit();
       }
 
-      final progress = controller.progress;
+      final progress = timeline.progress;
 
       if (progress == 1 && _previousProgress != 1) {
         onMax.emit();
@@ -115,7 +124,7 @@ class ControlledEffect extends EffectNode {
       onProgress.emit(progress);
       _previousProgress = progress;
 
-      if (!controller.isFinished) {
+      if (!timeline.isFinished) {
         _finished = false;
         return;
       }

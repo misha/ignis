@@ -28,7 +28,7 @@ void main() {
           children: [
             ColorOpacityEffect.fadeOut(
               paint: paint,
-              controller: .duration(1),
+              timeline: .duration(1),
             ),
           ],
         ),

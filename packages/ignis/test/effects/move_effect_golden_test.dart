@@ -24,7 +24,7 @@ void main() {
         children: [
           MoveEffect.by(
             offset: .new(20, -10),
-            controller: .duration(1),
+            timeline: .duration(1),
           ),
         ],
       ),

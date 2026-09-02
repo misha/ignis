@@ -2,30 +2,28 @@
 
 import 'dart:math' as math;
 
-import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// Plays [child] forward, then back down to its start, using it as a single
 /// shared instance for both legs.
-class RoundtripEffectController extends EffectController {
-  /// The controller played there and back.
-  final EffectController child;
+class RoundtripTimeline extends Timeline {
+  /// The timeline played there and back.
+  final Timeline child;
 
   final double _legDuration;
   double _legElapsed = 0;
   bool _reversed = false;
   bool _finished = false;
 
-  RoundtripEffectController(this.child)
+  RoundtripTimeline(this.child)
     : assert(
         child.duration?.isFinite ?? false,
-        'Cannot round-trip a controller with an unknown or infinite duration.',
+        'Cannot round-trip a timeline with an unknown or infinite duration.',
       ),
-      _legDuration = child.duration!,
-      super.empty();
+      _legDuration = child.duration!;
 
   @override
-  void attach(ControlledEffect effect) => child.attach(effect);
+  void fit(double distance) => child.fit(distance);
 
   @override
   double? get duration => _legDuration * 2;

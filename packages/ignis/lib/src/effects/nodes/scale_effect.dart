@@ -1,14 +1,14 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/scale_owner.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// An effect that animates a [ScaleOwner]'s scale over time.
-abstract class ScaleEffect extends ControlledEffect implements MeasurableEffect {
+abstract class ScaleEffect extends TimelineEffect implements MeasurableEffect {
   late final Target<ScaleOwner> _target;
 
   /// The [ScaleOwner] whose scale is mutated by this effect.
@@ -18,7 +18,7 @@ abstract class ScaleEffect extends ControlledEffect implements MeasurableEffect 
   /// scale when the effect starts.
   factory ScaleEffect.by({
     required Vector2 offset,
-    required EffectController controller,
+    required Timeline timeline,
     bool? cleanup,
     bool? enabled,
   }) = _ScaleByEffect;
@@ -26,13 +26,13 @@ abstract class ScaleEffect extends ControlledEffect implements MeasurableEffect 
   /// Scales the closest [ScaleOwner] ancestor to [destination].
   factory ScaleEffect.to({
     required Vector2 destination,
-    required EffectController controller,
+    required Timeline timeline,
     bool? cleanup,
     bool? enabled,
   }) = _ScaleToEffect;
 
   ScaleEffect._({
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) {
@@ -45,7 +45,7 @@ class _ScaleByEffect extends ScaleEffect {
 
   _ScaleByEffect({
     required Vector2 offset,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _offset = offset.clone(),
@@ -70,7 +70,7 @@ class _ScaleToEffect extends ScaleEffect {
 
   _ScaleToEffect({
     required Vector2 destination,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _destination = destination.clone(),

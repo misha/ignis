@@ -9,7 +9,7 @@ void main() {
 
   test('fades a paint in from transparent to opaque', () {
     final paint = Paint()..color = COLOR;
-    final effect = ColorOpacityEffect.fadeIn(paint: paint, controller: .duration(1));
+    final effect = ColorOpacityEffect.fadeIn(paint: paint, timeline: .duration(1));
     effect.mount();
 
     effect.update(0.25);
@@ -24,7 +24,7 @@ void main() {
 
   test('fades a paint out from opaque to transparent', () {
     final paint = Paint()..color = COLOR;
-    final effect = ColorOpacityEffect.fadeOut(paint: paint, controller: .duration(1));
+    final effect = ColorOpacityEffect.fadeOut(paint: paint, timeline: .duration(1));
     effect.mount();
 
     effect.update(0.5);
@@ -36,7 +36,7 @@ void main() {
 
   test('shifts a paint\'s opacity by a total amount, relative to its starting alpha', () {
     final paint = Paint()..color = COLOR.withValues(alpha: 0.2);
-    final effect = ColorOpacityEffect.by(paint: paint, opacity: 0.5, controller: .duration(1));
+    final effect = ColorOpacityEffect.by(paint: paint, opacity: 0.5, timeline: .duration(1));
     effect.mount();
 
     effect.update(0.5);
@@ -48,7 +48,7 @@ void main() {
 
   test('seeds its starting alpha from the paint when it mounts, not when constructed', () {
     final paint = Paint()..color = COLOR.withValues(alpha: 0.2);
-    final effect = ColorOpacityEffect.by(paint: paint, opacity: 0.5, controller: .duration(1));
+    final effect = ColorOpacityEffect.by(paint: paint, opacity: 0.5, timeline: .duration(1));
 
     paint.color = COLOR.withValues(alpha: 0.4); // Changed before mounting.
     effect.mount();

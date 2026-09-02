@@ -10,7 +10,7 @@ void main() {
     node.add(
       RotateEffect.to(
         angle: 2,
-        controller: .sequence([.once(.wait(0.5)), .duration(1)]),
+        timeline: .sequence([.once(.wait(0.5)), .duration(1)]),
       ),
     );
 
@@ -28,14 +28,14 @@ void main() {
     node.add(
       RotateEffect.by(
         angle: 1,
-        controller: .duration(1),
+        timeline: .duration(1),
       ),
     );
 
     node.add(
       RotateEffect.by(
         angle: 2,
-        controller: .duration(1),
+        timeline: .duration(1),
       ),
     );
 
@@ -50,7 +50,7 @@ void main() {
     node.add(
       RotateEffect.to(
         angle: 6, // Angle covered 5, at speed 5 -> duration 1.
-        controller: .speed(5),
+        timeline: .speed(5),
       ),
     );
 
@@ -70,7 +70,7 @@ void main() {
 
     final effect = RotateEffect.by(
       angle: 2,
-      controller: .duration(1),
+      timeline: .duration(1),
     );
     nodeA.add(effect);
 

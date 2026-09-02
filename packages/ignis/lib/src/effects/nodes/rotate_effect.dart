@@ -1,13 +1,13 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/effects/effect_controller.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 import 'package:ignis/src/owners/angle_owner.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// An effect that animates an [AngleOwner]'s angle over time.
-abstract class RotateEffect extends ControlledEffect implements MeasurableEffect {
+abstract class RotateEffect extends TimelineEffect implements MeasurableEffect {
   late final Target<AngleOwner> _target;
 
   /// The [AngleOwner] whose angle is mutated by this effect.
@@ -17,7 +17,7 @@ abstract class RotateEffect extends ControlledEffect implements MeasurableEffect
   /// angle when the effect starts.
   factory RotateEffect.by({
     required double angle,
-    required EffectController controller,
+    required Timeline timeline,
     bool? cleanup,
     bool? enabled,
   }) = _RotateByEffect;
@@ -25,13 +25,13 @@ abstract class RotateEffect extends ControlledEffect implements MeasurableEffect
   /// Rotates the closest [AngleOwner] ancestor to [angle].
   factory RotateEffect.to({
     required double angle,
-    required EffectController controller,
+    required Timeline timeline,
     bool? cleanup,
     bool? enabled,
   }) = _RotateToEffect;
 
   RotateEffect._({
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) {
@@ -44,7 +44,7 @@ class _RotateByEffect extends RotateEffect {
 
   _RotateByEffect({
     required this._angle,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : super._();
@@ -68,7 +68,7 @@ class _RotateToEffect extends RotateEffect {
 
   _RotateToEffect({
     required double angle,
-    required super.controller,
+    required super.timeline,
     super.cleanup,
     super.enabled,
   }) : _destination = angle,

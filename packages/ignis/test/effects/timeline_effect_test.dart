@@ -3,8 +3,8 @@ import 'package:ignis/ignis.dart';
 
 void main() {
   test('emits onStart once it starts progressing', () {
-    final effect = ControlledEffect(
-      controller: .sequence([.once(.wait(0.5)), .duration(1)]),
+    final effect = TimelineEffect(
+      timeline: .sequence([.once(.wait(0.5)), .duration(1)]),
     );
     effect.mount();
     var starts = 0;
@@ -21,7 +21,7 @@ void main() {
   });
 
   test('onStart is not re-emitted per repeat lap; only once for the whole run', () {
-    final effect = ControlledEffect(controller: .repeat(.duration(1), 2));
+    final effect = TimelineEffect(timeline: .repeat(.duration(1), 2));
     effect.mount();
     var starts = 0;
     effect.onStart(() => starts += 1);
@@ -34,7 +34,7 @@ void main() {
   });
 
   test('emits onMax when a tick lands exactly on progress 1', () {
-    final effect = ControlledEffect(controller: .duration(1));
+    final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
     var maxes = 0;
     effect.onMax(() => maxes += 1);
@@ -47,7 +47,7 @@ void main() {
   });
 
   test('emits onMin when progress returns exactly to 0', () {
-    final effect = ControlledEffect(controller: .roundtrip(.duration(1)));
+    final effect = TimelineEffect(timeline: .roundtrip(.duration(1)));
 
     effect.mount();
     var mins = 0;
@@ -61,8 +61,8 @@ void main() {
   });
 
   test('reversing within a repeat lap never redoes the initial delay', () {
-    final effect = ControlledEffect(
-      controller: .sequence([.once(.wait(0.5)), .repeat(.duration(1), 2)]),
+    final effect = TimelineEffect(
+      timeline: .sequence([.once(.wait(0.5)), .repeat(.duration(1), 2)]),
     );
     effect.mount();
 
@@ -78,7 +78,7 @@ void main() {
   });
 
   test('emits onProgress with its current progress once started', () {
-    final effect = ControlledEffect(controller: .duration(1));
+    final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
     final progresses = <double>[];
     effect.onProgress(progresses.add);
@@ -90,7 +90,7 @@ void main() {
   });
 
   test('emits onFinish once isComplete becomes true, and never again', () {
-    final effect = ControlledEffect(controller: .duration(1));
+    final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
@@ -106,7 +106,7 @@ void main() {
   });
 
   test('resets back to its start', () {
-    final effect = ControlledEffect(controller: .duration(1));
+    final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
     effect.update(1);
     expect(effect.isFinished, isTrue);
@@ -119,7 +119,7 @@ void main() {
   });
 
   test('restarts times-1 times before emitting onFinish', () {
-    final effect = ControlledEffect(controller: .repeat(.duration(1), 2));
+    final effect = TimelineEffect(timeline: .repeat(.duration(1), 2));
     effect.mount();
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
@@ -138,7 +138,7 @@ void main() {
   });
 
   test('repeats forever when times is null', () {
-    final effect = ControlledEffect(controller: .infinite(.duration(1)));
+    final effect = TimelineEffect(timeline: .infinite(.duration(1)));
     effect.mount();
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
@@ -152,7 +152,7 @@ void main() {
   });
 
   test('reset() restarts the repeat count from the beginning', () {
-    final effect = ControlledEffect(controller: .repeat(.duration(1), 2));
+    final effect = TimelineEffect(timeline: .repeat(.duration(1), 2));
     effect.mount();
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
@@ -168,7 +168,7 @@ void main() {
   });
 
   test('only emits onFinish once a reverse phase completes', () {
-    final effect = ControlledEffect(controller: .roundtrip(.duration(1)));
+    final effect = TimelineEffect(timeline: .roundtrip(.duration(1)));
 
     effect.mount();
     var finishes = 0;
@@ -184,14 +184,14 @@ void main() {
   });
 
   test('defaults to running forward', () {
-    final effect = ControlledEffect(controller: .duration(1));
+    final effect = TimelineEffect(timeline: .duration(1));
 
     expect(effect.isForward, isTrue);
     expect(effect.isReverse, isFalse);
   });
 
   test('reverse() ticks progress backward', () {
-    final effect = ControlledEffect(controller: .duration(1));
+    final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
 
     effect.update(0.75);
@@ -206,7 +206,7 @@ void main() {
   });
 
   test('forward() resumes progress forward after reverse()', () {
-    final effect = ControlledEffect(controller: .duration(1));
+    final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
 
     effect.update(0.5);
@@ -220,7 +220,7 @@ void main() {
   });
 
   test('reversing off the end un-finishes the effect', () {
-    final effect = ControlledEffect(controller: .duration(1));
+    final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
@@ -236,7 +236,7 @@ void main() {
   });
 
   test('reset() resets direction back to forward', () {
-    final effect = ControlledEffect(controller: .duration(1));
+    final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
     effect.reverse();
 
@@ -246,7 +246,7 @@ void main() {
   });
 
   test('forward() and reverse() implicitly enable the effect', () {
-    final effect = ControlledEffect(controller: .duration(1), enabled: false);
+    final effect = TimelineEffect(timeline: .duration(1), enabled: false);
     expect(effect.enabled, isFalse);
 
     effect.forward();
@@ -259,7 +259,7 @@ void main() {
 
   test('detaches itself once complete when added as a child, when cleanup is true', () {
     final a = Node();
-    final effect = ControlledEffect(controller: .duration(2), cleanup: true);
+    final effect = TimelineEffect(timeline: .duration(2), cleanup: true);
     a.add(effect);
     final scene = a.mount();
 

@@ -1,17 +1,16 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:ignis/src/effects/effect_controller.dart';
-import 'package:ignis/src/effects/nodes/controlled_effect.dart';
+import 'package:ignis/src/timeline.dart';
 
 /// Runs [child] once; ignored after that, whether reversing or repeating.
-class OnceEffectController extends EffectController {
-  /// The controller run once.
-  final EffectController child;
+class OnceTimeline extends Timeline {
+  /// The timeline run once.
+  final Timeline child;
 
-  OnceEffectController(this.child) : super.empty();
+  OnceTimeline(this.child);
 
   @override
-  void attach(ControlledEffect effect) => child.attach(effect);
+  void fit(double distance) => child.fit(distance);
 
   @override
   double? get duration => child.duration;
