@@ -3,9 +3,8 @@
 import 'package:flutter/painting.dart' show EdgeInsets;
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/layout/layout_constraints.dart';
-import 'package:ignis/src/layout/layout_engine.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/layout_node.dart';
+import 'package:ignis/src/layout/nodes/layout_node.dart';
 
 /// Claims a region, optionally at a fixed size, and places every child inside
 /// it under a shared [padding] and [alignment].
@@ -36,6 +35,7 @@ class BoxNode extends LayoutNode {
     EdgeInsets? padding,
     this.alignment,
     super.flex,
+    super.engine,
     super.position,
     super.scale,
     super.angle,
@@ -53,6 +53,7 @@ class BoxNode extends LayoutNode {
     EdgeInsets? padding,
     this.alignment,
     super.flex,
+    super.engine,
     super.position,
     super.scale,
     super.angle,
@@ -66,7 +67,7 @@ class BoxNode extends LayoutNode {
 
   @override
   Vector2 constrain(LayoutConstraints constraints) {
-    return LayoutEngine.box(
+    return engine.box(
       items: layoutChildren,
       constraints: constraints,
       targetWidth: targetWidth,

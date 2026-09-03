@@ -5,6 +5,8 @@ import 'package:ignis/ignis.dart';
 import '../support/test_layout_item.dart';
 
 void main() {
+  const engine = StandardLayoutEngine();
+
   group('box', () {
     Vector2 box(
       List<TestLayoutItem> items, {
@@ -13,7 +15,7 @@ void main() {
       double? height,
       EdgeInsets? padding,
       Anchor? alignment,
-    }) => LayoutEngine.box(
+    }) => engine.box(
       items: items,
       constraints: constraints ?? .unbounded(),
       targetWidth: width,
@@ -136,7 +138,7 @@ void main() {
         ),
       );
 
-      final selfSize = LayoutEngine.flex(
+      final selfSize = engine.flex(
         direction: .horizontal,
         constraints: .tight(.new(100, 50)),
         items: items,
@@ -153,7 +155,7 @@ void main() {
     test('stretch places every child at the cross-axis origin', () {
       final items = [TestLayoutItem(size: .all(10))];
 
-      LayoutEngine.flex(
+      engine.flex(
         direction: .horizontal,
         constraints: .tight(.new(100, 50)),
         items: items,
@@ -169,7 +171,7 @@ void main() {
     test('honors spacing between non-flex children and shrinks to consumed space', () {
       final items = List.generate(2, (_) => TestLayoutItem(size: .all(10)));
 
-      final selfSize = LayoutEngine.flex(
+      final selfSize = engine.flex(
         direction: .horizontal,
         constraints: .loose(.new(200, 50)),
         items: items,
@@ -192,7 +194,7 @@ void main() {
         ),
       );
 
-      LayoutEngine.flex(
+      engine.flex(
         direction: .vertical,
         constraints: .tight(.new(50, 100)),
         items: items,
@@ -211,7 +213,7 @@ void main() {
         TestLayoutItem(size: .all(10)),
       ];
 
-      LayoutEngine.flex(
+      engine.flex(
         direction: .horizontal,
         constraints: .tight(.new(100, 50)),
         items: items,
@@ -227,7 +229,7 @@ void main() {
     test('a scaled flex child is asked for the share its scale fills', () {
       final items = [TestLayoutItem(size: .all(10), scale: .all(2), flex: .expanded())];
 
-      LayoutEngine.flex(
+      engine.flex(
         direction: .horizontal,
         constraints: .tight(.new(100, 50)),
         items: items,
@@ -248,7 +250,7 @@ void main() {
       final items = [TestLayoutItem(flex: .expanded())];
 
       expect(
-        () => LayoutEngine.flex(
+        () => engine.flex(
           direction: .horizontal,
           constraints: .loose(.new(double.infinity, 50)),
           items: items,
@@ -265,19 +267,19 @@ void main() {
   group('place', () {
     test('compensates for a non-default item anchor', () {
       final item = TestLayoutItem(size: .new(20, 10), anchor: .center);
-      LayoutEngine.place(item, .all(50));
+      engine.place(item, .all(50));
       expect(item.position, Vector2(60, 55));
     });
 
     test('scales the anchor offset it compensates by', () {
       final item = TestLayoutItem(size: .new(20, 10), anchor: .center, scale: .all(2));
-      LayoutEngine.place(item, .all(50));
+      engine.place(item, .all(50));
       expect(item.position, Vector2(70, 60));
     });
 
     test('a flipped item still lands inside the space it was given', () {
       final item = TestLayoutItem(size: .all(10), scale: .new(-2, 1));
-      LayoutEngine.place(item, .all(50));
+      engine.place(item, .all(50));
 
       // Its content runs back from position, so its left edge is the 50 asked
       // for and its right edge is 20 further along.

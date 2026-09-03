@@ -1,9 +1,10 @@
 // SPDX-AI-Disclosure: ai-assisted
 
+import 'package:ignis/src/engine.dart';
 import 'package:ignis/src/math.dart';
 
-abstract class IntersectionSystem {
-  const IntersectionSystem();
+abstract class IntersectionEngine extends Engine {
+  const IntersectionEngine();
 
   /// Returns true if two rectangles overlap, given their world-space centers
   /// and, for each, the vectors from its center to the midpoints of its
@@ -31,8 +32,8 @@ abstract class IntersectionSystem {
   bool circleCircle(Vector2 centerA, double radiusA, Vector2 centerB, double radiusB);
 }
 
-final class StandardIntersectionSystem extends IntersectionSystem {
-  const StandardIntersectionSystem();
+final class StandardIntersectionEngine extends IntersectionEngine {
+  const StandardIntersectionEngine();
 
   @override
   bool rectangleRectangle(

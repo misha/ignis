@@ -9,6 +9,8 @@ Conventions for writing engine code, on top of what `dart format` and `dart anal
 3. [The `cleanup` Parameter](#3-the-cleanup-parameter)
 4. [No Mixins](#4-no-mixins)
 5. [Effect Controller Constructors](#5-effect-controller-constructors)
+6. [Servers](#6-servers)
+7. [Engines](#7-engines)
 
 ## 1. Node Constructors
 
@@ -82,5 +84,53 @@ Effect controller constructors always use positional parameters (`[...]`), not n
 class DurationEffectController extends EffectController {
   DurationEffectController(this.duration, [Curve? curve]) //
     : curve = curve ?? Curves.linear;
+}
+```
+
+## 6. Servers
+
+A subsystem's logic lives outside the tree in a `Server`. The abstraction exists to reify the patterns of integration. There are currently two kinds of servers:
+
+- `SteppedServer` is driven by a `process(dt)` method.
+- `EventServer` is driven by a `dispatch(event)` method.
+
+`SteppedServer`s usually have a *host node* in the tree responsible for providing the server to the subtree and processing it on tick:
+
+```dart
+class CollisionArenaNode extends Node {
+  final CollisionArena arena;
+
+  CollisionArenaNode({
+    CollisionArena? arena,
+    // ...
+  }) : arena = arena ?? CollisionArena() {
+    provide<CollisionArena>(this.arena);
+  }
+
+  @override
+  void build() {
+    super.build();
+    tick(arena.process);
+  }
+}
+```
+
+`EventServer`s live wherever they are scoped:
+
+- For the global scope, the server is declared on `Ignis`.
+- For the scene scope, the server is declared on `SceneRenderBox`.
+- For the node scope, the server is declared by a host node, like `SteppedServer`s.
+
+## 7. Engines
+
+A collection of related algorithms is an `Engine`. It knows nothing of nodes or signals, and is injected where it is used, with a `Standard` implementation as the default. Its primary purpose is to create a logical shape around complex logic for testability and benchmarking purposes.
+
+```dart
+final class CollisionArena extends SteppedServer {
+  final IntersectionEngine engine;
+
+  CollisionArena({
+    IntersectionEngine? engine,
+  }) : engine = engine ?? const StandardIntersectionEngine();
 }
 ```

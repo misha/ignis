@@ -7,43 +7,46 @@ import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/flutter/scene_render_box.dart';
 import 'package:ignis/src/inputs/nodes/hover_input.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/input_node.dart';
+import 'package:ignis/src/inputs/nodes/input_node.dart';
 
 /// Resolves raw pointer events against a [Scene]'s tree and hands off to
 /// whichever [InputNode]s claim them, per [InputNode.behavior].
 @internal
-class InputRouter {
+class InputServer extends EventServer<PointerEvent> {
   final SceneRenderBox box;
   Scene get scene => box.scene;
 
   final Map<int, _Hover> _hovered = {};
 
-  InputRouter(this.box);
+  InputServer(this.box);
 
-  void handle(PointerEvent event) {
+  @override
+  bool dispatch(PointerEvent event) {
     switch (event) {
       case PointerDownEvent():
-        _handleDown(event);
+        return _handleDown(event);
 
       case PointerHoverEvent():
-        _handleHover(event);
+        return _handleHover(event);
 
       default:
+        return false;
     }
   }
 
-  void _handleDown(PointerDownEvent event) {
+  bool _handleDown(PointerDownEvent event) {
     final point = event.localPosition.toVector2();
-    _dispatch(point, (node) => node.register(event, box.globalToLocal));
+    return _offer(point, (node) => node.register(event, box.globalToLocal)) != null;
   }
 
-  void _handleHover(PointerHoverEvent event) {
+  bool _handleHover(PointerHoverEvent event) {
     final point = event.localPosition.toVector2();
-    final target = _dispatch(point, (node) => node is HoverInput ? .handled : .ignored);
+    final target = _offer(point, (node) => node is HoverInput ? .handled : .ignored);
     final previous = _hovered[event.pointer];
-    if (identical(target, previous?.node)) return;
+    if (identical(target, previous?.node)) return target != null;
     if (previous != null) _exit(event.pointer, _wrap(previous.node, event));
     if (target != null) _enter(event.pointer, target, event);
+    return target != null;
   }
 
   /// Records [target] as [pointer]'s hover, emitting `onHoverEnter`.
@@ -70,7 +73,7 @@ class InputRouter {
 
   /// Walks [point]'s hit-test chain, offering each [InputNode] to [respond]
   /// until one is claimed by an opaque node.
-  InputNode? _dispatch(Vector2 point, InputResult Function(InputNode) respond) {
+  InputNode? _offer(Vector2 point, InputResult Function(InputNode) respond) {
     InputNode? result;
 
     for (final node in scene.node.hitTest(point).whereType<InputNode>()) {

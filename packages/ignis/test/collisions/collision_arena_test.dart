@@ -18,7 +18,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, isEmpty);
     });
@@ -34,7 +34,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, [b]);
       expect(bStarted, [a]);
@@ -49,7 +49,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, isEmpty);
     });
@@ -66,7 +66,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, isEmpty);
     });
@@ -84,7 +84,7 @@ void main() {
         ..add(a)
         ..add(b)
         ..add(c)
-        ..process();
+        ..process(0);
 
       expect(aStarted, [b]);
       expect(cStarted, isEmpty);
@@ -103,7 +103,7 @@ void main() {
         ..add(a)
         ..add(b)
         ..add(c)
-        ..process();
+        ..process(0);
 
       // 3 overlapping pairs, 2 signal emissions each.
       expect(started, hasLength(6));
@@ -118,8 +118,8 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process()
-        ..process();
+        ..process(0)
+        ..process(0);
 
       expect(aStarted, hasLength(1));
     });
@@ -133,10 +133,10 @@ void main() {
       a.onCollisionEnd(aEnded.add);
       b.onCollisionEnd(bEnded.add);
 
-      arena.process();
+      arena.process(0);
 
       a.position.x = 200;
-      arena.process();
+      arena.process(0);
 
       expect(aEnded, [b]);
       expect(bEnded, [a]);
@@ -150,8 +150,8 @@ void main() {
       a.onCollisionEnd(aEnded.add);
 
       arena
-        ..process()
-        ..process();
+        ..process(0)
+        ..process(0);
 
       expect(aEnded, isEmpty);
     });
@@ -161,7 +161,7 @@ void main() {
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
       final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
-      arena.process();
+      arena.process(0);
 
       final bEnded = <ColliderNode>[];
       b.onCollisionEnd(bEnded.add);
@@ -171,7 +171,7 @@ void main() {
       // queues the removal, so it needs an update to actually take effect.
       a.detach();
       scene.update(0);
-      arena.process();
+      arena.process(0);
 
       expect(bEnded, isEmpty);
     });
@@ -183,7 +183,7 @@ void main() {
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
       CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
-      arena.process();
+      arena.process(0);
 
       expect(a.active, {b});
       expect(b.active, {a});
@@ -196,10 +196,10 @@ void main() {
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
       CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
-      arena.process();
+      arena.process(0);
 
       a.position.x = 200;
-      arena.process();
+      arena.process(0);
 
       expect(a.active, isEmpty);
       expect(b.active, isEmpty);
@@ -214,14 +214,14 @@ void main() {
         final b = ColliderNode(shape: .square(10), position: .new(6, 0));
         final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
-        arena.process();
+        arena.process(0);
 
         final bEnded = <ColliderNode>[];
         b.onCollisionEnd(bEnded.add);
 
         a.detach();
         scene.update(0);
-        arena.process();
+        arena.process(0);
 
         expect(bEnded, isEmpty);
         expect(b.active, isEmpty);
@@ -242,7 +242,7 @@ void main() {
 
       CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
-      arena.process();
+      arena.process(0);
 
       expect(seen, [1]);
     });
@@ -258,10 +258,10 @@ void main() {
 
       CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
-      arena.process();
+      arena.process(0);
 
       a.position.x = 200;
-      arena.process();
+      arena.process(0);
 
       expect(colliding, [false]);
     });
@@ -271,7 +271,7 @@ void main() {
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
       final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
-      arena.process();
+      arena.process(0);
 
       expect(a.active, isNotEmpty);
 
@@ -292,12 +292,12 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       // a's x-min now exceeds b's, so the two swap places in sweep order,
       // but they're still overlapping and must not be treated as a new pair.
       a.position.x = 10;
-      arena.process();
+      arena.process(0);
 
       expect(aStarted, hasLength(1));
     });
@@ -311,13 +311,13 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       a.position.x = 200;
-      arena.process();
+      arena.process(0);
 
       a.position.x = 0;
-      arena.process();
+      arena.process(0);
 
       expect(aStarted, hasLength(2));
     });
@@ -329,7 +329,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       arena.remove(a);
 
@@ -342,7 +342,7 @@ void main() {
 
       arena
         ..add(c)
-        ..process();
+        ..process(0);
 
       expect(cStarted, [b]);
     });
@@ -360,7 +360,7 @@ void main() {
         ..add(b);
 
       arena.remove(a);
-      arena.process();
+      arena.process(0);
 
       expect(bStarted, isEmpty);
     });
@@ -380,13 +380,13 @@ void main() {
 
       arena
         ..add(a)
-        ..process();
+        ..process(0);
 
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
 
       arena
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, [b]);
     });
@@ -414,7 +414,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, [b]);
     });
@@ -440,7 +440,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, isEmpty);
     });
@@ -472,7 +472,7 @@ void main() {
         arena
           ..add(a)
           ..add(b)
-          ..process();
+          ..process(0);
 
         expect(aStarted, isEmpty);
         expect(bStarted, isEmpty);
@@ -502,7 +502,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, [b]);
       expect(bStarted, isEmpty);
@@ -529,10 +529,10 @@ void main() {
       a.onCollisionEnd(aEnded.add);
       b.onCollisionEnd(bEnded.add);
 
-      arena.process();
+      arena.process(0);
 
       a.position.x = 200;
-      arena.process();
+      arena.process(0);
 
       expect(aEnded, [b]);
       expect(bEnded, isEmpty);
@@ -549,7 +549,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, [b]);
     });
@@ -563,7 +563,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, [b]);
     });
@@ -577,7 +577,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, [b]);
     });
@@ -591,7 +591,7 @@ void main() {
       arena
         ..add(a)
         ..add(b)
-        ..process();
+        ..process(0);
 
       expect(aStarted, [b]);
     });

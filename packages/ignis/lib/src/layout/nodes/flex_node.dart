@@ -3,9 +3,8 @@
 import 'package:flutter/rendering.dart'
     show Axis, CrossAxisAlignment, MainAxisAlignment, MainAxisSize;
 import 'package:ignis/src/layout/layout_constraints.dart';
-import 'package:ignis/src/layout/layout_engine.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/layout_node.dart';
+import 'package:ignis/src/layout/nodes/layout_node.dart';
 
 /// Lays its children out along [direction], giving each child a share of the
 /// leftover space by its [LayoutNode.flex].
@@ -40,6 +39,7 @@ class FlexNode extends LayoutNode {
     MainAxisSize? mainAxisSize,
     double? spacing,
     super.flex,
+    super.engine,
     super.position,
     super.scale,
     super.angle,
@@ -55,7 +55,7 @@ class FlexNode extends LayoutNode {
 
   @override
   Vector2 constrain(LayoutConstraints constraints) {
-    return LayoutEngine.flex(
+    return engine.flex(
       direction: direction,
       constraints: constraints,
       items: layoutChildren,

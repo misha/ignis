@@ -30,7 +30,7 @@ abstract class IntersectionBenchmark extends AsyncBenchmarkBase {
   final int seed;
   final int count;
 
-  final _system = StandardIntersectionSystem();
+  final _engine = StandardIntersectionEngine();
   final List<IntersectionTest> _tests = [];
 
   IntersectionBenchmark(
@@ -69,7 +69,7 @@ abstract class IntersectionBenchmark extends AsyncBenchmarkBase {
 
     for (final test in _tests) {
       final hit = switch ((test.shapeA, test.shapeB)) {
-        (Rectangle a, Rectangle b) => _system.rectangleRectangle(
+        (Rectangle a, Rectangle b) => _engine.rectangleRectangle(
           test.centerA,
           _ex(a),
           _ey(a),
@@ -77,20 +77,20 @@ abstract class IntersectionBenchmark extends AsyncBenchmarkBase {
           _ex(b),
           _ey(b),
         ),
-        (Circle a, Circle b) => _system.circleCircle(
+        (Circle a, Circle b) => _engine.circleCircle(
           test.centerA,
           a.radius,
           test.centerB,
           b.radius,
         ),
-        (Circle a, Rectangle b) => _system.circleRectangle(
+        (Circle a, Rectangle b) => _engine.circleRectangle(
           test.centerA,
           a.radius,
           test.centerB,
           _ex(b),
           _ey(b),
         ),
-        (Rectangle a, Circle b) => _system.circleRectangle(
+        (Rectangle a, Circle b) => _engine.circleRectangle(
           test.centerB,
           b.radius,
           test.centerA,

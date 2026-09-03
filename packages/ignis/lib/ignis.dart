@@ -7,6 +7,7 @@ export 'src/core.dart';
 export 'src/curves.dart';
 export 'src/devices.dart';
 export 'src/effects.dart';
+export 'src/engine.dart';
 export 'src/extensions.dart';
 export 'src/flutter/scene_widget.dart';
 export 'src/globals.dart';

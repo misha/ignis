@@ -70,6 +70,18 @@ void main() {
     expect(() => router.go('b'), throwsA(isA<AssertionError>()));
   });
 
+  test('a router node without a router makes its own', () {
+    final host = RouterNode<String>(
+      children: [
+        RouteNode(name: 'a'),
+        RouteNode(name: 'b'),
+      ],
+    );
+
+    host.mount();
+    expect(host.router.top, 'a');
+  });
+
   test('a route reads its router', () {
     final router = Router<String>();
     Router<String>? read;
@@ -91,23 +103,6 @@ void main() {
     ).mount();
 
     expect(read, same(router));
-  });
-
-  test('a route not directly under a router node throws', () {
-    expect(() => RouteNode(name: 'a').mount(), throwsA(isA<StateError>()));
-
-    final host = RouterNode(
-      router: Router<String>(),
-      children: [
-        Node(
-          children: [
-            RouteNode(name: 'a'),
-          ],
-        ),
-      ],
-    );
-
-    expect(() => host.mount(), throwsA(isA<StateError>()));
   });
 
   test('a route takes the scene as its region with nothing above', () {

@@ -12,7 +12,7 @@ import 'package:ignis/src/routing/transitions/cut_transition.dart';
 ///
 /// A router isn't a node itself. A `RouterNode` generally drives it with the
 /// clock from an actual scene.
-class Router<T> {
+class Router<T> extends SteppedServer {
   /// The transition a navigation plays when it names none.
   ///
   /// Defaults to a [CutTransition].
@@ -65,6 +65,7 @@ class Router<T> {
   double get progress => _navigation?.transition.timeline.progress ?? 1;
 
   /// Moves the running navigation by [dt] seconds.
+  @override
   void process(double dt) {
     final navigation = _navigation;
     if (navigation == null) return;
@@ -202,7 +203,7 @@ class Router<T> {
 
   /// Adds [route] to those a navigation can name. Off the stack, it takes no
   /// part. Asserts that no route shares its name.
-  void add(RouteNode<T> route) {
+  Cleanup add(RouteNode<T> route) {
     assert(
       !_routes.any((other) => other.name == route.name),
       'A route is already named "${route.name}".',
@@ -211,6 +212,7 @@ class Router<T> {
     _routes.add(route);
     _initial ??= route.name;
     route.activity = _activityOf(route);
+    return scope(() => remove(route));
   }
 
   /// Removes [route], settling any navigation it is a side of.

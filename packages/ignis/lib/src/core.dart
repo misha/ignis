@@ -18,4 +18,5 @@ part 'node.dart';
 part 'signal.dart';
 part 'target.dart';
 part 'scene.dart';
+part 'server.dart';
 part 'tree.dart';

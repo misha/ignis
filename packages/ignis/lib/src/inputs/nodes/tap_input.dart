@@ -4,7 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/nodes/input_node.dart';
+import 'package:ignis/src/inputs/nodes/input_node.dart';
 
 /// A hit area that recognizes taps by delegating to a [TapGestureRecognizer].
 class TapInput extends InputNode {

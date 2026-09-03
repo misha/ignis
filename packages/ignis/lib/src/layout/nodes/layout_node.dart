@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/layout/layout_constraints.dart';
+import 'package:ignis/src/layout/layout_engine.dart';
 import 'package:ignis/src/layout/layout_flex.dart';
 import 'package:ignis/src/layout/layout_item.dart';
 import 'package:ignis/src/math.dart';
@@ -35,8 +36,13 @@ abstract class LayoutNode extends SpatialNode {
   @override
   LayoutFlex flex;
 
+  /// The algorithms this node lays its items out with. Defaults to a
+  /// [StandardLayoutEngine].
+  final LayoutEngine engine;
+
   LayoutNode({
     LayoutFlex? flex,
+    LayoutEngine? engine,
     super.position,
     super.scale,
     super.angle,
@@ -44,7 +50,8 @@ abstract class LayoutNode extends SpatialNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : flex = flex ?? .none;
+  }) : flex = flex ?? .none,
+       engine = engine ?? const StandardLayoutEngine();
 
   /// The items this node lays out: its direct [SpatialNode] children.
   ///

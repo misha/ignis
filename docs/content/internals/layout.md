@@ -4,7 +4,7 @@ description: Constraints down, sizes up, once per tick.
 lane: internals
 category: internal
 status: stub
-reference: [LayoutEngine, LayoutConstraints, LayoutItem]
+reference: [StandardLayoutEngine, LayoutConstraints, LayoutItem]
 ---
 <!-- SPDX-AI-Disclosure: none -->
 

@@ -16,7 +16,7 @@ class RouterNode<T> extends SpatialNode {
   final Router<T> router;
 
   RouterNode({
-    required this.router,
+    Router<T>? router,
     super.position,
     super.scale,
     super.angle,
@@ -24,9 +24,9 @@ class RouterNode<T> extends SpatialNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : super(inherit: .scene) {
-    // TODO: Allow for a default router, just like CollisionArenaNode.
-    provide<Router<T>>(router);
+  }) : router = router ?? Router<T>(),
+       super(inherit: .scene) {
+    provide<Router<T>>(this.router);
   }
 
   @override

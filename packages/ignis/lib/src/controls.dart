@@ -80,7 +80,7 @@ class _Control {
 /// no name in the middle, so a control is one thing in one place.
 ///
 /// TODO: Document further.
-class Controls {
+class Controls extends EventServer<ControlEvent> {
   final List<_Control> _controls = [];
   final Set<String> _disabled = {};
   final List<ControlDevice> _devices = [];
@@ -122,7 +122,7 @@ class Controls {
     );
 
     _controls.add(control);
-    return _trash(() => _controls.remove(control));
+    return scope(() => _controls.remove(control));
   }
 
   /// Lets the handlers in [group] answer again.
@@ -141,6 +141,7 @@ class Controls {
   /// Every match is found before the winner runs, so a handler is free to bind
   /// and unbind as it answers: a press is judged against the controls as they
   /// stood when it arrived, not as it leaves them.
+  @override
   bool dispatch(ControlEvent emitted) {
     List<_Control>? matched;
 

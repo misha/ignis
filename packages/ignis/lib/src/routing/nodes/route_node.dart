@@ -3,6 +3,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/nodes/opacity_node.dart';
 import 'package:ignis/src/routing/nodes/router_node.dart';
+import 'package:ignis/src/routing/router.dart';
 
 /// One of the routes a [RouterNode] shows.
 ///
@@ -13,23 +14,30 @@ class RouteNode<T> extends OpacityNode {
   /// The name a navigation reaches this route by.
   final T name;
 
+  /// Whether building anywhere but directly under a [RouterNode] throws a
+  /// [StateError]. Defaults to true.
+  bool strict;
+
   RouteNode({
     required this.name,
+    bool? strict,
     super.children,
-  });
+  }) : strict = strict ?? true;
 
   @override
   void build() {
     super.build();
-    final host = parent;
+    final router = readOrNull<Router<T>>();
 
-    // TODO: Maybe needs a `strict` parameter.
-    if (host is! RouterNode<T>) {
-      throw StateError('RouteNode must be a direct child of a RouterNode<$T>.');
+    if (router == null || parent is! RouterNode<T>) {
+      if (strict) {
+        throw StateError('RouteNode must be a direct child of a RouterNode<$T>.');
+      } else {
+        return;
+      }
     }
 
-    host.router.add(this);
-    trash(() => host.router.remove(this));
+    router.add(this);
   }
 
   /// Returns this route to how it stands outside a navigation.

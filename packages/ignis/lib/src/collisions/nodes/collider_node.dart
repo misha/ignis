@@ -1,7 +1,7 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:flutter/foundation.dart';
-import 'package:ignis/src/collisions/nodes/collision_arena_node.dart';
+import 'package:ignis/src/collisions/collision_arena.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
@@ -36,12 +36,6 @@ class ColliderNode extends SpatialNode {
   /// Whether this node currently overlaps anything.
   bool get isColliding => _active.isNotEmpty;
 
-  late final _target = Target<CollisionArenaNode?>(this);
-
-  /// The arena this collider reports to, if there is one above it.
-  @internal
-  CollisionArenaNode? get arena => _target.value;
-
   ColliderNode({
     super.shape,
     int? layer,
@@ -63,7 +57,7 @@ class ColliderNode extends SpatialNode {
   void build() {
     super.build();
 
-    final arena = this.arena;
+    final arena = readOrNull<CollisionArena>();
 
     if (arena == null) {
       if (strict) {
@@ -73,12 +67,8 @@ class ColliderNode extends SpatialNode {
       }
     }
 
-    arena.register(this);
-
-    trash(() {
-      arena.unregister(this);
-      _active.clear();
-    });
+    arena.add(this);
+    trash(_active.clear);
 
     debugDraw((canvas) {
       final debug = Ignis.debug;

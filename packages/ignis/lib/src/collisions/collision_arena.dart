@@ -1,7 +1,8 @@
 // SPDX-AI-Disclosure: ai-assisted
 
-import 'package:ignis/src/collisions/intersection_system.dart';
+import 'package:ignis/src/collisions/intersection_engine.dart';
 import 'package:ignis/src/collisions/nodes/collider_node.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/shape.dart';
 
@@ -23,9 +24,9 @@ final class _NarrowphaseGeometry {
 /// Registered colliders are broadphased with a sort-and-sweep over their
 /// AABBs to produce candidate pairs, which are then narrowphased against
 /// their actual shapes to power the node signals.
-final class CollisionArena {
+final class CollisionArena extends SteppedServer {
   /// Used for narrowphase intersection tests.
-  final IntersectionSystem system;
+  final IntersectionEngine engine;
 
   /// Densely stores colliders in registration order.
   final List<ColliderNode> _colliders = [];
@@ -64,10 +65,10 @@ final class CollisionArena {
   final Map<int, (ColliderNode, ColliderNode)> _overlapping = {};
 
   CollisionArena({
-    IntersectionSystem? system,
-  }) : system = system ?? const StandardIntersectionSystem();
+    IntersectionEngine? engine,
+  }) : engine = engine ?? const StandardIntersectionEngine();
 
-  void add(ColliderNode collider) {
+  Cleanup add(ColliderNode collider) {
     assert(
       !_mapping.containsKey(collider),
       'Collider is already registered.',
@@ -93,6 +94,7 @@ final class CollisionArena {
     _colliders.add(collider);
     _mapping[collider] = slot;
     _sorted = false;
+    return scope(() => remove(collider));
   }
 
   void remove(ColliderNode collider) {
@@ -110,7 +112,8 @@ final class CollisionArena {
     _freeSlots.add(slot);
   }
 
-  void process() {
+  @override
+  void process(double dt) {
     _sort();
     _detect();
   }
@@ -123,7 +126,7 @@ final class CollisionArena {
 
       for (final collider in _colliders) {
         final slot = _mapping[collider]!;
-        final transform = _transformIndex[slot] = collider.absoluteTransform(collider.arena);
+        final transform = _transformIndex[slot] = collider.absoluteTransform();
         _boundsIndex[slot] = collider.worldBounds(collider.shape, transform);
         _order.add(slot);
       }
@@ -134,7 +137,7 @@ final class CollisionArena {
     } else {
       for (final collider in _colliders) {
         final slot = _mapping[collider]!;
-        final transform = _transformIndex[slot] = collider.absoluteTransform(collider.arena);
+        final transform = _transformIndex[slot] = collider.absoluteTransform();
         _boundsIndex[slot] = collider.worldBounds(collider.shape, transform);
         _resettle(slot);
       }
@@ -232,7 +235,7 @@ final class CollisionArena {
 
         switch ((a.shape, b.shape)) {
           case (Rectangle(), Rectangle()):
-            overlapping = system.rectangleRectangle(
+            overlapping = engine.rectangleRectangle(
               narrowphaseA.center,
               narrowphaseA.extentX,
               narrowphaseA.extentY,
@@ -242,7 +245,7 @@ final class CollisionArena {
             );
 
           case (Circle(), Circle()):
-            overlapping = system.circleCircle(
+            overlapping = engine.circleCircle(
               narrowphaseA.center,
               narrowphaseA.radius,
               narrowphaseB.center,
@@ -250,7 +253,7 @@ final class CollisionArena {
             );
 
           case (Circle(), Rectangle()):
-            overlapping = system.circleRectangle(
+            overlapping = engine.circleRectangle(
               narrowphaseA.center,
               narrowphaseA.radius,
               narrowphaseB.center,
@@ -259,7 +262,7 @@ final class CollisionArena {
             );
 
           case (Rectangle(), Circle()):
-            overlapping = system.circleRectangle(
+            overlapping = engine.circleRectangle(
               narrowphaseB.center,
               narrowphaseB.radius,
               narrowphaseA.center,

@@ -4,13 +4,44 @@ import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';
 import 'package:ignis/src/anchor.dart';
+import 'package:ignis/src/engine.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/layout/layout_constraints.dart';
 import 'package:ignis/src/layout/layout_item.dart';
 import 'package:ignis/src/math.dart';
 
 /// A standalone set of layout algorithms, operating on [LayoutItem] items.
-abstract final class LayoutEngine {
+abstract class LayoutEngine extends Engine {
+  const LayoutEngine();
+
+  /// Sizes a region to [targetWidth]/[targetHeight] - or to its largest item
+  /// plus [padding] where either is null - then places every item inside it
+  /// at [alignment].
+  Vector2 box({
+    required Iterable<LayoutItem> items,
+    required LayoutConstraints constraints,
+    required double? targetWidth,
+    required double? targetHeight,
+    required EdgeInsets padding,
+    required Anchor? alignment,
+  });
+
+  /// Measures non-flex items, distributes remaining main-axis space to flex
+  /// items, then positions everyone in exactly three passes.
+  Vector2 flex({
+    required Axis direction,
+    required LayoutConstraints constraints,
+    required Iterable<LayoutItem> items,
+    required MainAxisAlignment mainAxisAlignment,
+    required CrossAxisAlignment crossAxisAlignment,
+    required MainAxisSize mainAxisSize,
+    required double spacing,
+  });
+}
+
+final class StandardLayoutEngine extends LayoutEngine {
+  const StandardLayoutEngine();
+
   /// Sizes a region to [targetWidth]/[targetHeight] - or to its largest item
   /// plus [padding] where either is null - then places every item inside it
   /// at [alignment].
@@ -61,7 +92,8 @@ abstract final class LayoutEngine {
   ///      bounded axis is taken whole, landing on 100x60.
   ///   4. Place every item. That leaves 60x20 of room inside the padding, and
   ///      half of it puts the item at (40, 20).
-  static Vector2 box({
+  @override
+  Vector2 box({
     required Iterable<LayoutItem> items,
     required LayoutConstraints constraints,
     required double? targetWidth,
@@ -165,7 +197,8 @@ abstract final class LayoutEngine {
   ///      share; a loose one may report back smaller.
   ///   3. Walk a cursor along the main axis, placing each item and advancing
   ///      by its extent plus [spacing], landing them at 0, 10 and 32.5.
-  static Vector2 flex({
+  @override
+  Vector2 flex({
     required Axis direction,
     required LayoutConstraints constraints,
     required Iterable<LayoutItem> items,
@@ -276,14 +309,22 @@ abstract final class LayoutEngine {
     final selfMain = selfSize.axis(direction);
     final selfCross = selfSize.axis(crossAxis);
     final freeMain = math.max(0.0, selfMain - consumedMain);
-    final (leading, between) = distributeSpace(mainAxisAlignment, freeMain, childCount);
+    final (leading, between) = distributeSpace(
+      mainAxisAlignment,
+      freeMain,
+      childCount,
+    );
 
     var cursor = leading;
 
     index = 0;
 
     for (final item in items) {
-      final crossOffset = crossAxisOffset(crossAxisAlignment, selfCross - crosses[index]);
+      final crossOffset = crossAxisOffset(
+        crossAxisAlignment,
+        selfCross - crosses[index],
+      );
+
       place(item, direction.toVector2(main: cursor, cross: crossOffset));
       cursor += mains[index] + spacing + between;
       index += 1;
@@ -292,9 +333,7 @@ abstract final class LayoutEngine {
     return selfSize;
   }
 
-  /// Positions [item] so its content's top-left corner lands at [position],
-  /// honoring [item]'s own anchor and scale.
-  static void place(LayoutItem item, Vector2 position) {
+  void place(LayoutItem item, Vector2 position) {
     final size = item.size;
     final scale = item.scale;
     final anchor = item.anchor;
