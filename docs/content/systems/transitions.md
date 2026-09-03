@@ -7,7 +7,7 @@ status: partial
 reference: [Router, RouterNode, RouteNode, Transition, CutTransition, CurtainTransition, WipeTransition, SlideTransition, FadeTransition]
 related: [/systems/effects, /systems/timelines]
 ---
-<!-- SPDX-AI-Disclosure: ai-none -->
+<!-- SPDX-AI-Disclosure: none -->
 
 ## Examples
 

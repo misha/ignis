@@ -1,4 +1,4 @@
-// SPDX-AI-Disclosure: none.
+// SPDX-AI-Disclosure: none
 
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/routing/backdrop.dart';
