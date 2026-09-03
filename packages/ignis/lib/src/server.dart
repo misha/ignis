@@ -14,11 +14,16 @@ abstract class Server {
 }
 
 /// A server stepped once per tick.
+///
+/// Generally held by a node in the tree, which calls [process] to run it.
 abstract class SteppedServer extends Server {
   void process(double dt);
 }
 
 /// A server fed events as they arrive.
+///
+/// Generally held wherever its scope demands (e.g. globally on `Ignis` on per
+/// node in a host node).
 abstract class EventServer<E> extends Server {
   bool dispatch(E event);
 }

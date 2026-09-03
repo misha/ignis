@@ -10,8 +10,7 @@ import 'package:ignis/src/routing/transitions/cut_transition.dart';
 
 /// A stack of [RouteNode]s managed with a set of classic routing operations.
 ///
-/// A router isn't a node itself. A `RouterNode` generally drives it with the
-/// clock from an actual scene.
+/// A router is [SteppedServer], and its host node is usually a `RouterNode`.
 class Router<T> extends SteppedServer {
   /// The transition a navigation plays when it names none.
   ///
