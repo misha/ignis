@@ -68,7 +68,6 @@ final class Circle extends Shape {
 
   @override
   void clip(Canvas canvas) {
-    // TODO: Should this really be a rounded rectangle? Strange, as this is a circle.
     canvas.clipRRect(RRect.fromRectAndRadius(rect(), Radius.circular(radius)));
   }
 
