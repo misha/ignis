@@ -2,6 +2,7 @@
 disclosure-default: ai-generated
 models-used:
   - claude-opus-5
+  - claude-fable-5-1
 providers:
   - Anthropic
 scope: |
