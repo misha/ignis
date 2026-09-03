@@ -3,50 +3,31 @@
 import 'dart:async';
 
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/routing/backdrop.dart';
 import 'package:ignis/src/routing/nodes/route_node.dart';
 import 'package:ignis/src/routing/transition.dart';
 import 'package:ignis/src/routing/transitions/cut_transition.dart';
 
-/// A stack of [RouteNode]s and the navigations over it, playing a
-/// [Transition] per navigation. It owns the routes' activity, priority, and
-/// pose. A transition may be reused: each navigation restarts its clock.
+/// A stack of [RouteNode]s managed with a set of classic routing operations.
 ///
-/// Plain state that never enters the tree. A `RouterNode` adds its routes,
-/// drives [process], mounts the chrome of the transition [onStart] emits and
-/// removes the one [onSettle] emits, and provides this router to everything
-/// beneath it.
-///
-/// [go] replaces the whole stack with one route, so a router that only ever
-/// goes is a switcher: one route takes part and the rest take no part at all.
-/// [push] lays a route over the top and leaves the covered one to whatever
-/// [Activity] the push allows it, painting at least and never hearing input.
-/// [pop] plays the push back. Mid-flight both sides are live, the lower one
-/// painting below the upper one and the chrome above all, and their pose is a
-/// pure function of the transition's progress, so a navigation can be reversed
-/// at any moment: [go] with the name being left reverses, with the current
-/// target runs forward, and with a third name completes the running navigation
-/// first. Every navigation commits at the call: [top] and [stack] answer for
-/// it at once, before the visuals settle.
+/// A router isn't a node itself. A `RouterNode` generally drives it with the
+/// clock from an actual scene.
 class Router<T> {
-  /// The transition a navigation plays when it names none. Defaults to a
-  /// [CutTransition].
+  /// The transition a navigation plays when it names none.
+  ///
+  /// Defaults to a [CutTransition].
   final Transition transition;
 
-  /// Emits the transition a navigation starts, its chrome enabled and
-  /// prioritized above the routes, ready to mount.
+  /// Emitted when a navigation begins.
   final onStart = Signal1<Transition>();
 
-  /// Emits the transition a navigation settles, its chrome disabled, ready to
-  /// remove.
+  /// Emitted when a navigation settles.
   final onSettle = Signal1<Transition>();
 
   final List<RouteNode<T>> _routes = [];
   final List<_Entry<T>> _stack = [];
   T? _initial;
-  Transition? _transition;
-  bool _forward = true;
-  RouteNode<T>? _incoming;
-  RouteNode<T>? _outgoing;
+  _Navigation<T>? _navigation;
 
   Router({
     T? top,
@@ -77,41 +58,41 @@ class Router<T> {
       entry.route.name,
   ];
 
-  /// Whether a navigation's transition is in flight.
-  bool get isTransitioning => _transition != null;
+  /// Whether a navigation is running.
+  bool get isTransitioning => _navigation != null;
 
-  /// The in-flight navigation's progress, or 1 between navigations.
-  double get progress => _transition?.timeline.progress ?? 1;
+  /// The running navigation's progress, or 1 between navigations.
+  double get progress => _navigation?.transition.timeline.progress ?? 1;
 
-  /// Moves the navigation in flight by [dt] seconds.
+  /// Moves the running navigation by [dt] seconds.
   void process(double dt) {
-    final flight = _transition;
-    if (flight == null) return;
-    final timeline = flight.timeline;
+    final navigation = _navigation;
+    if (navigation == null) return;
+    final timeline = navigation.transition.timeline;
 
-    if (_forward) {
+    if (navigation.forward) {
       timeline.advance(dt);
 
       if (timeline.isFinished) {
-        _settle(forward: true);
+        _settle();
         return;
       }
     } else {
       timeline.recede(dt);
 
       if (timeline.progress == 0 || timeline.duration == 0) {
-        _settle(forward: false);
+        _settle();
         return;
       }
     }
 
-    flight.apply(timeline.progress, _incoming!, _outgoing);
+    _pose(navigation);
   }
 
   /// Replaces the whole stack with the route named [name], playing
-  /// [transition] over the default. Mid-flight, naming the route being left
-  /// reverses the navigation, naming the current target keeps it running
-  /// forward, and naming a third route completes the running navigation first.
+  /// [transition] over the default. While a navigation runs, naming the route
+  /// being left reverses it, naming the current target keeps it running
+  /// forward, and naming a third route completes it first.
   /// Every push dropped completes with null.
   void go(
     T name, {
@@ -119,22 +100,23 @@ class Router<T> {
   }) {
     final target = _route(name);
     assert(target != null, 'No route is named "$name".');
+    final navigation = _navigation;
 
-    if (_transition != null) {
+    if (navigation != null) {
       if (name == top) {
-        _forward = true;
+        navigation.forward = true;
         return;
       }
 
-      if (identical(target, _outgoing)) {
+      if (identical(target, navigation.outgoing)) {
         _entries
           ..clear()
           ..add(_Entry(target!));
-        _forward = false;
+        navigation.forward = false;
         return;
       }
 
-      _settle(forward: _forward);
+      _settle();
     }
 
     if (name == top) {
@@ -146,14 +128,13 @@ class Router<T> {
   }
 
   /// Lays the route named [name] over the top, playing [transition] over the
-  /// default. The covered route takes part in [backdrop] once the push settles,
-  /// painting throughout and never hearing input; by default it only paints,
-  /// frozen in place. Completes with what the matching [pop] carries, or null
-  /// when a [go] drops the push.
+  /// default and leaving the covered route to [backdrop], frozen by default.
+  /// Completes with what the matching [pop] carries, or null when a [go]
+  /// drops the push.
   Future<R?> push<R>(
     T name, {
     Transition? transition,
-    Activity? backdrop,
+    Backdrop? backdrop,
   }) {
     final target = _route(name);
     assert(target != null, 'No route is named "$name".');
@@ -163,31 +144,29 @@ class Router<T> {
       'Route "$name" is already on the stack.',
     );
 
-    if (_transition != null) _settle(forward: _forward);
+    if (_navigation != null) _settle();
     final covered = _entries.last.route;
-    final allowed = (backdrop ?? .render) & ~Activity.input;
-    covered.activity = allowed | .render;
-    target!.activity = .all;
-    final flight = transition ?? this.transition;
     final completer = Completer<R?>();
 
-    _entries.add(
-      _Entry(
-        target,
-        backdrop: allowed,
-        transition: flight,
-        completer: completer,
+    final entry = _Entry(
+      target!,
+      backdrop: backdrop ?? const .frozen(),
+      transition: transition,
+      completer: completer,
+    );
+
+    _entries.add(entry);
+    _order();
+
+    _launch(
+      _Navigation(
+        entry.transition ?? this.transition,
+        incoming: target,
+        covered: covered,
+        backdrop: entry.backdrop,
       ),
     );
 
-    _order();
-    _incoming = target;
-    _outgoing = null;
-    _forward = true;
-    _transition = flight;
-    flight.timeline.setToStart();
-    flight.apply(flight.timeline.progress, target, null);
-    _start(flight);
     return completer.future;
   }
 
@@ -198,20 +177,24 @@ class Router<T> {
     if (_entries.length <= 1) throw StateError('Cannot pop the last route.');
     final entry = _entries.removeLast();
     _order();
-    _entries.last.route.activity = entry.backdrop | .render;
+    final navigation = _navigation;
 
-    if (_transition != null && identical(_incoming, entry.route) && _outgoing == null) {
-      _forward = false;
+    if (navigation != null &&
+        identical(navigation.incoming, entry.route) &&
+        navigation.outgoing == null) {
+      navigation.forward = false;
     } else {
-      if (_transition != null) _settle(forward: _forward);
-      final flight = entry.transition ?? transition;
-      _incoming = entry.route;
-      _outgoing = null;
-      _forward = false;
-      _transition = flight;
-      flight.timeline.setToEnd();
-      flight.apply(flight.timeline.progress, entry.route, null);
-      _start(flight);
+      if (navigation != null) _settle();
+
+      _launch(
+        _Navigation(
+          entry.transition ?? transition,
+          incoming: entry.route,
+          covered: _entries.last.route,
+          backdrop: entry.backdrop,
+          forward: false,
+        ),
+      );
     }
 
     entry.completer?.complete(result);
@@ -227,23 +210,20 @@ class Router<T> {
 
     _routes.add(route);
     _initial ??= route.name;
-    if (identical(route, _incoming) || identical(route, _outgoing)) return;
-
-    final stacked = _stack.isEmpty
-        ? route.name == _initial
-        : _stack.any((entry) => identical(entry.route, route));
-
-    if (stacked) return;
-    route.activity = .none;
+    route.activity = _activityOf(route);
   }
 
   /// Removes [route], settling any navigation it is a side of.
   void remove(RouteNode<T> route) {
     _routes.remove(route);
     _stack.removeWhere((entry) => identical(entry.route, route));
+    final navigation = _navigation;
+    if (navigation == null) return;
 
-    if (identical(route, _incoming) || identical(route, _outgoing)) {
-      _settle(forward: identical(route, _outgoing));
+    if (identical(route, navigation.incoming) ||
+        identical(route, navigation.outgoing) ||
+        identical(route, navigation.covered)) {
+      _settle();
     }
   }
 
@@ -262,7 +242,6 @@ class Router<T> {
     final top = entries.last;
 
     for (final entry in entries) {
-      if (!identical(entry, top)) entry.route.activity = .none;
       entry.completer?.complete(null);
     }
 
@@ -271,6 +250,7 @@ class Router<T> {
       ..add(_Entry(top.route));
 
     _order();
+    _arrange();
   }
 
   void _swap(RouteNode<T> incoming, Transition? transition) {
@@ -282,16 +262,14 @@ class Router<T> {
 
     _order();
     outgoing.priority = -1;
-    incoming.activity = .all;
-    _outgoing = outgoing;
-    _incoming = incoming;
-    _forward = true;
 
-    final flight = transition ?? this.transition;
-    _transition = flight;
-    flight.timeline.setToStart();
-    flight.apply(flight.timeline.progress, incoming, outgoing);
-    _start(flight);
+    _launch(
+      _Navigation(
+        transition ?? this.transition,
+        incoming: incoming,
+        outgoing: outgoing,
+      ),
+    );
   }
 
   /// Orders the stack's routes bottom to top.
@@ -301,62 +279,119 @@ class Router<T> {
     }
   }
 
-  /// Readies [flight]'s chrome above the stack and announces the navigation.
-  void _start(Transition flight) {
-    final chrome = flight.chrome;
+  /// What [route] takes part in right now: a side of the running navigation is
+  /// live, a covered one is in its backdrop's running state, the top is live, a stacked
+  /// one is in the settled state of the backdrop above it, and the rest take
+  /// no part.
+  Activity _activityOf(RouteNode<T> route) {
+    final navigation = _navigation;
+
+    if (navigation != null) {
+      if (identical(route, navigation.incoming) || identical(route, navigation.outgoing)) {
+        return .all;
+      }
+
+      if (identical(route, navigation.covered)) {
+        return navigation.backdrop!.running & ~Activity.input;
+      }
+    }
+
+    if (_stack.isEmpty) {
+      return route.name == _initial ? .all : .none;
+    }
+
+    for (final (index, entry) in _stack.indexed) {
+      if (!identical(entry.route, route)) continue;
+      if (index == _stack.length - 1) return .all;
+      return _stack[index + 1].backdrop!.settled & ~Activity.input;
+    }
+
+    return .none;
+  }
+
+  /// Gives every route what it takes part in.
+  void _arrange() {
+    for (final route in _routes) {
+      route.activity = _activityOf(route);
+    }
+  }
+
+  /// Poses every side of [navigation] at its progress.
+  void _pose(_Navigation<T> navigation) {
+    final progress = navigation.transition.timeline.progress;
+    navigation.transition.apply(progress, navigation.incoming, navigation.outgoing);
+    final covered = navigation.covered;
+    if (covered != null) navigation.backdrop!.apply(progress, covered);
+  }
+
+  /// Starts [navigation]: its clock at the end it runs from, every side arranged
+  /// and posed, its chrome above the stack, and the navigation announced.
+  void _launch(_Navigation<T> navigation) {
+    _navigation = navigation;
+    final transition = navigation.transition;
+    final timeline = transition.timeline;
+
+    if (navigation.forward) {
+      timeline.setToStart();
+    } else {
+      timeline.setToEnd();
+    }
+
+    _arrange();
+    _pose(navigation);
+    final chrome = transition.chrome;
 
     if (chrome != null) {
       chrome.priority = _entries.length + 1;
       chrome.enable();
     }
 
-    onStart.emit(flight);
+    onStart.emit(transition);
   }
 
-  /// Ends the flight: a swap retires its loser, a push settles the covered
-  /// route into what it was allowed, a pop retires the popped route and wakes
-  /// the one beneath.
-  void _settle({
-    required bool forward,
-  }) {
-    final flight = _transition;
-    if (flight == null) return;
-    final incoming = _incoming!;
-    final outgoing = _outgoing;
-    _transition = null;
-    _incoming = null;
-    _outgoing = null;
-    incoming.reset();
-    outgoing?.reset();
-
-    if (outgoing != null) {
-      (forward ? outgoing : incoming).activity = .none;
-    } else if (forward) {
-      final entries = _entries;
-
-      if (entries.length > 1) {
-        entries[entries.length - 2].route.activity = entries.last.backdrop;
-      }
-    } else {
-      incoming.activity = .none;
-      _entries.last.route.activity = .all;
-    }
-
-    flight.chrome?.disable();
-    onSettle.emit(flight);
+  /// Ends the navigation, returning every side to rest.
+  void _settle() {
+    final navigation = _navigation;
+    if (navigation == null) return;
+    _navigation = null;
+    navigation.incoming.reset();
+    navigation.outgoing?.reset();
+    navigation.covered?.reset();
+    _arrange();
+    final transition = navigation.transition;
+    transition.chrome?.disable();
+    onSettle.emit(transition);
   }
 }
 
 final class _Entry<T> {
   final RouteNode<T> route;
-  final Activity backdrop;
+  final Backdrop? backdrop;
   final Transition? transition;
   final Completer<Object?>? completer;
 
   _Entry(
     this.route, {
-    this.backdrop = .none,
+    this.backdrop,
     this.transition,
     this.completer,
   });
+}
+
+final class _Navigation<T> {
+  final Transition transition;
+  final RouteNode<T> incoming;
+  final RouteNode<T>? outgoing;
+  final RouteNode<T>? covered;
+  final Backdrop? backdrop;
+  bool forward;
+
+  _Navigation(
+    this.transition, {
+    required this.incoming,
+    this.outgoing,
+    this.covered,
+    this.backdrop,
+    bool? forward,
+  }) : forward = forward ?? true;
 }

@@ -1,17 +1,20 @@
-// SPDX-AI-Disclosure: ai-generated
+// SPDX-AI-Disclosure: none
 
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/routing/nodes/route_node.dart';
 import 'package:ignis/src/timeline.dart';
 
-/// The style and clock of one navigation between two routes.
+/// Describes a navigation between two routes.
 ///
-/// A transition never enters the tree. Its host, a `RouterNode`, drives
-/// [timeline], asks for the pose at each progress, and mounts [chrome] for
-/// the length of the navigation. Both sides are a pure function of progress, so a
-/// navigation runs forward and reverse freely, at any moment.
+/// A transition is not a node, but rather a specification for an operation.
+/// Instead, a `Router` drives the [timeline], periodically asking for the pose.
+/// If the transition has [chrome], the router also mounts it for the duration
+/// of the navigation, allowing it to be posed as well.
+///
+/// Transitions are intended to be reusable and reversible. Keep these
+/// requirements in mind when implementing a custom [apply].
 abstract class Transition {
-  /// This transition's clock, driven by the hosting `RouterNode`.
+  /// This transition's clock, driven by a `Router`.
   final Timeline timeline;
 
   /// This transition's own visuals, mounted above the host's whole subtree
@@ -24,7 +27,8 @@ abstract class Transition {
 
   /// Poses both sides at [progress] by writing onto the routes, whose size is
   /// the region being routed. [outgoing] is null on a push, where nothing is
-  /// leaving. Runs once when the navigation starts and once per tick after the
-  /// clock moves, so rendering always sees the pose.
+  /// leaving and the covered route is its `Backdrop`'s to pose. Runs once when
+  /// the navigation starts and once per tick after the clock moves, so
+  /// rendering always sees the pose.
   void apply(double progress, RouteNode incoming, RouteNode? outgoing);
 }

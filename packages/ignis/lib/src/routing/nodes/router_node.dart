@@ -33,13 +33,13 @@ class RouterNode<T> extends SpatialNode {
   void build() {
     super.build();
 
-    router.onStart((flight) {
-      final chrome = flight.chrome;
+    router.onStart((transition) {
+      final chrome = transition.chrome;
       if (chrome != null) add(chrome);
     });
 
-    router.onSettle((flight) {
-      final chrome = flight.chrome;
+    router.onSettle((transition) {
+      final chrome = transition.chrome;
       if (chrome != null) remove(chrome);
     });
 

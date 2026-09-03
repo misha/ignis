@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../support/test_backdrop.dart';
 import '../support/test_transition.dart';
 
 void main() {
@@ -180,12 +181,12 @@ void main() {
       ..add(RouteNode(name: 'a'))
       ..add(RouteNode(name: 'b'));
 
-    router.onStart((flight) {
-      starts.add(flight);
+    router.onStart((transition) {
+      starts.add(transition);
     });
 
-    router.onSettle((flight) {
-      settles.add(flight);
+    router.onSettle((transition) {
+      settles.add(transition);
     });
 
     router.go('b', transition: transition);
@@ -233,7 +234,7 @@ void main() {
     expect(() => router.go('b'), throwsA(isA<AssertionError>()));
   });
 
-  test('removing a side settles the flight', () {
+  test('removing a side settles the navigation', () {
     final a = RouteNode(name: 'a');
     final b = RouteNode(name: 'b');
     final router = Router<String>()
@@ -273,7 +274,7 @@ void main() {
       ..add(a)
       ..add(RouteNode(name: 'b'));
 
-    router.push('b', transition: TestTransition(), backdrop: Activity.update | Activity.render);
+    router.push('b', transition: TestTransition(), backdrop: .live());
     router.process(1);
 
     expect(a.activity, Activity.update | Activity.render);
@@ -286,7 +287,7 @@ void main() {
       ..add(a)
       ..add(RouteNode(name: 'b'));
 
-    router.push('b', transition: TestTransition(), backdrop: .none);
+    router.push('b', transition: TestTransition(), backdrop: .hidden());
     router.process(0.5);
     expect(a.activity, Activity.render);
 
@@ -429,5 +430,70 @@ void main() {
 
     router.push<int>('b');
     expect(() => router.pop('three'), throwsA(isA<TypeError>()));
+  });
+
+  test('a push poses its backdrop, and a pop plays it back', () {
+    final backdrop = TestBackdrop();
+    final router = Router<String>()
+      ..add(RouteNode(name: 'a'))
+      ..add(RouteNode(name: 'b'));
+
+    router.push('b', transition: TestTransition(), backdrop: backdrop);
+    router.process(0.5);
+    expect(backdrop.applies, [0, 0.5]);
+
+    router.process(0.5);
+    router.pop();
+    router.process(0.5);
+    expect(backdrop.applies, [0, 0.5, 1, 0.5]);
+  });
+
+  test('settling returns the covered route to rest', () {
+    final a = RouteNode(name: 'a');
+    final router = Router<String>()
+      ..add(a)
+      ..add(RouteNode(name: 'b'));
+
+    router.push('b', transition: TestTransition(), backdrop: TestBackdrop());
+    router.process(0.5);
+    expect(a.opacity, 0.5);
+
+    router.process(0.5);
+    expect(router.isTransitioning, isFalse);
+    expect(a.opacity, 1);
+  });
+
+  test('a backdrop may tick while the push runs and freeze at settle', () {
+    final a = RouteNode(name: 'a');
+    final router = Router<String>()
+      ..add(a)
+      ..add(RouteNode(name: 'b'));
+
+    router.push(
+      'b',
+      transition: TestTransition(),
+      backdrop: TestBackdrop(running: Activity.update | Activity.render),
+    );
+
+    expect(a.activity, Activity.update | Activity.render);
+    router.process(1);
+    expect(a.activity, Activity.render);
+  });
+
+  test('a covered route rests in the backdrop of the push above it', () {
+    final a = RouteNode(name: 'a');
+    final b = RouteNode(name: 'b');
+    final router = Router<String>()
+      ..add(a)
+      ..add(b)
+      ..add(RouteNode(name: 'c'));
+
+    router.push('b', backdrop: .hidden());
+    router.process(0);
+    router.push('c');
+    router.process(0);
+
+    expect(a.activity, Activity.none);
+    expect(b.activity, Activity.render);
   });
 }
