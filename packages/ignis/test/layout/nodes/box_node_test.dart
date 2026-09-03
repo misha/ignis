@@ -67,4 +67,9 @@ void main() {
       expect((node.width, node.height), (20.0, 30.0));
     });
   });
+
+  test('refuses a shape, since its layout sizes it', () {
+    final node = BoxNode();
+    expect(() => node.shape = .square(10), throwsUnsupportedError);
+  });
 }

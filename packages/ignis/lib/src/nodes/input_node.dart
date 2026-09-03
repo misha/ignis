@@ -14,26 +14,13 @@ import 'package:ignis/src/shape.dart';
 /// apply to always falls through to the next one. Once a node does claim an
 /// event, the search stops there unless [behavior] is [HitBehavior.translucent].
 abstract class InputNode extends SpatialNode {
-  Shape? _shape;
-
-  /// The shape of the node's hit area.
-  ///
-  /// If not explicitly set, defaults to the parent's shape.
-  @override
-  Shape get shape => _shape ?? super.shape;
-
-  /// Sets this input's shape.
-  ///
-  /// If null, defaults back to the parent's shape.
-  set shape(Shape? value) => _shape = value;
-
   /// Whether this node blocks nodes behind it once it claims an event.
   ///
   /// Defaults to [HitBehavior.opaque].
   HitBehavior behavior;
 
   InputNode({
-    this._shape,
+    super.shape,
     HitBehavior? behavior,
     super.position,
     super.scale,
@@ -42,7 +29,8 @@ abstract class InputNode extends SpatialNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : behavior = behavior ?? .opaque;
+  }) : behavior = behavior ?? .opaque,
+       super(inherit: .parent);
 
   @override
   void build() {

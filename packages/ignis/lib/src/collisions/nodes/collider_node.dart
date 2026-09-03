@@ -5,24 +5,10 @@ import 'package:ignis/src/collisions/nodes/collision_arena_node.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
-import 'package:ignis/src/shape.dart';
 
 /// A hitbox that reports overlaps against other colliders registered to the
 /// same [CollisionArenaNode].
 class ColliderNode extends SpatialNode {
-  Shape? _shape;
-
-  /// The shape of the collider's hitbox.
-  ///
-  /// If not explicitly set, defaults to the parent's shape.
-  @override
-  Shape get shape => _shape ?? super.shape;
-
-  /// Sets this collider's shape.
-  ///
-  /// If null, defaults back to the parent's shape.
-  set shape(Shape? value) => _shape = value;
-
   /// Bitmask of physics layers this collider exists on. Defaults to all 1-bits.
   int layer;
 
@@ -57,7 +43,7 @@ class ColliderNode extends SpatialNode {
   CollisionArenaNode? get arena => _target.value;
 
   ColliderNode({
-    this._shape,
+    super.shape,
     int? layer,
     int? mask,
     bool? strict,
@@ -70,7 +56,8 @@ class ColliderNode extends SpatialNode {
     super.children,
   }) : layer = layer ?? -1,
        mask = mask ?? -1,
-       strict = strict ?? true;
+       strict = strict ?? true,
+       super(inherit: .parent);
 
   @override
   void build() {

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:ignis/src/egg.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/shape.dart';
 
 part 'backdoor.dart';
 part 'controls.dart';

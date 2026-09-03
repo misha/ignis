@@ -31,6 +31,7 @@ class OpacityNode extends SpatialNode {
   }
 
   OpacityNode({
+    super.shape,
     double? opacity,
     super.position,
     super.scale,
@@ -39,7 +40,7 @@ class OpacityNode extends SpatialNode {
     super.enabled,
     super.priority,
     super.children,
-  }) {
+  }) : super(inherit: .parent) {
     if (opacity != null) {
       this.opacity = opacity;
     }

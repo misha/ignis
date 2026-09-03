@@ -21,9 +21,13 @@ class Scene<T extends Node> {
   bool _paused = false;
 
   Vector2 _size = .zero;
+  Rectangle _shape = const Rectangle(.zero);
 
   /// Current scene size, updated on every resize via [resize].
   Vector2 get size => _size;
+
+  /// This scene's area, updated on every resize via [resize].
+  Shape get shape => _shape;
 
   /// Whether the scene has been [resize]d at least once.
   bool get hasSize => _sized;
@@ -103,6 +107,7 @@ class Scene<T extends Node> {
     }
 
     _size = .new(width, height);
+    _shape = Rectangle(_size);
     _sized = true;
     node._resize(size);
   }

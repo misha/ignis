@@ -9,6 +9,9 @@ import 'package:ignis/src/math.dart';
 sealed class Shape {
   const Shape();
 
+  /// No shape: an empty rectangle.
+  static const Shape none = Rectangle(.zero);
+
   /// This shape's size, if fully contained by an AABB.
   Vector2 get size;
 

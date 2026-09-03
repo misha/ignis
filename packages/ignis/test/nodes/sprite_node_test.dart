@@ -396,4 +396,9 @@ void main() {
     expect(node.current.isFinished, isFalse);
     expect(a.children, [node]);
   });
+
+  test('refuses a shape, since its frame sizes it', () async {
+    final node = SpriteNode(sprite: SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 0));
+    expect(() => node.shape = .square(10), throwsUnsupportedError);
+  });
 }

@@ -21,7 +21,7 @@ void main() {
 
       slot.add(taps);
       slot.mount();
-      taps.shape = null;
+      taps.shape = .none;
 
       expect(taps.shape, isA<Rectangle>());
       expect(taps.size, Vector2(30, 20));

@@ -4,22 +4,8 @@ import 'dart:ui';
 
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/palette.dart';
-import 'package:ignis/src/shape.dart';
 
 class ShapeNode extends SpatialNode {
-  Shape? _shape;
-
-  /// The geometry drawn.
-  ///
-  /// If not explicitly set, defaults to the parent's shape.
-  @override
-  Shape get shape => _shape ?? super.shape;
-
-  /// Sets the geometry drawn.
-  ///
-  /// If null, defaults back to the parent's shape.
-  set shape(Shape? value) => _shape = value;
-
   /// This node's registered paints.
   final Palette palette;
 
@@ -27,7 +13,7 @@ class ShapeNode extends SpatialNode {
   Paint get paint => palette.paint;
 
   ShapeNode({
-    this._shape,
+    super.shape,
     Paint? paint,
     super.position,
     super.scale,
@@ -36,7 +22,8 @@ class ShapeNode extends SpatialNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : palette = Palette(paint: paint);
+  }) : palette = Palette(paint: paint),
+       super(inherit: .parent);
 
   @override
   void build() {

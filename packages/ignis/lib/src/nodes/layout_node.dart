@@ -27,6 +27,9 @@ abstract class LayoutNode extends SpatialNode {
   @override
   late final Shape shape = Rectangle(_size);
 
+  @override
+  set shape(Shape value) => throw UnsupportedError('A LayoutNode is sized by its layout.');
+
   /// How an ancestor `FlexNode` shares its leftover main-axis space with this
   /// node, ignored without one. Defaults to [LayoutFlex.none].
   @override

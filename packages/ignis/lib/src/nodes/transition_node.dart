@@ -1,11 +1,8 @@
 // SPDX-AI-Disclosure: ai-generated
 
 import 'package:flutter/foundation.dart';
-import 'package:ignis/src/core.dart';
-import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/nodes/transition_group_node.dart';
-import 'package:ignis/src/shape.dart';
 import 'package:ignis/src/transition.dart';
 import 'package:ignis/src/transitions/cut_transition.dart';
 
@@ -30,9 +27,6 @@ class TransitionNode<T> extends SpatialNode {
   /// [CutTransition].
   final Transition transition;
 
-  final MVector2 _room = .zero();
-  late final Shape _roomShape = Rectangle(_room);
-  late final _above = Target<SpatialNode?>(this);
   T? _shown;
   Transition? _transition;
   bool _forward = true;
@@ -49,12 +43,8 @@ class TransitionNode<T> extends SpatialNode {
     super.enabled,
     super.priority,
     super.children,
-  }) : transition = transition ?? CutTransition();
-
-  /// The area swapped: the shape in effect above this node, or the scene's
-  /// when nothing spatial is above.
-  @override
-  Shape get shape => _above.value?.shape ?? _roomShape;
+  }) : transition = transition ?? CutTransition(),
+       super(inherit: .scene);
 
   Iterable<TransitionGroupNode<T>> get _groups => query<TransitionGroupNode<T>>();
 
@@ -74,7 +64,6 @@ class TransitionNode<T> extends SpatialNode {
   @override
   void build() {
     super.build();
-    onSceneResize(_room.setFrom);
 
     tick((dt) {
       final flight = _transition;

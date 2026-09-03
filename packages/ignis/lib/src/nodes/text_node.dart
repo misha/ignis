@@ -36,6 +36,9 @@ class TextNode extends SpatialNode {
     return _shape;
   }
 
+  @override
+  set shape(Shape value) => throw UnsupportedError('A TextNode is sized by its text.');
+
   String _text;
   TextStyle? _style;
   TextStyle? _resolved;

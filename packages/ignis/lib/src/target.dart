@@ -22,9 +22,13 @@ class Target<T> {
   final Node _host;
   T? _value;
 
-  Target(this._host) {
+  Target(Node host) : _host = host {
     _host._track(this);
   }
+
+  /// The node this target resolves from.
+  @protected
+  Node get host => _host;
 
   /// The nearest ancestor implementing [T].
   ///

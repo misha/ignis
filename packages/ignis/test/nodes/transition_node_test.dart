@@ -314,4 +314,25 @@ void main() {
 
     expect(() => host.mount(), throwsA(isA<StateError>()));
   });
+
+  test('a group takes the scene as its region with nothing above', () {
+    final group = TransitionGroupNode(name: 'a');
+    final scene = TransitionNode<String>(children: [group]).mount();
+    scene.resize(100, 100);
+
+    expect(group.size, Vector2.all(100));
+  });
+
+  test('a group takes the shape in effect above its host', () {
+    final group = TransitionGroupNode(name: 'a');
+
+    ClipNode(
+      shape: .rectangle(.new(60, 40)),
+      children: [
+        TransitionNode<String>(children: [group]),
+      ],
+    ).mount();
+
+    expect(group.size, Vector2(60, 40));
+  });
 }

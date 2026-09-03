@@ -70,4 +70,18 @@ void main() {
     layer.opacity = -0.2;
     expect(layer.opacity, 0);
   });
+
+  test('fills its parent when given no shape', () {
+    final layer = OpacityNode();
+    ShapeNode(shape: .square(40), children: [layer]).mount();
+
+    expect(layer.size, Vector2.all(40));
+  });
+
+  test('holds a shape it is given', () {
+    final layer = OpacityNode(shape: .square(10));
+    ShapeNode(shape: .square(40), children: [layer]).mount();
+
+    expect(layer.size, Vector2.all(10));
+  });
 }

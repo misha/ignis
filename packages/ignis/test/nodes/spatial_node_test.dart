@@ -4,77 +4,47 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  group('inheriting a shape', () {
-    test('takes the shape in effect at its parent', () {
+  group('holding a shape', () {
+    test('is a point by default, even under a shaped parent', () {
       final node = SpatialNode();
-      final slot = ShapeNode(shape: .rectangle(.new(30, 20)), children: [node]);
-
-      slot.mount();
-
-      expect(node.shape, isA<Rectangle>());
-      expect(node.size, Vector2(30, 20));
-    });
-
-    test('covers no area with nothing above, even in a sized scene', () {
-      final node = SpatialNode();
-      final scene = node.mount();
-      scene.resize(100, 50);
+      ShapeNode(shape: .square(40), children: [node]).mount();
 
       expect(node.size, Vector2.zero);
     });
 
-    test('follows that shape as it changes', () {
-      final node = SpatialNode();
-      final slot = ShapeNode(shape: .rectangle(.new(30, 20)), children: [node]);
-
-      slot.mount();
-      slot.shape = .rectangle(.new(50, 40));
-
-      expect(node.size, Vector2(50, 40));
+    test('holds the shape it is given', () {
+      final node = SpatialNode(shape: .rectangle(.new(30, 20)));
+      expect(node.size, Vector2(30, 20));
     });
 
-    test('takes the nearest shape, not an outer one', () {
-      final node = SpatialNode();
-      final inner = ShapeNode(shape: .square(10), children: [node]);
+    test('reads its parent when told to and states none', () {
+      final node = SpatialNode(inherit: .parent);
+      ShapeNode(shape: .square(40), children: [node]).mount();
 
-      ShapeNode(shape: .square(80), children: [inner]).mount();
+      expect(node.size, Vector2.all(40));
+    });
+
+    test('reads the scene at the root when told to', () {
+      final node = SpatialNode(inherit: .scene);
+      final scene = node.mount();
+      scene.resize(100, 50);
+
+      expect(node.size, Vector2(100, 50));
+    });
+
+    test('a stated shape wins over inheritance', () {
+      final node = SpatialNode(shape: .square(10), inherit: .parent);
+      ShapeNode(shape: .square(40), children: [node]).mount();
 
       expect(node.size, Vector2.all(10));
     });
 
-    test('reaches through a node that states no shape', () {
-      final node = SpatialNode();
-      final pivot = SpatialNode(children: [node]);
+    test('setting it to none goes back to inheriting', () {
+      final node = SpatialNode(shape: .square(10), inherit: .parent);
+      ShapeNode(shape: .square(40), children: [node]).mount();
 
-      ShapeNode(shape: .circle(15), children: [pivot]).mount();
-
-      expect(node.shape, isA<Circle>());
-    });
-
-    test('reaches through a node that is not spatial', () {
-      final node = SpatialNode();
-      final group = Node(children: [node]);
-
-      ShapeNode(shape: .circle(15), children: [group]).mount();
-
-      expect(node.shape, isA<Circle>());
-    });
-
-    test('takes a circle from a circle, not a box around it', () {
-      final node = SpatialNode();
-
-      ShapeNode(shape: .circle(15), children: [node]).mount();
-
-      expect(node.shape, isA<Circle>());
-      expect(node.size, Vector2.all(30));
-    });
-
-    test('covers nothing with no shape anywhere above it', () {
-      final node = SpatialNode();
-
-      node.mount();
-
-      expect(node.size, Vector2.zero);
+      node.shape = .none;
+      expect(node.size, Vector2.all(40));
     });
   });
 

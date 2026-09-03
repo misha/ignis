@@ -16,6 +16,7 @@ import 'package:ignis/src/owners/angle_owner.dart';
 import 'package:ignis/src/owners/position_owner.dart';
 import 'package:ignis/src/owners/scale_owner.dart';
 import 'package:ignis/src/shape.dart';
+import 'package:ignis/src/targets/shape_target.dart';
 
 /// A [Node] with a transform and a shape.
 class SpatialNode extends Node
@@ -36,7 +37,24 @@ class SpatialNode extends Node
   @override
   Anchor anchor;
 
+  /// What [shape] falls back to when this node states none. Defaults to
+  /// [ShapeInheritance.none].
+  final ShapeInheritance inherit;
+
+  Shape _shape;
+  late final _inherited = ShapeTarget(this, inherit);
+
+  /// This node's shape.
+  ///
+  /// If the shape has a size of zero, it falls back to the [inherit]ed shape.
+  Shape get shape => _shape.size.isZero ? _inherited.shape : _shape;
+
+  /// Sets this node's own shape. Nodes sized by their content refuse one.
+  set shape(Shape value) => _shape = value;
+
   SpatialNode({
+    Shape? shape,
+    ShapeInheritance? inherit,
     Vector2? position,
     Vector2? scale,
     double? angle,
@@ -44,21 +62,14 @@ class SpatialNode extends Node
     super.enabled,
     super.priority,
     super.children,
-  }) : position = .copy(position ?? .zero),
+  }) : _shape = shape ?? .none,
+       inherit = inherit ?? .none,
+       position = .copy(position ?? .zero),
        scale = .copy(scale ?? .all(1)),
        angle = angle ?? 0,
        anchor = anchor ?? .topLeft;
 
-  late final _target = Target<SpatialNode?>(this);
-
-  /// The shape in effect at this node.
-  ///
-  /// A node that states no shape of its own takes its nearest spatial
-  /// ancestor's, so an area is inherited by pass-through rather than copied.
-  /// A node with nothing above it covers no area at all.
-  Shape get shape => _target.value?.shape ?? const Rectangle(.zero);
-
-  /// This node's size, which is the size of the [shape] in effect at it.
+  /// This node's dimensions, determined by the bounds of its [shape].
   @override
   Vector2 get size => shape.size;
 

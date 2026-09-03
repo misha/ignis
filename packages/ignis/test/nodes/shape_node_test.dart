@@ -29,7 +29,23 @@ void main() {
     final fill = ShapeNode(shape: .square(10), paint: Paint()..color = RED);
     ShapeNode(shape: .square(40), children: [fill]).mount();
 
-    fill.shape = null;
+    fill.shape = .none;
     expect(fill.size.x, 40);
+  });
+
+  test('fills the nearest spatial ancestor, not an outer one', () {
+    final fill = ShapeNode(paint: Paint()..color = RED);
+    final inner = ShapeNode(shape: .square(10), children: [fill]);
+    ShapeNode(shape: .square(80), children: [inner]).mount();
+
+    expect(fill.size, Vector2.all(10));
+  });
+
+  test('fills through a node that is not spatial', () {
+    final fill = ShapeNode(paint: Paint()..color = RED);
+    final group = Node(children: [fill]);
+    ShapeNode(shape: .circle(15), children: [group]).mount();
+
+    expect(fill.shape, isA<Circle>());
   });
 }

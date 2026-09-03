@@ -17,7 +17,7 @@ void main() {
       final slot = ShapeNode(shape: .rectangle(.new(30, 20)), children: [collider]);
 
       CollisionArenaNode(children: [slot]).mount();
-      collider.shape = null;
+      collider.shape = .none;
 
       expect(collider.shape, isA<Rectangle>());
       expect(collider.size, Vector2(30, 20));

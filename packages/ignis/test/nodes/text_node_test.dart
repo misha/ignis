@@ -129,4 +129,9 @@ void main() {
 
     expect(node.size, isNot(Vector2.zero));
   });
+
+  test('refuses a shape, since its text sizes it', () {
+    final node = TextNode(text: 'Ignis');
+    expect(() => node.shape = .square(10), throwsUnsupportedError);
+  });
 }

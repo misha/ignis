@@ -98,6 +98,9 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
   @override
   Shape get shape => _current.shape;
 
+  @override
+  set shape(Shape value) => throw UnsupportedError('A SpriteNode is sized by its frame.');
+
   /// This node's registered paints.
   final Palette palette;
 
