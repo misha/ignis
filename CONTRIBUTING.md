@@ -8,4 +8,4 @@ Open to everyone. Bug reports, questions, and ideas are all welcome, and an issu
 
 Restricted to contributors.
 
-If you want to work on something, open an issue first. That is how the design conversation happens.
+If you want to work on something, open an issue first.
