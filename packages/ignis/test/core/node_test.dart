@@ -1,10 +1,9 @@
 import 'dart:ui';
 
-import '../support/canvas.dart';
-
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../support/canvas.dart';
 import '../support/test_node.dart';
 
 void main() {
@@ -787,6 +786,35 @@ void main() {
       node.add(added);
       expect(first, [added]);
       expect(node.query<TestNode>(), same(first));
+    });
+  });
+
+  group('activity', () {
+    test('rendering alone paints without ticking', () {
+      final node = TestNode()..activity = .render;
+      final scene = node.mount();
+
+      scene.update(1);
+      scene.render(RecordingCanvas());
+      expect(node.updates, 0);
+      expect(node.renders, 1);
+    });
+
+    test('ticking and rendering still does not hear', () {
+      final taps = TapInput(shape: .square(10))..activity = Activity.update | Activity.render;
+      taps.mount();
+      expect(taps.hitTest(Vector2.all(5)), isEmpty);
+
+      taps.activity = .all;
+      expect(taps.hitTest(Vector2.all(5)), [taps]);
+    });
+
+    test('enabled means all three', () {
+      final node = TestNode()..activity = .render;
+      expect(node.enabled, isFalse);
+
+      node.enabled = true;
+      expect(node.activity, Activity.all);
     });
   });
 }

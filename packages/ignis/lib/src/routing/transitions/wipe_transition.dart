@@ -4,7 +4,7 @@ import 'package:flutter/animation.dart';
 import 'package:flutter/painting.dart' show AxisDirection;
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/nodes/opacity_node.dart';
-import 'package:ignis/src/transition.dart';
+import 'package:ignis/src/routing/transition.dart';
 
 /// A hard-edged [panel] sweeps in from the leading edge to full cover, trades
 /// the sides, then exits the trailing edge.
@@ -35,7 +35,7 @@ class WipeTransition extends Transition {
   void apply(progress, incoming, outgoing) {
     final covering = progress < swapAt;
     incoming.opacity = covering ? 0 : 1;
-    outgoing.opacity = covering ? 1 : 0;
+    outgoing?.opacity = covering ? 1 : 0;
 
     final double sweep;
 

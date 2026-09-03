@@ -92,7 +92,7 @@ class Scene<T extends Node> {
   /// Renders this scene to [canvas].
   void render(Canvas canvas) {
     assert(_mounted, 'Cannot render a destroyed scene.');
-    if (!node.enabled) return;
+    if (!node.activity.renders) return;
     node.render(canvas);
     if (Debug.instance.enabled) node.debugRender(canvas);
   }

@@ -3,7 +3,7 @@
 import 'package:flutter/animation.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/nodes/opacity_node.dart';
-import 'package:ignis/src/transition.dart';
+import 'package:ignis/src/routing/transition.dart';
 
 /// Fades through a [veil] above everything, its opacity ramping to 1 at
 /// [swapAt] and back to 0 after, trading the sides under full cover.
@@ -32,7 +32,7 @@ class CurtainTransition extends Transition {
   void apply(progress, incoming, outgoing) {
     final covering = progress < swapAt;
     incoming.opacity = covering ? 0 : 1;
-    outgoing.opacity = covering ? 1 : 0;
+    outgoing?.opacity = covering ? 1 : 0;
 
     if (covering) {
       chrome.opacity = progress / swapAt;

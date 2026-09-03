@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' hide FadeTransition, SlideTransition;
+import 'package:flutter/widgets.dart' hide FadeTransition, Router, SlideTransition;
 import 'package:ignis/ignis.dart';
 
 import '../colors.dart';
@@ -32,14 +32,16 @@ class _CutNode extends Node {
     // demo on transitions-cut
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
-    final host = TransitionNode<String>(
-      transition: CutTransition(),
+    final router = Router<String>(transition: CutTransition());
+
+    final host = RouterNode(
+      router: router,
       children: [
-        TransitionGroupNode(
+        RouteNode(
           name: 'red',
           children: [ShapeNode(paint: Paint()..color = RED)],
         ),
-        TransitionGroupNode(
+        RouteNode(
           name: 'green',
           children: [ShapeNode(paint: Paint()..color = GREEN)],
         ),
@@ -47,7 +49,7 @@ class _CutNode extends Node {
     );
 
     taps.onTap(() {
-      host.show(host.shown == 'red' ? 'green' : 'red');
+      router.go(router.top == 'red' ? 'green' : 'red');
     });
     // demo off
 
@@ -65,18 +67,22 @@ class _CurtainNode extends Node {
     // demo on transitions-curtain
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
-    final host = TransitionNode<String>(
+    final router = Router<String>(
       transition: CurtainTransition(
         veil: ShapeNode(
           paint: Paint()..color = INK,
         ),
       ),
+    );
+
+    final host = RouterNode(
+      router: router,
       children: [
-        TransitionGroupNode(
+        RouteNode(
           name: 'red',
           children: [ShapeNode(paint: Paint()..color = RED)],
         ),
-        TransitionGroupNode(
+        RouteNode(
           name: 'green',
           children: [ShapeNode(paint: Paint()..color = GREEN)],
         ),
@@ -84,7 +90,7 @@ class _CurtainNode extends Node {
     );
 
     taps.onTap(() {
-      host.show(host.shown == 'red' ? 'green' : 'red');
+      router.go(router.top == 'red' ? 'green' : 'red');
     });
     // demo off
 
@@ -101,18 +107,22 @@ class _WipeNode extends Node {
     // demo on transitions-wipe
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
-    final host = TransitionNode<String>(
+    final router = Router<String>(
       transition: WipeTransition(
         panel: ShapeNode(
           paint: Paint()..color = INK,
         ),
       ),
+    );
+
+    final host = RouterNode(
+      router: router,
       children: [
-        TransitionGroupNode(
+        RouteNode(
           name: 'red',
           children: [ShapeNode(paint: Paint()..color = RED)],
         ),
-        TransitionGroupNode(
+        RouteNode(
           name: 'green',
           children: [ShapeNode(paint: Paint()..color = GREEN)],
         ),
@@ -120,7 +130,7 @@ class _WipeNode extends Node {
     );
 
     taps.onTap(() {
-      host.show(host.shown == 'red' ? 'green' : 'red');
+      router.go(router.top == 'red' ? 'green' : 'red');
     });
     // demo off
 
@@ -137,14 +147,16 @@ class _SlideNode extends Node {
     // demo on transitions-slide
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
-    final host = TransitionNode<String>(
-      transition: SlideTransition(),
+    final router = Router<String>(transition: SlideTransition());
+
+    final host = RouterNode(
+      router: router,
       children: [
-        TransitionGroupNode(
+        RouteNode(
           name: 'red',
           children: [ShapeNode(paint: Paint()..color = RED)],
         ),
-        TransitionGroupNode(
+        RouteNode(
           name: 'green',
           children: [ShapeNode(paint: Paint()..color = GREEN)],
         ),
@@ -152,7 +164,7 @@ class _SlideNode extends Node {
     );
 
     taps.onTap(() {
-      host.show(host.shown == 'red' ? 'green' : 'red');
+      router.go(router.top == 'red' ? 'green' : 'red');
     });
     // demo off
 
@@ -169,14 +181,16 @@ class _FadeNode extends Node {
     // demo on transitions-fade
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
-    final host = TransitionNode<String>(
-      transition: FadeTransition(crossFade: true),
+    final router = Router<String>(transition: FadeTransition(crossFade: true));
+
+    final host = RouterNode(
+      router: router,
       children: [
-        TransitionGroupNode(
+        RouteNode(
           name: 'red',
           children: [ShapeNode(paint: Paint()..color = RED)],
         ),
-        TransitionGroupNode(
+        RouteNode(
           name: 'green',
           children: [ShapeNode(paint: Paint()..color = GREEN)],
         ),
@@ -184,7 +198,7 @@ class _FadeNode extends Node {
     );
 
     taps.onTap(() {
-      host.show(host.shown == 'red' ? 'green' : 'red');
+      router.go(router.top == 'red' ? 'green' : 'red');
     });
     // demo off
 

@@ -1,7 +1,7 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:flutter/animation.dart';
-import 'package:ignis/src/transition.dart';
+import 'package:ignis/src/routing/transition.dart';
 
 /// Fades the incoming side in over the still-painting outgoing one.
 ///
@@ -22,6 +22,6 @@ class FadeTransition extends Transition {
   @override
   void apply(progress, incoming, outgoing) {
     incoming.opacity = progress;
-    if (crossFade) outgoing.opacity = 1 - progress;
+    if (crossFade) outgoing?.opacity = 1 - progress;
   }
 }

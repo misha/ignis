@@ -9,6 +9,7 @@ import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/shape.dart';
 
+part 'activity.dart';
 part 'backdoor.dart';
 part 'controls.dart';
 part 'debug.dart';

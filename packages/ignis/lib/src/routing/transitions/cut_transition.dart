@@ -1,6 +1,6 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:ignis/src/transition.dart';
+import 'package:ignis/src/routing/transition.dart';
 
 /// Swaps instantly with no visuals, finishing on the first tick.
 class CutTransition extends Transition {
@@ -8,6 +8,6 @@ class CutTransition extends Transition {
 
   @override
   void apply(_, _, outgoing) {
-    outgoing.opacity = 0;
+    outgoing?.opacity = 0;
   }
 }

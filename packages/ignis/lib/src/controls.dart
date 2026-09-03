@@ -203,7 +203,7 @@ class Controls {
 
   /// [node] and its subtree, topmost first, the way a hit test walks it.
   Iterable<Node> _topmost(Node node) sync* {
-    if (!node.enabled) return;
+    if (!node.activity.inputs) return;
     final children = node._egg?.nodes;
 
     if (children != null && children.isNotEmpty) {

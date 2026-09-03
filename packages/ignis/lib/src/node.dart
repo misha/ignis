@@ -92,7 +92,7 @@ typedef Cleanup = void Function();
 class Node {
   /// Creates a new node.
   ///
-  /// [enabled] controls whether the node updates and renders.
+  /// [enabled] sets whether the node ticks, renders, and accepts input.
   /// Defaults to true.
   ///
   /// [priority] controls this node's order when updating and rendering.
@@ -104,14 +104,14 @@ class Node {
     int? priority,
     Iterable<Node> children = const [],
   }) : _priority = priority ?? 0,
-       _enabled = enabled ?? true {
+       activity = (enabled ?? true) ? .all : .none {
     addAll(children);
   }
 
   /// Updates this node and its children by [dt] seconds.
   @nonVirtual
   void update(double dt) {
-    if (!_enabled) return;
+    if (!activity.updates) return;
     final ticks = _ticks;
 
     if (ticks != null) {
@@ -154,7 +154,7 @@ class Node {
     for (final child in children) {
       // Rendering is recursive, so this is the only way to stop it.
       // A disabled child must never have `render` called on it.
-      if (child._enabled) {
+      if (child.activity.renders) {
         child.render(canvas);
       }
     }
@@ -167,7 +167,7 @@ class Node {
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
-      if (child._enabled) {
+      if (child.activity.renders) {
         child.debugRender(canvas);
       }
     }
@@ -369,20 +369,22 @@ class Node {
 
   // #endregion
 
-  // #region Enabled
+  // #region Activity
 
-  bool _enabled;
+  /// What this node takes part in: ticking, rendering, and hearing input.
+  /// Defaults to [Activity.all].
+  Activity activity;
 
-  /// Whether this node updates, renders, and answers input. Defaults to true.
-  bool get enabled => _enabled;
+  /// Whether this node ticks, renders, and hears input, all three.
+  bool get enabled => activity == .all;
 
   /// Enables this node, so it resumes updating, rendering and answering.
   @mustCallSuper
-  void enable() => _enabled = true;
+  void enable() => activity = .all;
 
   /// Disables this node, so it stops updating, rendering and answering.
   @mustCallSuper
-  void disable() => _enabled = false;
+  void disable() => activity = .none;
 
   @nonVirtual
   set enabled(bool value) {
@@ -736,7 +738,7 @@ class Node {
   /// TODO: Should it really do that? Is enabled actually a tree operation?
   @nonVirtual
   Iterable<Node> hitTest(Vector2 point) sync* {
-    if (!enabled) return;
+    if (!activity.inputs) return;
     final children = _egg?.nodes;
 
     if (children != null && children.isNotEmpty) {

@@ -166,14 +166,15 @@ void main() {
     Ignis.bundle = TestBundle(['world.png']);
     final boot = LoadingEffect(request: Ignis.preload.load(paths: ['ui.png']));
     final main = LoadingEffect(request: Ignis.preload.load(manifest: true));
-    final host = TransitionNode<String>();
+    final router = Router<String>();
+    final host = RouterNode(router: router);
     final game = TestNode(name: 'game');
     final view = TestNode(name: 'view');
-    TransitionGroupNode<String>? booting;
+    RouteNode<String>? booting;
 
     boot.onFinish(() {
       booting = host.add(
-        TransitionGroupNode(
+        RouteNode(
           name: 'boot',
           children: [view],
         ),
@@ -182,7 +183,7 @@ void main() {
 
     main.onFinish(() {
       host.add(
-        TransitionGroupNode(
+        RouteNode(
           name: 'game',
           children: [game],
         ),
@@ -201,13 +202,12 @@ void main() {
 
     await drain(scene);
     expect(loader.loaded, containsAll(['ui.png', 'world.png']));
-    expect(host.shown, 'boot', reason: 'the first group to register shows');
     expect(view.isMounted, isTrue);
 
-    host.show('game');
+    router.go('game');
     await drain(scene);
-    expect(host.shown, 'game');
+    expect(router.top, 'game');
     expect(game.isMounted, isTrue);
-    expect(booting!.enabled, isFalse, reason: 'settling disabled the boot group');
+    expect(booting!.enabled, isFalse, reason: 'settling disabled the boot route');
   });
 }
