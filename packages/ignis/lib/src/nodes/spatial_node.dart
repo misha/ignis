@@ -81,6 +81,14 @@ class SpatialNode extends Node
   @override
   double get height => size.y;
 
+  /// The [anchor]'s point in this node's local space.
+  Vector2 pointAt(Anchor anchor) => .new(anchor.x * width, anchor.y * height);
+
+  /// The center of this node's [shape], in its local space.
+  ///
+  /// [absoluteCenter] is the same point in scene space.
+  Vector2 get center => pointAt(.center);
+
   /// The share of a flex layout's leftover space this node asks for.
   ///
   /// A plain node asks for none.
@@ -167,7 +175,7 @@ class SpatialNode extends Node
   /// This node's [position], composed with the transform of every
   /// [SpatialNode] ancestor, stopping at (but not including) [upTo].
   ///
-  /// The returned vector is a fresh copy, free for the caller to mutate.
+  /// The returned vector is owned by the caller.
   MVector2 scenePosition([Node? upTo]) {
     final absolute = MVector2.copy(position);
     var current = parent;
@@ -184,20 +192,16 @@ class SpatialNode extends Node
   }
 
   /// This node's [position] in scene space.
+  ///
+  /// The returned vector is owned by the caller.
   MVector2 get absolutePosition => scenePosition();
 
   /// The center of this node's [shape] in scene space.
   ///
-  /// The anchor rides in the transform, so two nodes anchored differently put
-  /// their [absolutePosition]s in different corners of the same box. centers
-  /// stay comparable, which is what [distance] and [nearest] measure between.
-  ///
-  /// The returned vector is a fresh copy, free for the caller to mutate.
-  MVector2 get absoluteCenter {
-    return MVector2.copy(size)
-      ..scale(0.5)
-      ..transform(absoluteTransform());
-  }
+  /// The returned vector is owned by the caller.
+  MVector2 get absoluteCenter => .copy(size)
+    ..scale(0.5)
+    ..transform(absoluteTransform());
 
   /// The nearest [T] to this node among [within]'s descendants, or null if
   /// there is none.

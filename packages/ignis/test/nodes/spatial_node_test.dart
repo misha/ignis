@@ -108,6 +108,45 @@ void main() {
     });
   });
 
+  group('pointAt', () {
+    test('names a point inside its own box', () {
+      final node = SpatialNode(shape: .rectangle(.new(40, 20)));
+
+      expect(node.pointAt(.topLeft), Vector2.zero);
+      expect(node.pointAt(.center), Vector2(20, 10));
+      expect(node.pointAt(.bottomRight), Vector2(40, 20));
+    });
+
+    test('ignores its own anchor, which the transform already carries', () {
+      final node = SpatialNode(shape: .square(40), anchor: .center);
+
+      expect(node.pointAt(.center), Vector2.all(20));
+    });
+
+    test('places a child on the point it names', () {
+      final child = SpatialNode();
+
+      final parent = ShapeNode(
+        shape: .square(40),
+        position: .all(100),
+        anchor: .center,
+        children: [child],
+      );
+
+      child.position.setFrom(parent.pointAt(.bottomRight));
+      parent.mount();
+
+      // The parent's box spans (80,80)..(120,120).
+      expect(child.absolutePosition, Vector2(120, 120));
+    });
+
+    test('center is the middle of the box', () {
+      final node = SpatialNode(shape: .rectangle(.new(40, 20)));
+
+      expect(node.center, Vector2(20, 10));
+    });
+  });
+
   test('distance returns the distance between two nodes\' centers', () {
     final a = SpatialNode(position: .zero);
     final b = SpatialNode(position: .new(3, 4));
