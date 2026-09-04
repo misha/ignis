@@ -1,6 +1,5 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
@@ -48,7 +47,6 @@ class TimelineEffect extends EffectNode {
   /// Whether this effect is running in the reverse direction.
   bool get isReverse => !_forward;
 
-  @visibleForTesting
   TimelineEffect({
     required this.timeline,
     super.cleanup,
