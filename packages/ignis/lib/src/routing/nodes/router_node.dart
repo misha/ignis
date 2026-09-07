@@ -92,16 +92,12 @@ class RouterNode extends SpatialNode {
 
   /// The stack, bottom to top.
   late final Iterable<RouteNode> _routes = query<RouteNode>();
-  final Set<RouteNode> _retiring = .identity();
 
   /// The stack, bottom to top.
   ///
   /// A route taken off the stack is still a child until the next flush, so
   /// what is leaving is filtered out rather than waited on.
-  Iterable<RouteNode> get routes {
-    if (_retiring.isEmpty) return _routes;
-    return _routes.where((route) => !_retiring.contains(route));
-  }
+  Iterable<RouteNode> get routes => _routes.where((route) => !route.isRemoving);
 
   /// The route on top, or null while the stack is empty.
   RouteNode? get top => routes.lastOrNull;
@@ -187,8 +183,6 @@ class RouterNode extends SpatialNode {
     _arrange();
 
     tick((dt) {
-      // Whatever left last tick has flushed out of the tree by now.
-      _retiring.clear();
       _arrange();
 
       if (_machine.isArriving()) {
@@ -382,7 +376,6 @@ class RouterNode extends SpatialNode {
   /// Takes [route] off the stack, dropping the push that laid it there.
   void _retire(RouteNode route) {
     route._complete(null);
-    _retiring.add(route);
     route.disable();
     remove(route);
   }

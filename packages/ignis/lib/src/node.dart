@@ -448,6 +448,9 @@ class Node {
   /// True while this node is part of a mounted tree.
   bool get isMounted => _scene != null;
 
+  /// True while this node awaits removal at the next flush.
+  bool get isRemoving => _pendingRemoval;
+
   /// This node's direct children.
   Iterable<Node> get children => _egg?.nodes ?? const [];
 
