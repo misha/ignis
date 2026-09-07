@@ -140,18 +140,19 @@ void main() {
   });
 
   group('push', () {
-    test('starts on the tick after the call, once the route is in the tree', () {
+    test('begins at the call, but holds until the route is in the tree', () {
+      final transition = TestTransition();
       final router = RouterNode(children: [RouteNode()]);
       final scene = router.mount();
-      final pushed = RouteNode(transition: TestTransition());
+      final pushed = RouteNode(transition: transition);
 
       router.push(pushed);
+      expect(router.isTransitioning, isTrue);
       expect(router.routes, isNot(contains(pushed)), reason: 'the add is still queued');
-      expect(router.isTransitioning, isFalse);
 
       scene.update(0);
       expect(router.top, pushed);
-      expect(router.isTransitioning, isTrue);
+      expect(transition.applies, [0]);
     });
 
     test('poses only the incoming side', () {
@@ -186,8 +187,8 @@ void main() {
 
       expect(
         backdrop.applies,
-        [0, 0.5, 1, 1, 0.5],
-        reason: 'the push finishes at 1, and the pop starts there',
+        [0, 0.5, 1, 0.5],
+        reason: 'the push finishes at 1, and the pop plays back from there',
       );
     });
 
@@ -336,7 +337,7 @@ void main() {
       scene.update(0.5);
 
       expect(c.isMounted, isFalse);
-      expect(transition.applies, [1, 0.5]);
+      expect(transition.applies, [0.5], reason: 'the next pop plays back from 1');
     });
 
     test('throws during a go', () {
@@ -487,15 +488,20 @@ void main() {
     });
 
     test('settles the running navigation before starting', () {
-      final router = RouterNode(children: [RouteNode()]);
+      final a = RouteNode();
+      final router = RouterNode(children: [a]);
       final scene = router.mount();
+      final c = RouteNode();
 
       router.go(RouteNode(), transition: TestTransition());
       scene.update(0);
       scene.update(0.3);
 
-      router.go(RouteNode(), transition: TestTransition());
-      expect(router.isTransitioning, isFalse, reason: 'the first swap was settled at the call');
+      router.go(c, transition: TestTransition());
+      scene.update(0);
+
+      expect(a.isMounted, isFalse, reason: 'the first swap was settled at the call');
+      expect(router.top, c);
     });
 
     test('returns both sides to rest at settle', () {
