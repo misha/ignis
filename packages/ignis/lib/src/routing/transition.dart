@@ -17,13 +17,27 @@ abstract class Transition {
   /// This transition's clock, driven by a `Router`.
   final Timeline timeline;
 
+  /// What the arriving route takes part in while this runs.
+  ///
+  /// Defaults to [Activity.all].
+  final Activity incoming;
+
+  /// What the departing route takes part in while this runs.
+  ///
+  /// Defaults to everything but [Activity.input], so a pointer never reaches
+  /// a route being left behind.
+  final Activity outgoing;
+
   /// This transition's own visuals, mounted above the host's whole subtree
   /// for the length of the navigation. Null for none.
   Node? get chrome => null;
 
   Transition({
     required this.timeline,
-  });
+    Activity? incoming,
+    Activity? outgoing,
+  }) : incoming = incoming ?? .all,
+       outgoing = outgoing ?? Activity.all & ~Activity.input;
 
   /// Poses both sides at [progress] by writing onto the routes, whose size is
   /// the region being routed. [outgoing] is null on a push, where nothing is

@@ -5,61 +5,59 @@ import '../../support/colors.dart';
 import '../../support/expect.dart';
 
 void main() {
-  RouterNode<String> game() {
-    return RouterNode(
-      router: Router(),
-      children: [
-        RouteNode(
-          name: 'game',
-          children: [
-            ShapeNode(
-              shape: .square(100),
-              paint: Paint()..color = RED,
-            ),
-            ShapeNode(
-              shape: .square(20),
-              paint: Paint()..color = YELLOW,
-              position: .all(40),
-            ),
-          ],
-        ),
-        RouteNode(
-          name: 'menu',
-          children: [
-            ShapeNode(
-              shape: .square(60),
-              paint: Paint()..color = BLUE,
-              position: .all(20),
-            ),
-          ],
-        ),
-      ],
+  ({RouterNode game, RouteNode menu}) stage() {
+    return (
+      game: RouterNode(
+        children: [
+          RouteNode(
+            children: [
+              ShapeNode(
+                shape: .square(100),
+                paint: Paint()..color = RED,
+              ),
+              ShapeNode(
+                shape: .square(20),
+                paint: Paint()..color = YELLOW,
+                position: .all(40),
+              ),
+            ],
+          ),
+        ],
+      ),
+      menu: RouteNode(
+        transition: SlideTransition(),
+        children: [
+          ShapeNode(
+            shape: .square(60),
+            paint: Paint()..color = BLUE,
+            position: .all(20),
+          ),
+        ],
+      ),
     );
   }
 
   testWidgets('a push slides a panel over a frozen route', (tester) async {
-    final host = game();
+    final (:game, :menu) = stage();
+    game.push(menu);
 
     await expectGoldenGif(
       tester,
       'goldens/router_push.gif',
-      host,
-      onFrame: (frame) {
-        if (frame == 0) host.router.push('menu', transition: SlideTransition());
-      },
+      game,
     );
   });
 
   testWidgets('a pop slides the panel back out', (tester) async {
-    final host = game();
+    final (:game, :menu) = stage();
+    game.push(menu);
 
     await expectGoldenGif(
       tester,
       'goldens/router_pop.gif',
-      host,
+      game,
       onFrame: (frame) {
-        if (frame == 0) host.router.push('menu', transition: SlideTransition());
-        if (frame == 4) host.router.pop();
+        if (frame == 5) game.pop();
       },
     );
   });

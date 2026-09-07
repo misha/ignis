@@ -1,7 +1,8 @@
 import 'package:ignis/ignis.dart';
+import 'package:ignis/src/core.dart' show scope;
 
-/// A server that registers nodes.
-final class TestServer extends Server {
+/// A registry of nodes, standing in for a subsystem a node registers with.
+final class TestRegistry {
   final nodes = <Node>[];
 
   Cleanup add(Node node) {

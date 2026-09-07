@@ -1,6 +1,10 @@
 // SPDX-AI-Disclosure: none
 
-part of 'core.dart';
+import 'dart:collection';
+
+import 'package:flutter/foundation.dart';
+
+import 'package:ignis/src/core.dart';
 
 /// Something a device emits: a key going down, a button pressed, a stick moved.
 abstract interface class ControlEvent {
@@ -80,7 +84,7 @@ class _Control {
 /// no name in the middle, so a control is one thing in one place.
 ///
 /// TODO: Document further.
-class Controls extends EventServer<ControlEvent> {
+class Controls {
   final List<_Control> _controls = [];
   final Set<String> _disabled = {};
   final List<ControlDevice> _devices = [];
@@ -118,7 +122,7 @@ class Controls extends EventServer<ControlEvent> {
       handler,
       .of(matchers),
       .of(groups),
-      Node._builder,
+      builder,
     );
 
     _controls.add(control);
@@ -141,7 +145,6 @@ class Controls extends EventServer<ControlEvent> {
   /// Every match is found before the winner runs, so a handler is free to bind
   /// and unbind as it answers: a press is judged against the controls as they
   /// stood when it arrived, not as it leaves them.
-  @override
   bool dispatch(ControlEvent emitted) {
     List<_Control>? matched;
 
@@ -183,7 +186,7 @@ class Controls extends EventServer<ControlEvent> {
   _Control? _winner(List<_Control> matched) {
     if (matched.any((control) => control.node != null)) {
       for (final scene in Scene.live) {
-        for (final node in _topmost(scene.node)) {
+        for (final node in scene.node.traverse(prune: (node) => !node.activity.inputs)) {
           for (final control in matched.reversed) {
             if (identical(control.node, node)) {
               return control;
@@ -200,20 +203,6 @@ class Controls extends EventServer<ControlEvent> {
     }
 
     return null;
-  }
-
-  /// [node] and its subtree, topmost first, the way a hit test walks it.
-  Iterable<Node> _topmost(Node node) sync* {
-    if (!node.activity.inputs) return;
-    final children = node._egg?.nodes;
-
-    if (children != null && children.isNotEmpty) {
-      for (final child in children.reversed) {
-        yield* _topmost(child);
-      }
-    }
-
-    yield node;
   }
 
   /// Stops every device, and drops every control.

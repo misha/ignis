@@ -1,4 +1,5 @@
 export 'collisions/collision_arena.dart';
+export 'collisions/collision_set.dart';
 export 'collisions/intersection_engine.dart';
 
 export 'collisions/nodes/collider_node.dart';

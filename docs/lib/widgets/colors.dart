@@ -17,6 +17,7 @@ const BACKGROUND = Color(0xFF12100E);
 const BORDER = Color(0xFF2E2823);
 const HEADINGS = Color(0xFFF5F0E8);
 
+const BLACK = INK;
 const RED = Color(0xFFC4756A);
 const ORANGE = Color(0xFFC78F30);
 const GREEN = Color(0xFF8FB07A);

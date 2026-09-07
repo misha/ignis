@@ -1,5 +1,6 @@
 // SPDX-AI-Disclosure: none
 
+import 'package:ignis/src/controls.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/devices/keyboard.dart';
 import 'package:ignis/src/globals.dart';

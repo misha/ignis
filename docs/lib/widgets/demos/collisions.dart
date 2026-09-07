@@ -161,7 +161,7 @@ class _ActiveNode extends CollisionArenaNode {
     final collider = mover.add(ColliderNode());
 
     tick((_) {
-      log(switch (collider.active.length) {
+      log(switch (collider.collisions.length) {
         0 => "can't touch this!",
         final n => 'touching $n',
       });

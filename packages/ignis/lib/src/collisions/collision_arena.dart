@@ -1,5 +1,8 @@
 // SPDX-AI-Disclosure: ai-assisted
 
+// TODO: With the advent of the router node, it's clear this should just be
+//  inlined in the CollisionArenaNode itself. It may even get faster as a result.
+
 import 'package:ignis/src/collisions/intersection_engine.dart';
 import 'package:ignis/src/collisions/nodes/collider_node.dart';
 import 'package:ignis/src/core.dart';
@@ -24,7 +27,7 @@ final class _NarrowphaseGeometry {
 /// Registered colliders are broadphased with a sort-and-sweep over their
 /// AABBs to produce candidate pairs, which are then narrowphased against
 /// their actual shapes to power the node signals.
-final class CollisionArena extends SteppedServer {
+final class CollisionArena {
   /// Used for narrowphase intersection tests.
   final IntersectionEngine engine;
 
@@ -112,8 +115,7 @@ final class CollisionArena extends SteppedServer {
     _freeSlots.add(slot);
   }
 
-  @override
-  void process(double dt) {
+  void process() {
     _sort();
     _detect();
   }

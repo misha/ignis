@@ -23,6 +23,9 @@ class CollisionArenaNode extends Node {
   @override
   void build() {
     super.build();
-    tick(arena.process);
+
+    tick((_) {
+      arena.process();
+    });
   }
 }

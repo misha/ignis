@@ -10,6 +10,8 @@ final class TestTransition extends Transition {
   TestTransition({
     this.chrome,
     Timeline? timeline,
+    super.incoming,
+    super.outgoing,
   }) : super(timeline: timeline ?? .duration(1));
 
   @override

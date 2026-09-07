@@ -27,6 +27,8 @@ class WipeTransition extends Transition {
     double? duration,
     Curve? curve,
     double? swapAt,
+    super.incoming,
+    super.outgoing,
   }) : direction = direction ?? .right,
        swapAt = swapAt ?? 0.5,
        super(timeline: .duration(duration ?? 1, curve));

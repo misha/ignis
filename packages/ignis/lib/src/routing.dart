@@ -1,5 +1,4 @@
 export 'routing/backdrop.dart';
-export 'routing/router.dart';
 export 'routing/transition.dart';
 
 export 'routing/backdrops/frozen_backdrop.dart';

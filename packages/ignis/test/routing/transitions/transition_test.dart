@@ -2,13 +2,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 void main() {
-  late RouteNode<String> incoming;
-  late RouteNode<String> outgoing;
+  late RouteNode incoming;
+  late RouteNode outgoing;
 
   setUp(() {
-    incoming = RouteNode(name: 'in');
-    outgoing = RouteNode(name: 'out');
-    RouterNode(router: Router<String>(), children: [incoming, outgoing]).mount().resize(100, 100);
+    incoming = RouteNode();
+    outgoing = RouteNode();
+
+    RouterNode(children: [incoming, outgoing]) //
+        .mount()
+        .resize(100, 100);
   });
 
   test('a plain fade leaves the outgoing side alone', () {

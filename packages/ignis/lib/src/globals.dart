@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:ignis/src/assets/cache.dart';
 import 'package:ignis/src/assets/preload.dart';
+import 'package:ignis/src/controls.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/devices/keyboard.dart';
 

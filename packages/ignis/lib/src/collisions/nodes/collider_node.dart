@@ -2,6 +2,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/collisions/collision_arena.dart';
+import 'package:ignis/src/collisions/collision_set.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
@@ -22,25 +23,34 @@ class ColliderNode extends SpatialNode {
   /// when added to a tree without a [CollisionArenaNode] ancestor.
   bool strict;
 
+  Node? _owner;
+
+  /// The node this collider stands for. Defaults to its [parent].
+  ///
+  /// A collider is usually a hitbox for the node above it, but one placed
+  /// deeper in a subtree, or shared by a group, says who it belongs to here.
+  Node? get owner => _owner ?? parent;
+
+  set owner(Node? value) => _owner = value;
+
   /// Emitted with the other collider when this collider starts overlapping it.
   final onCollisionStart = Signal1<ColliderNode>();
 
   /// Emitted with the other collider when this collider stops overlapping it.
   final onCollisionEnd = Signal1<ColliderNode>();
 
-  final Set<ColliderNode> _active = .identity();
-
-  /// Colliders this node currently overlaps.
-  Iterable<ColliderNode> get active => _active;
+  /// The colliders this node currently overlaps.
+  final collisions = CollisionSet();
 
   /// Whether this node currently overlaps anything.
-  bool get isColliding => _active.isNotEmpty;
+  bool get isColliding => collisions.isNotEmpty;
 
   ColliderNode({
     super.shape,
     int? layer,
     int? mask,
     bool? strict,
+    this._owner,
     super.position,
     super.scale,
     super.angle,
@@ -68,7 +78,7 @@ class ColliderNode extends SpatialNode {
     }
 
     arena.add(this);
-    trash(_active.clear);
+    trash(collisions.clear);
 
     debugDraw((canvas) {
       final debug = Ignis.debug;
@@ -79,16 +89,16 @@ class ColliderNode extends SpatialNode {
 
   @internal
   void startCollision(ColliderNode other) {
-    _active.add(other);
+    collisions.add(other);
     onCollisionStart.emit(other);
   }
 
   @internal
   void endCollision(ColliderNode other) {
-    _active.remove(other);
+    collisions.remove(other);
     onCollisionEnd.emit(other);
   }
 
   @internal
-  void dropCollision(ColliderNode other) => _active.remove(other);
+  void dropCollision(ColliderNode other) => collisions.remove(other);
 }

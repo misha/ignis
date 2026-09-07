@@ -16,6 +16,8 @@ class FadeTransition extends Transition {
     double? duration,
     Curve? curve,
     bool? crossFade,
+    super.incoming,
+    super.outgoing,
   }) : crossFade = crossFade ?? false,
        super(timeline: .duration(duration ?? 1, curve));
 

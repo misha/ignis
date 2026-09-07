@@ -13,6 +13,8 @@ class SlideTransition extends Transition {
     AxisDirection? direction,
     double? duration,
     Curve? curve,
+    super.incoming,
+    super.outgoing,
   }) : direction = direction ?? .up,
        super(timeline: .duration(duration ?? 1, curve));
 

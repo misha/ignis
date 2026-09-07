@@ -1,9 +1,8 @@
 // SPDX-AI-Disclosure: ai-assisted
 
-import 'package:ignis/src/engine.dart';
 import 'package:ignis/src/math.dart';
 
-abstract class IntersectionEngine extends Engine {
+abstract class IntersectionEngine {
   const IntersectionEngine();
 
   /// Returns true if two rectangles overlap, given their world-space centers

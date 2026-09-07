@@ -166,28 +166,18 @@ void main() {
     Ignis.bundle = TestBundle(['world.png']);
     final boot = LoadingEffect(request: Ignis.preload.load(paths: ['ui.png']));
     final main = LoadingEffect(request: Ignis.preload.load(manifest: true));
-    final router = Router<String>();
-    final host = RouterNode(router: router);
+    final host = RouterNode();
     final game = TestNode(name: 'game');
     final view = TestNode(name: 'view');
-    RouteNode<String>? booting;
+    final booting = RouteNode(children: [view]);
+    final playing = RouteNode(children: [game]);
 
     boot.onFinish(() {
-      booting = host.add(
-        RouteNode(
-          name: 'boot',
-          children: [view],
-        ),
-      );
+      host.add(booting);
     });
 
     main.onFinish(() {
-      host.add(
-        RouteNode(
-          name: 'game',
-          children: [game],
-        ),
-      );
+      host.go(playing);
     });
 
     final scene = Node(
@@ -202,12 +192,8 @@ void main() {
 
     await drain(scene);
     expect(loader.loaded, containsAll(['ui.png', 'world.png']));
-    expect(view.isMounted, isTrue);
-
-    router.go('game');
-    await drain(scene);
-    expect(router.top, 'game');
+    expect(host.top, playing);
     expect(game.isMounted, isTrue);
-    expect(booting!.enabled, isFalse, reason: 'settling disabled the boot route');
+    expect(booting.isMounted, isFalse, reason: 'settling took the boot route off the stack');
   });
 }

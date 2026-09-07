@@ -1,7 +1,7 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:flutter/services.dart';
-import 'package:ignis/src/core.dart';
+import 'package:ignis/src/controls.dart';
 
 /// A pressed keyboard key and its modifier state.
 ///

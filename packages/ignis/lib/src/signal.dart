@@ -40,7 +40,7 @@ class Signal0 extends Signal {
 
   /// Subscribes to this signal, receiving data.
   Cleanup call(void Function() watcher) {
-    return _trash(_watch(watcher));
+    return scope(_watch(watcher));
   }
 
   Cleanup _watch(void Function() watcher) {
@@ -102,7 +102,7 @@ class Signal1<A> extends Signal {
 
   /// Subscribes to this signal.
   Cleanup call(void Function(A) watcher) {
-    return _trash(_watch(watcher));
+    return scope(_watch(watcher));
   }
 
   Cleanup _watch(void Function(A) watcher) {
@@ -164,7 +164,7 @@ class Signal2<A, B> extends Signal {
 
   /// Subscribes to this signal.
   Cleanup call(void Function(A, B) watcher) {
-    return _trash(_watch(watcher));
+    return scope(_watch(watcher));
   }
 
   Cleanup _watch(void Function(A, B) watcher) {
@@ -226,7 +226,7 @@ class Signal3<A, B, C> extends Signal {
 
   /// Subscribes to this signal.
   Cleanup call(void Function(A, B, C) watcher) {
-    return _trash(_watch(watcher));
+    return scope(_watch(watcher));
   }
 
   Cleanup _watch(void Function(A, B, C) watcher) {

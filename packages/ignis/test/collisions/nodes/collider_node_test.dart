@@ -83,6 +83,46 @@ void main() {
     expect(aStarted, [innerSibling]);
   });
 
+  group('owners', () {
+    test('an overlap reports the parent of the collider it hit', () {
+      final slot = ShapeNode(
+        shape: .rectangle(.new(8, 8)),
+        children: [ColliderNode(layer: 1, mask: 1)],
+      );
+
+      final object = ShapeNode(
+        shape: .rectangle(.new(8, 8)),
+        position: .new(2, 0),
+        children: [ColliderNode(layer: 1, mask: 1)],
+      );
+
+      final collider = object.children.whereType<ColliderNode>().first;
+      CollisionArenaNode(children: [slot, object]).mount().update(0);
+
+      expect(collider.collisions.owners, [slot]);
+    });
+
+    test('an overlap reports the owner a collider was given over its parent', () {
+      final group = Node();
+
+      final slot = ShapeNode(
+        shape: .rectangle(.new(8, 8)),
+        children: [ColliderNode(layer: 1, mask: 1, owner: group)],
+      );
+
+      final object = ShapeNode(
+        shape: .rectangle(.new(8, 8)),
+        position: .new(2, 0),
+        children: [ColliderNode(layer: 1, mask: 1)],
+      );
+
+      final collider = object.children.whereType<ColliderNode>().first;
+      CollisionArenaNode(children: [slot, object, group]).mount().update(0);
+
+      expect(collider.collisions.owners, [group]);
+    });
+  });
+
   test('unregisters from CollisionArenaNode when detached', () {
     final collisions = CollisionArenaNode();
     final a = ColliderNode(

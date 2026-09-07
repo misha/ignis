@@ -725,11 +725,28 @@ class Node {
 
   // #region Hit Testing
 
-  /// Finds every enabled node in this subtree whose hit area contains
-  /// [point], per [containsPoint], topmost first.
+  /// This node and its subtree, in postorder: every child before its parent,
+  /// and children in reverse [priority] order.
   ///
-  /// Children are searched in reverse [priority] order before this node's
-  /// own hit area, mirroring reverse paint order.
+  /// [prune] skips a node and everything beneath it, so a walk can stop at a
+  /// subtree rather than filter it out afterwards.
+  @nonVirtual
+  Iterable<Node> traverse({bool Function(Node node)? prune}) sync* {
+    if (prune != null && prune(this)) return;
+    final children = _egg?.nodes;
+
+    if (children != null && children.isNotEmpty) {
+      for (final child in children.reversed) {
+        yield* child.traverse(prune: prune);
+      }
+    }
+
+    yield this;
+  }
+
+  /// Finds every node in this subtree whose hit area contains [point], per
+  /// [containsPoint], topmost first. A node hearing no input hides its whole
+  /// subtree.
   ///
   /// Unlike [add], [remove], and [priority], [enabled] takes effect
   /// immediately even on a mounted node. A handler invoked mid-walk that
@@ -737,18 +754,12 @@ class Node {
   ///
   /// TODO: Should it really do that? Is enabled actually a tree operation?
   @nonVirtual
-  Iterable<Node> hitTest(Vector2 point) sync* {
-    if (!activity.inputs) return;
-    final children = _egg?.nodes;
-
-    if (children != null && children.isNotEmpty) {
-      for (final child in children.reversed) {
-        yield* child.hitTest(point);
-      }
-    }
-
-    if (containsPoint(point)) yield this;
-  }
+  Iterable<Node> hitTest(Vector2 point) =>
+      // TODO: Controls prunes on this same predicate, so "input does not reach
+      //  here" is now stated at two call sites rather than once. Decide where
+      //  input reachability actually belongs; it is not the traversal's business.
+      traverse(prune: ((node) => !node.activity.inputs)) //
+          .where((node) => node.containsPoint(point));
 
   /// Whether this node's hit area contains [point].
   ///

@@ -3,9 +3,10 @@
 import 'dart:ui';
 
 import 'package:ignis/src/nodes/spatial_node.dart';
+import 'package:ignis/src/owners/opacity_owner.dart';
 
 /// Fades its subtree as one image.
-class OpacityNode extends SpatialNode {
+class OpacityNode extends SpatialNode implements OpacityOwner {
   Paint? _paint;
 
   /// This subtree's opacity, 0 to 1. Defaults to 1.
@@ -22,8 +23,10 @@ class OpacityNode extends SpatialNode {
   /// For handling the opacity of a single sprite, use `Paint`'s alpha channel
   /// directly, or take advantage of effects like `ColorOpacityEffect` and
   /// `ColorFilterOpacityEffect` to control alpha over time.
+  @override
   double get opacity => _paint?.color.a ?? 1;
 
+  @override
   set opacity(double value) {
     if (_paint == null && value >= 1) return;
     final paint = _paint ??= Paint();

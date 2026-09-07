@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' hide FadeTransition, Router, SlideTransition;
+import 'package:flutter/widgets.dart' hide FadeTransition, SlideTransition;
 import 'package:ignis/ignis.dart';
 
 import '../colors.dart';
@@ -30,71 +30,58 @@ class _CutNode extends Node {
     super.build();
 
     // demo on transitions-cut
+    RouteNode buildRoute(Color color) {
+      return RouteNode(
+        transition: CutTransition(),
+        children: [
+          ShapeNode(paint: Paint()..color = color),
+        ],
+      );
+    }
+
+    final router = RouterNode(children: [buildRoute(RED)]);
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
-    final router = Router<String>(transition: CutTransition());
-
-    final host = RouterNode(
-      router: router,
-      children: [
-        RouteNode(
-          name: 'red',
-          children: [ShapeNode(paint: Paint()..color = RED)],
-        ),
-        RouteNode(
-          name: 'green',
-          children: [ShapeNode(paint: Paint()..color = GREEN)],
-        ),
-      ],
-    );
+    int state = 0;
 
     taps.onTap(() {
-      router.go(router.top == 'red' ? 'green' : 'red');
+      state += 1;
+      router.go(buildRoute(state.isEven ? RED : GREEN));
     });
-    // demo off
 
-    addAll([host, taps]);
+    addAll([router, taps]);
+    // demo off
   }
 }
 
-/// The same trade, through a fade to black and back. Tapping mid-swap turns
-/// it around.
+/// The same trade, through a fade to black and back.
 class _CurtainNode extends Node {
   @override
   void build() {
     super.build();
 
     // demo on transitions-curtain
+    RouteNode buildRoute(Color color) {
+      return RouteNode(
+        transition: CurtainTransition(
+          veil: ShapeNode(paint: Paint()..color = BLACK),
+        ),
+        children: [
+          ShapeNode(paint: Paint()..color = color),
+        ],
+      );
+    }
+
+    final router = RouterNode(children: [buildRoute(RED)]);
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
-    final router = Router<String>(
-      transition: CurtainTransition(
-        veil: ShapeNode(
-          paint: Paint()..color = INK,
-        ),
-      ),
-    );
-
-    final host = RouterNode(
-      router: router,
-      children: [
-        RouteNode(
-          name: 'red',
-          children: [ShapeNode(paint: Paint()..color = RED)],
-        ),
-        RouteNode(
-          name: 'green',
-          children: [ShapeNode(paint: Paint()..color = GREEN)],
-        ),
-      ],
-    );
+    int state = 0;
 
     taps.onTap(() {
-      router.go(router.top == 'red' ? 'green' : 'red');
+      state += 1;
+      router.go(buildRoute(state.isEven ? RED : GREEN));
     });
-    // demo off
 
-    addAll([host, taps]);
+    addAll([router, taps]);
+    // demo off
   }
 }
 
@@ -105,36 +92,28 @@ class _WipeNode extends Node {
     super.build();
 
     // demo on transitions-wipe
+    RouteNode buildRoute(Color color) {
+      return RouteNode(
+        transition: WipeTransition(
+          panel: ShapeNode(paint: Paint()..color = BLACK),
+        ),
+        children: [
+          ShapeNode(paint: Paint()..color = color),
+        ],
+      );
+    }
+
+    final router = RouterNode(children: [buildRoute(RED)]);
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
-    final router = Router<String>(
-      transition: WipeTransition(
-        panel: ShapeNode(
-          paint: Paint()..color = INK,
-        ),
-      ),
-    );
-
-    final host = RouterNode(
-      router: router,
-      children: [
-        RouteNode(
-          name: 'red',
-          children: [ShapeNode(paint: Paint()..color = RED)],
-        ),
-        RouteNode(
-          name: 'green',
-          children: [ShapeNode(paint: Paint()..color = GREEN)],
-        ),
-      ],
-    );
+    int state = 0;
 
     taps.onTap(() {
-      router.go(router.top == 'red' ? 'green' : 'red');
+      state += 1;
+      router.go(buildRoute(state.isEven ? RED : GREEN));
     });
-    // demo off
 
-    addAll([host, taps]);
+    addAll([router, taps]);
+    // demo off
   }
 }
 
@@ -145,30 +124,26 @@ class _SlideNode extends Node {
     super.build();
 
     // demo on transitions-slide
+    RouteNode buildRoute(Color color) {
+      return RouteNode(
+        transition: SlideTransition(),
+        children: [
+          ShapeNode(paint: Paint()..color = color),
+        ],
+      );
+    }
+
+    final router = RouterNode(children: [buildRoute(RED)]);
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
-    final router = Router<String>(transition: SlideTransition());
-
-    final host = RouterNode(
-      router: router,
-      children: [
-        RouteNode(
-          name: 'red',
-          children: [ShapeNode(paint: Paint()..color = RED)],
-        ),
-        RouteNode(
-          name: 'green',
-          children: [ShapeNode(paint: Paint()..color = GREEN)],
-        ),
-      ],
-    );
+    int state = 0;
 
     taps.onTap(() {
-      router.go(router.top == 'red' ? 'green' : 'red');
+      state += 1;
+      router.go(buildRoute(state.isEven ? RED : GREEN));
     });
-    // demo off
 
-    addAll([host, taps]);
+    addAll([router, taps]);
+    // demo off
   }
 }
 
@@ -179,29 +154,25 @@ class _FadeNode extends Node {
     super.build();
 
     // demo on transitions-fade
+    RouteNode buildRoute(Color color) {
+      return RouteNode(
+        transition: FadeTransition(crossFade: true),
+        children: [
+          ShapeNode(paint: Paint()..color = color),
+        ],
+      );
+    }
+
+    final router = RouterNode(children: [buildRoute(RED)]);
     final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
-    final router = Router<String>(transition: FadeTransition(crossFade: true));
-
-    final host = RouterNode(
-      router: router,
-      children: [
-        RouteNode(
-          name: 'red',
-          children: [ShapeNode(paint: Paint()..color = RED)],
-        ),
-        RouteNode(
-          name: 'green',
-          children: [ShapeNode(paint: Paint()..color = GREEN)],
-        ),
-      ],
-    );
+    int state = 0;
 
     taps.onTap(() {
-      router.go(router.top == 'red' ? 'green' : 'red');
+      state += 1;
+      router.go(buildRoute(state.isEven ? RED : GREEN));
     });
-    // demo off
 
-    addAll([host, taps]);
+    addAll([router, taps]);
+    // demo off
   }
 }

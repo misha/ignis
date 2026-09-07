@@ -1,44 +1,39 @@
 // SPDX-AI-Disclosure: ai-generated
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/nodes/opacity_node.dart';
+import 'package:ignis/src/routing/backdrop.dart';
 import 'package:ignis/src/routing/nodes/router_node.dart';
-import 'package:ignis/src/routing/router.dart';
+import 'package:ignis/src/routing/transition.dart';
 
-/// One of the routes a [RouterNode] shows.
-///
-/// Must always be placed as a direct child of a [RouterNode].
+/// One entry on a [RouterNode]'s stack.
 ///
 /// Its transform, opacity, activity, and priority belong to the router.
-class RouteNode<T> extends OpacityNode {
-  /// The name a navigation reaches this route by.
-  final T name;
+class RouteNode extends OpacityNode {
+  /// What the route beneath takes part in while this one covers it.
+  ///
+  /// Defaults to a frozen backdrop.
+  final Backdrop backdrop;
 
-  /// Whether building anywhere but directly under a [RouterNode] throws a
-  /// [StateError]. Defaults to true.
-  bool strict;
+  /// The transition to play when this route arrives.
+  ///
+  /// It is also played in reverse when route leaves.
+  ///
+  /// Null falls back to the router's default transition. Some router operations
+  /// can also override this transition.
+  final Transition? transition;
+
+  /// What the push that laid this route down is waiting on, if a push did.
+  @internal
+  Completer<Object?>? completer;
 
   RouteNode({
-    required this.name,
-    bool? strict,
+    Backdrop? backdrop,
+    this.transition,
     super.children,
-  }) : strict = strict ?? true;
-
-  @override
-  void build() {
-    super.build();
-    final router = readOrNull<Router<T>>();
-
-    if (router == null || parent is! RouterNode<T>) {
-      if (strict) {
-        throw StateError('RouteNode must be a direct child of a RouterNode<$T>.');
-      } else {
-        return;
-      }
-    }
-
-    router.add(this);
-  }
+  }) : backdrop = backdrop ?? const .frozen();
 
   /// Returns this route to how it stands outside a navigation.
   @internal

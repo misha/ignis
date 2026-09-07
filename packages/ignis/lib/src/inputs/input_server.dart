@@ -12,7 +12,7 @@ import 'package:ignis/src/inputs/nodes/input_node.dart';
 /// Resolves raw pointer events against a [Scene]'s tree and hands off to
 /// whichever [InputNode]s claim them, per [InputNode.behavior].
 @internal
-class InputServer extends EventServer<PointerEvent> {
+class InputServer {
   final SceneRenderBox box;
   Scene get scene => box.scene;
 
@@ -20,7 +20,6 @@ class InputServer extends EventServer<PointerEvent> {
 
   InputServer(this.box);
 
-  @override
   bool dispatch(PointerEvent event) {
     switch (event) {
       case PointerDownEvent():

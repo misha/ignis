@@ -4,14 +4,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';
 import 'package:ignis/src/anchor.dart';
-import 'package:ignis/src/engine.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/layout/layout_constraints.dart';
 import 'package:ignis/src/layout/layout_item.dart';
 import 'package:ignis/src/math.dart';
 
 /// A standalone set of layout algorithms, operating on [LayoutItem] items.
-abstract class LayoutEngine extends Engine {
+abstract class LayoutEngine {
   const LayoutEngine();
 
   /// Sizes a region to [targetWidth]/[targetHeight] - or to its largest item

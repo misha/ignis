@@ -2,31 +2,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 import '../support/test_node.dart';
-import '../support/test_server.dart';
+import '../support/test_registry.dart';
 
 void main() {
   test('a registration made in a build dies with the node', () {
-    final server = TestServer();
+    final registry = TestRegistry();
     final node = TestNode(
       builder: (node) {
-        server.add(node);
+        registry.add(node);
       },
     );
 
     final scene = node.mount();
-    expect(server.nodes, [node]);
+    expect(registry.nodes, [node]);
 
     scene.destroy();
-    expect(server.nodes, isEmpty);
+    expect(registry.nodes, isEmpty);
   });
 
   test("a registration made outside a build is the caller's to end", () {
-    final server = TestServer();
+    final registry = TestRegistry();
     final node = Node();
-    final cleanup = server.add(node);
-    expect(server.nodes, [node]);
+    final cleanup = registry.add(node);
+    expect(registry.nodes, [node]);
 
     cleanup();
-    expect(server.nodes, isEmpty);
+    expect(registry.nodes, isEmpty);
   });
 }
