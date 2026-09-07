@@ -173,7 +173,7 @@ void main() {
     final playing = RouteNode(children: [game]);
 
     boot.onFinish(() {
-      host.add(booting);
+      host.go(booting);
     });
 
     main.onFinish(() {

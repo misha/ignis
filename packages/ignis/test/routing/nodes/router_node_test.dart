@@ -340,26 +340,53 @@ void main() {
       expect(transition.applies, [0.5], reason: 'the next pop plays back from 1');
     });
 
-    test('throws during a go', () {
-      final router = RouterNode(children: [RouteNode()]);
+    test('plays a running go back', () {
+      final a = RouteNode();
+      final b = RouteNode();
+      final router = RouterNode(children: [a]);
       final scene = router.mount();
 
-      router.go(RouteNode(), transition: TestTransition());
+      router.go(b, transition: TestTransition());
+      scene.update(0);
+      scene.update(0.3);
+
+      router.pop();
+      scene.update(1);
       scene.update(0);
 
-      expect(router.pop, throwsStateError);
+      expect(router.routes, [a]);
+      expect(b.isMounted, isFalse);
     });
 
-    test('throws while a go is arriving', () {
-      final router = RouterNode(children: [RouteNode()]);
-      router.mount();
+    test('takes back a go whose route has not reached the tree', () {
+      final a = RouteNode();
+      final b = RouteNode();
+      final router = RouterNode(children: [a]);
+      final scene = router.mount();
 
-      router.go(RouteNode());
-      expect(router.pop, throwsStateError);
+      router.go(b);
+      router.pop();
+      scene.update(0);
+
+      expect(router.top, a);
+      expect(b.isMounted, isFalse);
     });
 
-    test('throws on a stack of one', () {
-      final router = RouterNode(children: [RouteNode()]);
+    test('plays the last route out to nothing', () {
+      final route = RouteNode(transition: TestTransition());
+      final router = RouterNode(children: [route]);
+      final scene = router.mount();
+
+      router.pop();
+      scene.update(1);
+      scene.update(0);
+
+      expect(router.routes, isEmpty);
+      expect(route.isMounted, isFalse);
+    });
+
+    test('throws on an empty stack', () {
+      final router = RouterNode();
       router.mount();
 
       expect(router.pop, throwsStateError);

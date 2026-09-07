@@ -53,8 +53,8 @@ part 'route_node.dart';
 /// **Concurrent Navigation**
 ///
 /// When navigating while another navigation is already running, the router will
-/// settle the running navigation first, except that a [pop] during the push it
-/// matches turns that push around instead. Usually, settling means instantly
+/// settle the running navigation first, except that a [pop] during a running
+/// navigation plays it back instead. Usually, settling means instantly
 /// finishing that transition to start the new one. Although this doesn't look
 /// great, it's somewhat mitigated by the fact that transitions can be made
 /// quite short, so the snapping is less noticeable; and most games don't let
@@ -102,29 +102,40 @@ class RouterNode extends SpatialNode {
     super.anchor,
     super.enabled,
     super.priority,
-    super.children,
+    Iterable<RouteNode>? children,
   }) : transition = transition ?? CutTransition(),
-       super(inherit: .scene);
+       super(inherit: .scene) {
+    RouteNode? beneath;
+
+    for (final route in children ?? const <RouteNode>[]) {
+      super.add(route);
+      beneath?.activity = route.backdrop.settled & ~Activity.input;
+      beneath = route;
+    }
+
+    beneath?.activity = .all;
+  }
+
+  /// Routes come and go through [push], [go], and [pop] alone.
+  @override
+  T add<T extends Node>(T node) {
+    throw UnsupportedError('Routes come and go through push, go, and pop.');
+  }
+
+  /// Routes come and go through [push], [go], and [pop] alone.
+  @override
+  bool remove(Node node) {
+    throw UnsupportedError('Routes come and go through push, go, and pop.');
+  }
 
   @override
   void build() {
     super.build();
-    _arrange();
 
     tick((dt) {
-      _arrange();
-      final navigation = _navigation;
-      if (navigation == null) return;
-
-      // The route added only reaches the tree at the next flush.
-      if (!navigation.incoming.isMounted) return;
-
-      if (navigation.step(dt)) {
+      if (_navigation?.tick(dt) ?? false) {
         _settle();
-        return;
       }
-
-      navigation.pose();
     });
   }
 
@@ -142,20 +153,12 @@ class RouterNode extends SpatialNode {
     // Checked after settling, since that is what takes the departing route
     // off the stack and so makes room to go back to it.
     assert(!routes.contains(route), 'That route is already on the stack.');
-    final outgoing = top;
-
-    // Nothing to leave, so the route simply stands.
-    if (outgoing == null) {
-      _place(route);
-      return Future.value();
-    }
 
     return _launch(
       _Swap(
         transition ?? route.transition ?? this.transition,
-        settled: Completer<void>(),
         incoming: route,
-        outgoing: outgoing,
+        outgoing: top,
       ),
     );
   }
@@ -174,22 +177,15 @@ class RouterNode extends SpatialNode {
     // Checked after settling, since that is what takes the departing route
     // off the stack and so makes room to go back to it.
     assert(!routes.contains(route), 'That route is already on the stack.');
-    final covered = top;
 
-    // Nothing to cover, so the route simply stands.
-    if (covered == null) {
-      _place(route);
-    } else {
-      _launch(
-        _Layer(
-          route.transition ?? transition,
-          settled: Completer<void>(),
-          incoming: route,
-          covered: covered,
-          backdrop: route.backdrop,
-        ),
-      );
-    }
+    _launch(
+      _Layer(
+        route.transition ?? transition,
+        incoming: route,
+        covered: top,
+        backdrop: route.backdrop,
+      ),
+    );
 
     // Set once launched, since settling a pop of this same route clears it.
     final completer = Completer<R?>();
@@ -197,130 +193,76 @@ class RouterNode extends SpatialNode {
     return completer.future;
   }
 
-  /// Plays the top route's push back, uncovering the route beneath and
-  /// completing the push with [result], which must be of the type it asked
-  /// for. Completes once the navigation settles. Popping a push whose route
-  /// has not reached the tree yet takes it back. Throws a [StateError] on a
-  /// stack of one, or while a [go] runs, since a go leaves one route.
+  /// Plays the running navigation back, or with none running, plays the top
+  /// route's push back, uncovering the route beneath and completing that push
+  /// with [result], which must be of the type it asked for. Completes once the
+  /// navigation settles. Throws a [StateError] on an empty stack.
   Future<void> pop([Object? result]) {
     final navigation = _navigation;
-    if (navigation is _Swap) throw StateError('Cannot pop the last route.');
 
-    if (navigation is _Layer) {
-      // Popping the push still in flight plays it back rather than settling it.
-      if (navigation.turn()) {
-        final incoming = navigation.incoming;
-        incoming._complete(result);
+    if (navigation != null && navigation.turn()) {
+      final incoming = navigation.incoming;
+      incoming._complete(result);
 
-        // Taken back before its route reached the tree, so it never happened.
-        if (!incoming.isMounted) _settle();
-        return navigation.settled.future;
-      }
-
-      // Settling a running pop takes its route off the stack, so the stack is
-      // read after.
-      _settle();
+      // Taken back before its route reached the tree, so it never happened.
+      if (!incoming.isMounted) _settle();
+      return navigation.settled.future;
     }
 
+    // Settling a running navigation takes what it leaves off the stack, so
+    // the stack is read after.
+    _settle();
     final stack = routes;
-    if (stack.length <= 1) throw StateError('Cannot pop the last route.');
+    if (stack.isEmpty) throw StateError('Nothing to pop.');
     final leaving = stack.last;
     leaving._complete(result);
 
     return _launch(
       _Layer(
         leaving.transition ?? transition,
-        settled: Completer<void>(),
         incoming: leaving,
-        covered: stack.elementAt(stack.length - 2),
+        covered: stack.length > 1 ? stack.elementAt(stack.length - 2) : null,
         backdrop: leaving.backdrop,
         forward: false,
       ),
     );
   }
 
-  /// Places [route] above the stack.
-  void _place(RouteNode route) {
-    route.priority = _above;
-    add(route);
-  }
-
-  /// Starts [navigation]: its route placed above the stack, its chrome above
-  /// that, and its clock at the end it runs from. The tick poses it from there
-  /// once its route is in the tree.
+  /// Starts [navigation]: its route placed above the stack, and its chrome
+  /// above that.
   Future<void> _launch(_Navigation navigation) {
     _navigation = navigation;
     final incoming = navigation.incoming;
-    _place(incoming);
+    incoming.priority = _above;
+    super.add(incoming);
+    final chrome = navigation.transition.chrome;
 
-    navigation.transition.chrome
-      ?..priority = incoming.priority + 1
-      ..attach(this);
+    if (chrome != null) {
+      chrome.priority = incoming.priority + 1;
+      super.add(chrome);
+    }
 
-    navigation.start();
-    _arrange();
     return navigation.settled.future;
   }
 
   /// Ends the running navigation, if one is, taking whichever routes it left
   /// off the stack.
-  ///
-  /// When the clock has landed, posing once more is what finishes the
-  /// transition: the tick that lands it settles instead of posing, and nothing
-  /// else returns the chrome to rest. Settled early, the sides are simply
-  /// returned to rest.
   void _settle() {
     final navigation = _navigation;
     if (navigation == null) return;
     _navigation = null;
-    final incoming = navigation.incoming;
 
-    // A route that never reached the tree was never on the stack.
-    if (!incoming.isMounted) {
-      incoming._complete(null);
-      remove(incoming);
-    } else {
-      navigation
-        ..pose()
-        ..rest();
+    // A route that never reached the tree is played back out.
+    if (!navigation.incoming.isMounted) navigation.turn();
+    navigation.settle();
 
-      for (final route in navigation.leaving(routes).toList(growable: false)) {
-        _retire(route);
-      }
-
-      _order();
+    for (final route in navigation.leaving(routes).toList(growable: false)) {
+      _retire(route);
     }
 
-    navigation
-      ..transition.chrome?.detach()
-      ..settled.complete();
-
-    _arrange();
-  }
-
-  /// What [route] takes part in right now, given the [covering] route above
-  /// it or null when it is the top: a side of the running navigation takes
-  /// what its transition names for that side, a covered one is in its
-  /// backdrop's running state, the top is live, and one beneath is in the
-  /// settled state of the backdrop above it.
-  Activity _activityOf(RouteNode route, RouteNode? covering) {
-    final side = _navigation?.activityOf(route);
-    if (side != null) return side;
-    if (covering == null) return .all;
-    return covering.backdrop.settled & ~Activity.input;
-  }
-
-  /// Gives every route on the stack what it takes part in.
-  ///
-  /// Writing [Node.activity] never reorders the egg, so the stack is safe to
-  /// walk while it is being written to.
-  void _arrange() {
-    final stack = routes;
-    final last = stack.length - 1;
-
-    for (final (index, route) in stack.indexed) {
-      route.activity = _activityOf(route, index == last ? null : stack.elementAt(index + 1));
-    }
+    _order();
+    final chrome = navigation.transition.chrome;
+    if (chrome != null) super.remove(chrome);
   }
 
   /// Numbers the stack bottom to top, so a route's priority is its place on
@@ -335,6 +277,6 @@ class RouterNode extends SpatialNode {
   void _retire(RouteNode route) {
     route._complete(null);
     route.disable();
-    remove(route);
+    super.remove(route);
   }
 }
