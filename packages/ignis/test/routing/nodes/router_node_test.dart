@@ -217,6 +217,24 @@ void main() {
 
       expect(await dropped, isNull);
     });
+
+    test("carries a later pop's result when pushed again while being popped", () async {
+      final router = RouterNode(children: [RouteNode()]);
+      final scene = router.mount();
+      final route = RouteNode(transition: TestTransition());
+
+      router.push(route);
+      scene.update(0);
+      scene.update(1);
+      router.pop();
+
+      final result = router.push<String>(route);
+      scene.update(0);
+      scene.update(1);
+      router.pop('again');
+
+      expect(await result, 'again');
+    });
   });
 
   group('pop', () {
@@ -270,6 +288,60 @@ void main() {
       router.pop();
       scene.update(0.1);
       expect(transition.applies, [0, 0.3, closeTo(0.2, 1e-9)]);
+    });
+
+    test('takes back a push still arriving', () async {
+      final router = RouterNode(children: [RouteNode()]);
+      final scene = router.mount();
+      final pushed = RouteNode();
+
+      final result = router.push<String>(pushed);
+      router.pop('carried');
+      scene.update(0);
+
+      expect(await result, 'carried');
+      expect(pushed.isMounted, isFalse);
+    });
+
+    test('settles the running pop, then pops the next', () {
+      final transition = TestTransition();
+      final c = RouteNode(transition: TestTransition());
+
+      final router = RouterNode(
+        children: [
+          RouteNode(),
+          RouteNode(transition: transition),
+          c,
+        ],
+      );
+
+      final scene = router.mount();
+      router.pop();
+      scene.update(0.3);
+
+      router.pop();
+      scene.update(0.5);
+
+      expect(c.isMounted, isFalse);
+      expect(transition.applies, [1, 0.5]);
+    });
+
+    test('throws during a go', () {
+      final router = RouterNode(children: [RouteNode()]);
+      final scene = router.mount();
+
+      router.go(RouteNode(), transition: TestTransition());
+      scene.update(0);
+
+      expect(router.pop, throwsStateError);
+    });
+
+    test('throws while a go is arriving', () {
+      final router = RouterNode(children: [RouteNode()]);
+      router.mount();
+
+      router.go(RouteNode());
+      expect(router.pop, throwsStateError);
     });
 
     test('throws on a stack of one', () {

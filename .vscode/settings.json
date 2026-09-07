@@ -70,6 +70,8 @@
     "pregenerates",
     "premultiplies",
     "preorder",
+    "pstate",
+    "ptransition",
     "pubspec",
     "quantizer",
     "reentrancy",
@@ -91,6 +93,7 @@
     "typesafe",
     "unclaims",
     "unflexed",
+    "unlayer",
     "unlisten",
     "unresized",
     "unrotated",
@@ -104,6 +107,7 @@
     "wireframes",
     "wordmark",
     "workspace",
+    "yafsm",
     "zoomable"
   ],
 }

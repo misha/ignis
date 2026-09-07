@@ -5,7 +5,6 @@ export 'routing/backdrops/frozen_backdrop.dart';
 export 'routing/backdrops/hidden_backdrop.dart';
 export 'routing/backdrops/live_backdrop.dart';
 
-export 'routing/nodes/route_node.dart';
 export 'routing/nodes/router_node.dart';
 
 export 'routing/transitions/curtain_transition.dart';

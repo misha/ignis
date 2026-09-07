@@ -4,7 +4,7 @@ import 'package:ignis/src/core.dart';
 import 'package:ignis/src/routing/backdrops/frozen_backdrop.dart';
 import 'package:ignis/src/routing/backdrops/hidden_backdrop.dart';
 import 'package:ignis/src/routing/backdrops/live_backdrop.dart';
-import 'package:ignis/src/routing/nodes/route_node.dart';
+import 'package:ignis/src/routing/nodes/router_node.dart';
 
 /// Describes how a route treats the route it is pushed over.
 abstract class Backdrop {

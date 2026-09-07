@@ -1,7 +1,7 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:ignis/src/core.dart';
-import 'package:ignis/src/routing/nodes/route_node.dart';
+import 'package:ignis/src/routing/nodes/router_node.dart';
 import 'package:ignis/src/timeline.dart';
 
 /// Describes a navigation between two routes.

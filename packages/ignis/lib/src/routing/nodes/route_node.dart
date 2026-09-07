@@ -1,12 +1,6 @@
 // SPDX-AI-Disclosure: ai-generated
 
-import 'dart:async';
-
-import 'package:flutter/foundation.dart';
-import 'package:ignis/src/nodes/opacity_node.dart';
-import 'package:ignis/src/routing/backdrop.dart';
-import 'package:ignis/src/routing/nodes/router_node.dart';
-import 'package:ignis/src/routing/transition.dart';
+part of 'router_node.dart';
 
 /// One entry on a [RouterNode]'s stack.
 ///
@@ -26,8 +20,7 @@ class RouteNode extends OpacityNode {
   final Transition? transition;
 
   /// What the push that laid this route down is waiting on, if a push did.
-  @internal
-  Completer<Object?>? completer;
+  Completer<Object?>? _completer;
 
   RouteNode({
     Backdrop? backdrop,
@@ -35,9 +28,15 @@ class RouteNode extends OpacityNode {
     super.children,
   }) : backdrop = backdrop ?? const .frozen();
 
+  /// Completes the push that laid this route down, if one is waiting, and
+  /// forgets it.
+  void _complete(Object? result) {
+    _completer?.complete(result);
+    _completer = null;
+  }
+
   /// Returns this route to how it stands outside a navigation.
-  @internal
-  void reset() {
+  void _reset() {
     position.setZero();
     scale.splat(1);
     angle = 0;
