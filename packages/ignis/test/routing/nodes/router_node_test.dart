@@ -124,6 +124,19 @@ void main() {
 
       expect(route.size, Vector2(60, 40));
     });
+
+    test('takes its own shape over the one above it', () {
+      final route = RouteNode();
+
+      SpatialNode(
+        shape: .rectangle(.new(60, 40)),
+        children: [
+          RouterNode(shape: .rectangle(.new(30, 20)), children: [route]),
+        ],
+      ).mount();
+
+      expect(route.size, Vector2(30, 20));
+    });
   });
 
   group('push', () {

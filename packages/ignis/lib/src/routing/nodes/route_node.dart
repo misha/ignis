@@ -13,7 +13,7 @@ class RouteNode extends OpacityNode {
 
   /// The transition to play when this route arrives.
   ///
-  /// It is also played in reverse when route leaves.
+  /// It is also played in reverse when the route is popped.
   ///
   /// Null falls back to the router's default transition. Some router operations
   /// can also override this transition.

@@ -39,7 +39,7 @@ final class _Machine extends fsm.Machine {
 
 /// A stack of [RouteNode]s.
 ///
-/// The children *are* the stack, bottom to top. The operations are:
+/// The [RouteNode] children *are* the stack, bottom to top. The operations are:
 ///
 ///   - [go] replaces the entire stack with its route.
 ///   - [push] adds a route to the top of the stack.
@@ -56,14 +56,15 @@ final class _Machine extends fsm.Machine {
 /// **Scheduling**
 ///
 /// Routing is slightly tricky because added nodes only hit a tree on the next
-/// frame. As a result, requesting a navigation will always start on the *next*
-/// frame, even if the router itself has yet to update.
+/// frame. As a result, a [push] or [go] will always start on the *next* frame,
+/// even if the router itself has yet to update. A [pop] starts at the call,
+/// since its route is already in the tree.
 ///
 /// **Region**
 ///
 /// The region routed is the [shape] in effect above this node, or the scene's
 /// when nothing spatial is above. The routes and any transition chrome will
-/// fill that region. This is notable because the "natural" usage of router,
+/// fill that region. This is notable because the "natural" usage of a router,
 /// to control the high-level view of the game, works off scene size by default.
 ///
 /// Additionally, this implementation means you can "route" any subregion of the
@@ -73,14 +74,12 @@ final class _Machine extends fsm.Machine {
 /// town and combat displays: it's just routing between the two, and you have
 /// the entire power of [Transition] to control exactly how the two switch.
 ///
-/// TODO: `RouterNode` *is* a `SpatialNode`. Does setting its shape allow it to
-///   simultaneously *become* that subregion?
-///
 /// **Concurrent Navigation**
 ///
 /// When navigating while another navigation is already running, the router will
-/// settle the running navigation first. Usually, this means instantly finishing
-/// that transition in order to start the new one. Although this doesn't look
+/// settle the running navigation first, except that a [pop] during the push it
+/// matches turns that push around instead. Usually, settling means instantly
+/// finishing that transition to start the new one. Although this doesn't look
 /// great, it's somewhat mitigated by the fact that transitions can be made
 /// quite short, so the snapping is less noticeable; and most games don't let
 /// you switch routes multiple times a second anyway, so the instant finish does
@@ -123,6 +122,7 @@ class RouterNode extends SpatialNode {
 
   RouterNode({
     Transition? transition,
+    super.shape,
     super.position,
     super.scale,
     super.angle,
@@ -210,7 +210,7 @@ class RouterNode extends SpatialNode {
   }
 
   /// Replaces the whole stack with [route], playing [transition] over the
-  /// default, and completes once the navigation settles.
+  /// route's own and the default, and completes once the navigation settles.
   ///
   /// A navigation already running is settled first. Every push dropped
   /// completes with null.
