@@ -196,18 +196,25 @@ class Node {
 
   // #region Building
 
-  /// The node whose [build] is currently running, or null between builds.
-  ///
-  /// How a [Signal] subscribed inside a [build] finds the node that owns it.
-  static Node? _builder;
-
   /// Which reassembly is running, bumped once per [Scene.reassemble].
   ///
   /// A node records the pass it last built in, so a subtree the walk mounts on
   /// its way down is not built a second time when the walk reaches it.
-  static int _generation = 0;
+  static int _latestGeneration = 0;
+  int _builtGeneration = -1;
 
-  int _built = -1;
+  /// The node whose [build] is currently running, or null between builds.
+  ///
+  /// How a [Signal] subscribed inside a [build] finds the node that owns it.
+  static Node? _building;
+
+  // The following fields belong to a single, logical run of `Node.build`. When
+  // the node is unmounted or rebuilt, they are processed and/or dropped.
+
+  List<Tick>? _ticks;
+  List<Draw>? _draws;
+  List<DebugDraw>? _debugDraws;
+  List<Cleanup>? _cleanups;
 
   /// Declares this node's children and behavior.
   ///
@@ -236,7 +243,7 @@ class Node {
   /// everything the body named with [Live.keep].
   ///
   void _rebuild() {
-    _built = _generation;
+    _builtGeneration = _latestGeneration;
     _discardDeclared();
 
     // Dropped rather than cleared, so a rebuild from inside an [onUpdate]
@@ -246,8 +253,8 @@ class Node {
     _draws = null;
     _debugDraws = null;
     _cleanup();
-    final builder = _builder;
-    _builder = this;
+    final saved = _building;
+    _building = this;
 
     try {
       build();
@@ -259,7 +266,7 @@ class Node {
       }
     } finally {
       if (this case final Live live) live._claimed = null;
-      _builder = builder;
+      _building = saved;
     }
   }
 
@@ -280,12 +287,6 @@ class Node {
     declared.clear();
   }
 
-  // #endregion
-
-  // #region Ticks
-
-  List<Tick>? _ticks;
-
   /// Calls [tick] with the elapsed seconds on every frame.
   ///
   /// ```dart
@@ -293,17 +294,17 @@ class Node {
   ///   turret.angle += pi / 4 * dt;
   /// });
   /// ```
+  ///
+  /// Discarded by the next [build]. Only valid inside this node's own [build].
   @nonVirtual
   void tick(Tick tick) {
+    assert(
+      identical(_building, this),
+      'tick() is only available inside this node\'s own build.',
+    );
+
     (_ticks ??= []).add(tick);
   }
-
-  // #endregion
-
-  // #region Draws
-
-  List<Draw>? _draws;
-  List<DebugDraw>? _debugDraws;
 
   /// Draws to [canvas] every frame, in this node's own coordinate space.
   ///
@@ -312,22 +313,30 @@ class Node {
   ///   canvas.drawCircle(.zero, radius, paint);
   /// });
   /// ```
+  ///
+  /// Discarded by the next [build]. Only valid inside this node's own [build].
   @nonVirtual
   void draw(Draw draw) {
+    assert(
+      identical(_building, this),
+      'draw() is only available inside this node\'s own build.',
+    );
+
     (_draws ??= []).add(draw);
   }
 
   /// Draws to the debug overlay every frame, in the same space as [draw].
+  ///
+  /// Discarded by the next [build]. Only valid inside this node's own [build].
   @nonVirtual
   void debugDraw(DebugDraw draw) {
+    assert(
+      identical(_building, this),
+      'debugDraw() is only available inside this node\'s own build.',
+    );
+
     (_debugDraws ??= []).add(draw);
   }
-
-  // #endregion
-
-  // #region Trash
-
-  List<Cleanup>? _cleanups;
 
   /// Defers [cleanup] until this [build] stops being current.
   ///
@@ -340,9 +349,14 @@ class Node {
   /// ```
   ///
   /// Emptied most-recent-first, so a teardown that emits must be trashed after
-  /// the handlers it will notify.
+  /// the handlers it will notify. Only valid inside this node's own [build].
   @nonVirtual
   void trash(Cleanup cleanup) {
+    assert(
+      identical(_building, this),
+      'trash() is only available inside this node\'s own build.',
+    );
+
     (_cleanups ??= []).add(cleanup);
   }
 
@@ -603,19 +617,21 @@ class Node {
   /// as declared, so the next rebuild discards it before running the body
   /// again. The node handed in is always the node handed back.
   T add<T extends Node>(T node) {
-    if (identical(_builder, this)) (_declared ??= []).add(node);
-
-    if (owns(node)) {
-      node._pendingRemoval = false;
-      return node;
-    }
-
     if (identical(this, node)) {
       throw StateError('Cannot add a node to itself.');
     }
 
     if (cycles(node)) {
       throw StateError('Cannot add a node to its descendant.');
+    }
+
+    if (identical(_building, this)) {
+      (_declared ??= []).add(node);
+    }
+
+    if (owns(node)) {
+      node._pendingRemoval = false;
+      return node;
     }
 
     // Already somewhere else, so this is a move. Cancel whatever was queued
@@ -696,7 +712,7 @@ class Node {
 
   void _reassemble() {
     // Already built by the flush that mounted it, against this same code.
-    if (this is Live && _built != _generation) {
+    if (this is Live && _builtGeneration != _latestGeneration) {
       // A mid-edit build throws, and must not take the rest of the walk down.
       try {
         _rebuild();

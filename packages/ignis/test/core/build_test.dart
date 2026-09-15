@@ -79,6 +79,28 @@ void main() {
     });
   });
 
+  group('declaring', () {
+    test('asserts on a tick before the node has built', () {
+      expect(() => Node().tick((_) {}), throwsAssertionError);
+    });
+
+    test('asserts on a declaration once the build has returned', () {
+      final node = TestNode()..mount();
+
+      expect(() => node.tick((_) {}), throwsAssertionError);
+      expect(() => node.draw((_) {}), throwsAssertionError);
+      expect(() => node.debugDraw((_) {}), throwsAssertionError);
+      expect(() => node.trash(() {}), throwsAssertionError);
+    });
+
+    test('asserts on a tick aimed at another node from a build', () {
+      final child = Node();
+      final parent = TestNode(builder: (_) => child.tick((_) {}));
+
+      expect(parent.mount, throwsAssertionError);
+    });
+  });
+
   group('reassembly', () {
     test('rebuilds every node that mixes in Live', () {
       final child = LiveTestNode(builder: (_) {});
@@ -260,6 +282,28 @@ void main() {
 
       expect(node.children, isEmpty);
       expect(held.isMounted, isFalse);
+    });
+
+    test('a self-add reported by a reassembly leaves the node in place', () {
+      var broken = false;
+
+      final node = LiveTestNode(
+        builder: (n) {
+          if (broken) n.add(n);
+        },
+      );
+
+      final root = Node(children: [node]);
+      final scene = root.mount();
+
+      broken = true;
+      _reported(scene.reassemble);
+      broken = false;
+      scene.reassemble();
+      scene.update(0);
+
+      expect(node.parent, same(root));
+      expect(node.isMounted, isTrue);
     });
   });
 

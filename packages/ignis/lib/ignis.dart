@@ -4,7 +4,7 @@ export 'src/anchor.dart';
 export 'src/assets.dart';
 export 'src/collisions.dart';
 export 'src/controls.dart';
-export 'src/core.dart' hide builder, scope;
+export 'src/core.dart' hide building, scope;
 export 'src/curves.dart';
 export 'src/devices.dart';
 export 'src/effects.dart';

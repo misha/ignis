@@ -133,7 +133,7 @@ mixin Live on Node {
     void Function(T value)? dispose,
   }) {
     assert(
-      identical(Node._builder, this),
+      identical(Node._building, this),
       'keep() is only available inside this node\'s own build.',
     );
 
@@ -180,13 +180,13 @@ mixin Live on Node {
   /// Runs [create] with no pass current, so a node built inside one does not
   /// hand its constructor's subscriptions to the node that built it.
   static T _construct<T>(T Function() create) {
-    final builder = Node._builder;
-    Node._builder = null;
+    final building = Node._building;
+    Node._building = null;
 
     try {
       return create();
     } finally {
-      Node._builder = builder;
+      Node._building = building;
     }
   }
 }

@@ -5,7 +5,7 @@ part of 'core.dart';
 
 /// The node currently running its [Node.build], if there is one.
 @internal
-Node? get builder => Node._builder;
+Node? get building => Node._building;
 
 /// Hands [cleanup] to the node currently building, if there is one.
 ///
@@ -15,7 +15,7 @@ Node? get builder => Node._builder;
 /// caller owns the cleanup, and gets it straight back.
 @internal
 Cleanup scope(Cleanup cleanup) {
-  final node = builder;
+  final node = building;
   if (node == null) return cleanup;
   node.trash(cleanup);
   return _noop;

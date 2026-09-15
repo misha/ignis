@@ -80,7 +80,7 @@ class Scene<T extends Node> {
     assert(_mounted, 'Cannot reassemble a destroyed scene.');
     if (_reassembling) return;
     _reassembling = true;
-    Node._generation += 1;
+    Node._latestGeneration += 1;
 
     try {
       node._reassemble();
