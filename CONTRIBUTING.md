@@ -2,7 +2,7 @@
 
 ## Issues
 
-Open to everyone. Bug reports, questions, and ideas are all welcome, and an issue is the right place for every one of them.
+Open to everyone. Bug reports, questions, and ideas are all welcome.
 
 ## Pull Requests
 
