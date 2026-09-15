@@ -73,9 +73,8 @@ class _SceneWidgetState extends State<SceneWidget> {
             if (size.isEmpty) return const SizedBox.expand();
             widget.scene.resize(size.width, size.height);
 
-            // Primes the tree with an initial update before the first real
-            // frame tick, so the first paint reflects update()-driven setup
-            // rather than one frame of stale state.
+            // Primes the tree with one update before the first frame, so the
+            // first paint reflects update()-driven setup.
             if (!_primed) {
               _primed = true;
               widget.scene.update(0);

@@ -2,11 +2,8 @@
 
 import 'package:flutter/rendering.dart' show FlexFit;
 
-/// The share of a flex layout's leftover main-axis space an item asks for,
-/// and what it does with the space it gets.
-///
-/// The two travel together because [fit] means nothing without a [factor] to
-/// claim space in the first place.
+/// An item's [factor] share of a flex's leftover main-axis space, and the
+/// [fit] it takes that share at.
 final class LayoutFlex {
   /// How many shares of the leftover space this item asks for. 0 asks for
   /// none, leaving the item at whatever size it chooses.
@@ -17,18 +14,16 @@ final class LayoutFlex {
 
   const LayoutFlex._(this.factor, this.fit);
 
-  /// No share of the leftover space: a fixed, non-flexible item.
+  /// No share of the leftover space.
   static const LayoutFlex none = LayoutFlex._(0, .loose);
 
-  /// [factor] shares of the leftover space, filling every bit of what it
-  /// gets. Defaults to 1 share.
+  /// [factor] shares of the leftover space, filled. Defaults to 1.
   const LayoutFlex.expanded([int? factor])
     : assert(factor == null || factor > 0, 'Use LayoutFlex.none to ask for no space.'),
       factor = factor ?? 1,
       fit = .tight;
 
-  /// [factor] shares of the leftover space, free to stay smaller than that.
-  /// Defaults to 1 share.
+  /// [factor] shares of the leftover space, free to stay smaller. Defaults to 1.
   const LayoutFlex.flexible([int? factor])
     : assert(factor == null || factor > 0, 'Use LayoutFlex.none to ask for no space.'),
       factor = factor ?? 1,

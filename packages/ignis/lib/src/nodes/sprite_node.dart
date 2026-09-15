@@ -80,10 +80,8 @@ final class SpriteState<T> {
 /// );
 /// ```
 ///
-/// A sprite takes its [shape] from the frame, so [anchor], hit testing and
-/// layout all work off the frame rather than the image. How fast it plays and
-/// whether it loops belong to the sprite. [speed] scales the rate, and [play]
-/// chooses which entry is playing.
+/// The [shape] is one frame, so [anchor], hit testing, and layout work off the
+/// frame. [speed] scales the sprite's own rate, and [play] chooses the entry.
 class SpriteNode<T> extends SpatialNode implements SpeedOwner {
   final SpriteState<T> _current = SpriteState._();
   Sprite<T> _sprite;
@@ -207,8 +205,8 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
     Ignis.cache.onChanged(() {
       _sprite = _sprite.reload();
 
-      // Follow the entry by name. An entry the replacement dropped takes its
-      // frame with it, and one that grew shorter starts over.
+      // Follow the entry by name. A dropped entry falls back to the first; a
+      // shorter one starts over.
       final entry = _sprite.resolve(_current.key);
 
       if (entry == null) {

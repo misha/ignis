@@ -105,8 +105,7 @@ class SheetRow {
 
   /// The next [skip] rows of the grid, passed over rather than played.
   ///
-  /// For grids that hold art this sheet has no use for. The rows declared
-  /// after it carry on from where it leaves off.
+  /// The rows declared after it carry on from where it leaves off.
   const SheetRow.skip(int skip)
     : assert(skip >= 1, 'A skip passes over at least one row.'),
       skip = skip,
@@ -119,9 +118,8 @@ class SheetRow {
 
 /// A grid measured over an image, and the pieces you can take from it.
 ///
-/// A sheet selects; it holds no animation properties of its own and nothing it
-/// has worked out, so rows are coordinates you ask it about rather than things
-/// it keeps.
+/// A sheet is coordinates only; the rows it hands back hold the animation
+/// state.
 ///
 /// ```
 ///     0              128
@@ -159,8 +157,7 @@ class SpriteSheet {
 
   /// One frame of the grid, drawn still.
   ///
-  /// For grids that hold art rather than animations, a tile map being the
-  /// canonical example.
+  /// For grids that hold art rather than animations, such as a tile map.
   SpriteImage image({
     int? row,
     int? column,

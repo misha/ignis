@@ -14,7 +14,6 @@ part of 'core.dart';
 ///
 /// The host resolves it on mount and drops it whenever its ancestry changes,
 /// so a node moved under a new parent finds the new one on its next read.
-/// There is nothing to call and nothing to keep in sync.
 ///
 /// A nullable [T] makes the ancestor optional: [value] is null while the host
 /// is unmounted or has no such ancestor, instead of throwing.

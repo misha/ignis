@@ -19,9 +19,8 @@ import 'package:ignis/src/globals.dart';
 /// | F5  | [pause]      | Pauses and resumes the scene this node is in.   |
 /// | F6  | [clear]      | Clears the overlay, whatever it was drawing.    |
 ///
-/// Every parameter is a set of matchers, so `DebugControlsNode(pause: const {})`
-/// declines that one and keeps the rest, and passing your own remaps just it.
-/// Unlike a declined control, an omitted one takes its default.
+/// Every parameter is a set of matchers. Pass `const {}` to decline a control,
+/// your own set to remap it, or omit it for the default.
 ///
 /// The default [priority] is lower than usual to ensure key presses prefer
 /// actual game controls, if they overlap with the debug controls.
@@ -44,7 +43,7 @@ class DebugControlsNode extends Node {
   /// Clears the overlay, whatever it was drawing.
   final Set<ControlEvent> clear;
 
-  /// The groups gating every one of them, empty where nothing does.
+  /// The groups gating all of them, if any.
   final Set<String> groups;
 
   DebugControlsNode({

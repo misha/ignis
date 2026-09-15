@@ -10,14 +10,11 @@ import 'runner.dart';
 
 /// Randomly generated layout trees, re-laid out from scratch on every tick.
 ///
-/// Every tree is its own layout root, so a single `scene.update` drives a
-/// full constraint-propagation pass over all of them: measure, distribute,
-/// place, top to bottom. Nothing else runs, so the tick cost is the layout
-/// cost.
+/// Every tree is its own layout root, so one `scene.update` lays all of them
+/// out from scratch. Nothing else runs.
 ///
-/// Trees mix every layout node the engine ships, which keeps the measurement
-/// honest about the mix a real UI hits rather than one node type in a loop.
-/// Generation is deterministic for a given [seed].
+/// Trees mix every layout node the engine ships. Generation is deterministic
+/// for a given [seed].
 class LayoutBenchmark extends AsyncBenchmarkBase {
   final int seed;
   final int trees;
@@ -73,12 +70,9 @@ class LayoutBenchmark extends AsyncBenchmarkBase {
   /// A [FlexNode] along a random axis, whose container children are all
   /// flexed.
   ///
-  /// That one rule is what keeps generation simple. A flexed child is
-  /// measured against a finite slice of the main axis, so every container in
-  /// the tree ends up with bounded constraints, and every flex factor,
-  /// alignment, and `MainAxisSize` below it is legal without a special case.
-  /// Leaves are left unflexed - they ignore their constraints anyway - so
-  /// both the flex and non-flex paths still get exercised.
+  /// Flexing every container child bounds its constraints, so any flex factor,
+  /// alignment, and `MainAxisSize` below it is legal. Leaves stay unflexed to
+  /// cover the other path.
   FlexNode flex(int depth) {
     final items = children(depth);
 

@@ -581,7 +581,7 @@ void main() {
 
       expect(b.parent, same(c));
       expect(b.isMounted, isTrue);
-      expect(mounts, 1, reason: 'a move is not a mount');
+      expect(mounts, 1, reason: 'no mount fired for a move');
     });
 
     test('mounting a node reentrantly from within its own onMount is a no-op', () {

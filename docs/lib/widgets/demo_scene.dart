@@ -19,8 +19,8 @@ Future<void> _load(Iterable<String> assets) {
   ]);
 }
 
-/// The type every demo sets text in, with no color of its own so a caller can
-/// give it either a [color] or a [TextStyle.foreground].
+/// The style every demo sets text in. A caller supplies the [color] or
+/// [TextStyle.foreground].
 const DEMO_TEXT_STYLE = TextStyle(
   fontFamily: 'iA Writer Mono',
   fontFamilyFallback: ['Roboto'],

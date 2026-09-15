@@ -134,7 +134,7 @@ void main() {
     expect(press(.f3), isFalse);
     expect(press(.f4), isFalse);
     expect(press(.f5), isFalse);
-    expect(press(.f6), isFalse, reason: 'the build owned the lot');
+    expect(press(.f6), isFalse, reason: 'every bind was trashed with the build');
   });
 
   group('the wireframes', () {

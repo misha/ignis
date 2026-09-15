@@ -14,10 +14,9 @@ import 'package:ignis/src/sprites/sprite_entry.dart';
 /// node.play(1);
 /// ```
 ///
-/// Entries are numbered straight through and answer to their index, so a part
-/// contributes as many as it holds and the next one carries on where it left
-/// off. Each part brings its own image, frame size, rates and looping, and
-/// anything implementing [Sprite] can be one of them.
+/// Entries are numbered straight through: each part contributes as many as it
+/// holds, and the next carries on. Each part brings its own image, frame size,
+/// rates, and looping.
 ///
 /// A [SpriteMap] is the same run of entries under names of your choosing.
 class SpriteGroup extends Sprite<int> {

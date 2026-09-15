@@ -185,7 +185,7 @@ void main() {
       scene.reassemble();
       scene.update(0);
 
-      expect(returned, same(given), reason: 'the fresh one, never a standing one');
+      expect(returned, same(given), reason: 'the newly declared instance');
       expect(node.children.single, same(given));
     });
 
@@ -483,7 +483,7 @@ void main() {
 
       expect(node.children, isEmpty, reason: 'the child did leave');
 
-      expect(unmounted, 0, reason: 'a reassembly is not an unmount');
+      expect(unmounted, 0, reason: 'no unmount fired for a reassembly');
     });
 
     test('onSceneResize fires again for the handler a rebuild installed', () {
@@ -568,7 +568,7 @@ void main() {
       scene.update(0);
 
       expect(kept, same(firstKept));
-      expect(firstKept.isMounted, isTrue, reason: 'a name is not a slot');
+      expect(firstKept.isMounted, isTrue, reason: 'kept by name, not position');
       expect(fresh, isNot(same(firstFresh)));
     });
 
@@ -695,11 +695,11 @@ void main() {
       expect(node.mount, throwsAssertionError);
     });
 
-    test('runs create outside the pass, so the child owns its own subscriptions', () {
+    test('a kept child owns its own subscriptions', () {
       late TestNode child;
 
-      // TestNode watches its own onUnmount from its constructor, which is
-      // where ownership goes wrong if a pass is left current during creation.
+      // TestNode subscribes to its own onUnmount in its constructor, which a
+      // pass left current during creation would claim.
       final node = LiveTestNode(
         builder: (node) {
           child = node.add(node.keep(#child, TestNode.new));
@@ -732,7 +732,7 @@ void main() {
 
       expect(kid, same(first));
       expect(kid.isMounted, isTrue, reason: 'a move never unmounts it');
-      expect(kid.builds, 1, reason: 'and never rebuilds it');
+      expect(kid.builds, 1, reason: 'not rebuilt');
       expect(node.children.single.children.single, same(kid));
     });
 

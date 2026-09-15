@@ -26,11 +26,9 @@ enum DebugMode {
 /// Nodes and systems that wish to participate in a particular debug [mode]
 /// should reach directly into [Ignis.debug] when checking if it's enabled.
 class Debug {
-  /// The one in use, which is whatever [Ignis.debug] holds.
+  /// The settings in use.
   ///
-  /// A name for it from inside core, where [Ignis] is reachable but reads
-  /// oddly: the engine's own render path asks for the debug settings, not for
-  /// a global.
+  /// Named for use inside core, where reading [Ignis] reads oddly.
   static Debug get instance => Ignis.debug;
 
   /// What the overlay draws, or null to draw no wireframe at all.
@@ -38,8 +36,7 @@ class Debug {
 
   /// Whether the overlay draws at all.
   ///
-  /// Every [Node.debugDraw] runs while this is on, whatever [mode] is, so a
-  /// drawing of your own shows in every mode there is.
+  /// Every [Node.debugDraw] runs while this is on, whatever [mode] is.
   bool get enabled => mode != null;
 
   /// What the [DebugMode.spatial] wireframe draws with.

@@ -1,13 +1,12 @@
 part of 'router_node.dart';
 
-/// One run of a [transition], carrying [incoming] against whatever it plays
-/// over. Made at the end it runs from with its sides taking part as it says,
-/// ticked and settled by its router.
+/// One run of a [transition], carrying [incoming] over whatever it covers.
+/// Ticked and settled by its router.
 sealed class _Navigation {
   final Transition transition;
   final RouteNode incoming;
 
-  /// Which way the clock runs. Turns around when a pop lands before it has.
+  /// Which way the clock runs. A pop before it lands turns it around.
   bool forward;
 
   /// Completes once this navigation settles.
@@ -48,7 +47,7 @@ sealed class _Navigation {
       landed = timeline.isFinished;
     } else {
       timeline.recede(dt);
-      // A clock with no length has nowhere to recede to.
+      // A zero-length timeline counts as landed.
       landed = timeline.progress == 0 || timeline.duration == 0;
     }
 
@@ -69,7 +68,7 @@ sealed class _Navigation {
   /// Poses every side at [progress].
   void _pose();
 
-  /// Returns every side to how it stands once this navigation is over.
+  /// Returns every side to rest.
   void _rest();
 }
 
@@ -101,9 +100,7 @@ final class _Swap extends _Navigation {
       ..activity = .all;
   }
 
-  /// A swap played forward leaves nothing behind: whichever side lost goes,
-  /// and so does everything the arriving side was laid over. Played back, the
-  /// arriving side goes instead.
+  /// Forward, every route but [incoming] leaves. Backward, [incoming] does.
   @override
   Iterable<RouteNode> leaving(Iterable<RouteNode> stack) {
     if (!forward) return [incoming];

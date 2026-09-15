@@ -7,9 +7,8 @@ import 'runner.dart';
 
 /// A wide, shallow tree of empty nodes, driven by [ticks] update ticks.
 ///
-/// Pure traversal cost: no vector math, no simulated input, no benchmark-only
-/// subclass, just plain nodes, each set up with its own children before
-/// being added to the root.
+/// Pure traversal cost: plain nodes, each given its children before being
+/// added to the root.
 ///
 /// Keep parameters in sync with `FlameUpdateBenchmark`.
 class UpdateBenchmark extends AsyncBenchmarkBase {

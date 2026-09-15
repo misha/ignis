@@ -11,9 +11,8 @@ const DEMO_EMBEDDED_SIZE = 250.0;
 
 /// One live scene, embedded in the page.
 ///
-/// Every `<Demo name="..."/>` slot with a scene behind it resolves to this, and
-/// the name is all that separates one from another: the client half looks it up
-/// in its own registry once Flutter is up.
+/// Every `<Demo name="..."/>` with a scene resolves to this; the client half
+/// looks the name up in its registry once Flutter boots.
 @client
 class SceneDemo extends StatelessComponent {
   final String name;

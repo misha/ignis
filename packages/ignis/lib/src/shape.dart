@@ -21,7 +21,7 @@ sealed class Shape {
   /// The height of the AABB that fully contains this shape.
   double get height => size.y;
 
-  /// This shape's bounds at the origin, ready to hand to a [Canvas].
+  /// This shape's bounds at the origin.
   Rect rect() => Rect.fromLTWH(0, 0, width, height);
 
   /// Draws this shape onto [canvas] with [paint].

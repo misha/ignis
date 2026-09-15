@@ -13,8 +13,7 @@ import 'package:ignis/src/shape.dart';
 /// [CollisionArena.process].
 ///
 /// [extentX]/[extentY] are only meaningful for rectangles, [radius] only for
-/// circles. Every field is mutated in place. This object is never replaced,
-/// just assigned to new nodes and overwritten.
+/// circles. Every field is mutated in place and reused across colliders.
 final class _NarrowphaseGeometry {
   final MVector2 center = .zero();
   final MVector2 extentX = .zero();
@@ -61,7 +60,7 @@ final class CollisionArena {
   /// Sparsely stores each slot's index within [_order].
   final List<int> _orderIndex = [];
 
-  /// Whether or not [_order] is currently sorted.
+  /// Whether [_order] is currently sorted.
   bool _sorted = true;
 
   /// Pairs confirmed overlapping as of the last [process], by key.
@@ -80,12 +79,10 @@ final class CollisionArena {
     final int slot;
 
     if (_freeSlots.isNotEmpty) {
-      // Reuse a free slot.
       slot = _freeSlots.removeLast();
       _colliderIndex[slot] = collider;
       _orderIndex[slot] = -1;
     } else {
-      // Create a new slot.
       slot = _colliderIndex.length;
       _colliderIndex.add(collider);
       _boundsIndex.add(null);
@@ -204,7 +201,6 @@ final class CollisionArena {
   }
 
   void _detect() {
-    // Not faster to make it an instance variable.
     final current = <int, (ColliderNode, ColliderNode)>{};
     final refreshed = <int>{};
 
@@ -275,8 +271,6 @@ final class CollisionArena {
 
         if (!overlapping) continue;
 
-        // At this point, we have a collision. The question is: what to report?
-
         // Use a canonical ordering for this pair based on their slot order,
         // so the key and the stored collider order stay stable even if the
         // sweep visits them in the opposite order on a later tick.
@@ -307,11 +301,8 @@ final class CollisionArena {
       if (next != null && _identicalPair(previous, next)) continue;
       final (a, b) = previous;
 
-      // A pair can end up here because a member was unregistered (e.g.
-      // detached) rather than because it stopped overlapping; the arena
-      // already dropped it from consideration, so just drop it silently
-      // instead of firing a spurious exit. The survivor's own bookkeeping
-      // still needs to let go of the gone collider, though.
+      // Unregistered, not separated: no exit signal, but the survivor still
+      // forgets it.
       if (!a.isMounted || !b.isMounted) {
         a.dropCollision(b);
         b.dropCollision(a);

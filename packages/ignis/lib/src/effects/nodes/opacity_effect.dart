@@ -3,22 +3,21 @@ import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 import 'package:ignis/src/owners/opacity_owner.dart';
 import 'package:ignis/src/timeline.dart';
 
-/// An effect that animates an [OpacityOwner]'s opacity over time, fading its
-/// whole subtree as one image.
+/// Animates an [OpacityOwner]'s opacity, fading its whole subtree as one image.
 abstract class OpacityEffect extends TimelineEffect {
   late final Target<OpacityOwner> _target;
 
-  /// The [OpacityOwner] whose opacity is mutated by this effect.
+  /// The [OpacityOwner] this effect drives.
   OpacityOwner get target => _target.value;
 
-  /// Fades the closest [OpacityOwner] ancestor in, from nothing to whole.
+  /// Fades the closest [OpacityOwner] ancestor from 0 to 1.
   factory OpacityEffect.fadeIn({
     required Timeline timeline,
     bool? cleanup,
     bool? enabled,
   }) = _FadeInEffect;
 
-  /// Fades the closest [OpacityOwner] ancestor out, from whole to nothing.
+  /// Fades the closest [OpacityOwner] ancestor from 1 to 0.
   factory OpacityEffect.fadeOut({
     required Timeline timeline,
     bool? cleanup,

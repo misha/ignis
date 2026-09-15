@@ -3,11 +3,8 @@ import 'package:jaspr/jaspr.dart';
 import 'package:jaspr_content/jaspr_content.dart';
 import 'package:jaspr_content/theme.dart';
 
-/// Says out loud how finished a page is.
-///
-/// The site ships at whatever depth it has reached, so every page that has not
-/// reached its category floor admits it rather than reading as authoritative.
-/// A `complete` page renders nothing.
+/// Renders a page's status on any page below its category's depth floor. A
+/// `complete` page renders nothing.
 class StatusBanner extends StatelessComponent {
   const StatusBanner({required this.page, super.key});
 

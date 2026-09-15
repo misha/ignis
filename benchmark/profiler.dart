@@ -83,7 +83,7 @@ Future<void> profile(
   await service.dispose();
 }
 
-/// Generates a useful (?) name for the given profiling function.
+/// Names [function] for the report.
 String _describe(ProfileFunction function) {
   final target = function.function;
 

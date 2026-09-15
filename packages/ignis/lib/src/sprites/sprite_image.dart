@@ -10,8 +10,7 @@ import 'package:ignis/src/sprites/sprite_region.dart';
 /// final logo = SpriteImage('assets/logo.png');
 /// ```
 ///
-/// [SpriteSheet.image] draws one frame of a grid this way, which is how a tile
-/// map uses a sheet.
+/// [SpriteSheet.image] draws one frame of a grid this way, as a tile map does.
 class SpriteImage extends Sprite<int> {
   /// Which piece of which asset this draws.
   final SpriteRegion region;
@@ -52,8 +51,7 @@ class SpriteImage extends Sprite<int> {
     if (!region.isLoaded) return this;
     if (identical(region.image, entries.single.image)) return this;
 
-    // Art replaced by something this region no longer sits inside keeps the
-    // frame it last cut, rather than drawing outside the image.
+    // A replacement image this region no longer fits keeps the last cut.
     // TODO: Evaluate if this is intuitive or not after a few games.
     if (!region.fits) return this;
 

@@ -5,8 +5,8 @@ import 'package:ignis/src/core.dart';
 import 'package:ignis/src/nodes/opacity_node.dart';
 import 'package:ignis/src/routing/transition.dart';
 
-/// Fades through a [veil] above everything, its opacity ramping to 1 at
-/// [swapAt] and back to 0 after, trading the sides under full cover.
+/// Fades a [veil] above everything to full opacity at [swapAt], swaps the
+/// sides under it, and fades it back out.
 ///
 /// The veil fills the region swapped, so a shape-less `ShapeNode` makes a
 /// solid curtain.

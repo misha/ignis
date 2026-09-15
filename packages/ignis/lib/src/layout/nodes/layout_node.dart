@@ -55,9 +55,7 @@ abstract class LayoutNode extends SpatialNode {
 
   /// The items this node lays out: its direct [SpatialNode] children.
   ///
-  /// Queried as [SpatialNode] rather than [LayoutItem] because that is what a
-  /// layout item is *in the tree* - [LayoutItem] exists so `LayoutEngine` can
-  /// work on things that aren't nodes at all.
+  /// Queried as [SpatialNode]: [LayoutItem] is also implemented by non-nodes.
   ///
   /// [Node.query] hands back live storage that is maintained in place rather
   /// than replaced, so the reference is resolved once and kept; later adds and

@@ -121,9 +121,7 @@ final class StandardLayoutEngine extends LayoutEngine {
       itemConstraints = itemConstraints.loosen();
     }
 
-    // Measure. An item reports a size in its own space, so it is measured
-    // against constraints carried into that space and compared on the extent
-    // that size occupies back out here.
+    // Measure, in each item's own space, comparing the extent back in this one.
     final largest = MVector2.zero();
     final extent = MVector2.zero();
 
@@ -138,18 +136,14 @@ final class StandardLayoutEngine extends LayoutEngine {
       largest.max(extent);
     }
 
-    // Size. An alignment asks for room to align within, so it takes every
-    // bounded axis whole; an unbounded one has no room to ask for. [region] is
-    // already tight on any targeted axis, so a target still wins either way.
+    // Size. An alignment takes every bounded axis whole; a target still wins.
     final fill = alignment != null;
     final size = region.constrain(
       fill && region.hasBoundedWidth ? region.max.x : largest.x + padding.horizontal,
       fill && region.hasBoundedHeight ? region.max.y : largest.y + padding.vertical,
     );
 
-    // Place. Nothing was kept from the measure pass: [LayoutItem] guarantees
-    // an item still reports the size it just measured at. An unaligned item
-    // multiplies the leftover room by zero, landing on the padded origin.
+    // Place. An item still reports the size it measured at.
     final anchor = alignment ?? .topLeft;
     final innerWidth = size.x - padding.horizontal;
     final innerHeight = size.y - padding.vertical;
@@ -213,9 +207,8 @@ final class StandardLayoutEngine extends LayoutEngine {
     final fillCross = crossAxisAlignment == .stretch;
     final childCount = items.length;
 
-    // Flex divides whatever the main axis has left over, and an unbounded axis
-    // never has a leftover. Pass 1 measures flexed items at their natural size
-    // instead, which only holds up if nothing demanded to fill something.
+    // An unbounded main axis has no leftover to flex, so pass 1 measures flexed
+    // items at their natural size. A tight fit cannot be honored there.
     if (!canFlex) {
       assert(
         !items.any((item) => item.flex.factor > 0) || mainAxisSize == .min,
@@ -337,9 +330,8 @@ final class StandardLayoutEngine extends LayoutEngine {
     final scale = item.scale;
     final anchor = item.anchor;
 
-    // The anchor offset is applied in the item's own space, so it arrives here
-    // scaled. A flipped axis grows the other way, which puts its anchor on the
-    // opposite edge. Without that, the content lands outside its own space.
+    // The anchor offset arrives scaled, in the item's own space. A flipped axis
+    // puts its anchor on the opposite edge.
     final anchorX = scale.x < 0 ? anchor.x - 1 : anchor.x;
     final anchorY = scale.y < 0 ? anchor.y - 1 : anchor.y;
 

@@ -25,9 +25,8 @@ import 'support/test_bundle.dart';
 ///     -> Cache.add replaces the image
 ///     -> Sprite.reload() re-cuts, when the tree is reassembled
 ///
-/// Nothing here waits a fixed duration. Filesystem events have no guaranteed
-/// latency, so the tests wait on the outcome instead; the timeout is only ever
-/// reached when something is actually broken.
+/// Filesystem events have no guaranteed latency, so every test waits on the
+/// outcome rather than a fixed duration.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -221,8 +220,8 @@ flutter:
   });
 
   test('caches nothing when no loader is registered on the global preload', () async {
-    // The trap: loaders registered on some other Preload instance leave
-    // Ignis.preload empty, and live reloading only ever goes through that one.
+    // Loaders registered on another Preload leave Ignis.preload empty, and
+    // live reloading only goes through that one.
     await start();
     Ignis.preload = Preload();
 
@@ -236,7 +235,7 @@ flutter:
     request.dispose();
   });
 
-  test('reports how many assets its loaders actually accepted', () async {
+  test('reports how many assets its loaders accepted', () async {
     await start();
 
     // Watched and readable, but the image loader only accepts `.png`.

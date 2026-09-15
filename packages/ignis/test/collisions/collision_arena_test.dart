@@ -166,9 +166,9 @@ void main() {
       final bEnded = <ColliderNode>[];
       b.onCollisionEnd(bEnded.add);
 
-      // a's pair with b drops out because a was unregistered (detached),
-      // not because it genuinely drifted apart. Detaching while mounted only
-      // queues the removal, so it needs an update to actually take effect.
+      // a's pair with b drops out because a was unregistered, not because they
+      // separated. Detaching while mounted queues the removal, so an update is
+      // needed.
       a.detach();
       scene.update(0);
       arena.process();

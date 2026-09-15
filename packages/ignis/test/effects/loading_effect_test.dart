@@ -130,7 +130,7 @@ void main() {
 
     await drain(scene);
     expect(second.progress, 1, reason: 'the pool runs every request');
-    expect(second.isFinished, isFalse, reason: 'its turn has not come');
+    expect(second.isFinished, isFalse, reason: 'still queued');
     expect(finishes, 0);
 
     loader.gates['a.png']!.complete();

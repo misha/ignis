@@ -7,16 +7,14 @@ import 'package:ignis/src/sprite.dart';
 
 /// One entry of a [Sprite]: the frames it draws, and how it plays them.
 ///
-/// A sprite answers with one of these rather than a field at a time, so an
-/// implementation states what it holds instead of inventing a storage unit to
-/// answer from. Frames are cut once, here, rather than on every draw.
+/// Frames are cut once, here, rather than on every draw.
 final class SpriteEntry<T> {
   /// Where this sits in the sprite that holds it.
   final int index;
 
   /// What this answers to.
   ///
-  /// Art numbers its entries, so this is [index] again where nothing named it.
+  /// [index] again, where nothing named it.
   final T key;
 
   /// The image this is drawn from.

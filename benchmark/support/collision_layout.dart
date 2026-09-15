@@ -5,8 +5,7 @@ enum CollisionLayoutShape {
   circle,
 }
 
-/// A single shape/position/velocity triple, used to build equivalent
-/// collision fixtures across different collision-system benchmarks.
+/// One shape, position, and velocity.
 class CollisionLayoutEntry {
   final CollisionLayoutShape shape;
   final double x;

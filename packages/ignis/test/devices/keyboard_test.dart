@@ -9,37 +9,36 @@ void main() {
   group('KeyPress', () {
     group('accepts', () {
       test('the same key with nothing required', () {
-        expect(const KeyPress(.space).accepts(const KeyPress(.space)), isTrue);
+        expect(KeyPress(.space).accepts(KeyPress(.space)), isTrue);
       });
 
       test('only that key', () {
-        expect(const KeyPress(.space).accepts(const KeyPress(.enter)), isFalse);
+        expect(KeyPress(.space).accepts(KeyPress(.enter)), isFalse);
       });
 
       test('a required modifier must be held', () {
         const bound = KeyPress(.keyS, control: true);
 
-        expect(bound.accepts(const KeyPress(.keyS)), isFalse);
-        expect(bound.accepts(const KeyPress(.keyS, control: true)), isTrue);
+        expect(bound.accepts(KeyPress(.keyS)), isFalse);
+        expect(bound.accepts(KeyPress(.keyS, control: true)), isTrue);
       });
 
       test('every required modifier must be held', () {
         const bound = KeyPress(.keyS, control: true, shift: true);
 
-        expect(bound.accepts(const KeyPress(.keyS, control: true)), isFalse);
-        expect(bound.accepts(const KeyPress(.keyS, control: true, shift: true)), isTrue);
+        expect(bound.accepts(KeyPress(.keyS, control: true)), isFalse);
+        expect(bound.accepts(KeyPress(.keyS, control: true, shift: true)), isTrue);
       });
 
       test('a modifier left null takes the press either way', () {
-        expect(const KeyPress(.space).accepts(const KeyPress(.space, shift: true)), isTrue);
-        expect(const KeyPress(.space).accepts(const KeyPress(.space, shift: false)), isTrue);
+        expect(KeyPress(.space).accepts(KeyPress(.space, shift: true)), isTrue);
+        expect(KeyPress(.space).accepts(KeyPress(.space, shift: false)), isTrue);
 
         expect(
-          const KeyPress(.keyS, control: true).accepts(
-            const KeyPress(.keyS, control: true, shift: true),
-          ),
+          KeyPress(.keyS, control: true) //
+              .accepts(KeyPress(.keyS, control: true, shift: true)),
           isTrue,
-          reason: 'an extra modifier nobody asked about never blocks a match',
+          reason: 'an unmatched modifier does not block a match',
         );
       });
 
@@ -47,7 +46,7 @@ void main() {
         const bound = KeyPress(.f2, shift: false);
 
         expect(
-          bound.accepts(const KeyPress(.f2)),
+          bound.accepts(KeyPress(.f2)),
           isTrue,
           reason: 'null emitted reads as released',
         );
@@ -57,49 +56,53 @@ void main() {
         const forward = KeyPress(.f2, shift: false);
         const back = KeyPress(.f2, shift: true);
 
-        expect(forward.accepts(const KeyPress(.f2, shift: false)), isTrue);
-        expect(forward.accepts(const KeyPress(.f2, shift: true)), isFalse);
-        expect(back.accepts(const KeyPress(.f2, shift: true)), isTrue);
-        expect(back.accepts(const KeyPress(.f2, shift: false)), isFalse);
+        expect(forward.accepts(KeyPress(.f2, shift: false)), isTrue);
+        expect(forward.accepts(KeyPress(.f2, shift: true)), isFalse);
+        expect(back.accepts(KeyPress(.f2, shift: true)), isTrue);
+        expect(back.accepts(KeyPress(.f2, shift: false)), isFalse);
       });
 
       test('one modifier released says nothing about the others', () {
         const bound = KeyPress(.f2, shift: false);
 
-        expect(bound.accepts(const KeyPress(.f2, control: true)), isTrue);
+        expect(bound.accepts(KeyPress(.f2, control: true)), isTrue);
       });
 
       test('an event of another kind never matches', () {
-        expect(const KeyPress(.space).accepts(const TestEvent()), isFalse);
+        expect(KeyPress(.space).accepts(const TestEvent()), isFalse);
       });
     });
 
     group('value', () {
       test('equal keys and modifiers are equal', () {
-        expect(const KeyPress(.keyS, control: true), const KeyPress(.keyS, control: true));
         expect(
-          const KeyPress(.keyS, control: true).hashCode,
-          const KeyPress(.keyS, control: true).hashCode,
+          KeyPress(.keyS, control: true),
+          KeyPress(.keyS, control: true),
+        );
+
+        expect(
+          KeyPress(.keyS, control: true).hashCode,
+          KeyPress(.keyS, control: true).hashCode,
         );
       });
 
       test('a required modifier tells it apart', () {
-        expect(const KeyPress(.keyS), isNot(const KeyPress(.keyS, control: true)));
+        expect(KeyPress(.keyS), isNot(KeyPress(.keyS, control: true)));
       });
 
       test('asking for a modifier released differs from not asking', () {
-        expect(const KeyPress(.keyS, control: false), isNot(const KeyPress(.keyS)));
+        expect(KeyPress(.keyS, control: false), isNot(KeyPress(.keyS)));
       });
 
       test('reads as the chord it stands for', () {
         expect(
-          const KeyPress(.keyS, control: true, shift: true).toString(),
+          KeyPress(.keyS, control: true, shift: true).toString(),
           'ctrl+shift+Key S',
         );
       });
 
       test('a bare key reads as itself', () {
-        expect(const KeyPress(.space).toString(), LogicalKeyboardKey.space.debugName);
+        expect(KeyPress(.space).toString(), LogicalKeyboardKey.space.debugName);
       });
     });
   });
@@ -114,14 +117,17 @@ void main() {
 
       Ignis.controls = Controls()
         ..install(keyboard)
-        ..bind(fired.add, matchers: {const KeyPress(.keyF)});
+        ..bind(fired.add, matchers: {KeyPress(.keyF)});
     });
 
     Future<void> pump(WidgetTester tester, {bool mounted = true}) async {
       await tester.pumpWidget(
         Directionality(
           textDirection: .ltr,
-          child: mounted ? SceneWidget(Node().mount(), autofocus: false) : const SizedBox.shrink(),
+          child:
+              mounted //
+              ? SceneWidget(Node().mount(), autofocus: false)
+              : const SizedBox.shrink(),
         ),
       );
     }
@@ -161,7 +167,7 @@ void main() {
     });
 
     testWidgets('controls with no device hear nothing', (tester) async {
-      Ignis.controls = Controls()..bind(fired.add, matchers: {const KeyPress(.keyF)});
+      Ignis.controls = Controls()..bind(fired.add, matchers: {KeyPress(.keyF)});
 
       await pump(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);

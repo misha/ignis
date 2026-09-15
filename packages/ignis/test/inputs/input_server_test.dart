@@ -200,7 +200,7 @@ void main() {
     drag.onDragStart(starts.add);
 
     // tap is translucent, so both nodes are offered the down event and their
-    // recognizers genuinely contest the same pointer's arena.
+    // recognizers contest the same pointer's arena.
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.moveBy(const Offset(50, 0));
     await gesture.up();
@@ -257,7 +257,7 @@ void main() {
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await tester.pump(kPressTimeout + settle);
-    expect(downs, hasLength(1), reason: 'the deadline elapsed, so the tap spoke up');
+    expect(downs, hasLength(1), reason: 'the deadline elapsed');
 
     await gesture.moveBy(const Offset(50, 0));
     await gesture.up();
@@ -555,7 +555,7 @@ void main() {
     expect(drag.isDragging, isFalse);
 
     // The arena resolution the release would have triggered is already spent,
-    // so it must NOT manufacture a second terminal signal.
+    // so it must not emit a second terminal signal.
     await gesture.up();
     await tester.pump(settle);
 

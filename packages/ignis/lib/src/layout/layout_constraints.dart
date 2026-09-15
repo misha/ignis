@@ -25,9 +25,7 @@ final class LayoutConstraints {
          'Copy mutable sizes with Vector2.copy first.',
        );
 
-  /// Exactly [size] in both axes. Aliases [size] rather than copying, so it
-  /// must already be immutable - this is checked with an assertion. Copy a
-  /// mutable size with [Vector2.copy] first if needed.
+  /// Exactly [size] in both axes. Aliases [size], which must be immutable.
   const LayoutConstraints.tight(Vector2 size)
     : assert(
         size is! MVector2,
@@ -37,9 +35,7 @@ final class LayoutConstraints {
       min = size,
       max = size;
 
-  /// Zero to [size] in both axes. Aliases [size] rather than copying, so it
-  /// must already be immutable - this is checked with an assertion. Copy a
-  /// mutable size with [Vector2.copy] first if needed.
+  /// Zero to [size] in both axes. Aliases [size], which must be immutable.
   const LayoutConstraints.loose(Vector2 size)
     : assert(
         size is! MVector2,
@@ -60,8 +56,7 @@ final class LayoutConstraints {
 
   /// These constraints, pulled inside [other].
   ///
-  /// Every bound is clamped into [other]'s range, so [other] always wins - a
-  /// tight [other] leaves nothing of these behind.
+  /// Every bound is clamped into [other]'s range.
   LayoutConstraints enforce(LayoutConstraints other) => .new(
     min: min.clampedBetween(other.min, other.max),
     max: max.clampedBetween(other.min, other.max),
@@ -79,9 +74,8 @@ final class LayoutConstraints {
   /// These constraints with [min] cleared to zero, keeping [max].
   LayoutConstraints loosen() => .new(min: .zero, max: max);
 
-  /// These constraints with [padding] subtracted from [min] and [max],
-  /// clamping both so neither drops below zero and [max] never ends up
-  /// below the deflated [min].
+  /// These constraints with [padding] subtracted from [min] and [max]. Neither
+  /// drops below zero, and [max] never drops below [min].
   LayoutConstraints deflate(EdgeInsets padding) {
     final minX = math.max(0.0, min.x - padding.horizontal);
     final minY = math.max(0.0, min.y - padding.vertical);

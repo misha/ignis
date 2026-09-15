@@ -8,9 +8,7 @@ import 'package:ignis/src/flutter/render_loop.dart';
 import 'package:ignis/src/flutter/scene_widget.dart';
 import 'package:ignis/src/inputs/input_server.dart';
 
-/// A [RenderObjectWidget] that renders the [SceneRenderBox].
-///
-/// This is the widget used by [SceneWidget] to actually render the scene.
+/// Hosts a [SceneRenderBox] for [SceneWidget].
 @internal
 class RenderSceneWidget extends LeafRenderObjectWidget {
   final Scene scene;
@@ -113,8 +111,8 @@ class SceneRenderBox extends RenderBox {
     _watch();
   }
 
-  // Detach pairs with attach and can recur, e.g. on reparenting, so it only
-  // stops the loop. Destruction belongs to [SceneWidget] alone.
+  // Detach can recur, e.g. on reparenting, so it only stops the loop.
+  // [SceneWidget] destroys the scene.
   @override
   void detach() {
     super.detach();

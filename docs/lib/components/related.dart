@@ -13,14 +13,11 @@ import 'package:jaspr_content/theme.dart';
 /// internals: [/internals/tree]
 /// ```
 ///
-/// What a page hands off is what fixes its own edges, so a reader meets the
-/// handoffs before investing in the page rather than after. Each entry is
-/// labelled with the title the target page gives itself, which is why the
-/// frontmatter carries urls and no text of its own.
+/// Each entry is labelled with the target page's own title, so the frontmatter
+/// carries urls only.
 ///
-/// [Related.internals] renders the second list as its own row underneath, so a
-/// reader can tell a page they may want next from a page about how this one
-/// works underneath.
+/// [Related.internals] renders the second list as its own row, separating
+/// further reading from internals.
 class Related extends StatelessComponent {
   final Page page;
 
@@ -73,7 +70,7 @@ class Related extends StatelessComponent {
         gap: .column(0.75.rem),
         raw: {'flex-wrap': 'wrap'},
       ),
-      // Two rows read as one block: the space below belongs after the pair.
+      // The space below belongs after the pair.
       css('&:has(+ .related)').styles(
         margin: .only(top: 1.rem, bottom: 0.rem),
       ),

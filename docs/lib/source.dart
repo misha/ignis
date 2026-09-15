@@ -13,9 +13,6 @@ const _OPEN = '// demo on';
 const _CLOSE = '// demo off';
 
 /// A run of lines cut out of a demo's source.
-///
-/// The page shows [code] and links to [url], so what a reader reads is the
-/// source that ran, down to the line numbers.
 class DemoSource {
   /// The lines between the region's markers.
   final String code;
@@ -36,8 +33,7 @@ class DemoSource {
   /// // demo off
   /// ```
   ///
-  /// Throws if either marker is missing, so a page that names a region which
-  /// has since been renamed fails the build rather than shipping empty.
+  /// Throws if either marker is missing, so a renamed region fails the build.
   factory DemoSource.cut(String file, String region) {
     final path = '$_DEMOS/$file';
     final lines = File(path).readAsLinesSync();
@@ -65,9 +61,6 @@ class DemoSource {
   }
 
   /// Joins [lines], shifted left by the indentation they all share.
-  ///
-  /// A region cut from inside a method arrives indented by however deep it sat.
-  /// The page shows it against its own left edge instead.
   static String _dedent(List<String> lines) {
     var indent = _MAX_INDENT;
 
@@ -90,5 +83,5 @@ class DemoSource {
   }
 }
 
-/// Deeper than any region is indented, as a starting point for the minimum.
+/// Deeper than any region is indented.
 const _MAX_INDENT = 1 << 20;

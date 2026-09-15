@@ -33,14 +33,14 @@ void main() {
         ..dispatch(const NamedEvent('up'))
         ..dispatch(const NamedEvent('space'));
 
-      expect(log, ['jump:up', 'jump:space'], reason: 'one handler, either way in');
+      expect(log, ['jump:up', 'jump:space'], reason: 'one handler for both events');
     });
 
     test('matchers from several subsystems reach one handler', () {
       controls.bind(note('jump'), matchers: {const NamedEvent('space'), const ButtonEvent(3)});
 
       expect(controls.dispatch(const ButtonEvent(3)), isTrue);
-      expect(log, ['jump:button3'], reason: 'the engine never learns what a button is');
+      expect(log, ['jump:button3'], reason: 'dispatch is event-agnostic');
     });
 
     test('an event nothing matches runs nothing', () {
@@ -104,7 +104,7 @@ void main() {
         ..bind(note('cancel'), matchers: {const NamedEvent('enter')});
 
       expect(controls.dispatch(const NamedEvent('enter')), isTrue);
-      expect(log, ['cancel:enter'], reason: 'the most recent of them, and only it');
+      expect(log, ['cancel:enter'], reason: 'only the most recent');
     });
 
     test('releasing the winner falls back to the one beneath', () {
@@ -248,7 +248,7 @@ void main() {
 
       controls.dispatch(const NamedEvent('enter'));
 
-      expect(log, ['world:enter'], reason: 'gone, rather than swallowing the event');
+      expect(log, ['world:enter'], reason: 'the event falls through');
     });
 
     test('a group can be switched before anything is in it', () {
@@ -262,7 +262,7 @@ void main() {
       expect(
         controls.dispatch(const NamedEvent('space')),
         isFalse,
-        reason: 'the switch outlives whatever happens to be bound',
+        reason: 'the group switch is independent of binds',
       );
     });
   });

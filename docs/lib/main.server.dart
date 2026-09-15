@@ -48,9 +48,7 @@ class _IgnisLayout extends DocsLayout {
 
   @override
   Component buildBody(Page page, Component child) {
-    // Injected here rather than written into every page, so a page cannot
-    // quietly forget to admit how finished it is, and so the API links sit in
-    // the same place on every page that lists any.
+    // Injected for every page, so none can omit its status or reference block.
     return super.buildBody(
       page,
       .fragment([
@@ -70,10 +68,7 @@ void main() {
     options: defaultServerOptions,
   );
 
-  // Starts the app.
-  //
-  // [ContentApp] spins up the content rendering pipeline from jaspr_content to render
-  // your markdown files in the content/ directory to a beautiful documentation site.
+  // Renders the markdown under content/ with jaspr_content.
   runApp(
     ContentApp(
       // Enables mustache templating inside the markdown files.
@@ -89,11 +84,11 @@ void main() {
         HeadingAnchorsExtension(),
         // Generates a table of contents for each page.
         TableOfContentsExtension(),
-        // Heads the contents with the page's own title, which the layout
-        // renders outside the content the extension above walks.
+        // Heads the contents with the page title, which sits outside the
+        // content the extension above walks.
         TitleEntryExtension(),
-        // Lists the reference block underneath it, which the layout injects
-        // too late for the contents above to have seen.
+        // Lists the reference block, injected after the contents above are
+        // built.
         ReferenceEntryExtension(),
       ],
       components: [

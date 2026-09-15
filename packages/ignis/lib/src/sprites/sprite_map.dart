@@ -16,9 +16,8 @@ import 'package:ignis/src/sprites/sprite_entry.dart';
 /// node.play('jump');
 /// ```
 ///
-/// A name holds one entry, so what it names brings only the art: a row of a
-/// sheet, a whole image, anything implementing [Sprite] that holds one thing.
-/// Entries are numbered in the order the map states them.
+/// A name holds one entry: a row of a sheet, a whole image, any [Sprite]
+/// holding one thing. Entries are numbered in the order the map states them.
 ///
 /// [T] is what entries are named by: an enum, a [String], anything with `==`.
 class SpriteMap<T> extends Sprite<T> {

@@ -18,8 +18,7 @@ const _TIMEOUT = Duration(seconds: 10);
 ///
 /// Register loaders once, then [load] whatever you need, whenever you need it.
 /// Each call names its own assets and hands back a [PreloadRequest] to watch.
-/// There is no difference between filling the cache at startup and replacing
-/// one entry later; both go through the same loaders.
+/// Startup fills and later replacements go through the same loaders.
 ///
 /// ```dart
 /// Ignis.preload

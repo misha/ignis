@@ -1,7 +1,6 @@
 import 'package:ignis/ignis.dart';
 
-/// One wireframe as the header reads it: what to call it, the color the engine
-/// is stroking it in, and whether it is drawing.
+/// One wireframe as the header reads it.
 typedef Wireframe = ({String label, String color, bool draws});
 
 /// The wireframes the site drives, each with the digit that toggles it and the
@@ -41,20 +40,18 @@ String _css(Paint paint) {
   return '#${rgb.toRadixString(16).padLeft(6, '0')}';
 }
 
-/// The engine's debug overlay, on the digits, for the site rather than a scene.
+/// The engine's debug overlay, on the digits.
 ///
-/// [DebugControlsNode] puts one wireframe on each of F1 to F4, which a browser
-/// has spoken for, so the site takes 1 to 4 in the same order. They bind
-/// outside every scene, and [Ignis.debug] is global, so one press answers for
-/// every demo on the page at once.
+/// [DebugControlsNode] uses F1 to F4, which browsers claim, so the site takes
+/// 1 to 4 in the same order. [Ignis.debug] is global, so one press answers for
+/// every demo on the page.
 abstract final class DebugShortcuts {
   /// Emitted whenever a press changes what the demos draw.
   static final onChange = Signal0();
 
   static bool _bound = false;
 
-  /// Every wireframe the header names, or null until a demo comes up to draw
-  /// any of them.
+  /// Every wireframe the header names, or null until a demo comes up.
   static List<Wireframe>? get wireframes {
     if (!_bound) return null;
 
@@ -76,8 +73,7 @@ abstract final class DebugShortcuts {
 
   /// Binds the shortcuts, which every demo asks for as it comes up.
   ///
-  /// The first to ask is the one that binds them: a page with no demo has no
-  /// engine to take the keys, and nothing to draw over if it did.
+  /// Idempotent: the first demo to come up binds them.
   static void install() {
     if (_bound) return;
     _bound = true;

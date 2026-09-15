@@ -4,8 +4,7 @@ import 'dart:math' as math;
 
 import 'package:ignis/src/timeline.dart';
 
-/// Plays [child] forward, then back down to its start, using it as a single
-/// shared instance for both legs.
+/// Plays [child] forward, then back to its start.
 class RoundtripTimeline extends Timeline {
   /// The timeline played there and back.
   final Timeline child;

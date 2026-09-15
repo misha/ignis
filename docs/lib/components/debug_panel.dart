@@ -18,9 +18,8 @@ class DebugPanel extends StatefulComponent {
 
   @css
   static List<StyleRule> get styles => [
-    // The package's header is a flex row of a title and an items group, so a
-    // panel between the two is measured against the header itself rather than
-    // against either of them.
+    // A panel between the header's title and items is positioned against the
+    // header itself.
     css('.docs .header').styles(position: .relative()),
     css('.docs .header .debug', [
       css('&').styles(
@@ -33,8 +32,7 @@ class DebugPanel extends StatefulComponent {
         fontFamily: ContentTheme.currentCodeFont,
         fontSize: 0.6875.rem,
       ),
-      // A button inherits neither face nor size, so the row's are restated
-      // here rather than left to the parent.
+      // A button inherits neither face nor size, so the row's are restated.
       css('.debug-mode', [
         css('&').styles(
           padding: .zero,
@@ -45,8 +43,8 @@ class DebugPanel extends StatefulComponent {
           fontWeight: .w400,
           backgroundColor: Colors.transparent,
         ),
-        // Weight and a rule only. The color is the wireframe's own and says
-        // whether it draws, so hovering must not touch it.
+        // Weight and a rule only. The color says whether the wireframe draws,
+        // so hover leaves it alone.
         css('&:hover').styles(
           fontWeight: .w700,
           textDecoration: const TextDecoration(line: .underline),
@@ -66,7 +64,7 @@ class DebugPanel extends StatefulComponent {
 class _DebugPanelState extends State<DebugPanel> {
   void Function()? _unwatch;
 
-  /// What the shortcuts last left the demos drawing.
+  /// What the demos are drawing, per the shortcuts.
   List<_Wireframe>? wireframes;
 
   @override

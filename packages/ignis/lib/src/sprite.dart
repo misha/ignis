@@ -10,11 +10,10 @@ import 'package:ignis/src/sprites/sprite_entry.dart';
 /// either end to end, and a [SpriteMap] does the same under names of your
 /// choosing. Implement this to draw frames packed some other way.
 ///
-/// An entry is the unit, and a [SpriteEntry] states everything one is, so an
-/// implementation is free to hold every entry in its own image, at its own
-/// size.
+/// A [SpriteEntry] states everything about one entry, so each may have its own
+/// image and size.
 ///
-/// A sprite only has one name at a time, and that name is [T]. [SpriteNode]
+/// A sprite has one name type at a time, [T]. [SpriteNode]
 /// then enforces that all sprites use the same naming scheme.
 abstract class Sprite<T> {
   const Sprite();

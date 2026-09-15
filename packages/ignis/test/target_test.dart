@@ -120,6 +120,6 @@ void main() {
     expect(host, isNot(same(dead)), reason: 'the container was rebuilt');
     expect(effect.target, same(host));
     expect(host.angle, 1.0, reason: 'it drives the host it now sits under');
-    expect(dead.angle, 0.0, reason: 'and not the detached one');
+    expect(dead.angle, 0.0, reason: 'the detached host is untouched');
   });
 }

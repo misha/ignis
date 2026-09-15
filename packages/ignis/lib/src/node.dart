@@ -14,11 +14,9 @@ typedef DebugDraw = void Function(Canvas canvas);
 /// Call to undo whatever was set up.
 typedef Cleanup = void Function();
 
-/// The humble node.
-///
 /// **Overview**
 ///
-/// Nodes are the buildings block of Ignis. They are organized in a directed,
+/// Nodes are the building block of Ignis. They are organized in a directed,
 /// acyclic tree, with [children] ordered by [priority]. Nodes may be assembled
 /// into subtrees using [add] and [remove] any number of times.
 ///
@@ -28,17 +26,15 @@ typedef Cleanup = void Function();
 /// in their [build] method. [build] is called every time a node is mounted to
 /// a live scene, or as the root of its own scene with [mount].
 ///
-/// [build] should be written in such a way that it can be run multiple times.
-/// To facilitate this, [build] internally tracks every node added and every
-/// signal subscribed inside that method call. If you create resources that
-/// should be disposed, place it into the [trash] to prevent leaks.
+/// [build] must be safe to run more than once. It tracks every node added and
+/// every signal subscribed inside it. Resources needing disposal go in the
+/// [trash].
 ///
 /// Lastly, a reload reboots the internals of every node: added children are
 /// removed, signals unsubscribed, the [trash] processed, and [build] run
 /// again. What survives is the node itself, and whatever it named with [Live.keep].
 ///
-/// **Do not make [build] `async`.** An asynchronous build breaks engine
-/// invariants in multiple, devastating ways.
+/// **Do not make [build] `async`.**
 ///
 /// **Signals**
 ///
@@ -66,9 +62,8 @@ typedef Cleanup = void Function();
 ///
 /// Once mounted, however, the same calls are instead merely enqueued. The
 /// scene applies pending changes right before the next [update]. As a result,
-/// operations for live node trees are always delayed a frame. Although
-/// unintuitive, this queue allows the engine to mitigate modification
-/// during iteration, and improves performance by batching the changes.
+/// operations for live node trees are always delayed a frame. The queue avoids
+/// mutation during iteration and batches changes.
 ///
 /// **Dependency Injection**
 ///
@@ -84,11 +79,8 @@ typedef Cleanup = void Function();
 /// disabled nodes are rebuilt. It runs whenever the `SceneWidget` reassembles
 /// in the Flutter tree.
 ///
-/// There is nothing to opt into and nothing to override: name what should
-/// carry across with [Live.keep], and everything else is made again.
-///
-/// Each node answers for itself, and the default answer is nothing, so a save
-/// leaves a running game exactly as it was.
+/// By default nothing rebuilds. A [Live] node rebuilds, keeping only what
+/// [Live.keep] names.
 class Node {
   /// Creates a new node.
   ///
@@ -152,8 +144,8 @@ class Node {
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
-      // Rendering is recursive, so this is the only way to stop it.
-      // A disabled child must never have `render` called on it.
+      // Recursive, and `render` is virtual: a disabled child is skipped here,
+      // before the call.
       if (child.activity.renders) {
         child.render(canvas);
       }
@@ -235,13 +227,8 @@ class Node {
   ///   - All [tick], [draw], and [debugDraw] closures are removed.
   ///   - The [trash] is processed and cleared.
   ///
-  /// Then, [build] runs again from the top, so constructor arguments are
-  /// re-evaluated exactly like a statement is. What survives is this node
-  /// itself: its members, its position, and anything added to it imperatively.
-  ///
-  /// A child the new body [add]s back is preserved rather than replaced, as is
-  /// everything the body named with [Live.keep].
-  ///
+  /// A child the new body [add]s back is preserved, as is everything
+  /// [Live.keep] names.
   void _rebuild() {
     _builtGeneration = _latestGeneration;
     _discardDeclared();
@@ -470,12 +457,8 @@ class Node {
 
   /// This node's direct children of type [T], in [priority] order.
   ///
-  /// The result is kept up to date as children come and go, so repeated calls
-  /// cost nothing and allocate nothing. The first call for a given [T] pays
-  /// one pass over [children] to build it.
-  ///
-  /// Returned as an [Iterable] over this node's live storage, so it reflects
-  /// later changes but cannot be mutated through its interface.
+  /// Cached and kept live: the first call for a [T] costs one pass over
+  /// [children], later calls nothing. The view is read-only.
   Iterable<T> query<T extends Node>() => (_egg ??= Egg()).query<T>();
 
   /// The parent that owns this node, or null when it is parentless.
@@ -558,7 +541,7 @@ class Node {
   // #region Mounting
 
   void _mount(Scene scene) {
-    // Already standing here, which is how a moved subtree is left alone.
+    // Already mounted here: a subtree moved within the scene.
     if (identical(_scene, scene)) return;
     _scene = scene;
     _rebuild();
@@ -615,7 +598,7 @@ class Node {
   ///
   /// Called from this node's own [build], the child is additionally recorded
   /// as declared, so the next rebuild discards it before running the body
-  /// again. The node handed in is always the node handed back.
+  /// again.
   T add<T extends Node>(T node) {
     if (identical(this, node)) {
       throw StateError('Cannot add a node to itself.');
@@ -634,9 +617,7 @@ class Node {
       return node;
     }
 
-    // Already somewhere else, so this is a move. Cancel whatever was queued
-    // for it there, unhook it without unmounting, and drop the ancestry it
-    // had cached.
+    // A move: release from the old parent without unmounting.
     node._pendingParent = null;
 
     if (node.hasParent) {
@@ -679,7 +660,7 @@ class Node {
     }
 
     if (node._pendingRemoval) return false; // Already being removed.
-    if (!owns(node)) return false; // Not our node, not our problem.
+    if (!owns(node)) return false;
 
     if (isMounted) {
       node._pendingRemoval = true;
@@ -782,8 +763,7 @@ class Node {
 
   /// Whether this node's hit area contains [point].
   ///
-  /// The default implementation always returns false, so plain nodes are
-  /// invisible to [hitTest]. Override to opt a node into hit-testing.
+  /// Override to opt into [hitTest]. Plain nodes never match.
   @visibleForOverriding
   bool containsPoint(Vector2 point) => false;
 
@@ -828,15 +808,7 @@ class Node {
     (_providers ??= {})[T] = value;
   }
 
-  /// Reads the nearest instance of [T] provided by this node or an
-  /// ancestor, checking this node first.
-  ///
-  /// Not reactive: whether it finds a match or not, the result is cached
-  /// until the node is unmounted, so a later [provide] call for [T] won't be
-  /// picked up until then.
-  ///
-  /// Throws a [StateError] if this node is not mounted yet, or if no [T] was
-  /// ever [provide]d.
+  /// As [readOrNull], but throws a [StateError] when nothing [provide]d [T].
   T read<T>() {
     final value = readOrNull<T>();
     if (value != null) return value;
@@ -846,9 +818,7 @@ class Node {
   /// Reads the nearest instance of [T] provided by this node or an
   /// ancestor, checking this node first. Returns null if none was provided.
   ///
-  /// Not reactive: whether it finds a match or not, the result is cached
-  /// until the node is unmounted, so a later [provide] call for [T] won't be
-  /// picked up until then.
+  /// Cached until unmount, misses included.
   ///
   /// Throws a [StateError] if this node is not mounted yet.
   T? readOrNull<T>() {

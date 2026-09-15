@@ -13,10 +13,8 @@ import 'scene_demo.dart';
 /// `<Demo name="..."/>`: a live scene, beside the source that runs it.
 ///
 /// The name resolves to a file here and to a `#region` of the same name inside
-/// it, so the code on the page is cut from the code that ran. Adding a scene
-/// costs a line here and one in the client's own registry, rather than a
-/// bespoke component, an `@Import` shim, and a registration. A name with no
-/// scene behind it yet renders as a placeholder saying so.
+/// it, so the code on the page is cut from the code that ran. A name with no
+/// scene behind it renders as a placeholder saying so.
 class Demo extends CustomComponentBase {
   Demo();
 
@@ -79,9 +77,8 @@ class Demo extends CustomComponentBase {
 
     final hint = attributes['hint'];
 
-    // `<Demo name="..." hero/>`: the scene on its own, with no code and no
-    // title, for a page to open on. It floats beside the prose that follows it,
-    // so it is written above that prose rather than under it.
+    // `<Demo name="..." hero/>`: the scene alone, floated beside the prose that
+    // follows it, for a page to open on.
     if (attributes.containsKey('hero')) {
       return div(classes: 'demo-hero', [
         SceneDemo(name: demo),
@@ -108,8 +105,8 @@ class Demo extends CustomComponentBase {
     // Scoped by `.content`, since the package's own `pre` rules are emitted
     // after ours and would win the tie at equal specificity.
     css('.content .demo', [
-      // The code takes whatever height it needs and the scene keeps its square
-      // beside it, aligned to the first line rather than stretched to match.
+      // Start-aligned, so the scene keeps its square instead of stretching to
+      // the code.
       css('&').styles(
         display: .grid,
         margin: .only(top: 1.5.rem, bottom: 1.5.rem),
@@ -117,8 +114,7 @@ class Demo extends CustomComponentBase {
         gap: .new(row: 0.75.rem, column: 1.rem),
         raw: {'grid-template-columns': 'minmax(0, 1fr) ${DEMO_EMBEDDED_SIZE.toInt()}px'},
       ),
-      // Both columns are stacks with the same gap, so the caption under the
-      // scene sits on the same line as the file name under the code.
+      // The same gap in both columns lines the caption up with the file name.
       css('.demo-stage, .demo-source').styles(
         display: .flex,
         minWidth: Unit.zero,
@@ -126,9 +122,8 @@ class Demo extends CustomComponentBase {
         gap: .column(0.375.rem),
       ),
       css('.code-block').styles(margin: Margin.zero),
-      // Firefox takes the scrollbar from these two; the ones below are for
-      // everything else. Both sit against a block that is dark in either mode,
-      // so they name the dark neutrals rather than the theme's tokens.
+      // `scrollbar-*` for Firefox, `::-webkit-*` below for the rest. Dark
+      // neutrals, since the block is dark in either mode.
       css('pre').styles(
         margin: Margin.zero,
         overflow: .auto,
@@ -155,9 +150,8 @@ class Demo extends CustomComponentBase {
         fontSize: 0.75.rem,
       ),
     ]),
-    // A hero carries no source, so it keeps its square and lets the opening
-    // paragraph run beside it. A float and a width, and nothing else: the
-    // scene and its caption are two blocks, and stack as such.
+    // A hero floats right at its own width, with the opening paragraph beside
+    // it.
     css('.content .demo-hero', [
       css('&').styles(
         width: DEMO_EMBEDDED_SIZE.px,
@@ -172,8 +166,7 @@ class Demo extends CustomComponentBase {
         fontSize: 0.75.rem,
       ),
     ]),
-    // One column is not enough for two, so the scene goes under its source,
-    // and the hero stops making room it no longer has.
+    // Narrow: stack the scene under its source, and unfloat the hero.
     css.media(MediaQuery.screen(maxWidth: 60.rem), [
       css('.demo').styles(raw: {'grid-template-columns': 'minmax(0, 1fr)'}),
       css('.content .demo-hero').styles(

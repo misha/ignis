@@ -12,8 +12,7 @@ import 'package:path/path.dart' as p;
 /// Serves assets straight off the developer's disk, and pushes changes back
 /// through [Ignis.preload] so the cache follows along.
 ///
-/// Local, as in the app and the project source must share a filesystem: the
-/// machine hosting the project, and nowhere else.
+/// Local: the app and the project source must share a filesystem.
 ///
 /// Install it over [Ignis.bundle], then [start] it:
 ///
@@ -23,8 +22,8 @@ import 'package:path/path.dart' as p;
 /// await local.start();
 /// ```
 ///
-/// Outside [kDebugMode], this is inert. [start] does nothing and every load
-/// delegates to [delegate], making it is safe to install unconditionally.
+/// Outside [kDebugMode], this is inert: [start] does nothing and every load
+/// delegates to [delegate], so it is safe to install unconditionally.
 class LocalAssetBundle extends CachingAssetBundle {
   /// The project directory asset keys are resolved against.
   final String root;
@@ -41,8 +40,7 @@ class LocalAssetBundle extends CachingAssetBundle {
 
   /// The manifest entries currently being watched, relative to [root].
   ///
-  /// Derived from the project's `pubspec.yaml`, so this is the answer to why a
-  /// given asset is or is not reloading.
+  /// Derived from the project's `pubspec.yaml`.
   Iterable<String> get watching => _watcher.watching;
 
   /// Creates a local bundle rooted at [root], defaulting to the working
@@ -116,9 +114,8 @@ class LocalAssetBundle extends CachingAssetBundle {
     }
 
     if (request.value.accepted == 0) {
-      // Either nothing is registered on Ignis.preload, or every loader filtered
-      // this out. Common for editor scratch files that land in the assets
-      // directory, but it also catches loaders registered on the wrong preload.
+      // Nothing is registered on Ignis.preload, or every loader filtered this
+      // out, as with editor scratch files in the assets directory.
       debugPrint('[IGNIS] No loader accepted "$key".');
       return;
     }

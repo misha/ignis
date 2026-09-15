@@ -68,7 +68,7 @@ class _Control {
   /// The events it answers, any one of which is enough.
   final Set<ControlEvent> matchers;
 
-  /// The groups gating it, empty where nothing does.
+  /// The groups gating it, if any.
   final Set<String> groups;
 
   /// The node whose build bound this, or null where nothing was building.
@@ -80,8 +80,7 @@ class _Control {
 /// Routes events emitted by control devices to the handlers bound to them.
 ///
 /// One call binds the lot: the events that reach a handler, the handler, and
-/// any groups that switch it on and off. There is nothing else to register and
-/// no name in the middle, so a control is one thing in one place.
+/// any groups that switch it on and off.
 ///
 /// TODO: Document further.
 class Controls {
@@ -143,8 +142,7 @@ class Controls {
   /// Returns whether anything ran, so a device can report the event as handled.
   ///
   /// Every match is found before the winner runs, so a handler is free to bind
-  /// and unbind as it answers: a press is judged against the controls as they
-  /// stood when it arrived, not as it leaves them.
+  /// and unbind as it answers.
   bool dispatch(ControlEvent emitted) {
     List<_Control>? matched;
 
@@ -179,8 +177,8 @@ class Controls {
 
   /// The one of [matched] that answers, by tree order.
   ///
-  /// Walks the live scenes exactly as a hit test would, and takes the first
-  /// whose node it reaches, so a handler the walk never reaches never runs.
+  /// Walks the live scenes as a hit test would, and takes the first whose node
+  /// it reaches.
   /// Handlers with no node rank below every node, the most recent of them
   /// first.
   _Control? _winner(List<_Control> matched) {

@@ -37,8 +37,6 @@ abstract interface class LayoutItem {
   /// An item that can't lay itself out any further does nothing at all,
   /// keeping whatever intrinsic [size] it already had.
   ///
-  /// Returns nothing on purpose: [size] is the only channel, so an algorithm
-  /// needing sizes in a later pass reads them back off the item instead of
-  /// keeping its own copies.
+  /// [size] is the only channel; a later pass reads it back off the item.
   void layout(LayoutConstraints constraints);
 }

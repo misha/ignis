@@ -68,10 +68,8 @@ ContentTheme get ignisTheme => ContentTheme(
   ),
 );
 
-/// Dart highlighting, drawn from the ramp.
-///
-/// Monochrome by necessity - the artwork has one hue - so the scopes separate
-/// by lightness rather than by color.
+/// Dart highlighting, drawn from the ramp. The artwork has one hue, so scopes
+/// separate by lightness.
 final ignisCodeTheme = hl.HighlighterTheme.fromConfiguration(
   '''
 {"settings":[
@@ -91,10 +89,10 @@ final ignisCodeTheme = hl.HighlighterTheme.fromConfiguration(
   ),
 );
 
-/// Site-wide rules: the bundled faces, and the package styling we have to beat.
+/// Site-wide rules: the bundled faces, and overrides of the package styling.
 ///
-/// Our `@css` block is emitted before `jaspr_content`'s, so every override here
-/// carries a scoping ancestor rather than relying on source order.
+/// This block is emitted before `jaspr_content`'s, so every override carries a
+/// scoping ancestor.
 abstract final class IgnisStyles {
   @css
   static List<StyleRule> get styles => [
@@ -106,16 +104,10 @@ abstract final class IgnisStyles {
     ..._lists,
   ];
 
-  /// A catalog page is a list, and the package spaces lists for prose.
-  ///
-  /// Markdown calls a list loose the moment any entry carries a second block -
-  /// a callout, a diagram - and wraps every entry's content in a paragraph. The
-  /// package then gives those paragraphs `1.25em` top and bottom, over the
-  /// `0.5em` it gives the entry itself, and the entries drift apart until the
-  /// list reads as separate paragraphs that happen to have bullets.
-  ///
-  /// These take an entry's own paragraphs back to the line. Paragraphs deeper
-  /// in - inside a callout - are left to the rules that own them.
+  /// Markdown makes a list loose once any entry has a second block, and the
+  /// package then gives entry paragraphs `1.25em` over the entry's own `0.5em`.
+  /// These take a top-level entry's own paragraphs back to `0.25em`. Paragraphs
+  /// inside a callout keep their own rules.
   static List<StyleRule> get _lists => [
     css('.docs .content > ul > li, .docs .content > ol > li').styles(
       margin: .symmetric(vertical: 0.25.em),
@@ -133,16 +125,14 @@ abstract final class IgnisStyles {
     ).styles(margin: .only(bottom: Unit.zero)),
   ];
 
-  /// The display face, and the size everything else is measured against.
+  /// The display face, and the root size.
   ///
   /// [ContentTheme.typography] reaches inside `.content` only, so the wordmark
-  /// and the page title - the largest type on any page - were being set in the
-  /// prose face. IM FELL carries no bold, so both ask for 400 rather than let
-  /// the browser synthesize one.
+  /// and page title need the display face set here. IM FELL has no bold, hence
+  /// 400.
   ///
-  /// Garamond runs small for its point size. The root size lifts the whole
-  /// site to suit it, and the sidebar, which the package sets in `rem`, is
-  /// brought up further and tightened to match.
+  /// Garamond runs small, so the root size and the `rem`-sized sidebar are
+  /// lifted.
   static List<StyleRule> get _type => [
     css(':root').styles(fontSize: 17.px),
     css('.docs .header .header-title span').styles(
@@ -172,11 +162,9 @@ abstract final class IgnisStyles {
     ),
   ];
 
-  /// The highlighter colors brackets by nesting depth from a hardcoded
-  /// five-hue rainbow (`_bracketStyles`, private and top-level, so neither
-  /// themeable nor overridable in Dart). It writes them as inline styles, which
-  /// only `!important` can beat. Punctuation should be quiet, so all five
-  /// collapse onto the muted tone the theme already gives `meta.brace`.
+  /// The highlighter rainbows brackets by depth through private inline styles,
+  /// which only `!important` can beat. All five collapse onto the muted tone
+  /// `meta.brace` already gets.
   static List<StyleRule> get _brackets => [
     for (final hex in ['#5caeef', '#dfb976', '#c172d9', '#4fb1bc', '#97c26c'])
       css('.content pre code span[style*="$hex"]').styles(
@@ -213,40 +201,29 @@ abstract final class IgnisStyles {
     );
   }
 
-  /// The three hairlines `jaspr_content` hardcodes to black at 5%, which is
-  /// invisible on a dark ground, and the measure it lets prose run to.
+  /// Page chrome: borders, measure, scroll offsets, header controls.
   static List<StyleRule> get _chrome => [
-    // The package allows 80rem, which is a paragraph a line long on a wide
-    // display. The column holds a comfortable measure instead, and the layout
-    // centers what it no longer uses.
+    // 80rem is far past a readable measure on a wide display.
     css('.docs .main-container .content-container').styles(maxWidth: 46.rem),
-    // A scene strokes its outermost wireframe along its own edge, so a demo
-    // squares its corners rather than clip it, and the code beside it follows
-    // so a page reads as one set of rectangles.
+    // Square corners, so a scene's outermost wireframe is not clipped.
     css('.docs .content pre').styles(radius: .circular(Unit.zero)),
     css('.docs .header-container .header').styles(
       border: .only(
         bottom: BorderSide(width: 1.px, color: IgnisTokens.border),
       ),
     ),
-    // Matches the package's own `.docs .main-container .sidebar-container`
-    // specificity; ours is emitted later, so the tie falls our way. Theirs is
-    // mobile-only, so this also gives the sidebar an edge on desktop.
+    // Same specificity as the package's rule, emitted later. Theirs is
+    // mobile-only, so this also edges the sidebar on desktop.
     css('.docs .main-container .sidebar-container').styles(
       border: .only(
         right: BorderSide(width: 1.px, color: IgnisTokens.border),
       ),
     ),
-    // A page's `description` stays in frontmatter, where it is the page's
-    // `<meta name="description">` and its link preview, but it is not also
-    // printed under the title. The layout renders it as plain text, so it can
-    // carry no code and name no class, and the page's opening line says the
-    // same thing in a register that can.
+    // The description belongs to <meta> and link previews, not the page body.
     css('.docs .content-header p').styles(display: .none),
-    // A page carrying an `image` is the hero, and only the overview does. The
-    // layout emits the header as title, description, mark, so `order` puts the
-    // painting on top without the markup moving, and the description comes back
-    // from the rule above to serve as the centered opening line.
+    // The overview's hero header. `order` lifts the mark above the title
+    // without touching the markup, and the description returns from the rule
+    // above.
     css('.docs .content-header:has(img)', [
       css('&').styles(
         display: .flex,
@@ -275,8 +252,7 @@ abstract final class IgnisStyles {
         raw: {'order': '3'},
       ),
     ]),
-    // Sits beside `GitHubButton` and borrows its metrics, so the two read as
-    // one pair rather than a link next to a button.
+    // Borrows `GitHubButton`'s metrics so the two match.
     css('.docs .header .header-api', [
       css('&').styles(
         display: .flex,
@@ -285,8 +261,7 @@ abstract final class IgnisStyles {
         alignItems: .center,
         gap: .column(0.5.rem),
         color: ContentColors.text,
-        // The acronym reads as an identifier, not as prose, and `w700` lands on
-        // the bold face that ships rather than a synthesized one.
+        // Set as an identifier; `w700` is the bold face that ships.
         fontFamily: ContentTheme.currentCodeFont,
         fontSize: 0.7.rem,
         fontWeight: .w700,
@@ -297,12 +272,8 @@ abstract final class IgnisStyles {
       css('&:hover').styles(backgroundColor: IgnisTokens.surface),
       css('svg').styles(width: 1.2.rem, height: 1.2.rem),
     ]),
-    // Garamond sets its middle dot small and low, which reads as a full stop
-    // beside capitals. The mono centers it, and the size lifts it clear.
-    //
-    // Centering agrees on boxes, not on ink. `API` is capitals, so it rides
-    // above its box center, and a middle dot sits below its own. The nudge is
-    // the sum of the two, which lands the dot on the cap line.
+    // Garamond's middle dot sits low. Set in the mono and nudged onto the cap
+    // line beside "API".
     css('.docs .header .header-separator').styles(
       display: .flex,
       alignItems: .center,
@@ -342,22 +313,16 @@ abstract final class IgnisStyles {
       color: IgnisTokens.primaryHi,
       raw: {'text-decoration-color': 'currentColor'},
     ),
-    // The header is fixed and frosted, and the package puts its height at 4rem
-    // where it offsets the sidebar. Landing an anchor at the target's own top
-    // parks it under that glass, so every target clears the header and keeps a
-    // gap besides. In `rem`, since `em` here would scale the gap by whatever
-    // the heading it lands on happens to be set in.
+    // Clears the 4rem fixed header. In `rem` so the gap does not scale with
+    // the heading.
     css(
       '.docs .content :is(h1, h2, h3, h4), .docs .reference',
     ).styles(raw: {'scroll-margin-top': '6rem'}),
   ];
 
-  /// `Callout` reaches for no theme token at all - every color in it is a
-  /// hardcoded sky/amber/red/green, at `.callout.callout-info` and the like.
-  ///
-  /// The `.content` these sit under carries them past that. The package's own
-  /// dark set is written as `[data-theme="dark"] .callout`, and nothing on this
-  /// site sets that attribute, so it never applies.
+  /// `Callout` hardcodes its colors, and its dark set keys on
+  /// `[data-theme="dark"]`, which this site never sets. Scoping under
+  /// `.content` outranks both.
   static List<StyleRule> get _callouts => [
     css('.content .callout', [
       css('&').styles(backgroundColor: IgnisTokens.surface),

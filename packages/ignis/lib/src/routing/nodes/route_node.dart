@@ -15,8 +15,8 @@ class RouteNode extends OpacityNode {
   ///
   /// It is also played in reverse when the route is popped.
   ///
-  /// Null falls back to the router's default transition. Some router operations
-  /// can also override this transition.
+  /// Null falls back to the router's default. [RouterNode.go] can override it
+  /// per navigation.
   final Transition? transition;
 
   /// What the push that laid this route down is waiting on, if a push did.

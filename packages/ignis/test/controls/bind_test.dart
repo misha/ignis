@@ -75,7 +75,7 @@ void main() {
     expect(node.builds, 2, reason: 'the node rebuilt');
 
     press();
-    expect(jumps, 1, reason: 'the old bind was trashed, so only one ran');
+    expect(jumps, 1, reason: 'the old bind was trashed');
   });
 
   test('the bind dies with the node', () {
@@ -142,7 +142,7 @@ void main() {
       over.enabled = false;
       press();
 
-      expect(log, ['over', 'under'], reason: 'the bind is still there, the node is not');
+      expect(log, ['over', 'under'], reason: 'a disabled node is skipped; its bind stays');
     });
 
     test('a disabled node answers nothing, even uncontested', () {
@@ -209,7 +209,7 @@ void main() {
       Ignis.controls.disable('ui');
       press();
 
-      expect(log, ['over', 'under'], reason: 'gone, rather than swallowing the press');
+      expect(log, ['over', 'under'], reason: 'the press falls through');
     });
   });
 }

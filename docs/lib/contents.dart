@@ -1,9 +1,7 @@
 import 'package:jaspr_content/jaspr_content.dart';
 
-/// Where the title's entry points.
-///
-/// No element carries this id. A fragment of `top` sends the browser to the
-/// start of the document, which is where the layout puts the title.
+/// Where the title's entry points. `#top` scrolls to the start of the
+/// document, where the layout puts the title; no element carries the id.
 const _TOP = 'top';
 
 /// Puts a page's own title at the head of its table of contents.

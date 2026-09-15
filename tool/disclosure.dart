@@ -4,13 +4,12 @@
 //
 //   dart run tool/disclosure.dart
 //
-// The site's `build` and `serve` scripts run this first, so the report is built
-// from the tree it describes and ships inside the artifact. It is not committed
-// and there is nothing to keep in sync by hand.
+// The site's `build` and `serve` scripts run this first, so the report ships
+// inside the artifact. Generated, not committed.
 //
 // Disclosure is per file: a file's own SPDX-AI-Disclosure tag, or the
 // disclosure-default from AI_DISCLOSURE.md when it carries none. Groups come
-// from tool/disclosure.yaml and exist only to give the report its rows.
+// from tool/disclosure.yaml.
 
 import 'dart:convert';
 import 'dart:io';
@@ -26,10 +25,8 @@ const _REPORT = 'docs/content/_data/disclosure.json';
 /// The vocabulary, in the order the report lists it.
 const _VALUES = ['none', 'ai-assisted', 'ai-generated', 'autonomous'];
 
-/// How far into a file a tag may sit.
-///
-/// Far enough to clear a shebang, a license header, a library doc comment or a
-/// page's frontmatter, and short enough that the walk stays cheap.
+/// How far into a file a tag may sit: past a shebang, license header, doc
+/// comment, or frontmatter.
 const _SCAN_LINES = 30;
 
 final _TAG = RegExp(r'SPDX-AI-Disclosure:\s*([\w-]+)', caseSensitive: false);
@@ -229,10 +226,8 @@ List<_Entry> _entries(YamlMap config, String key) {
   ];
 }
 
-/// Every file in the working tree that git does not ignore.
-///
-/// Untracked files count and deleted ones do not, so a change is accounted for
-/// before it is committed rather than the run after.
+/// Every file in the working tree that git does not ignore. Untracked files
+/// count; deleted ones do not.
 List<String> _tracked() {
   final result = Process.runSync('git', [
     'ls-files',
@@ -275,8 +270,7 @@ String? _tag(File file) {
   try {
     lines = file.readAsLinesSync();
   } on FileSystemException {
-    // Binary content that slipped past the excluded entries. Reporting it as
-    // untagged beats failing the build over an encoding.
+    // Binary content that slipped past the excluded entries counts as untagged.
     return null;
   }
 

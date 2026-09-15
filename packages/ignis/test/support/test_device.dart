@@ -27,7 +27,7 @@ final class TestDevice extends ControlDevice {
   }
 }
 
-/// The simplest event there is: it matches its own kind.
+/// Matches its own kind.
 final class TestEvent implements ControlEvent {
   const TestEvent();
 
@@ -56,7 +56,7 @@ final class NamedEvent implements ControlEvent {
   String toString() => name;
 }
 
-/// An event no keyboard could produce, to prove dispatch never assumes one.
+/// A non-keyboard event.
 final class ButtonEvent implements ControlEvent {
   final int button;
 

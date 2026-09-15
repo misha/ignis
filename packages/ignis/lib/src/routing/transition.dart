@@ -6,8 +6,8 @@ import 'package:ignis/src/timeline.dart';
 
 /// Describes a navigation between two routes.
 ///
-/// A transition is not a node, but rather a specification for an operation.
-/// Instead, a `Router` drives the [timeline], periodically asking for the pose.
+/// A transition is a specification, not a node. A `Router` drives the
+/// [timeline], periodically asking for the pose.
 /// If the transition has [chrome], the router also mounts it for the duration
 /// of the navigation, allowing it to be posed as well.
 ///

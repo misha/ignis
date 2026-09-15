@@ -7,8 +7,7 @@ import 'package:ignis/src/sprites/sprite_region.dart';
 
 /// A run of frames, played.
 ///
-/// The plain constructor is for art that ships a file per animation, where the
-/// file is the whole of it:
+/// The plain constructor is for art that ships one file per animation:
 ///
 /// ```dart
 /// final idle = SpriteAnimation('assets/slime_idle.png', .all(56), fps: 16);
@@ -129,7 +128,7 @@ class SpriteAnimation extends Sprite<int> {
         ),
       ];
 
-  /// Rejects a file cut into more rows than the one it was taken to hold.
+  /// Rejects a whole-file region that holds more than one row.
   static void _checkWhole(SpriteRegion region, int? row) {
     if (row != null) return;
     final rows = region.rows;
@@ -155,8 +154,7 @@ class SpriteAnimation extends Sprite<int> {
     final entry = entries.single;
     if (identical(region.image, entry.image)) return this;
 
-    // Art replaced by something this region no longer sits inside keeps the
-    // frames it last cut, rather than drawing outside the image.
+    // A replacement image this region no longer fits keeps the last cut.
     if (!region.fits) return this;
 
     return SpriteAnimation._(

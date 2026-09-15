@@ -8,9 +8,9 @@ import 'package:ignis/src/sprites/sprite_entry.dart';
 
 /// Which piece of which asset a sprite draws.
 ///
-/// A region states where its frames sit rather than holding the cuts, so it
-/// answers against whatever the cache holds now. What it describes is cut once,
-/// into a [SpriteEntry], and cut again only when the image behind it changes.
+/// A region states where its frames sit, so it answers against whatever the
+/// cache holds now. It is cut into a [SpriteEntry] once, and again only when
+/// the image behind it changes.
 ///
 /// ```dart
 /// SpriteRegion('assets/slime.png', .all(56), row: 3, end: 12);
@@ -29,8 +29,8 @@ final class SpriteRegion {
 
   /// The column played up to, or null to run to the end of the row.
   ///
-  /// A region left open re-reads the width of a replacement image, so art that
-  /// grows a frame plays it without being redeclared.
+  /// A region left open re-reads the width of a replacement image, so added
+  /// frames play.
   final int? end;
 
   /// Describes a piece of the image cached at [asset], cut into [cell] frames.
@@ -50,8 +50,8 @@ final class SpriteRegion {
 
   /// Describes the whole of the image cached at [asset], as one frame.
   ///
-  /// Stating no frame size measures the region against the image rather than
-  /// over it, so it re-measures when the art behind it changes shape.
+  /// With no frame size stated, the region re-measures when the image changes
+  /// shape.
   const SpriteRegion.whole(this.asset) //
     : _cell = null,
       row = 0,
@@ -86,7 +86,7 @@ final class SpriteRegion {
   /// How many frames this plays.
   int get frames => (end ?? columns) - start;
 
-  /// Whether the image the cache holds now still holds this region.
+  /// Whether this region still fits the cached image.
   bool get fits {
     final image = this.image;
     final cell = this.cell;

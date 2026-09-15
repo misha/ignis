@@ -20,18 +20,13 @@ part 'route_node.dart';
 ///   - [push] adds a route to the top of the stack.
 ///   - [pop] removes a route from the top of the stack.
 ///
-/// Leaving the router is equivalent to leaving the tree, so nodes may use the
-/// usual `build` or mount signals to respond to routing operations. Note that
-/// the router doesn't know how to build routes, nor does it keep a registry of
-/// them. It's up to the programmer to standardize how their routes are made -
-/// or not, if that's the shape of the game.
-///
-/// And now, some quirks!
+/// Leaving the router is leaving the tree, so routes respond to routing through
+/// the usual `build` and mount signals. Routes are built by the caller; the
+/// router keeps no registry.
 ///
 /// **Scheduling**
 ///
-/// Routing is slightly tricky because added nodes only hit a tree on the next
-/// frame. As a result, a [push] or [go] begins at the call but holds until its
+/// Added nodes only hit the tree on the next frame, so a [push] or [go] begins at the call but holds until its
 /// route is in the tree, so nothing moves before the *next* frame, even if the
 /// router itself has yet to update. A [pop] starts at the call, since its route
 /// is already in the tree.
@@ -40,33 +35,22 @@ part 'route_node.dart';
 ///
 /// The region routed is the [shape] in effect above this node, or the scene's
 /// when nothing spatial is above. The routes and any transition chrome will
-/// fill that region. This is notable because the "natural" usage of a router,
-/// to control the high-level view of the game, works off scene size by default.
-///
-/// Additionally, this implementation means you can "route" any subregion of the
-/// canvas. Previous versions of the code even called it a `TransitionNode`,
-/// because by declaring a sized `SpatialNode` parent, you can create arbitrary
-/// transitioning subregions of your game. Think of a HUD that animates between
-/// town and combat displays: it's just routing between the two, and you have
-/// the entire power of [Transition] to control exactly how the two switch.
+/// fill that region. A sized `SpatialNode` parent scopes the router to a
+/// subregion, such as a HUD switching between town and combat panels.
 ///
 /// **Concurrent Navigation**
 ///
 /// When navigating while another navigation is already running, the router will
 /// settle the running navigation first, except that a [pop] during a running
-/// navigation plays it back instead. Usually, settling means instantly
-/// finishing that transition to start the new one. Although this doesn't look
-/// great, it's somewhat mitigated by the fact that transitions can be made
-/// quite short, so the snapping is less noticeable; and most games don't let
-/// you switch routes multiple times a second anyway, so the instant finish does
-/// not realistically trigger.
+/// navigation plays it back instead. Settling snaps the running transition to
+/// its end.
 class RouterNode extends SpatialNode {
   /// The transition a navigation plays when it names none.
   ///
   /// Defaults to a [CutTransition].
   final Transition transition;
 
-  /// The stack, bottom to top.
+  /// Every [RouteNode] child, bottom to top.
   late final Iterable<RouteNode> _routes = query<RouteNode>();
 
   /// The stack, bottom to top.
@@ -80,8 +64,8 @@ class RouterNode extends SpatialNode {
 
   /// The priority that sits above every route on the stack.
   ///
-  /// An arriving route is placed with this, and a navigation's chrome one
-  /// above it, so the two never disagree about what "on top" means.
+  /// An arriving route takes this priority; a navigation's chrome takes one
+  /// more.
   int get _above => (top?.priority ?? -1) + 1;
 
   /// The running navigation, or null between navigations.

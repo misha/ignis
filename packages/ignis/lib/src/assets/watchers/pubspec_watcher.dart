@@ -19,8 +19,7 @@ import 'package:yaml/yaml.dart';
 /// Changes are reported as project-relative paths, which are exactly the keys
 /// Flutter uses for those assets. Matching follows Flutter's own rule as closely
 /// as possible: a directory entry like `assets/` globs one level deep, so a
-/// change in `assets/nested/` is not reported. Your app could not load it
-/// either.
+/// change in `assets/nested/` is not reported.
 ///
 /// Only functions in debug builds and only when run on the same host as the app.
 class PubspecWatcher {
@@ -165,8 +164,7 @@ class PubspecWatcher {
 
   /// Whether the manifest declares [asset], by Flutter's own rule.
   ///
-  /// A directory entry globs exactly one level deep, so it claims its immediate
-  /// children and nothing further down.
+  /// A directory entry globs exactly one level deep.
   bool _declares(String asset) {
     final parent = p.dirname(asset);
 

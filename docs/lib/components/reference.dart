@@ -6,7 +6,7 @@ import 'package:jaspr_content/theme.dart';
 /// Where `dart doc` publishes the engine.
 const _API = '/api/ignis';
 
-/// What the block anchors on, for the table of contents to link to.
+/// The block's anchor, for the table of contents.
 const _ANCHOR = 'reference';
 
 /// The symbols [page] lists in its frontmatter, in the order it lists them.
@@ -29,8 +29,7 @@ List<String> _symbols(Page page) {
 /// reference: [SpriteNode, SpriteImage, SpriteAnimation, SpriteSheet]
 /// ```
 ///
-/// The major classes a reader constructs, rather than every symbol a page
-/// mentions - which is what keeps every entry a `-class.html` away.
+/// List the major classes a reader constructs; every entry links to its `-class.html`.
 class Reference extends StatelessComponent {
   final Page page;
 
@@ -90,9 +89,8 @@ class Reference extends StatelessComponent {
 
 /// Lists [Reference] in the table of contents, on the pages that carry one.
 ///
-/// The layout injects the block after every extension has run, so the generated
-/// contents never see it and the reader is left with a section the page doesn't
-/// admit to. This appends the entry the block would have earned.
+/// The layout injects [Reference] after every extension runs, so the generated
+/// contents miss it. This appends its entry.
 ///
 /// Must be applied after [TableOfContentsExtension], which replaces whatever
 /// sits under 'toc' wholesale.

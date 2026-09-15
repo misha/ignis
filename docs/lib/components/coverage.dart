@@ -5,9 +5,8 @@ import 'package:jaspr_content/theme.dart';
 
 /// `<Coverage/>`: how far along every page on the site is.
 ///
-/// Derived from each page's `status`, so it cannot drift from the pages it
-/// describes. Requires `eagerlyLoadAllPages`, or it only sees what has been
-/// built so far.
+/// Derived from each page's `status`. Requires `eagerlyLoadAllPages`, or it
+/// only sees what has been built so far.
 class Coverage extends CustomComponentBase {
   Coverage();
 

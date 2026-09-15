@@ -2,8 +2,7 @@
 
 part of 'core.dart';
 
-/// What a [Node.keep] declaration is filed under: its name, plus the id that
-/// separates one member of a collection from the next.
+/// A [Node.keep] declaration's key: its name, and its id within a collection.
 typedef _Key = (Symbol name, Object? id);
 
 /// One [Node.keep] value, the keys deciding whether it is kept, and how to end
@@ -22,7 +21,7 @@ final class _Kept {
   /// Whether a declaration carrying [other] may keep this value.
   bool matches(List<Object?> other) => _sameKeys(keys, other);
 
-  /// Ends this value, however it asked to be ended.
+  /// Detaches [value] if it is a [Node], then runs [dispose].
   void discard() {
     if (value case final Node stale) stale.detach();
     dispose?.call();
@@ -58,26 +57,20 @@ bool _sameKeys(List<Object?> a, List<Object?> b) {
   return true;
 }
 
-/// Re-derives a node's [Node.build] on every reload, and grants [keep].
+/// Re-runs a node's [Node.build] on every reload, and grants [keep].
 ///
-/// Without this, a node's body is built once and held: the children it added,
-/// its closures, and its subscriptions all survive a reload untouched, as
-/// though the whole pass sat inside one [keep] block. Nothing that node
-/// declares picks up an edit until the app restarts.
-///
-/// Mixing this in trades that for granularity. The body runs again on every
-/// reload, so edits land, and [keep] names the individual values that should
-/// carry across instead of the whole pass at once.
+/// Without this, a body is built once and never picks up an edit. With it,
+/// every reload re-runs the body, and [keep] names the values that carry
+/// across.
 mixin Live on Node {
   Map<_Key, _Kept>? _kept;
   Set<_Key>? _claimed;
 
   /// Keeps whatever [create] returns alive across [build] passes, under [name].
   ///
-  /// A pass re-runs from the top, so everything it builds is built again. That
-  /// is the point for closures and configuration, and fatal for anything with
-  /// state worth keeping. Naming it runs [create] exactly once and hands the
-  /// same value back on every later pass:
+  /// A pass re-runs from the top, which discards anything holding state.
+  /// Naming it runs [create] once and hands the same value back on every later
+  /// pass:
   ///
   /// ```dart
   /// final square = keep(#square, () {
@@ -90,9 +83,7 @@ mixin Live on Node {
   /// Editing `_COLOR` repaints the existing square, because that line re-runs.
   /// Editing the shape does nothing, because that closure does not.
   ///
-  /// **The name is the whole mechanism.** Nothing about it cares where the call
-  /// sits: insert lines above it, reorder it, wrap it in an `if`, move it into
-  /// a loop, and the value is still found. Rename it to force a rebuild.
+  /// Lookup is by name, not call position. Rename it to force a rebuild.
   ///
   /// Pass [keys] to tie the value to something instead, and it is rebuilt
   /// whenever they stop comparing equal:
@@ -147,13 +138,11 @@ mixin Live on Node {
     final shape = create.runtimeType;
     final previous = kept[key];
 
-    // A name that starts building something else is as finished as one the
-    // keys replaced, so editing the type in place rebuilds rather than throws.
+    // A changed shape or changed keys both retire the old value.
     if (previous != null && previous.shape == shape && previous.matches(keys)) {
       return previous.value as T;
     }
 
-    // Whatever the keys replaced is as finished as one a pass dropped.
     previous?.discard();
     final value = _construct(create);
 

@@ -342,7 +342,7 @@ void main() {
     Ignis.cache.add('sheet.png', await solidImage(4, 2, RED));
 
     expect((node.current.index, node.current.frame), (1, 1));
-    expect(node.sprite.entries[1].image, same(held), reason: 'it keeps its art');
+    expect(node.sprite.entries[1].image, same(held), reason: 'row 1 keeps its image');
     expect(node.sprite.entries[0].image, isNot(same(held)), reason: 'row 0 reloads');
   });
 

@@ -153,8 +153,7 @@ bool _sameBytes(Uint8List a, Uint8List b) {
   return true;
 }
 
-/// Lays [captures] side by side on a gutter-colored ground, one reviewable
-/// image for the whole timeline.
+/// Lays [captures] side by side on a gutter-colored ground.
 img.Image _stripOf(List<img.Image> captures) {
   final width = captures.first.width;
   final strip = img.Image(

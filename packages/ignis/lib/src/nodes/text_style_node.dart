@@ -24,8 +24,7 @@ class TextStyleNode extends Node {
     super.children,
   });
 
-  /// The style in effect at this node: the nearest ancestor's, extended by
-  /// this node's own.
+  /// The style in effect at this node.
   TextStyle get style => _resolved ??= _target.value?.style.merge(_style) ?? _style;
 
   set style(TextStyle style) {
