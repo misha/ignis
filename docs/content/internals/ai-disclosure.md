@@ -13,9 +13,9 @@ For Ignis, I have elected to use AI to help me write, maintain, and test the eng
 
 ## Authorship Tracking
 
-In the near future, I will target certain authorship thresholds, e.g. "the core library must be 100% human-owned". In order to enforce this, authorship is explicitly tracked using this [AI Disclosure](https://github.com/ggfevans/ai-disclosure) convention. It is not a well-known convention, but after some research, I judged it well-written and suitable for this project.
+In the near future, I will target certain authorship thresholds, e.g. "the core library must be 100% human-authored". In order to enforce this, authorship is explicitly tracked using this [AI Disclosure](https://github.com/ggfevans/ai-disclosure) convention. It is not a well-known convention, but after some research, I judged it well-written and suitable for this project.
 
-The convention is documented by `AI_DISCLOSURE.md` at the repository root, along with the default disclosure value. Disclosure is per-file, and any file can override the default it with an `SPDX-AI-Disclosure:` tag in a comment. The possible values for the tag are as follows:
+The convention is documented by `AI_DISCLOSURE.md` at the repository root. Disclosure is per-file, and any file can override the default it with an `SPDX-AI-Disclosure:` tag in a comment. The possible values for the tag are as follows:
 
 | Value          | Means                                                                       |
 |----------------|-----------------------------------------------------------------------------|
@@ -30,7 +30,7 @@ I explicitly forbid autonomous AI contributions, so there will never be an `auto
 
 ## Automated Reporting
 
-Whenever this documentation site is built, it also generates an AI disclosure report via `tool/disclosure.dart`. The tool allows me to assert that every file is accounted for; group files together to help understand progress towards goals; and exclude ineligible files from ownership concerns, such as assets, goldens, and source code managed by non-AI codegen tools.
+Whenever this documentation site is built, it also generates an AI disclosure report via `tool/disclosure.dart`. The tool allows me to assert that every file is accounted for; group files together to help understand progress towards goals; and exclude ineligible files from reporting concerns, such as assets, goldens, and source code managed by non-AI codegen tools.
 
 ### Disclosure
 
