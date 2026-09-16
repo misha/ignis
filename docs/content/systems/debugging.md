@@ -28,11 +28,28 @@ The demo on the right has a hidden input box. Hit `3` to find the input box, the
 | `input`     | `InputNode` hit areas.            |
 | `layout`    | `LayoutNode` boxes.               |
 
-One mode draws at a time. `spatial` shows the most, covering every node that has a shape, drawn as its bounding box. The other three narrow to a single category, and draw its true shape rather than the box around it, so reach for them when `spatial` gives you more than you want to look at, or when you need a circle drawn as a circle.
+One mode draws at a time. `spatial` shows the most, covering every node that has a shape, drawn as its bounding box. The other three narrow to a single category, and draw its true shape rather than the box around it, so reach for them when `spatial` starts getting too noisy.
 
-Every `SpatialNode` marks its origin with a small cross under all four modes, drawn in that mode's own color, so narrowing to one category still tells you where each node sits.
+In all four modes, every `SpatialNode` marks its origin with a small cross, drawn in that mode's own color, so narrowing to one category still tells you where each node is placed.
 
 You can also customize the `Paint` for each debug mode. For example, `Ignis.debug.inputPaint` specifies how `InputNode` will draw its debug visuals.
+
+## `debugDraw`
+
+Wireframes are drawn on *top* of a scene by executing an additional rendering pass. Use `debugDraw` to add your own debug visuals to this secondary rendering pass:
+
+```dart
+// Only called when a debug mode is enabled:
+debugDraw((canvas) {
+  canvas.drawRect(shape.rect(), Ignis.debug.paint);
+});
+```
+
+<Info>
+
+  `debugDraw` follows the same rules and restrictions as `draw`.
+
+</Info>
 
 ## `DebugControlsNode`
 
@@ -59,7 +76,7 @@ void build() {
 
 <Info>
 
-  If your game binds any of these keys, the default `priority` on `DebugControlsNode` will let your game respond instead.
+  If your game binds any of these keys, the low default `priority` on `DebugControlsNode` will let your game respond instead.
 
 </Info>
 

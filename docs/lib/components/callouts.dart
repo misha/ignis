@@ -95,10 +95,10 @@ class Callouts extends CustomComponentBase {
     css('.aside-warning', [
       css('&').styles(
         border: .only(
-          left: BorderSide(width: 3.px, color: FLARE),
+          left: BorderSide(width: 3.px, color: EMBER),
         ),
       ),
-      css('.aside-label').styles(color: FLARE),
+      css('.aside-label').styles(color: EMBER),
     ]),
     // Tighter inside a list entry, where it belongs to the entry rather than
     // the page.

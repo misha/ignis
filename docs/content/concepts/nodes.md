@@ -13,7 +13,7 @@ internals: [/internals/tree]
 
 Nodes are constructed in trees, inheriting the properties and transforms of their ancestors.
 
-A node declares its behavior and children in `build()`, which runs whenever the node enters a scene. Per-frame logic is registered with `tick`, and drawing with `draw`.
+A node declares its behavior and children in `build()`, which runs whenever the node enters a scene. Per-frame logic is registered with `tick`.
 
 <Demo name="spinner"/>
 
@@ -31,9 +31,29 @@ A node declares its behavior and children in `build()`, which runs whenever the 
 
 For a complete list of available nodes, see [Built-in Nodes](/systems/nodes).
 
-## Ticking and Drawing
+## Building
 
-`tick` registers a callback to run every frame with the elapsed seconds. Register as many as you like; each belongs to the build that declared it.
+Nodes install behavior in the `build` method, called whenever the node is mounted to a scene.
+
+Behavior is composed from a mere three primitives: `tick`, `draw`, and `trash`. Each primitive takes a callback and registers it for execution. This apparently innocuous pattern simultaneously enables [Locality of Behavior](/motivation#locality-of-behavior) and [Live Reload](/systems/live-reload).
+
+`tick` and `draw` callbacks are executed first-in-first-out, like a queue. `trash` callbacks are executed first-in-last-out, like a stack.
+
+<Info>
+
+  For `tick` and `draw`, a parent's callbacks run before their children's callbacks. For `draw`, this means parents always render beneath their children.
+
+</Info>
+
+<Warning>
+
+  `tick`, `draw`, and `trash` may **only** be called inside `build`.
+
+</Warning>
+
+### Ticking
+
+`tick` registers a callback to run every frame of the game loop. `dt` is the frame time in seconds. See [Time](/concepts/time).
 
 ```dart
 tick((dt) {
@@ -41,7 +61,9 @@ tick((dt) {
 });
 ```
 
-`draw` registers a callback to paint with, in the node's own coordinate space - the origin is wherever the node sits, anchor and all. Register as many as you like.
+### Drawing
+
+`draw` registers a callback to paint something to the canvas. `canvas` is always in the node's own coordinate space. The origin is wherever the node exists in the tree.
 
 ```dart
 draw((canvas) {
@@ -49,14 +71,15 @@ draw((canvas) {
 });
 ```
 
-Callbacks run before the node's children, so a parent paints behind them.
+There is an additional drawing primitive, `debugDraw`, available for visual debugging purposes. See [Debugging](/systems/debugging).
 
-`debugDraw` is the same thing for the debug overlay, and runs whenever the overlay is on. See [Debugging](/systems/debugging).
+### Trashing
+
+`trash` registers a callback to run when the node is unmounted or rebuilt. It is most commonly used to clean up resources created for that node.
 
 ```dart
-debugDraw((canvas) {
-  canvas.drawRect(shape.rect(), Ignis.debug.paint);
-});
+final painter = TextPainter(text: span);
+trash(painter.dispose);
 ```
 
 ## Enabled
@@ -91,18 +114,8 @@ However, `priority` only applies to siblings of the same node. A child is *alway
 
 `Node` comes with three signals, which makes them available on every node in the engine.
 
-- `onMount` and `onUnmount` are emitted when that instance enters and exits a scene.
-- `onSceneResize` is emitted once at mount and again whenever the scene changes size.
+- `onMount` is emitted when entering a scene.
+- `onUnmount` is emitted when exiting a scene.
+- `onSceneResize` is emitted when entering a scene, and again whenever the scene changes size.
 
-Other nodes expose signals based on their specific use case. For example, collider nodes offer `onCollisionStart` and `onCollisionEnd`, and a tap input node offers `onTap`.
-
-## Cleaning Up
-
-A signal watched inside `build()` is owned by the node and unsubscribed for you. See [Signals](/concepts/signals).
-
-Anything else that has to be released goes in the `trash`, which is emptied at unmount, most recently thrown in first.
-
-```dart
-final painter = TextPainter(text: span);
-trash(painter.dispose);
-```
+Signals watched inside `build` do not need to be unsubscribed from. See [Signals](/concepts/signals).

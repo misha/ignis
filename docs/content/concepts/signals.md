@@ -10,23 +10,25 @@ related: [/concepts/nodes, /systems/nodes]
 
 Nodes communicate time-sensitive events through `Signal`, a lightweight message emitter.
 
-By convention, signals are prefixed with `on` so subscriptions read naturally in a node's [`build()`](/concepts/nodes).
+By convention, signals are prefixed with `on` so subscriptions read naturally in a node's `build` method.
+
+Subscribing to a signal returns a `Cleanup` callback. It must be called to avoid leaking the subscription.
 
 ```dart
 // Declare a signal with 1 parameter. There are Signal0, Signal1, ...
 final onCollisionStart = Signal1<ColliderNode>();
 
-// Call a signal with a function argument to watch it.
-final cleanup = onCollisionStart((other) => print('Hit $other!'));
+// Call a signal with a callback argument to subscribe to it.
+final Cleanup cleanup = onCollisionStart((ColliderNode other) => print('Hit!'));
 
-// Emit sends a type-safe message to all watchers.
+// Emit sends a type-safe message to all subscribers.
 onCollisionStart.emit(someCollider);
 
-// Stop watching the signal.
+// Unsubscribe from the signal.
 cleanup();
 ```
 
-`Signal0` through `Signal3` carry zero to three arguments, each typed.
+Signals are implemented from `Signal0` up to `Signal3`. The number at the end indicates the number of arguments and type parameters, letting each signal retain type safety.
 
 <Lineage from="Godot">
 
@@ -34,25 +36,27 @@ cleanup();
 
 </Lineage>
 
-## Ownership
+## Inside `build`
 
-Watching a signal returns a `Cleanup`, and somebody has to own it. Inside a node's `build()`, that somebody is the node: the subscription is automatically torn down on the next rebuild or unmount:
+Remembering to unsubscribe is annoying and bug-prone. To help with this, when you subscribe to a signal inside a node's `build` method, **Ignis will automatically unsubscribe for you on unmount or rebuild**.
 
 ```dart
 @override
 void build() {
   super.build();
-  // No need to assign `cleanup` here!
-  // The node magically knows about this subscription.
+  // The node knows about this subscription and will automatically clean it up:
   onCollisionStart(/* some behavior */);
+  // It's almost as if `trash(cleanup)` is magically executed for you.
 }
 ```
 
-Watching signals in `build()` needs no bookkeeping at all, but everywhere else, it does. Hold on to the `Cleanup` and call it, or the signal keeps a reference to your watcher indefinitely.
+In practice, the *vast* majority of subscriptions occur inside `build`, resulting in minimal bookkeeping. Everywhere else: hold on to the `Cleanup` and call it, or the signal keeps a reference to your callback indefinitely.
 
-## Outside a Node
+## Outside `build`
 
-Although nodes are driven by signals, `Signal` is a standalone utility class and may be used anywhere. Notably, signals can easily be used to implement communication between your Flutter app and your Ignis game. Here's an example integration using [`flutter_hooks`](https://pub.dev/packages/flutter_hooks).
+Although nodes use signals, `Signal` itself is a standalone utility class and may be used anywhere.
+
+Notably, signals can easily be used to implement communication between your Flutter app and your Ignis game. Here's an example integration using [`flutter_hooks`](https://pub.dev/packages/flutter_hooks).
 
 ```dart
 /// Calls [handle] whenever [signal] is emitted.
