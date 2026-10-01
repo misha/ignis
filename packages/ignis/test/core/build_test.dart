@@ -201,6 +201,49 @@ void main() {
       expect(node.children.single, isNot(same(first)));
     });
 
+    test('a remount replaces the children the previous build declared', () {
+      final node = TestNode(builder: (n) => n.add(_A()));
+      final root = Node(children: [node]);
+      final scene = root.mount()..update(0);
+      final first = node.children.single;
+
+      root.remove(node);
+      scene.update(0);
+      root.add(node);
+      scene.update(0);
+
+      expect(first.isMounted, isFalse);
+      expect(node.children.single, isNot(same(first)));
+    });
+
+    test('a remount into a new scene replaces the children the previous build declared', () {
+      final node = TestNode(builder: (n) => n.add(_A()));
+      final scene = node.mount()..update(0);
+      final first = node.children.single;
+
+      scene.destroy();
+      node.mount().update(0);
+
+      expect(first.isMounted, isFalse);
+      expect(node.children.single, isNot(same(first)));
+    });
+
+    test('a remount leaves imperative additions alone', () {
+      final node = TestNode(builder: (n) => n.add(_A()));
+      final root = Node(children: [node]);
+      final scene = root.mount()..update(0);
+      final spawned = node.add(_B());
+      scene.update(0);
+
+      root.remove(node);
+      scene.update(0);
+      root.add(node);
+      scene.update(0);
+
+      expect(spawned.isMounted, isTrue, reason: 'no build declared it');
+      expect(node.children, hasLength(2));
+    });
+
     test('a child that stops being declared does not come back', () {
       var declared = true;
 

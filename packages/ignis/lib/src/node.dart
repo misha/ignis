@@ -581,8 +581,9 @@ class Node {
     _ticks = null;
     _draws = null;
     _debugDraws = null;
-    _declared = null;
     _scene = null;
+
+    _discardDeclared();
     _dropAncestry();
   }
 
