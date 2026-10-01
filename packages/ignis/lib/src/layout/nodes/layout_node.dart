@@ -53,7 +53,8 @@ abstract class LayoutNode extends SpatialNode {
   }) : flex = flex ?? .none,
        engine = engine ?? const StandardLayoutEngine();
 
-  /// The items this node lays out: its direct [SpatialNode] children.
+  /// The items this node lays out: its direct [SpatialNode] children, except
+  /// those inheriting this node's shape.
   ///
   /// Queried as [SpatialNode]: [LayoutItem] is also implemented by non-nodes.
   ///
@@ -61,7 +62,9 @@ abstract class LayoutNode extends SpatialNode {
   /// than replaced, so the reference is resolved once and kept; later adds and
   /// removals show up through it.
   @protected
-  late final Iterable<LayoutItem> layoutChildren = query<SpatialNode>();
+  late final Iterable<LayoutItem> layoutChildren =
+      query<SpatialNode>() //
+          .where((child) => !identical(child.size, _size));
 
   /// Whether no [LayoutNode] lays this node out, leaving it to lay itself out
   /// against the scene every frame.

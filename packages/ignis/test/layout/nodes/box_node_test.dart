@@ -72,4 +72,16 @@ void main() {
     final node = BoxNode();
     expect(() => node.shape = .square(10), throwsUnsupportedError);
   });
+
+  test('keeps its size across layouts when it pads a shapeless DragInput', () {
+    final child = ShapeNode(shape: Rectangle(.new(20, 10)));
+    final node = BoxNode(padding: .all(5), children: [child, DragInput()]);
+    node.mount();
+
+    node.layout(.unbounded());
+    expect((node.width, node.height), (30.0, 20.0));
+
+    node.layout(.unbounded());
+    expect((node.width, node.height), (30.0, 20.0));
+  });
 }
