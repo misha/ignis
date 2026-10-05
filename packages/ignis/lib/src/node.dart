@@ -867,6 +867,8 @@ class Node {
     }
   }
 
+  // #endregion
+
   // #region Hit Testing
 
   /// This node and its subtree, in postorder: every child before its parent,
