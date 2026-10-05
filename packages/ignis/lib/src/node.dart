@@ -27,7 +27,7 @@ typedef Cleanup = void Function();
 /// a live scene.
 ///
 /// [build] must be safe to run more than once. It tracks every node added and
-/// every signal subscribed inside it. When the nodes is unmounted, the nodes
+/// every signal subscribed inside it. When the node is unmounted, the nodes
 /// are removed and signals automatically unsubscribed. Other resources that
 /// need disposal should be put in the [trash] manually.
 ///
@@ -81,7 +81,7 @@ class Node {
   /// Creates a new node.
   ///
   /// [activity] sets whether the node ticks, renders, and accepts input.
-  /// Defaults to true.
+  /// Defaults to [Activity.all].
   ///
   /// [priority] controls this node's order when updating and rendering.
   /// Defaults to 0.
@@ -206,7 +206,7 @@ class Node {
 
   /// Declares this node's children and behavior.
   ///
-  /// Runs every time the nodes is mounted to a scene. Declared nodes, signals,
+  /// Runs every time the node is mounted to a scene. Declared nodes, signals,
   /// and other [trash]ed resources are cleaned up when unmounted.
   @mustCallSuper
   @visibleForOverriding
@@ -823,7 +823,7 @@ class Node {
     (_targets ??= []).add(target);
   }
 
-  /// Drops all registers targets for this node.
+  /// Drops all registered targets for this node.
   void _dropAncestry() {
     _dependencies = null;
     final targets = _targets;
@@ -834,7 +834,7 @@ class Node {
     }
   }
 
-  /// Drops all registers targets for this node and its entire subtree.
+  /// Drops all registered targets for this node and its entire subtree.
   void _forgetAncestry() {
     _dropAncestry();
     final children = _children?.nodes;

@@ -97,7 +97,7 @@ final class _Children {
   }
 }
 
-/// One type's view of an [_Children], holding every node of type [T].
+/// One type's view of a [_Children], holding every node of type [T].
 final class _Index<T extends Node> {
   final List<T> nodes = [];
 
