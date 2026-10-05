@@ -22,16 +22,14 @@ typedef Cleanup = void Function();
 ///
 /// **Building**
 ///
-/// Nodes should initialize children, connect signals, and add [tick] behavior
-/// in their [build] method. [build] is called every time a node is mounted to
-/// a live scene, or as the root of its own scene with [mount].
+/// Nodes should initialize children, connect signals, and compose behavior in
+/// their [build] method. [build] is called every time a node is mounted to
+/// a live scene.
 ///
 /// [build] must be safe to run more than once. It tracks every node added and
-/// every signal subscribed inside it. Other resources that need disposal should
-/// be put in the [trash].
-///
-/// For more information on how [build] enables granular live reload, see the
-/// [Live] mixin.
+/// every signal subscribed inside it. When the nodes is unmounted, the nodes
+/// are removed and signals automatically unsubscribed. Other resources that
+/// need disposal should be put in the [trash] manually.
 ///
 /// **Do not make [build] `async`.**
 ///
@@ -73,13 +71,12 @@ typedef Cleanup = void Function();
 ///
 /// **Reassembly**
 ///
-/// When code is reloaded, the scene walks the tree rebuilding every node.
-/// Unlike [update] and [render], the walk ignores the [enabled] flag, so even
-/// disabled nodes are rebuilt. It runs whenever the `SceneWidget` reassembles
-/// in the Flutter tree.
+/// By default nothing in particular happens when the code reassembles. You can
+/// change this by opting into the [Live] mixin.
 ///
-/// By default nothing rebuilds. A [Live] node rebuilds, keeping only what
-/// [Live.keep] names.
+/// With [Live], a reassembly completely rebuilds the node. Even disabled nodes
+/// are rebuilt. Anything kept with [Live.keep] is retained from the last build.
+/// See [Live] for more detailed usage examples.
 class Node {
   /// Creates a new node.
   ///
@@ -143,8 +140,6 @@ class Node {
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
-      // Recursive, and `render` is virtual: a disabled child is skipped here,
-      // before the call.
       if (child.activity.renders) {
         child.render(canvas);
       }
@@ -192,11 +187,11 @@ class Node {
   /// A node records the pass it last built in, so a subtree the walk mounts on
   /// its way down is not built a second time when the walk reaches it.
   static int _latestGeneration = 0;
+
+  /// The last built generation, which generally lags behind [_latestGeneration].
   int _builtGeneration = -1;
 
   /// The node whose [build] is currently running, or null between builds.
-  ///
-  /// How a [Signal] subscribed inside a [build] finds the node that owns it.
   static Node? _building;
 
   // The following fields belong to a single, logical run of `Node.build`. When
@@ -209,16 +204,13 @@ class Node {
 
   /// Declares this node's children and behavior.
   ///
-  /// Runs once on mount, and again whenever the code reassembles.
-  ///
-  /// `super.build()` is required, as skipping it drops whatever the superclass
-  /// declared.
+  /// Runs every time the nodes is mounted to a scene. Declared nodes, signals,
+  /// and other [trash]ed resources are cleaned up when unmounted.
   @mustCallSuper
   @visibleForOverriding
   void build() {}
 
-  /// Re-derives this node by running [build] again over the wreckage of the
-  /// last one.
+  /// Re-derives this node by running [build] again from scratch.
   ///
   /// Everything the previous [build] made is thrown away:
   ///
@@ -226,8 +218,7 @@ class Node {
   ///   - All [tick], [draw], and [debugDraw] closures are removed.
   ///   - The [trash] is processed and cleared.
   ///
-  /// A child the new body [add]s back is preserved, as is everything
-  /// [Live.keep] names.
+  /// When using [Live], anything named by [Live.keep] is specifically retained.
   void _rebuild() {
     _builtGeneration = _latestGeneration;
     _discardDeclared();
@@ -244,6 +235,8 @@ class Node {
 
     try {
       build();
+      // TODO: Not a fan of the control flow here. Might need a separate method
+      //  to specifically handle the two cases instead.
       if (this case final Live live) live._sweep();
       final scene = _scene;
 
@@ -259,6 +252,13 @@ class Node {
   /// The children this node's [build] added, in declaration order.
   ///
   /// Separate from [children], which also holds whatever was added imperatively.
+  ///
+  /// TODO: There's insufficient documentation regarding "declaration" of nodes.
+  ///   Honestly, it seems like a new core API, e.g. `declare(child)` causes the
+  ///   node to then get automatically removed on rebuild. Such an API would
+  ///   even allow (potentially) currently imperative-only additions to *also*
+  ///   clean up automatically (like you can remove missiles or whatever if you
+  ///   want to clean them up on a code change, when that unit changes).
   List<Node>? _declared;
 
   /// Detaches every child the last [build] declared.
@@ -334,8 +334,7 @@ class Node {
   /// trash(painter.dispose);
   /// ```
   ///
-  /// Emptied most-recent-first, so a teardown that emits must be trashed after
-  /// the handlers it will notify. Only valid inside this node's own [build].
+  /// Emptied first-in-last-out. Only valid inside this node's own [build].
   @nonVirtual
   void trash(Cleanup cleanup) {
     assert(
@@ -454,7 +453,7 @@ class Node {
     return _scene!;
   }
 
-  /// True while this node is part of a mounted tree.
+  /// True while this node is part of a scene.
   bool get isMounted => _scene != null;
 
   /// True while this node awaits removal at the next flush.
@@ -552,6 +551,7 @@ class Node {
     if (identical(_scene, scene)) return;
     _scene = scene;
     _rebuild();
+    // TODO: Should `onMount` come before or after target resolution?
     onMount.emit();
     final targets = _targets;
 
@@ -789,7 +789,7 @@ class Node {
     (_targets ??= []).add(target);
   }
 
-  /// Drops what this node resolved through its ancestors.
+  /// Drops all registers targets for this node.
   void _dropAncestry() {
     _dependencies = null;
     final targets = _targets;
@@ -800,7 +800,7 @@ class Node {
     }
   }
 
-  /// Drops the same across this subtree, for a node that just moved.
+  /// Drops all registers targets for this node and its entire subtree.
   void _forgetAncestry() {
     _dropAncestry();
     final children = _egg?.nodes;

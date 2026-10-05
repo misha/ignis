@@ -89,9 +89,6 @@ final class Egg {
 
   /// Inserts [node] into [nodes], keeping it ordered by [Node.priority]. Ties
   /// go after the nodes already there.
-  ///
-  /// Serves both an egg's own storage and each index's narrower list, which is
-  /// why every index holds nodes rather than some looser type.
   static void _insert(List<Node> nodes, Node node) {
     var low = 0;
     var high = nodes.length;
