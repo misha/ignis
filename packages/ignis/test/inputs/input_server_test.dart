@@ -456,7 +456,7 @@ void main() {
     final hover = HoverInput(shape: .square(20));
     final subtree = Node(children: [hover]);
     final scene = await pumpScene(tester, [subtree]);
-    scene.node.provide('cursor');
+    scene.root.provide('cursor');
     final exits = <HoverEvent>[];
     final reads = <String>[];
 
@@ -473,7 +473,7 @@ void main() {
     await tester.pump();
     expect(hover.isHovering, isTrue);
 
-    scene.node.remove(subtree);
+    scene.root.remove(subtree);
     await tester.pump();
 
     expect(exits, hasLength(1));
@@ -495,7 +495,7 @@ void main() {
     await gesture.moveTo(const Offset(5, 5));
     await tester.pump();
 
-    scene.node.remove(hover);
+    scene.root.remove(hover);
     await tester.pump();
     expect(exits, hasLength(1));
 
@@ -519,9 +519,9 @@ void main() {
 
     await gesture.moveTo(const Offset(5, 5));
     await tester.pump();
-    scene.node.remove(hover);
+    scene.root.remove(hover);
     await tester.pump();
-    scene.node.add(hover);
+    scene.root.add(hover);
     await tester.pump();
 
     await gesture.moveTo(const Offset(500, 500));
@@ -547,7 +547,7 @@ void main() {
     await tester.pump(settle);
     expect(drag.isDragging, isTrue);
 
-    scene.node.remove(drag);
+    scene.root.remove(drag);
     await tester.pump();
 
     expect(cancels, 1);
@@ -574,7 +574,7 @@ void main() {
     await gesture.moveBy(const Offset(50, 0));
     await tester.pump(settle);
 
-    scene.node.remove(drag);
+    scene.root.remove(drag);
     await tester.pump();
     await gesture.up();
     await tester.pump(settle);

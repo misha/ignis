@@ -175,13 +175,14 @@ class Node {
     }
   }
 
-  void _resize(Vector2 size) {
+  @internal
+  void resize(Vector2 size) {
     onSceneResize.emit(size);
     final children = _children?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
-      child._resize(size);
+      child.resize(size);
     }
   }
 
@@ -243,7 +244,7 @@ class Node {
       // TODO: Not a fan of the control flow here. Might need a separate method
       //  to specifically handle the two cases instead.
       if (this case final Live live) live._sweep();
-      final scene = _scene;
+      final scene = _state.scene;
 
       if (scene != null && scene.hasSize) {
         onSceneResize.emit(scene.size);
@@ -421,7 +422,10 @@ class Node {
     _priority = value;
     final parent = this.parent;
     if (parent == null) return;
-    parent._tree.reposition(this, parent);
+
+    _state.tree.schedule(() {
+      parent._reposition(this);
+    });
   }
 
   // #endregion
@@ -441,27 +445,20 @@ class Node {
 
   // #region Tree
 
-  Scene? _scene;
+  _State _state = const _Detached();
   Children? _children;
-  Node? _parent;
-  Node? _pendingParent;
-  bool _pendingRemoval = false;
 
   /// True while this node is part of a scene.
-  bool get isMounted => _scene != null;
+  bool get isMounted => _state.scene != null;
 
   /// True while this node awaits removal at the next flush.
-  bool get isRemoving => _pendingRemoval;
+  bool get isRemoving => _state is _Removing;
 
   /// This node's owning scene. Only valid while [isMounted].
   Scene get scene {
-    assert(_scene != null, 'This node is not mounted yet.');
-    return _scene!;
-  }
-
-  _Tree get _tree {
-    if (isMounted) return scene._tree;
-    return const _ImmediateTree();
+    final scene = _state.scene;
+    assert(scene != null, 'This node is not mounted yet.');
+    return scene!;
   }
 
   /// This node's direct children.
@@ -473,7 +470,7 @@ class Node {
   Iterable<T> query<T extends Node>() => (_children ??= Children()).query<T>();
 
   /// The parent that owns this node, or null when it is parentless.
-  Node? get parent => _parent;
+  Node? get parent => _state.parent;
 
   /// True if this node has a non-null parent.
   bool get hasParent => parent != null;
@@ -509,40 +506,89 @@ class Node {
 
     while (current != null) {
       if (identical(current, node)) return true;
-      current = current._parent ?? current._pendingParent;
+      final state = current._state;
+
+      switch (state) {
+        case _Arriving(:final target) || _Moving(:final target):
+          current = target;
+
+        default:
+          current = state.parent;
+      }
     }
 
     return false;
   }
 
   void _own(Node node) {
-    (_children ??= Children()).add(node);
-    node._parent = this;
-    node._pendingParent = null;
-    final scene = _scene;
-    if (scene == null) return;
+    switch (node._state) {
+      case _Moving(:final from, :final scene):
+        // A node moved here from another scene leaves that one first. One moved
+        // within this scene is already standing, and must not be rebuilt.
+        if (identical(_state.scene, scene)) {
+          from._release(node);
+          (_children ??= Children()).add(node);
+          node._state = _Mounted(this, scene);
+          return;
+        }
 
-    // A node moved here from another scene leaves that one first. One moved
-    // within this scene is already standing, and must not be rebuilt.
-    if (node.isMounted && !identical(node._scene, scene)) node._unmount();
-    node._mount(scene);
+        node.unmount();
+
+      case _Detached() || _Arriving():
+        break;
+
+      case final state:
+        throw StateError('Cannot own a node while $state.');
+    }
+
+    (_children ??= Children()).add(node);
+    node._state = _Attached(this);
+    final scene = _state.scene;
+    if (scene != null) node._mount(scene);
+  }
+
+  void _admit(Node node) {
+    node._state = _Arriving(this);
+
+    _state.tree.schedule(() {
+      _arrive(node);
+    });
+  }
+
+  void _move(Node node, Node from, Scene scene) {
+    node._state = _Moving(from, this, scene);
+
+    scene.tree.schedule(() {
+      _arrive(node);
+    });
+  }
+
+  void _arrive(Node node) {
+    switch (node._state) {
+      case _Arriving(:final target) || _Moving(:final target):
+        if (identical(target, this)) _own(node);
+
+      default:
+        break;
+    }
+  }
+
+  void _depart(Node node, Scene scene) {
+    node._state = _Removing(this, scene);
+
+    scene.tree.schedule(() {
+      final state = node._state;
+      if (state is! _Removing) return;
+      if (!identical(state.parent, this)) return;
+      node.unmount();
+    });
   }
 
   /// Unhooks [node] without unmounting it, so it can stand under a new parent.
   void _release(Node node) {
     _children?.remove(node);
-    node._parent = null;
-    node._pendingRemoval = false;
-  }
-
-  void _disown(Node node) {
-    try {
-      if (node.isMounted) node._unmount();
-    } finally {
-      _children?.remove(node);
-      node._parent = null;
-      node._pendingRemoval = false;
-    }
+    node._state = const _Detached();
+    node._forgetAncestry();
   }
 
   void _reposition(Node node) => _children?.reorder(node);
@@ -561,9 +607,12 @@ class Node {
   }
 
   void _enter(Scene scene, List<Node> entered) {
-    // Already mounted here: a subtree moved within the scene.
-    if (identical(_scene, scene)) return;
-    _scene = scene;
+    _state = switch (_state) {
+      _Detached() => _Root(scene),
+      _Attached(:final parent) => _Mounted(parent, scene),
+      final state => throw StateError('Cannot mount a node while $state.'),
+    };
+
     entered.add(this);
     final children = _children?.nodes;
     if (children == null) return;
@@ -585,7 +634,8 @@ class Node {
     }
   }
 
-  void _unmount() {
+  @internal
+  void unmount() {
     try {
       _stop();
     } finally {
@@ -596,10 +646,8 @@ class Node {
   void _stop() {
     final children = _children?.nodes;
 
-    if (children != null && children.isNotEmpty) {
-      // Snapshotted: a handler is free to move a child to another parent,
-      // which takes it out of the list being walked.
-      for (final child in children.toList(growable: false)) {
+    if (children != null) {
+      for (final child in children) {
         child._stop();
       }
     }
@@ -609,19 +657,35 @@ class Node {
   }
 
   void _exit() {
-    // TODO: Assert non-null _scene?
     final children = _children?.nodes;
 
     if (children != null) {
-      for (final child in children) {
-        child._exit();
+      for (var i = children.length - 1; i >= 0; i -= 1) {
+        children[i]._exit();
       }
+    }
+
+    switch (_state) {
+      case _Root():
+        _state = const _Detached();
+
+      case _Mounted(:final parent):
+        _state = _Attached(parent);
+
+      case _Removing(:final parent):
+        parent._release(this);
+
+      case _Moving(:final from, :final target):
+        from._release(this);
+        _state = _Arriving(target);
+
+      case final state:
+        throw StateError('Cannot unmount a node while $state.');
     }
 
     _ticks = null;
     _draws = null;
     _debugDraws = null;
-    _scene = null;
 
     _discardDeclared();
     _dropAncestry();
@@ -652,20 +716,46 @@ class Node {
       (_declared ??= []).add(node);
     }
 
-    if (owns(node)) {
-      node._pendingRemoval = false;
-      return node;
+    switch (node._state) {
+      case _Detached():
+        _admit(node);
+
+      case _Attached(:final parent):
+        if (identical(parent, this)) return node;
+        parent._release(node);
+        _admit(node);
+
+      case _Arriving(:final target):
+        if (identical(target, this)) return node;
+        node._state = const _Detached();
+        _admit(node);
+
+      case _Root():
+        throw StateError('Cannot add a scene root to another node.');
+
+      case _Mounted(:final parent, :final scene):
+        if (identical(parent, this)) return node;
+        _move(node, parent, scene);
+
+      case _Moving(:final from, :final target, :final scene):
+        if (identical(target, this)) return node;
+
+        if (identical(from, this)) {
+          node._state = _Mounted(this, scene);
+          return node;
+        }
+
+        _move(node, from, scene);
+
+      case _Removing(:final parent, :final scene):
+        if (identical(parent, this)) {
+          node._state = _Mounted(this, scene);
+          return node;
+        }
+
+        _move(node, parent, scene);
     }
 
-    // A move: release from the old parent without unmounting.
-    node._pendingParent = null;
-
-    if (node.hasParent) {
-      node._parent!._release(node);
-      node._forgetAncestry();
-    }
-
-    _tree.add(node, this);
     return node;
   }
 
@@ -688,29 +778,62 @@ class Node {
   /// A node still awaiting its own addition is cancelled outright, so an add
   /// and a remove queued in the same frame settle to nothing.
   bool remove(Node node) {
-    if (identical(node._pendingParent, this)) {
-      node._pendingParent = null; // Cancels the addition queued this frame.
-      return true;
+    switch (node._state) {
+      case _Attached(:final parent):
+        if (!identical(parent, this)) return false;
+        _release(node);
+        return true;
+
+      case _Mounted(:final parent, :final scene):
+        if (!identical(parent, this)) return false;
+        _depart(node, scene);
+        return true;
+
+      case _Arriving(:final target):
+        if (!identical(target, this)) return false;
+        node._state = const _Detached();
+        return true;
+
+      case _Moving(:final from, :final target, :final scene):
+        if (!identical(target, this)) return false;
+        from._depart(node, scene);
+        return true;
+
+      case _Detached() || _Root() || _Removing():
+        return false;
     }
-
-    if (node._pendingRemoval) return false; // Already being removed.
-    if (!owns(node)) return false;
-
-    _tree.remove(node, this);
-    return true;
   }
 
   /// Removes all children.
   void removeAll() {
-    _tree.removeAll(this);
+    final children = _children?.nodes;
+    if (children == null) return;
+
+    for (var i = children.length - 1; i >= 0; i -= 1) {
+      remove(children[i]);
+    }
   }
 
   /// Removes this node from its parent, or from the parent it is on its way to.
-  bool detach() => (parent ?? _pendingParent)?.remove(this) ?? false;
+  bool detach() {
+    switch (_state) {
+      case _Arriving(:final target) || _Moving(:final target):
+        return target.remove(this);
+
+      case final state:
+        return state.parent?.remove(this) ?? false;
+    }
+  }
 
   // #endregion
 
   // #region Reassembly
+
+  @internal
+  void reassemble() {
+    _latestGeneration += 1;
+    _reassemble();
+  }
 
   void _reassemble() {
     // Already built by the flush that mounted it, against this same code.
@@ -732,14 +855,14 @@ class Node {
 
     // Settle what the pass just declared, so the walk descends into the tree
     // as it now stands rather than as it stood before the rebuild.
-    if (isMounted) scene._tree.flush();
+    if (isMounted) scene.tree.flush();
     final children = _children?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children.toList(growable: false)) {
       // A rebuild above queued this one's removal, so it is already gone. Its
       // replacement built against the current code and is not in this list.
-      if (child._pendingRemoval) continue;
+      if (child.isRemoving) continue;
       child._reassemble();
     }
   }
@@ -868,4 +991,25 @@ class Node {
   }
 
   // #endregion
+}
+
+/// Mounts a node as the root of a new [Scene].
+extension Mount<T extends Node> on T {
+  /// Mounts this node as the root of a new [Scene] and returns it.
+  ///
+  /// If this is already the root of a scene, returns the same scene.
+  Scene<T> mount() {
+    switch (_state) {
+      case _Detached():
+        final scene = Scene<T>(root: this);
+        _mount(scene);
+        return scene;
+
+      case _Root(:final scene):
+        return scene as Scene<T>;
+
+      case final state:
+        throw StateError('Cannot mount a node while $state.');
+    }
+  }
 }

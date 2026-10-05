@@ -534,7 +534,7 @@ void main() {
       final sizes = <Vector2>[];
       final node = LiveTestNode(builder: (n) => n.onSceneResize(sizes.add));
 
-      scene.node.add(node);
+      scene.root.add(node);
       scene.update(0);
       expect(sizes, [Vector2(100, 80)]);
 
@@ -553,7 +553,7 @@ void main() {
       Vector2? heard;
       final node = LiveTestNode(builder: (node) => node.onSceneResize((size) => heard = size));
 
-      scene.node.add(node);
+      scene.root.add(node);
       scene.update(0);
 
       expect(heard, Vector2(100, 80));

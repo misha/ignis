@@ -5,6 +5,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/scene.dart';
 
 /// Something a device emits: a key going down, a button pressed, a stick moved.
 abstract interface class ControlEvent {
@@ -184,7 +185,7 @@ class Controls {
   _Control? _winner(List<_Control> matched) {
     if (matched.any((control) => control.node != null)) {
       for (final scene in Scene.live) {
-        for (final node in scene.node.traverse(prune: (node) => !node.activity.inputs)) {
+        for (final node in scene.root.traverse(prune: (node) => !node.activity.inputs)) {
           for (final control in matched.reversed) {
             if (identical(control.node, node)) {
               return control;

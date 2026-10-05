@@ -1,7 +1,7 @@
 // SPDX-AI-Disclosure: ai-assisted
 
 import 'package:flutter/widgets.dart';
-import 'package:ignis/src/core.dart';
+import 'package:ignis/src/scene.dart';
 import 'package:ignis/src/flutter/scene_render_box.dart';
 
 class SceneWidget extends StatefulWidget {

@@ -29,7 +29,7 @@ void main() {
 
   /// Puts [node] in the scene under test and builds it.
   void add(Node node) {
-    scene.node.add(node);
+    scene.root.add(node);
     scene.update(0);
   }
 

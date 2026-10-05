@@ -3,6 +3,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/scene.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/flutter/scene_render_box.dart';
 import 'package:ignis/src/inputs/nodes/hover_input.dart';
@@ -75,7 +76,7 @@ class InputServer {
   InputNode? _offer(Vector2 point, InputResult Function(InputNode) respond) {
     InputNode? result;
 
-    for (final node in scene.node.hitTest(point).whereType<InputNode>()) {
+    for (final node in scene.root.hitTest(point).whereType<InputNode>()) {
       final response = respond(node);
       if (response == .ignored) continue;
       result ??= node;

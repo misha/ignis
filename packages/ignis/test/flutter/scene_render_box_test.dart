@@ -30,9 +30,9 @@ void main() {
 
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 16));
-    expect(scene.node.updates, 2);
-    expect(scene.node.elapsed, closeTo(0.016 * 2, 0.0001));
-    expect(scene.node.renders, greaterThanOrEqualTo(2)); // Sometimes 3.
+    expect(scene.root.updates, 2);
+    expect(scene.root.elapsed, closeTo(0.016 * 2, 0.0001));
+    expect(scene.root.renders, greaterThanOrEqualTo(2)); // Sometimes 3.
   });
 
   testWidgets('stops driving updates while paused, and resumes afterwards', (tester) async {
@@ -46,19 +46,19 @@ void main() {
     );
 
     await tester.pump(const Duration(milliseconds: 16));
-    expect(scene.node.updates, 1);
+    expect(scene.root.updates, 1);
 
     scene.paused = true;
     await tester.pump(const Duration(milliseconds: 16));
-    final updatesAfterPause = scene.node.updates;
+    final updatesAfterPause = scene.root.updates;
 
     await tester.pump(const Duration(milliseconds: 16));
-    expect(scene.node.updates, updatesAfterPause); // No longer driven while paused.
+    expect(scene.root.updates, updatesAfterPause); // No longer driven while paused.
 
     scene.paused = false;
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 16));
-    expect(scene.node.updates, greaterThan(updatesAfterPause));
+    expect(scene.root.updates, greaterThan(updatesAfterPause));
   });
 
   testWidgets('starting paused does not start its render loop', (tester) async {
@@ -87,14 +87,14 @@ void main() {
     );
 
     await tester.pump(const Duration(milliseconds: 16));
-    expect(scene.node.isMounted, isTrue);
+    expect(scene.root.isMounted, isTrue);
 
     await tester.pumpWidget(const SizedBox.shrink());
-    final updates = scene.node.updates;
+    final updates = scene.root.updates;
     await tester.pump(const Duration(milliseconds: 16));
 
-    expect(scene.node.isMounted, isTrue, reason: 'destruction belongs to SceneWidget');
-    expect(scene.node.updates, updates);
+    expect(scene.root.isMounted, isTrue, reason: 'destruction belongs to SceneWidget');
+    expect(scene.root.updates, updates);
   });
 
   testWidgets('detaches the old scene and attaches the new one on swap', (tester) async {
@@ -103,14 +103,14 @@ void main() {
 
     await tester.pumpWidget(RenderSceneWidget(scene: sceneA, addRepaintBoundary: true));
     await tester.pump(const Duration(milliseconds: 16));
-    expect(sceneA.node.updates, 1);
+    expect(sceneA.root.updates, 1);
 
     await tester.pumpWidget(RenderSceneWidget(scene: sceneB, addRepaintBoundary: true));
     await tester.pump(const Duration(milliseconds: 16));
-    final sceneAUpdatesAfterSwap = sceneA.node.updates;
+    final sceneAUpdatesAfterSwap = sceneA.root.updates;
 
     await tester.pump(const Duration(milliseconds: 16));
-    expect(sceneA.node.updates, sceneAUpdatesAfterSwap); // No longer driven once detached.
-    expect(sceneB.node.updates, greaterThanOrEqualTo(1));
+    expect(sceneA.root.updates, sceneAUpdatesAfterSwap); // No longer driven once detached.
+    expect(sceneB.root.updates, greaterThanOrEqualTo(1));
   });
 }

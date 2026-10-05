@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/scene.dart';
 import 'package:ignis/src/flutter/render_loop.dart';
 import 'package:ignis/src/flutter/scene_widget.dart';
 import 'package:ignis/src/inputs/input_server.dart';

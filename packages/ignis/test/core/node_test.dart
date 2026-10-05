@@ -348,6 +348,25 @@ void main() {
     expect(b.isMounted, isFalse, reason: 'it never arrived');
   });
 
+  test('removing a moved child in the same frame unmounts it', () {
+    final a = Node();
+    final b = Node();
+    final c = Node();
+    a.add(b);
+    a.add(c);
+    final scene = a.mount()..update(0);
+    var unmounts = 0;
+    c.onUnmount(() => unmounts += 1);
+
+    b.add(c);
+    b.remove(c);
+    scene.update(0);
+
+    expect(c.hasParent, isFalse);
+    expect(c.isMounted, isFalse);
+    expect(unmounts, 1);
+  });
+
   test('propagates destroy listener failures while still detaching the node', () {
     final a = Node();
     final b = Node();

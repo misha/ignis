@@ -1,20 +1,28 @@
 // SPDX-AI-Disclosure: none
 
-part of 'core.dart';
+import 'dart:ui' hide Scene;
+
+import 'package:flutter/foundation.dart';
+import 'package:ignis/src/core.dart';
+import 'package:ignis/src/math.dart';
+import 'package:ignis/src/shape.dart';
+import 'package:ignis/src/tree.dart';
 
 /// A controller for a mounted [Node] tree.
 ///
 /// TODO: Document further.
 class Scene<T extends Node> {
   /// This scene's root. Cannot be modified.
-  final T node;
+  final T root;
 
   static final List<Scene> _live = [];
 
   /// Every scene currently mounted, the most recent first.
   static Iterable<Scene> get live => _live.reversed;
 
-  final _tree = _QueuedTree();
+  @internal
+  final tree = QueuedTree();
+
   bool _mounted = true;
   bool _sized = false;
   bool _reassembling = false;
@@ -63,27 +71,26 @@ class Scene<T extends Node> {
   /// Emitted whenever [paused] changes.
   final onPause = Signal1<bool>();
 
-  Scene._({
-    required this.node,
+  @internal
+  Scene({
+    required this.root,
   }) {
     _live.add(this);
-    node._mount(this);
   }
 
   void update(double dt) {
     assert(_mounted, 'Cannot update a destroyed scene.');
-    _tree.flush();
-    node.update(dt);
+    tree.flush();
+    root.update(dt);
   }
 
   void reassemble() {
     assert(_mounted, 'Cannot reassemble a destroyed scene.');
     if (_reassembling) return;
     _reassembling = true;
-    Node._latestGeneration += 1;
 
     try {
-      node._reassemble();
+      root.reassemble();
     } finally {
       _reassembling = false;
     }
@@ -92,9 +99,9 @@ class Scene<T extends Node> {
   /// Renders this scene to [canvas].
   void render(Canvas canvas) {
     assert(_mounted, 'Cannot render a destroyed scene.');
-    if (!node.activity.renders) return;
-    node.render(canvas);
-    if (Debug.instance.enabled) node.debugRender(canvas);
+    if (!root.activity.renders) return;
+    root.render(canvas);
+    if (Debug.instance.enabled) root.debugRender(canvas);
   }
 
   void resize(double width, double height) {
@@ -109,7 +116,7 @@ class Scene<T extends Node> {
     _size = .new(width, height);
     _shape = Rectangle(_size);
     _sized = true;
-    node._resize(size);
+    root.resize(size);
   }
 
   /// Unmounts the tree, permanently. Idempotent; every other way of driving
@@ -118,21 +125,6 @@ class Scene<T extends Node> {
     if (!_mounted) return;
     _mounted = false;
     _live.remove(this);
-    node._unmount();
-  }
-}
-
-/// Mounts a node as the root of a new [Scene].
-extension Mount<T extends Node> on T {
-  /// Mounts this node as the root of a new [Scene] and returns it.
-  ///
-  /// A no-op that returns the existing [Scene] if already mounted.
-  Scene<T> mount() {
-    if (isMounted) {
-      // TODO: Should this throw a StateError?
-      return scene as Scene<T>;
-    }
-
-    return Scene._(node: this);
+    root.unmount();
   }
 }

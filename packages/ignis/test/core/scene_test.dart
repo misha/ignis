@@ -46,7 +46,7 @@ void main() {
     Vector2? heard;
     node.onSceneResize((size) => heard = size);
 
-    scene.node.add(node);
+    scene.root.add(node);
     scene.update(0);
 
     expect(heard, Vector2(100, 80));
@@ -66,7 +66,7 @@ void main() {
     final node = Node();
     final scene = node.mount();
 
-    expect(scene.node.parent, isNull);
+    expect(scene.root.parent, isNull);
   });
 
   test('reassembles the whole tree', () {

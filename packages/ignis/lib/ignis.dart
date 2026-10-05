@@ -18,6 +18,7 @@ export 'src/nodes.dart';
 export 'src/owners.dart';
 export 'src/palette.dart';
 export 'src/routing.dart';
+export 'src/scene.dart';
 export 'src/shape.dart';
 export 'src/sprite.dart';
 export 'src/sprites.dart';
