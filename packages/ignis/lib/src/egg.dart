@@ -111,10 +111,6 @@ final class Egg {
 }
 
 /// One type's view of an [Egg], holding every node of type [T].
-///
-/// [T] is a real type parameter rather than a [Type] value so the membership
-/// test stays a plain `is` check the compiler can specialize, and so reads
-/// hand back a typed list without wrapping it.
 final class _Index<T extends Node> {
   final List<T> nodes = [];
 

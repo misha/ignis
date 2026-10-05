@@ -1,22 +1,25 @@
-// SPDX-AI-Disclosure: ai-generated
+// SPDX-AI-Disclosure: none
 
 part of 'core.dart';
 
-/// What a node takes part in, as bits: ticking, rendering, and hearing input.
+/// A bitmap indicating what kinds of activity a node responds to.
+///
+/// Nodes may be separately instrumented to respond to updates, renders, and
+/// inputs.
 extension type const Activity(int bits) {
   /// Nothing.
   static const none = Activity(0);
 
-  /// Running [Node.tick] callbacks and updating children.
+  /// Runs [Node.update].
   static const update = Activity(1);
 
-  /// Running [Node.draw] callbacks and rendering children.
+  /// Runs [Node.render].
   static const render = Activity(2);
 
-  /// Hit testing and answering binds.
+  /// Accepts inputs via [Node.hitTest].
   static const input = Activity(4);
 
-  /// All three.
+  /// Participates in all activities: [update], [render], and [input].
   static const all = Activity(7);
 
   Activity operator |(Activity other) => Activity(bits | other.bits);

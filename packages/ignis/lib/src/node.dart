@@ -1,4 +1,4 @@
-// SPDX-AI-Disclosure: ai-assisted
+// SPDX-AI-Disclosure: none
 
 part of 'core.dart';
 
@@ -27,12 +27,11 @@ typedef Cleanup = void Function();
 /// a live scene, or as the root of its own scene with [mount].
 ///
 /// [build] must be safe to run more than once. It tracks every node added and
-/// every signal subscribed inside it. Resources needing disposal go in the
-/// [trash].
+/// every signal subscribed inside it. Other resources that need disposal should
+/// be put in the [trash].
 ///
-/// Lastly, a reload reboots the internals of every node: added children are
-/// removed, signals unsubscribed, the [trash] processed, and [build] run
-/// again. What survives is the node itself, and whatever it named with [Live.keep].
+/// For more information on how [build] enables granular live reload, see the
+/// [Live] mixin.
 ///
 /// **Do not make [build] `async`.**
 ///
@@ -372,21 +371,25 @@ class Node {
 
   // #region Activity
 
-  /// What this node takes part in: ticking, rendering, and hearing input.
+  /// A bitmap indicating what kinds of activity this node responds to.
+  ///
   /// Defaults to [Activity.all].
   Activity activity;
 
-  /// Whether this node ticks, renders, and hears input, all three.
+  /// Whether this node participates in all activity.
+  ///
+  /// If even one bit of [activity] is disabled, this is false.
   bool get enabled => activity == .all;
 
-  /// Enables this node, so it resumes updating, rendering and answering.
+  /// Enables this node.
   @mustCallSuper
   void enable() => activity = .all;
 
-  /// Disables this node, so it stops updating, rendering and answering.
+  /// Disables this node.
   @mustCallSuper
   void disable() => activity = .none;
 
+  /// Calls [enable] or [disable] depending on [value].
   @nonVirtual
   set enabled(bool value) {
     if (value) {
@@ -402,9 +405,14 @@ class Node {
 
   int _priority;
 
-  /// This node's order in updating and rendering in its parent. Defaults to 0.
+  /// This node's order in updating and rendering in its parent.
+  ///
+  /// The default priority is 0. Children that share a priority are kept in
+  /// insertion order, like a queue. Changing the priority of a child maintains
+  /// this internal ordering with a stable sorting algorithm.
   int get priority => _priority;
 
+  @nonVirtual
   set priority(int value) {
     _priority = value;
     final target = parent;
@@ -457,8 +465,7 @@ class Node {
 
   /// This node's direct children of type [T], in [priority] order.
   ///
-  /// Cached and kept live: the first call for a [T] costs one pass over
-  /// [children], later calls nothing. The view is read-only.
+  /// The returned object is a live, read-only view of all [T] children.
   Iterable<T> query<T extends Node>() => (_egg ??= Egg()).query<T>();
 
   /// The parent that owns this node, or null when it is parentless.
@@ -594,12 +601,11 @@ class Node {
   /// Adds [node] to this node. The node is returned.
   ///
   /// Nodes cannot be added to themselves or their descendants. Adding a child
-  /// to its current parent is a no-op, and cancels its pending removal, so a
-  /// child held on the instance survives the reload that discarded it.
+  /// to its current parent is a no-op. If the child was pending removal, this
+  /// operation cancels that removal.
   ///
-  /// Called from this node's own [build], the child is additionally recorded
-  /// as declared, so the next rebuild discards it before running the body
-  /// again.
+  /// Called from this node's own [build], the child is automatically recorded
+  /// as declared, so the next [build] discards it before running again.
   T add<T extends Node>(T node) {
     if (identical(this, node)) {
       throw StateError('Cannot add a node to itself.');
@@ -746,8 +752,10 @@ class Node {
   }
 
   /// Finds every node in this subtree whose hit area contains [point], per
-  /// [containsPoint], topmost first. A node hearing no input hides its whole
-  /// subtree.
+  /// [containsPoint], topmost first.
+  ///
+  /// When [Activity.inputs] is disabled, this node and its entire subtree are
+  /// excluded from hit testing.
   ///
   /// Unlike [add], [remove], and [priority], [enabled] takes effect
   /// immediately even on a mounted node. A handler invoked mid-walk that
@@ -756,7 +764,7 @@ class Node {
   /// TODO: Should it really do that? Is enabled actually a tree operation?
   @nonVirtual
   Iterable<Node> hitTest(Vector2 point) =>
-      // TODO: Controls prunes on this same predicate, so "input does not reach
+      // TODO: Controls prune on this same predicate, so "input does not reach
       //  here" is now stated at two call sites rather than once. Decide where
       //  input reachability actually belongs; it is not the traversal's business.
       traverse(prune: ((node) => !node.activity.inputs)) //
