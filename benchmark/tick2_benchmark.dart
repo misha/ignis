@@ -17,7 +17,7 @@ class Tick2Benchmark extends AsyncBenchmarkBase {
   final int ticks;
   final int children;
 
-  late Scene<Node> scene;
+  late Scene scene;
 
   Tick2Benchmark({
     this.nodes = 1000,

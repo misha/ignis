@@ -59,7 +59,7 @@ class InputServer {
       cleanup: target.onUnmount(() => _exit(pointer, hover)),
     );
 
-    if (target is HoverInput) target.enter(hover);
+    if (target is HoverInput) target.reportEnter(hover);
   }
 
   /// Drops [pointer]'s hover, emitting `onHoverExit`.
@@ -68,7 +68,7 @@ class InputServer {
     if (hovered == null) return;
     hovered.cleanup();
     final node = hovered.node;
-    if (node is HoverInput && node.isMounted) node.exit(event);
+    if (node is HoverInput && node.isMounted) node.reportExit(event);
   }
 
   /// Walks [point]'s hit-test chain, offering each [InputNode] to [respond]

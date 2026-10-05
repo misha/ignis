@@ -25,7 +25,7 @@ void main() {
       ),
     );
 
-    expect(scene.root.mounts, 1);
+    expect((scene.root as TestNode).mounts, 1);
     expect(tester.widget<RenderSceneWidget>(find.byType(RenderSceneWidget)).scene, same(scene));
   });
 
@@ -73,7 +73,7 @@ void main() {
     );
 
     expect(scene.root.isMounted, isTrue);
-    expect(scene.root.unmounts, 0);
+    expect((scene.root as TestNode).unmounts, 0);
   });
 
   testWidgets('survives a transiently empty layout', (tester) async {
@@ -101,7 +101,7 @@ void main() {
     );
 
     expect(scene.root.isMounted, isTrue);
-    expect(scene.root.unmounts, 0);
+    expect((scene.root as TestNode).unmounts, 0);
   });
 
   testWidgets('primes the scene exactly once, not on every layout', (tester) async {
@@ -110,13 +110,13 @@ void main() {
 
     final scene = TestNode().mount()..pause();
     await tester.pumpWidget(SceneWidget(scene));
-    expect(scene.root.updates, 1);
+    expect((scene.root as TestNode).updates, 1);
 
     await tester.pumpWidget(SceneWidget(scene));
     await tester.binding.setSurfaceSize(const Size(200, 80));
     await tester.pump();
 
-    expect(scene.root.updates, 1);
+    expect((scene.root as TestNode).updates, 1);
   });
 
   testWidgets('auto-pauses while its tickers are disabled', (tester) async {
@@ -134,20 +134,20 @@ void main() {
 
     await tester.pumpWidget(harness(enabled: true));
     await tester.pump(const Duration(milliseconds: 16));
-    expect(scene.root.updates, greaterThanOrEqualTo(1));
+    expect((scene.root as TestNode).updates, greaterThanOrEqualTo(1));
 
     await tester.pumpWidget(harness(enabled: false));
     await tester.pump(const Duration(milliseconds: 16));
-    final coveredUpdates = scene.root.updates;
+    final coveredUpdates = (scene.root as TestNode).updates;
 
     await tester.pump(const Duration(milliseconds: 16));
-    expect(scene.root.updates, coveredUpdates);
+    expect((scene.root as TestNode).updates, coveredUpdates);
 
     await tester.pumpWidget(harness(enabled: true));
     await tester.pump(const Duration(milliseconds: 16));
     await tester.pump(const Duration(milliseconds: 16));
 
-    expect(scene.root.updates, greaterThan(coveredUpdates));
+    expect((scene.root as TestNode).updates, greaterThan(coveredUpdates));
   });
 
   testWidgets('destroys the scene when swapped for a different one', (tester) async {
@@ -179,7 +179,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
 
     expect(scene.root.isMounted, isFalse);
-    expect(scene.root.unmounts, 1);
+    expect((scene.root as TestNode).unmounts, 1);
   });
 
   testWidgets('resizes the node and performs an initial update', (tester) async {
@@ -190,9 +190,9 @@ void main() {
     await tester.pumpWidget(SceneWidget(scene));
 
     expect(scene.size, Vector2(100, 80));
-    expect(scene.root.mounts, 1);
-    expect(scene.root.updates, 1);
-    expect(scene.root.elapsed, 0);
+    expect((scene.root as TestNode).mounts, 1);
+    expect((scene.root as TestNode).updates, 1);
+    expect((scene.root as TestNode).elapsed, 0);
   });
 
   testWidgets('reassembles the scene on hot reload', (tester) async {
@@ -209,7 +209,7 @@ void main() {
     unawaited(tester.binding.reassembleApplication());
     await tester.pump();
 
-    expect(scene.root.builds, 2);
+    expect((scene.root as LiveTestNode).builds, 2);
   });
 
   testWidgets('paints against the given background color', (tester) async {

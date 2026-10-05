@@ -19,7 +19,7 @@ final class _Mine extends Node {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late Scene<Node> scene;
+  late Scene scene;
 
   setUp(() {
     Ignis.controls = Controls();

@@ -21,7 +21,7 @@ class LifecycleEventsBenchmark extends AsyncBenchmarkBase {
   final Random random;
 
   late Node root;
-  late Scene<Node> scene;
+  late Scene scene;
   late List<Node> leaves;
 
   LifecycleEventsBenchmark({

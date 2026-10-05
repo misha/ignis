@@ -5,23 +5,24 @@ import 'dart:ui' hide Scene;
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/scheduler.dart';
 import 'package:ignis/src/shape.dart';
-import 'package:ignis/src/tree.dart';
 
 /// A controller for a mounted [Node] tree.
 ///
 /// TODO: Document further.
-class Scene<T extends Node> {
+class Scene {
   /// This scene's root. Cannot be modified.
-  final T root;
+  final Node root;
 
   static final List<Scene> _live = [];
 
   /// Every scene currently mounted, the most recent first.
+  @internal
   static Iterable<Scene> get live => _live.reversed;
 
   @internal
-  final tree = QueuedTree();
+  final scheduler = QueuedScheduler();
 
   bool _mounted = true;
   bool _sized = false;
@@ -80,7 +81,7 @@ class Scene<T extends Node> {
 
   void update(double dt) {
     assert(_mounted, 'Cannot update a destroyed scene.');
-    tree.flush();
+    scheduler.flush();
     root.update(dt);
   }
 

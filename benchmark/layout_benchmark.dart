@@ -23,7 +23,7 @@ class LayoutBenchmark extends AsyncBenchmarkBase {
   final int ticks;
   final Random random;
 
-  late Scene<Node> scene;
+  late Scene scene;
 
   LayoutBenchmark({
     this.seed = 12345,

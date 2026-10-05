@@ -16,7 +16,7 @@ class UpdateBenchmark extends AsyncBenchmarkBase {
   final int ticks;
   final int children;
 
-  late Scene<Node> scene;
+  late Scene scene;
 
   UpdateBenchmark({
     this.nodes = 1000,

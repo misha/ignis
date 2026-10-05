@@ -7,15 +7,17 @@ import 'package:flutter/foundation.dart';
 typedef Change = void Function();
 
 @internal
-sealed class Tree {
-  const Tree();
+sealed class Scheduler {
+  const Scheduler();
 
   void schedule(Change change);
+
+  void flush() {}
 }
 
 @internal
-final class ImmediateTree extends Tree {
-  const ImmediateTree();
+final class ImmediateScheduler extends Scheduler {
+  const ImmediateScheduler();
 
   @override
   void schedule(Change change) {
@@ -24,7 +26,7 @@ final class ImmediateTree extends Tree {
 }
 
 @internal
-final class QueuedTree extends Tree {
+final class QueuedScheduler extends Scheduler {
   final _changes = Queue<Change>();
 
   @override
@@ -32,7 +34,7 @@ final class QueuedTree extends Tree {
     _changes.addLast(change);
   }
 
-  /// Applies every pending structural change, in enqueued order.
+  @override
   void flush() {
     while (_changes.isNotEmpty) {
       _changes.removeFirst()();

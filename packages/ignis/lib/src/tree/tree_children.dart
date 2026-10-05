@@ -1,9 +1,8 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:flutter/foundation.dart';
-import 'package:ignis/src/core.dart';
+part of 'tree.dart';
 
-/// A [Node]'s children: a flat list kept in [Node.priority] order, alongside
+/// A node's children: a flat list kept in [Tree.priority] order, alongside
 /// an index per queried type.
 ///
 /// Each index built by [query] is maintained as nodes come and go, rather than
@@ -11,44 +10,39 @@ import 'package:ignis/src/core.dart';
 /// recomputed. That is only affordable because every mutation runs through
 /// this one type.
 @internal
-final class Children {
-  List<Node>? _nodes;
-  Map<Type, _Index<Node>>? _indexes;
+final class TreeChildren<T extends Tree<T>> {
+  List<T>? _nodes;
+  Map<Type, _Index<Object>>? _indexes;
 
-  /// These nodes, in [Node.priority] order.
-  ///
-  /// Deliberately a [List] rather than an [Iterable]: [Node.update] walks it
-  /// for every node of every frame, and a concrete list iterates far faster
-  /// than a polymorphic one. Hand it out as an [Iterable] to anyone who
-  /// shouldn't be writing to it.
-  List<Node> get nodes => _nodes ?? const <Node>[];
+  /// These nodes, in [Tree.priority] order.
+  List<T> get nodes => _nodes ?? const [];
 
-  /// The nodes of type [T], in [Node.priority] order.
+  /// The nodes of type [T], in [Tree.priority] order.
   ///
   /// Kept up to date as nodes come and go, so repeated calls cost nothing and
   /// allocate nothing. The first call for a given [T] pays one pass to build
   /// its index.
-  Iterable<T> query<T extends Node>() {
+  Iterable<S> query<S extends T>() {
     final indexes = _indexes ??= {};
-    final existing = indexes[T];
+    final existing = indexes[S];
 
     if (existing != null) {
-      return (existing as _Index<T>).nodes;
+      return (existing as _Index<S>).nodes;
     }
 
-    final index = _Index<T>();
+    final index = _Index<S>();
 
     for (final node in nodes) {
-      if (node is T) index.nodes.add(node);
+      if (node is S) index.nodes.add(node);
     }
 
-    indexes[T] = index;
+    indexes[S] = index;
     return index.nodes;
   }
 
-  /// Adds [node] at its [Node.priority] position, and to every index that
+  /// Adds [node] at its [Tree.priority] position, and to every index that
   /// accepts it.
-  void add(Node node) {
+  void add(T node) {
     _insert(_nodes ??= [], node);
 
     final indexes = _indexes;
@@ -56,14 +50,14 @@ final class Children {
 
     for (final index in indexes.values) {
       if (index.accepts(node)) {
-        _insert(index.nodes, node);
+        _insert(index.nodes as List<T>, node);
       }
     }
   }
 
   /// Removes [node] from this egg and every index holding it, reporting
   /// whether it was here at all.
-  bool remove(Node node) {
+  bool remove(T node) {
     if (_nodes?.remove(node) != true) return false;
 
     final indexes = _indexes;
@@ -78,15 +72,15 @@ final class Children {
     return true;
   }
 
-  /// Moves [node] to its current [Node.priority] position, here and in every
+  /// Moves [node] to its current [Tree.priority] position, here and in every
   /// index holding it.
-  void reorder(Node node) {
+  void reorder(T node) {
     if (remove(node)) add(node);
   }
 
-  /// Inserts [node] into [nodes], keeping it ordered by [Node.priority]. Ties
+  /// Inserts [node] into [nodes], keeping it ordered by [Tree.priority]. Ties
   /// go after the nodes already there.
-  static void _insert(List<Node> nodes, Node node) {
+  void _insert(List<T> nodes, T node) {
     var low = 0;
     var high = nodes.length;
 
@@ -104,10 +98,10 @@ final class Children {
   }
 }
 
-/// One type's view of an [Children], holding every node of type [T].
-final class _Index<T extends Node> {
+/// One type's view of an [TreeChildren], holding every node of type [T].
+final class _Index<T extends Object> {
   final List<T> nodes = [];
 
   /// Whether [node] belongs in [nodes].
-  bool accepts(Node node) => node is T;
+  bool accepts(Object node) => node is T;
 }

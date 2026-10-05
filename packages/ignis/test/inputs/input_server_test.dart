@@ -5,7 +5,7 @@ import 'package:ignis/ignis.dart';
 import 'package:ignis/src/flutter/scene_render_box.dart';
 
 void main() {
-  Future<Scene<Node>> pumpScene(WidgetTester tester, Iterable<Node> children) async {
+  Future<Scene> pumpScene(WidgetTester tester, Iterable<Node> children) async {
     final scene = Node(children: children).mount();
     scene.resize(800, 600);
     await tester.pumpWidget(RenderSceneWidget(scene: scene, addRepaintBoundary: true));

@@ -53,7 +53,7 @@ class DemoScene extends StatefulWidget {
 }
 
 class _DemoSceneState extends State<DemoScene> {
-  Scene<Node>? scene;
+  Scene? scene;
 
   @override
   void initState() {

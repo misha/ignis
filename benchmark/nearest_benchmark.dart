@@ -16,7 +16,7 @@ class NearestBenchmark extends AsyncBenchmarkBase {
   final int ticks;
   final double bounds;
 
-  late Scene<Node> scene;
+  late Scene scene;
 
   final List<_SeekerNode> _seekers = [];
 

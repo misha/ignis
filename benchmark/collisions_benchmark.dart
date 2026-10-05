@@ -27,7 +27,7 @@ class CollisionsBenchmark extends AsyncBenchmarkBase {
   final double maxSize;
   final double speed;
 
-  late Scene<CollisionArenaNode> scene;
+  late Scene scene;
 
   CollisionsBenchmark({
     this.seed = 12345,

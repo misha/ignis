@@ -32,13 +32,13 @@ class HoverInput extends InputNode {
   });
 
   @internal
-  void enter(HoverEvent event) {
+  void reportEnter(HoverEvent event) {
     _hovering = true;
     onHoverEnter.emit(event);
   }
 
   @internal
-  void exit(HoverEvent event) {
+  void reportExit(HoverEvent event) {
     _hovering = false;
     onHoverExit.emit(event);
   }
