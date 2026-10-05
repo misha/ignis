@@ -14,7 +14,7 @@ class Scene<T extends Node> {
   /// Every scene currently mounted, the most recent first.
   static Iterable<Scene> get live => _live.reversed;
 
-  final _tree = _Tree();
+  final _tree = _QueuedTree();
   bool _mounted = true;
   bool _sized = false;
   bool _reassembling = false;

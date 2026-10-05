@@ -4,7 +4,7 @@ import 'dart:collection';
 import 'dart:ui' hide Scene;
 
 import 'package:flutter/foundation.dart';
-import 'package:ignis/src/egg.dart';
+import 'package:ignis/src/children.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/shape.dart';

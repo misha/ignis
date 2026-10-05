@@ -2,6 +2,44 @@
 
 part of 'core.dart';
 
+sealed class _Tree {
+  const _Tree();
+
+  void add(Node node, Node parent);
+
+  void remove(Node node, Node parent);
+
+  void removeAll(Node parent);
+
+  void reposition(Node node, Node parent);
+}
+
+final class _ImmediateTree extends _Tree {
+  const _ImmediateTree();
+
+  @override
+  void add(Node node, Node parent) {
+    parent._own(node);
+  }
+
+  @override
+  void remove(Node node, Node parent) {
+    parent._disown(node);
+  }
+
+  @override
+  void removeAll(Node parent) {
+    for (final child in parent.children.toList(growable: false)) {
+      parent._disown(child);
+    }
+  }
+
+  @override
+  void reposition(Node node, Node parent) {
+    parent._reposition(node);
+  }
+}
+
 enum _OperationKind {
   add,
   remove,
@@ -21,7 +59,7 @@ final class _Operation {
   }
 }
 
-final class _Tree {
+final class _QueuedTree extends _Tree {
   final _queue = Queue<_Operation>();
   final _pool = <_Operation>[];
 
@@ -30,26 +68,46 @@ final class _Tree {
     return _Operation();
   }
 
-  void _add(Node target, Node parent) => _queue.addLast(
-    _obtain()
-      ..kind = .add
-      ..target = target
-      ..parent = parent,
-  );
+  @override
+  void add(Node node, Node parent) {
+    node._pendingParent = parent;
 
-  void _remove(Node target, Node parent) => _queue.addLast(
-    _obtain()
-      ..kind = .remove
-      ..target = target
-      ..parent = parent,
-  );
+    _queue.addLast(
+      _obtain()
+        ..kind = .add
+        ..target = node
+        ..parent = parent,
+    );
+  }
 
-  void _reposition(Node target, Node parent) => _queue.addLast(
-    _obtain()
-      ..kind = .reposition
-      ..target = target
-      ..parent = parent,
-  );
+  @override
+  void remove(Node node, Node parent) {
+    node._pendingRemoval = true;
+
+    _queue.addLast(
+      _obtain()
+        ..kind = .remove
+        ..target = node
+        ..parent = parent,
+    );
+  }
+
+  @override
+  void removeAll(Node parent) {
+    for (final child in parent.children) {
+      parent.remove(child);
+    }
+  }
+
+  @override
+  void reposition(Node node, Node parent) {
+    _queue.addLast(
+      _obtain()
+        ..kind = .reposition
+        ..target = node
+        ..parent = parent,
+    );
+  }
 
   /// Applies every pending structural change, in enqueued order.
   void flush() {

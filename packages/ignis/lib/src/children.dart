@@ -6,15 +6,12 @@ import 'package:ignis/src/core.dart';
 /// A [Node]'s children: a flat list kept in [Node.priority] order, alongside
 /// an index per queried type.
 ///
-/// Named for the question of whether the parent or the child comes first. An
-/// egg did. Also, eggs contain children, which is the purpose of this class.
-///
 /// Each index built by [query] is maintained as nodes come and go, rather than
 /// invalidated and rebuilt, so a query can never go stale and never has to be
 /// recomputed. That is only affordable because every mutation runs through
 /// this one type.
 @internal
-final class Egg {
+final class Children {
   List<Node>? _nodes;
   Map<Type, _Index<Node>>? _indexes;
 
@@ -107,7 +104,7 @@ final class Egg {
   }
 }
 
-/// One type's view of an [Egg], holding every node of type [T].
+/// One type's view of an [Children], holding every node of type [T].
 final class _Index<T extends Node> {
   final List<T> nodes = [];
 

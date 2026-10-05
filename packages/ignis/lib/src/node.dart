@@ -108,7 +108,7 @@ class Node {
       }
     }
 
-    final children = _egg?.nodes;
+    final children = _children?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
@@ -136,7 +136,7 @@ class Node {
   /// Renders this node's enabled children to [canvas], in [priority] order.
   @protected
   void renderChildren(Canvas canvas) {
-    final children = _egg?.nodes;
+    final children = _children?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
@@ -165,7 +165,7 @@ class Node {
 
   @protected
   void debugRenderChildren(Canvas canvas) {
-    final children = _egg?.nodes;
+    final children = _children?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
@@ -177,7 +177,7 @@ class Node {
 
   void _resize(Vector2 size) {
     onSceneResize.emit(size);
-    final children = _egg?.nodes;
+    final children = _children?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
@@ -419,14 +419,9 @@ class Node {
   @nonVirtual
   set priority(int value) {
     _priority = value;
-    final target = parent;
-    if (target == null) return;
-
-    if (target.isMounted) {
-      target.scene._tree._reposition(this, target);
-    } else {
-      target._reposition(this);
-    }
+    final parent = this.parent;
+    if (parent == null) return;
+    parent._tree.reposition(this, parent);
   }
 
   // #endregion
@@ -447,16 +442,10 @@ class Node {
   // #region Tree
 
   Scene? _scene;
-  Egg? _egg;
+  Children? _children;
   Node? _parent;
   Node? _pendingParent;
   bool _pendingRemoval = false;
-
-  /// This node's owning scene. Only valid while [isMounted].
-  Scene get scene {
-    assert(_scene != null, 'This node is not mounted yet.');
-    return _scene!;
-  }
 
   /// True while this node is part of a scene.
   bool get isMounted => _scene != null;
@@ -464,13 +453,24 @@ class Node {
   /// True while this node awaits removal at the next flush.
   bool get isRemoving => _pendingRemoval;
 
+  /// This node's owning scene. Only valid while [isMounted].
+  Scene get scene {
+    assert(_scene != null, 'This node is not mounted yet.');
+    return _scene!;
+  }
+
+  _Tree get _tree {
+    if (isMounted) return scene._tree;
+    return const _ImmediateTree();
+  }
+
   /// This node's direct children.
-  Iterable<Node> get children => _egg?.nodes ?? const [];
+  Iterable<Node> get children => _children?.nodes ?? const [];
 
   /// This node's direct children of type [T], in [priority] order.
   ///
   /// The returned object is a live, read-only view of all [T] children.
-  Iterable<T> query<T extends Node>() => (_egg ??= Egg()).query<T>();
+  Iterable<T> query<T extends Node>() => (_children ??= Children()).query<T>();
 
   /// The parent that owns this node, or null when it is parentless.
   Node? get parent => _parent;
@@ -516,7 +516,7 @@ class Node {
   }
 
   void _own(Node node) {
-    (_egg ??= Egg()).add(node);
+    (_children ??= Children()).add(node);
     node._parent = this;
     node._pendingParent = null;
     final scene = _scene;
@@ -530,7 +530,7 @@ class Node {
 
   /// Unhooks [node] without unmounting it, so it can stand under a new parent.
   void _release(Node node) {
-    _egg?.remove(node);
+    _children?.remove(node);
     node._parent = null;
     node._pendingRemoval = false;
   }
@@ -539,57 +539,85 @@ class Node {
     try {
       if (node.isMounted) node._unmount();
     } finally {
-      _egg?.remove(node);
+      _children?.remove(node);
       node._parent = null;
       node._pendingRemoval = false;
     }
   }
 
-  void _reposition(Node node) => _egg?.reorder(node);
+  void _reposition(Node node) => _children?.reorder(node);
 
   // #endregion
 
   // #region Mounting
 
   void _mount(Scene scene) {
+    final entered = <Node>[];
+    _enter(scene, entered);
+
+    for (final node in entered) {
+      node._start();
+    }
+  }
+
+  void _enter(Scene scene, List<Node> entered) {
     // Already mounted here: a subtree moved within the scene.
     if (identical(_scene, scene)) return;
     _scene = scene;
+    entered.add(this);
+    final children = _children?.nodes;
+    if (children == null) return;
+
+    for (final child in children) {
+      child._enter(scene, entered);
+    }
+  }
+
+  void _start() {
     _rebuild();
     // TODO: Should `onMount` come before or after target resolution?
     onMount.emit();
     final targets = _targets;
+    if (targets == null) return;
 
-    if (targets != null) {
-      for (final target in targets) {
-        target._resolve();
-      }
+    for (final target in targets) {
+      target._resolve();
     }
+  }
 
-    final children = _egg?.nodes;
+  void _unmount() {
+    try {
+      _stop();
+    } finally {
+      _exit();
+    }
+  }
+
+  void _stop() {
+    final children = _children?.nodes;
 
     if (children != null && children.isNotEmpty) {
       // Snapshotted: a handler is free to move a child to another parent,
       // which takes it out of the list being walked.
       for (final child in children.toList(growable: false)) {
-        child._mount(scene);
-      }
-    }
-  }
-
-  void _unmount() {
-    // TODO: Assert non-null _scene?
-    final children = _egg?.nodes;
-
-    if (children != null && children.isNotEmpty) {
-      // Snapshotted, for the same reason as [_mount].
-      for (final child in children.toList(growable: false)) {
-        child._unmount();
+        child._stop();
       }
     }
 
     onUnmount.emit();
     _cleanup();
+  }
+
+  void _exit() {
+    // TODO: Assert non-null _scene?
+    final children = _children?.nodes;
+
+    if (children != null) {
+      for (final child in children) {
+        child._exit();
+      }
+    }
+
     _ticks = null;
     _draws = null;
     _debugDraws = null;
@@ -637,13 +665,7 @@ class Node {
       node._forgetAncestry();
     }
 
-    if (isMounted) {
-      node._pendingParent = this;
-      scene._tree._add(node, this);
-    } else {
-      _own(node);
-    }
-
+    _tree.add(node, this);
     return node;
   }
 
@@ -674,26 +696,13 @@ class Node {
     if (node._pendingRemoval) return false; // Already being removed.
     if (!owns(node)) return false;
 
-    if (isMounted) {
-      node._pendingRemoval = true;
-      scene._tree._remove(node, this);
-    } else {
-      _disown(node);
-    }
-
+    _tree.remove(node, this);
     return true;
   }
 
   /// Removes all children.
   void removeAll() {
-    Iterable<Node>? children = _egg?.nodes;
-    if (children == null || children.isEmpty) return;
-
-    // While mounted, removal is deferred to the next flush, so it's safe to
-    // iterate the live list. Otherwise, removal is immediate and would
-    // mutate the list out from under this loop, so a snapshot is required.
-    if (!isMounted) children = children.toList(growable: false);
-    for (final child in children) remove(child);
+    _tree.removeAll(this);
   }
 
   /// Removes this node from its parent, or from the parent it is on its way to.
@@ -724,7 +733,7 @@ class Node {
     // Settle what the pass just declared, so the walk descends into the tree
     // as it now stands rather than as it stood before the rebuild.
     if (isMounted) scene._tree.flush();
-    final children = _egg?.nodes;
+    final children = _children?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children.toList(growable: false)) {
@@ -745,7 +754,7 @@ class Node {
   @nonVirtual
   Iterable<Node> traverse({bool Function(Node node)? prune}) sync* {
     if (prune != null && prune(this)) return;
-    final children = _egg?.nodes;
+    final children = _children?.nodes;
 
     if (children != null && children.isNotEmpty) {
       for (final child in children.reversed) {
@@ -808,7 +817,7 @@ class Node {
   /// Drops all registers targets for this node and its entire subtree.
   void _forgetAncestry() {
     _dropAncestry();
-    final children = _egg?.nodes;
+    final children = _children?.nodes;
     if (children == null || children.isEmpty) return;
 
     for (final child in children) {
