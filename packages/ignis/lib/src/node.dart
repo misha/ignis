@@ -634,28 +634,6 @@ class Node {
   /// Adds this node to the target [node].
   void attach(Node node) => node.add(this);
 
-  void _attach(Node node) {
-    final scene = node._scene;
-
-    // A node moved here from another scene leaves that one first. One moved
-    // within this scene is already standing, and must not be rebuilt.
-    if (identical(_scene, scene)) {
-      _move(node);
-      return;
-    }
-
-    if (isMounted) _unmount();
-    _move(node);
-    if (scene != null) _mount(scene);
-  }
-
-  void _move(Node node) {
-    _parent?._children?.remove(this);
-    _forgetAncestry();
-    (node._children ??= _Children()).add(this);
-    _parent = node;
-  }
-
   /// Removes the child [node].
   ///
   /// Returns true if the node was owned by this node and its removal was
@@ -683,15 +661,6 @@ class Node {
   /// Removes this node from its parent, or from the parent it is on its way to.
   bool detach() => incomingParent?.remove(this) ?? false;
 
-  void _detach() {
-    try {
-      if (isMounted) _unmount();
-    } finally {
-      _parent?._children?.remove(this);
-      _parent = null;
-    }
-  }
-
   void _scheduleParent(Node? parent) {
     _reparentTicket?.cancel();
     _reparentTicket = null;
@@ -702,12 +671,26 @@ class Node {
 
   void _reparent(Node? parent) {
     _reparentTicket = null;
+    final outgoing = _scene;
+    final incoming = parent?._scene;
 
-    if (parent != null) {
-      _attach(parent);
+    if (identical(outgoing, incoming)) {
+      _relink(parent);
     } else {
-      _detach();
+      try {
+        if (outgoing != null) _unmount();
+      } finally {
+        _relink(parent);
+        if (incoming != null) _mount(incoming);
+      }
     }
+  }
+
+  void _relink(Node? parent) {
+    _parent?._children?.remove(this);
+    (parent?._children ??= _Children())?.add(this);
+    _parent = parent;
+    _forgetAncestry();
   }
 
   // #endregion
