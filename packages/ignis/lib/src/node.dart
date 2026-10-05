@@ -77,10 +77,10 @@ typedef Cleanup = void Function();
 /// With [Live], a reassembly completely rebuilds the node. Even disabled nodes
 /// are rebuilt. Anything kept with [Live.keep] is retained from the last build.
 /// See [Live] for more detailed usage examples.
-class Node extends Tree<Node> {
+class Node {
   /// Creates a new node.
   ///
-  /// [enabled] sets whether the node ticks, renders, and accepts input.
+  /// [activity] sets whether the node ticks, renders, and accepts input.
   /// Defaults to true.
   ///
   /// [priority] controls this node's order when updating and rendering.
@@ -407,13 +407,12 @@ class Node extends Tree<Node> {
   /// The default priority is 0. Children that share a priority are kept in
   /// insertion order, like a queue. Changing the priority of a child maintains
   /// this internal ordering with a stable sorting algorithm.
-  @override
   int get priority => _priority;
 
   @nonVirtual
   set priority(int value) {
     _priority = value;
-    reposition();
+    _scheduler.schedule(Task(() => parent?._children?.reorder(this)));
   }
 
   // #endregion
@@ -431,85 +430,160 @@ class Node extends Tree<Node> {
 
   // #endregion
 
-  // #region Tree
+  // #region Children
 
-  /// This node's owning scene. Only valid while [isMounted].
-  Scene get scene => read<Scene>();
+  _Children? _children;
 
-  /// Mounts this node as the root of a new [Scene] and returns it.
+  /// This node's direct children.
+  Iterable<Node> get children => _children?.nodes ?? const [];
+
+  /// This node's direct children of type [T], in [priority] order.
   ///
-  /// If this is already the root of a scene, returns the same scene.
-  @override
-  Scene mount() {
-    final state = this.state;
-    if (state is Root) return scene;
+  /// The returned object is a live, read-only view of all [T] children.
+  Iterable<T> query<T extends Node>() => (_children ??= _Children()).query<T>();
 
-    if (state is! Detached) {
-      throw StateError('Cannot mount a node while $state.');
+  /// This node's descendants in depth-first preorder.
+  Iterable<Node> get descendants sync* {
+    for (final child in children) {
+      yield child;
+      yield* child.descendants;
     }
-
-    final created = Scene(root: this);
-    provide<Scene>(created);
-    super.mount();
-    return created;
   }
 
-  @override
-  @internal
-  void unmount() {
-    super.unmount();
-  }
-
-  @override
-  @protected
-  Scheduler get scheduler {
-    if (!isMounted) return const ImmediateScheduler();
-    return scene.scheduler;
-  }
+  /// Checks if this node contains the [other] node.
+  bool contains(Node other) => //
+      descendants.any((descendant) => identical(descendant, other));
 
   // #endregion
 
-  // #region Mounting
+  // #region Scene
 
-  @override
-  @nonVirtual
-  @protected
-  void mounted() {
+  Scene? _scene;
+
+  /// True while this node is the root of a scene.
+  bool get isRoot => identical(_scene?.root, this);
+
+  /// True while this node is part of a scene.
+  bool get isMounted => _scene != null;
+
+  /// This node's current scene. Only valid while [isMounted].
+  Scene get scene {
+    final owner = _scene;
+    assert(owner != null, 'This node is not mounted yet.');
+    return owner!;
+  }
+
+  /// The scheduler used to execute structural changes on the current scene.
+  Scheduler get _scheduler {
+    if (isMounted) return scene.scheduler;
+    return const ImmediateScheduler();
+  }
+
+  /// Mounts this node as the root of a new [Scene] and returns it.
+  ///
+  /// If this is already the root of a scene, returns that same scene.
+  Scene mount() {
+    if (isRoot) {
+      return scene;
+    }
+
+    if (_attachment is! _Detached) {
+      throw StateError('Cannot mount a node that has a parent.');
+    }
+
+    final created = Scene(root: this);
+    _mount(created);
+    return created;
+  }
+
+  @internal
+  void unmount() {
+    _unmount();
+  }
+
+  void _mount(Scene scene) {
+    _scene = scene;
     _rebuild();
-    // TODO: Should `onMount` come before or after target resolution?
-    onMount.emit();
     final targets = _targets;
-    if (targets == null) return;
 
-    for (final target in targets) {
-      target._resolve();
+    if (targets != null) {
+      for (final target in targets) {
+        target._resolve();
+      }
+    }
+
+    onMount.emit();
+    final children = _children?.nodes;
+    if (children == null) return;
+
+    for (final child in children.toList(growable: false)) {
+      if (!identical(child.parent, this)) continue;
+      child._mount(scene);
     }
   }
 
-  @override
-  @nonVirtual
-  @protected
-  void unmounted() {
-    onUnmount.emit();
-    _cleanup();
-    _ticks = null;
-    _draws = null;
-    _debugDraws = null;
-    _providers?.remove(Scene);
-    _discardDeclared();
-    _dropAncestry();
-  }
+  void _unmount() {
+    final children = _children?.nodes;
 
-  @override
-  @nonVirtual
-  @protected
-  void reparented() {
-    _dropAncestry();
+    if (children != null) {
+      for (var i = children.length - 1; i >= 0; i -= 1) {
+        children[i]._unmount();
+      }
+    }
+
+    try {
+      onUnmount.emit();
+      _cleanup();
+      _ticks = null;
+      _draws = null;
+      _debugDraws = null;
+      _discardDeclared();
+      _dropAncestry();
+    } finally {
+      _scene = null;
+    }
   }
 
   // #endregion
 
   // #region Attachment
+
+  _Attachment _attachment = const _Detached();
+
+  /// True while this node awaits removal at the next flush.
+  bool get isRemoving => _attachment is _Removing;
+
+  /// The parent that owns this node, or null when it is parentless.
+  Node? get parent => _attachment.parent;
+
+  /// True if this node has a non-null parent.
+  bool get hasParent => parent != null;
+
+  /// This node's ancestors in the tree.
+  Iterable<Node> get ancestors sync* {
+    var ancestor = parent;
+
+    while (ancestor != null) {
+      yield ancestor;
+      ancestor = ancestor.parent;
+    }
+  }
+
+  /// Checks if this node owns the [other] node.
+  bool owns(Node other) => identical(this, other.parent);
+
+  /// True if [node] is (or soon will be) an ancestor of this node.
+  bool cycles(Node node) {
+    Node? current = this;
+
+    while (current != null) {
+      if (identical(current, node)) return true;
+      final attachment = current._attachment;
+      current = attachment.destination ?? attachment.parent;
+    }
+
+    return false;
+  }
 
   /// Adds [node] to this node. The node is returned.
   ///
@@ -519,15 +593,132 @@ class Node extends Tree<Node> {
   ///
   /// Called from this node's own [build], the child is automatically recorded
   /// as declared, so the next [build] discards it before running again.
-  @override
   T add<T extends Node>(T node) {
-    super.add(node);
+    if (identical(this, node)) {
+      throw StateError('Cannot add a node to itself.');
+    }
+
+    if (cycles(node)) {
+      throw StateError('Cannot add a node to its descendant.');
+    }
 
     if (identical(_building, this)) {
       (_declared ??= []).add(node);
     }
 
+    final attachment = node._attachment;
+
+    if (identical(attachment.destination, this)) {
+      return node;
+    }
+
+    attachment.task?.cancel();
+
+    if (identical(attachment.parent, this)) {
+      node._attachment = _Attached(this);
+      return node;
+    }
+
+    if (node.isRoot) {
+      throw StateError('Cannot add a scene root to another node.');
+    }
+
+    final task = Task(() => _attach(node));
+
+    node._attachment = switch (attachment) {
+      _Detached() || _Arriving() => _Arriving(this, task),
+      _Attached(:final parent) ||
+      _Moving(:final parent) ||
+      _Removing(:final parent) => _Moving(parent, this, task),
+    };
+
+    _scheduler.schedule(task);
     return node;
+  }
+
+  /// Adds all [nodes] to this node.
+  void addAll(Iterable<Node> nodes) => nodes.forEach(add);
+
+  /// Adds this node to the target [node].
+  void attach(Node node) => node.add(this);
+
+  void _attach(Node node) {
+    final from = node.parent;
+
+    if (from != null) {
+      from._children?.remove(node);
+      node._forgetAncestry();
+    }
+
+    (_children ??= _Children()).add(node);
+    node._attachment = _Attached(this);
+    final scene = _scene;
+
+    // A node moved here from another scene leaves that one first. One moved
+    // within this scene is already standing, and must not be rebuilt.
+    if (identical(node._scene, scene)) return;
+    if (node.isMounted) node._unmount();
+    if (scene != null) node._mount(scene);
+  }
+
+  /// Removes the child [node].
+  ///
+  /// Returns true if the node was owned by this node and its removal was
+  /// accepted. Removing a parentless node, a node not owned by this node, or a
+  /// node already awaiting removal, is a no-op that returns `false`.
+  ///
+  /// A node still awaiting its own addition is cancelled outright, so an add
+  /// and a remove queued in the same frame settle to nothing.
+  bool remove(Node node) {
+    final attachment = node._attachment;
+    if (!identical(attachment.destination, this)) return false;
+    attachment.task?.cancel();
+
+    switch (attachment) {
+      case _Attached():
+        _detach(node);
+
+      case _Arriving():
+        node._attachment = const _Detached();
+
+      case _Moving(:final parent):
+        parent._detach(node);
+
+      case _Detached() || _Removing():
+        return false;
+    }
+
+    return true;
+  }
+
+  /// Removes all children.
+  void removeAll() {
+    final children = _children?.nodes;
+    if (children == null) return;
+
+    for (var i = children.length - 1; i >= 0; i -= 1) {
+      remove(children[i]);
+    }
+  }
+
+  /// Removes this node from its parent, or from the parent it is on its way to.
+  bool detach() {
+    final attachment = _attachment;
+    return (attachment.destination ?? attachment.parent)?.remove(this) ?? false;
+  }
+
+  void _detach(Node node) {
+    final task = Task(() {
+      try {
+        if (node.isMounted) node._unmount();
+      } finally {
+        _children?.remove(node);
+        node._attachment = const _Detached();
+      }
+    });
+
+    node._attachment = _Removing(this, task);
+    node._scheduler.schedule(task);
   }
 
   // #endregion
@@ -560,7 +751,7 @@ class Node extends Tree<Node> {
 
     // Settle what the pass just declared, so the walk descends into the tree
     // as it now stands rather than as it stood before the rebuild.
-    scheduler.flush();
+    _scheduler.flush();
     if (children.isEmpty) return;
 
     for (final child in children.toList(growable: false)) {
@@ -574,6 +765,25 @@ class Node extends Tree<Node> {
   // #endregion
 
   // #region Hit Testing
+
+  /// This node and its subtree, in postorder: every child before its parent,
+  /// and children in reverse [priority] order.
+  ///
+  /// [prune] skips a node and everything beneath it, so a walk can stop at a
+  /// subtree rather than filter it out afterwards.
+  @nonVirtual
+  Iterable<Node> traverse({bool Function(Node node)? prune}) sync* {
+    if (prune != null && prune(this)) return;
+    final children = _children?.nodes;
+
+    if (children != null) {
+      for (var i = children.length - 1; i >= 0; i -= 1) {
+        yield* children[i].traverse(prune: prune);
+      }
+    }
+
+    yield this;
+  }
 
   /// Finds every node in this subtree whose hit area contains [point], per
   /// [containsPoint], topmost first.
@@ -621,6 +831,17 @@ class Node extends Tree<Node> {
 
     for (final target in targets) {
       target._invalidate();
+    }
+  }
+
+  /// Drops all registers targets for this node and its entire subtree.
+  void _forgetAncestry() {
+    _dropAncestry();
+    final children = _children?.nodes;
+    if (children == null) return;
+
+    for (final child in children) {
+      child._forgetAncestry();
     }
   }
 

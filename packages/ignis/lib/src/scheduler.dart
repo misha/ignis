@@ -4,15 +4,27 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 
-typedef Change = void Function();
+@internal
+final class Task extends LinkedListEntry<Task> {
+  final void Function() call;
+
+  Task(this.call);
+
+  void cancel() {
+    if (list == null) return;
+    unlink();
+  }
+}
 
 @internal
 sealed class Scheduler {
   const Scheduler();
 
-  void schedule(Change change);
+  void schedule(Task task);
 
-  void flush() {}
+  void flush() {
+    // Nothing to do.
+  }
 }
 
 @internal
@@ -20,24 +32,25 @@ final class ImmediateScheduler extends Scheduler {
   const ImmediateScheduler();
 
   @override
-  void schedule(Change change) {
-    change();
+  void schedule(Task task) {
+    task.call();
   }
 }
 
 @internal
 final class QueuedScheduler extends Scheduler {
-  final _changes = Queue<Change>();
+  final _tasks = LinkedList<Task>();
 
   @override
-  void schedule(Change change) {
-    _changes.addLast(change);
+  void schedule(Task task) {
+    _tasks.add(task);
   }
 
   @override
   void flush() {
-    while (_changes.isNotEmpty) {
-      _changes.removeFirst()();
+    while (_tasks.isNotEmpty) {
+      final task = _tasks.first..unlink();
+      task.call();
     }
   }
 }

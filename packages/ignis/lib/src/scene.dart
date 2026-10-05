@@ -127,5 +127,6 @@ class Scene {
     _mounted = false;
     _live.remove(this);
     root.unmount();
+    scheduler.flush();
   }
 }

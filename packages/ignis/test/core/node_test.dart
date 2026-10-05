@@ -520,7 +520,7 @@ void main() {
   });
 
   group('reentrant mutation during mount/unmount', () {
-    test('removing a sibling from onMount during a mount cascade defers the removal', () {
+    test('removing a sibling from onMount during a mount cascade removes it', () {
       final a = Node();
       final b = Node();
       final c = Node();
@@ -528,11 +528,9 @@ void main() {
       a.add(c);
       b.onMount(() => a.remove(c));
       final scene = a.mount();
-      // The removal was requested mid-cascade, but a.remove(c) only enqueues.
-      // c still gets mounted this same pass.
-      expect(c.isMounted, isTrue);
 
       scene.update(0);
+      expect(c.hasParent, isFalse);
       expect(c.isMounted, isFalse);
     });
 
