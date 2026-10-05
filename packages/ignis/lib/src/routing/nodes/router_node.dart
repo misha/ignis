@@ -57,7 +57,7 @@ class RouterNode extends SpatialNode {
   ///
   /// A route taken off the stack is still a child until the next flush, so
   /// what is leaving is filtered out rather than waited on.
-  Iterable<RouteNode> get routes => _routes.where((route) => !route.isRemoving);
+  Iterable<RouteNode> get routes => _routes.where((route) => identical(route.incomingParent, this));
 
   /// The route on top, or null while the stack is empty.
   RouteNode? get top => routes.lastOrNull;

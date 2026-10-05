@@ -391,6 +391,23 @@ void main() {
     expect(child.parent, isNull);
   });
 
+  test('node emits onUnmount before moving out of its scene', () {
+    final from = Node();
+    final to = Node();
+    final child = Node();
+    from.add(child);
+    final scene = from.mount();
+    Node? seen;
+    child.onUnmount(() => seen = child.parent);
+
+    from.remove(child);
+    to.add(child);
+    scene.update(0);
+    expect(seen, same(from));
+    expect(child.parent, same(to));
+    expect(child.isMounted, isFalse);
+  });
+
   group('mounting', () {
     test('mounts a node and its subtree from the root downward', () {
       final log = TestLog();
@@ -588,10 +605,7 @@ void main() {
       a.add(c);
       var mounts = 0;
       b.onMount(() => mounts += 1);
-
-      b.onMount(() {
-        if (b.parent != c) c.add(b);
-      });
+      b.onMount(() => c.add(b));
 
       final scene = a.mount();
       scene.update(0);

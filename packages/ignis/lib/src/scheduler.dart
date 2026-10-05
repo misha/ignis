@@ -5,10 +5,8 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
 @internal
-final class Task extends LinkedListEntry<Task> {
-  final void Function() call;
-
-  Task(this.call);
+abstract base class Ticket extends LinkedListEntry<Ticket> {
+  void redeem();
 
   void cancel() {
     if (list == null) return;
@@ -20,11 +18,17 @@ final class Task extends LinkedListEntry<Task> {
 sealed class Scheduler {
   const Scheduler();
 
-  void schedule(Task task);
-
-  void flush() {
-    // Nothing to do.
+  static Scheduler select(Scheduler? a, [Scheduler? b]) {
+    return switch ((a, b)) {
+      (final QueuedScheduler a, _) => a,
+      (_, final QueuedScheduler b) => b,
+      _ => const ImmediateScheduler(),
+    };
   }
+
+  T? submit<T extends Ticket>(T ticket);
+
+  void flush();
 }
 
 @internal
@@ -32,25 +36,32 @@ final class ImmediateScheduler extends Scheduler {
   const ImmediateScheduler();
 
   @override
-  void schedule(Task task) {
-    task.call();
+  T? submit<T extends Ticket>(T ticket) {
+    ticket.redeem();
+    return null;
+  }
+
+  @override
+  void flush() {
+    // Nothing to do.
   }
 }
 
 @internal
 final class QueuedScheduler extends Scheduler {
-  final _tasks = LinkedList<Task>();
+  final _tickets = LinkedList<Ticket>();
 
   @override
-  void schedule(Task task) {
-    _tasks.add(task);
+  T? submit<T extends Ticket>(T ticket) {
+    _tickets.add(ticket);
+    return ticket;
   }
 
   @override
   void flush() {
-    while (_tasks.isNotEmpty) {
-      final task = _tasks.first..unlink();
-      task.call();
+    while (_tickets.isNotEmpty) {
+      final ticket = _tickets.first..unlink();
+      ticket.redeem();
     }
   }
 }

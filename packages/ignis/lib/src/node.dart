@@ -398,25 +398,6 @@ class Node {
 
   // #endregion
 
-  // #region Priority
-
-  int _priority;
-
-  /// This node's order in updating and rendering in its parent.
-  ///
-  /// The default priority is 0. Children that share a priority are kept in
-  /// insertion order, like a queue. Changing the priority of a child maintains
-  /// this internal ordering with a stable sorting algorithm.
-  int get priority => _priority;
-
-  @nonVirtual
-  set priority(int value) {
-    _priority = value;
-    _scheduler.schedule(Task(() => parent?._children?.reorder(this)));
-  }
-
-  // #endregion
-
   // #region Signals
 
   /// Emitted when this node is added to a scene.
@@ -456,6 +437,40 @@ class Node {
 
   // #endregion
 
+  // #region Priority
+
+  int _priority;
+  _ReorderTicket? _reorderTicket;
+
+  /// This node's order in updating and rendering in its parent.
+  ///
+  /// The default priority is 0. Children that share a priority are kept in
+  /// insertion order, like a queue. Changing the priority of a child maintains
+  /// this internal ordering with a stable sorting algorithm.
+  int get priority => _priority;
+
+  /// This node's priority, or what it will be next frame.
+  int get incomingPriority => _reorderTicket?.priority ?? _priority;
+
+  @nonVirtual
+  set priority(int value) => _schedulePriority(value);
+
+  void _schedulePriority(int priority) {
+    _reorderTicket?.cancel();
+    _reorderTicket = null;
+    if (priority == _priority) return;
+    final scheduler = Scheduler.select(_scene?.scheduler);
+    _reorderTicket = scheduler.submit(_ReorderTicket(this, priority));
+  }
+
+  void _reorder(int priority) {
+    _reorderTicket = null;
+    _priority = priority;
+    _parent?._children?.reorder(this);
+  }
+
+  // #endregion
+
   // #region Scene
 
   Scene? _scene;
@@ -468,15 +483,8 @@ class Node {
 
   /// This node's current scene. Only valid while [isMounted].
   Scene get scene {
-    final owner = _scene;
-    assert(owner != null, 'This node is not mounted yet.');
-    return owner!;
-  }
-
-  /// The scheduler used to execute structural changes on the current scene.
-  Scheduler get _scheduler {
-    if (isMounted) return scene.scheduler;
-    return const ImmediateScheduler();
+    assert(isMounted, 'This node is not mounted yet.');
+    return _scene!;
   }
 
   /// Mounts this node as the root of a new [Scene] and returns it.
@@ -487,10 +495,12 @@ class Node {
       return scene;
     }
 
-    if (_attachment is! _Detached) {
+    if (_parent != null) {
       throw StateError('Cannot mount a node that has a parent.');
     }
 
+    _reparentTicket?.cancel();
+    _reparentTicket = null;
     final created = Scene(root: this);
     _mount(created);
     return created;
@@ -546,15 +556,16 @@ class Node {
 
   // #endregion
 
-  // #region Attachment
+  // #region Tree
 
-  _Attachment _attachment = const _Detached();
+  Node? _parent;
+  _ReparentTicket? _reparentTicket;
 
-  /// True while this node awaits removal at the next flush.
-  bool get isRemoving => _attachment is _Removing;
+  /// The parent that owns this node, if any.
+  Node? get parent => _parent;
 
-  /// The parent that owns this node, or null when it is parentless.
-  Node? get parent => _attachment.parent;
+  /// The parent that owns or is scheduled to own this node, if any.
+  Node? get incomingParent => _reparentTicket != null ? _reparentTicket!.parent : parent;
 
   /// True if this node has a non-null parent.
   bool get hasParent => parent != null;
@@ -578,8 +589,7 @@ class Node {
 
     while (current != null) {
       if (identical(current, node)) return true;
-      final attachment = current._attachment;
-      current = attachment.destination ?? attachment.parent;
+      current = current.incomingParent;
     }
 
     return false;
@@ -602,37 +612,19 @@ class Node {
       throw StateError('Cannot add a node to its descendant.');
     }
 
-    if (identical(_building, this)) {
-      (_declared ??= []).add(node);
-    }
-
-    final attachment = node._attachment;
-
-    if (identical(attachment.destination, this)) {
-      return node;
-    }
-
-    attachment.task?.cancel();
-
-    if (identical(attachment.parent, this)) {
-      node._attachment = _Attached(this);
-      return node;
-    }
-
     if (node.isRoot) {
       throw StateError('Cannot add a scene root to another node.');
     }
 
-    final task = Task(() => _attach(node));
+    if (identical(node.incomingParent, this)) {
+      return node;
+    }
 
-    node._attachment = switch (attachment) {
-      _Detached() || _Arriving() => _Arriving(this, task),
-      _Attached(:final parent) ||
-      _Moving(:final parent) ||
-      _Removing(:final parent) => _Moving(parent, this, task),
-    };
+    if (identical(_building, this)) {
+      (_declared ??= []).add(node);
+    }
 
-    _scheduler.schedule(task);
+    node._scheduleParent(this);
     return node;
   }
 
@@ -643,22 +635,25 @@ class Node {
   void attach(Node node) => node.add(this);
 
   void _attach(Node node) {
-    final from = node.parent;
-
-    if (from != null) {
-      from._children?.remove(node);
-      node._forgetAncestry();
-    }
-
-    (_children ??= _Children()).add(node);
-    node._attachment = _Attached(this);
-    final scene = _scene;
+    final scene = node._scene;
 
     // A node moved here from another scene leaves that one first. One moved
     // within this scene is already standing, and must not be rebuilt.
-    if (identical(node._scene, scene)) return;
-    if (node.isMounted) node._unmount();
-    if (scene != null) node._mount(scene);
+    if (identical(_scene, scene)) {
+      _move(node);
+      return;
+    }
+
+    if (isMounted) _unmount();
+    _move(node);
+    if (scene != null) _mount(scene);
+  }
+
+  void _move(Node node) {
+    _parent?._children?.remove(this);
+    _forgetAncestry();
+    (node._children ??= _Children()).add(this);
+    _parent = node;
   }
 
   /// Removes the child [node].
@@ -670,24 +665,8 @@ class Node {
   /// A node still awaiting its own addition is cancelled outright, so an add
   /// and a remove queued in the same frame settle to nothing.
   bool remove(Node node) {
-    final attachment = node._attachment;
-    if (!identical(attachment.destination, this)) return false;
-    attachment.task?.cancel();
-
-    switch (attachment) {
-      case _Attached():
-        _detach(node);
-
-      case _Arriving():
-        node._attachment = const _Detached();
-
-      case _Moving(:final parent):
-        parent._detach(node);
-
-      case _Detached() || _Removing():
-        return false;
-    }
-
+    if (!identical(node.incomingParent, this)) return false;
+    node._scheduleParent(null);
     return true;
   }
 
@@ -702,23 +681,33 @@ class Node {
   }
 
   /// Removes this node from its parent, or from the parent it is on its way to.
-  bool detach() {
-    final attachment = _attachment;
-    return (attachment.destination ?? attachment.parent)?.remove(this) ?? false;
+  bool detach() => incomingParent?.remove(this) ?? false;
+
+  void _detach() {
+    try {
+      if (isMounted) _unmount();
+    } finally {
+      _parent?._children?.remove(this);
+      _parent = null;
+    }
   }
 
-  void _detach(Node node) {
-    final task = Task(() {
-      try {
-        if (node.isMounted) node._unmount();
-      } finally {
-        _children?.remove(node);
-        node._attachment = const _Detached();
-      }
-    });
+  void _scheduleParent(Node? parent) {
+    _reparentTicket?.cancel();
+    _reparentTicket = null;
+    if (identical(parent, _parent)) return;
+    final scheduler = Scheduler.select(_scene?.scheduler, parent?._scene?.scheduler);
+    _reparentTicket = scheduler.submit(_ReparentTicket(this, parent));
+  }
 
-    node._attachment = _Removing(this, task);
-    node._scheduler.schedule(task);
+  void _reparent(Node? parent) {
+    _reparentTicket = null;
+
+    if (parent != null) {
+      _attach(parent);
+    } else {
+      _detach();
+    }
   }
 
   // #endregion
@@ -751,13 +740,13 @@ class Node {
 
     // Settle what the pass just declared, so the walk descends into the tree
     // as it now stands rather than as it stood before the rebuild.
-    _scheduler.flush();
+    Scheduler.select(_scene?.scheduler).flush();
     if (children.isEmpty) return;
 
     for (final child in children.toList(growable: false)) {
       // A rebuild above queued this one's removal, so it is already gone. Its
       // replacement built against the current code and is not in this list.
-      if (child.isRemoving) continue;
+      if (!identical(child.parent, this)) continue;
       child._reassemble();
     }
   }
@@ -824,6 +813,9 @@ class Node {
   }
 
   /// Drops all registered targets for this node.
+  ///
+  /// TODO: Really bad naming between this and `_forgetAncestry`. One is shallow
+  ///   while the other is deep. Think of something better.
   void _dropAncestry() {
     _dependencies = null;
     final targets = _targets;
