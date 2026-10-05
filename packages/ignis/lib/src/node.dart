@@ -149,14 +149,7 @@ class Node {
   /// Renders the debug overlay for this node and its children to [canvas].
   void debugRender(Canvas canvas) {
     debugRenderSelf(canvas);
-    final children = _egg?.nodes;
-    if (children == null || children.isEmpty) return;
-
-    for (final child in children) {
-      if (child.activity.renders) {
-        child.debugRender(canvas);
-      }
-    }
+    debugRenderChildren(canvas);
   }
 
   /// Runs this node's [debugDraw] callbacks, in the same space as [renderSelf].
@@ -167,6 +160,18 @@ class Node {
 
     for (var i = 0; i < debugDraws.length; i += 1) {
       debugDraws[i](canvas);
+    }
+  }
+
+  @protected
+  void debugRenderChildren(Canvas canvas) {
+    final children = _egg?.nodes;
+    if (children == null || children.isEmpty) return;
+
+    for (final child in children) {
+      if (child.activity.renders) {
+        child.debugRender(canvas);
+      }
     }
   }
 
