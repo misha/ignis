@@ -774,8 +774,8 @@ void main() {
       scene.update(0);
 
       expect(kid, same(first));
-      expect(kid.isMounted, isTrue, reason: 'a move never unmounts it');
-      expect(kid.builds, 1, reason: 'not rebuilt');
+      expect(kid.isMounted, isTrue);
+      expect(kid.builds, 2, reason: 'a move remounts');
       expect(node.children.single.children.single, same(kid));
     });
 

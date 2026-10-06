@@ -11,18 +11,15 @@ import 'package:ignis/src/shape.dart';
 /// A controller for a mounted [Node] tree.
 ///
 /// TODO: Document further.
-class Scene {
+class Scene with Scheduler {
   /// This scene's root. Cannot be modified.
   final Node root;
 
-  static final List<Scene> _live = [];
+  static final List<Scene> _ACTIVE = [];
 
   /// Every scene currently mounted, the most recent first.
   @internal
-  static Iterable<Scene> get live => _live.reversed;
-
-  @internal
-  final scheduler = QueuedScheduler();
+  static Iterable<Scene> get ACTIVE => _ACTIVE.reversed;
 
   bool _mounted = true;
   bool _sized = false;
@@ -76,12 +73,12 @@ class Scene {
   Scene({
     required this.root,
   }) {
-    _live.add(this);
+    _ACTIVE.add(this);
   }
 
   void update(double dt) {
     assert(_mounted, 'Cannot update a destroyed scene.');
-    scheduler.flush();
+    flush();
     root.update(dt);
   }
 
@@ -125,8 +122,8 @@ class Scene {
   void destroy() {
     if (!_mounted) return;
     _mounted = false;
-    _live.remove(this);
+    _ACTIVE.remove(this);
     root.unmount();
-    scheduler.flush();
+    flush();
   }
 }

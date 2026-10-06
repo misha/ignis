@@ -440,7 +440,7 @@ class Node {
   // #region Priority
 
   int _priority;
-  _ReorderTicket? _reorderTicket;
+  _ReorderTask? _reorderTask;
 
   /// This node's order in updating and rendering in its parent.
   ///
@@ -449,22 +449,28 @@ class Node {
   /// this internal ordering with a stable sorting algorithm.
   int get priority => _priority;
 
-  /// This node's priority, or what it will be next frame.
-  int get incomingPriority => _reorderTicket?.priority ?? _priority;
+  /// This node's [priority], or what it will be next frame.
+  int get incomingPriority => _reorderTask?.priority ?? _priority;
 
   @nonVirtual
   set priority(int value) => _schedulePriority(value);
 
   void _schedulePriority(int priority) {
-    _reorderTicket?.cancel();
-    _reorderTicket = null;
+    _reorderTask?.cancel();
+    _reorderTask = null;
     if (priority == _priority) return;
-    final scheduler = Scheduler.select(_scene?.scheduler);
-    _reorderTicket = scheduler.submit(_ReorderTicket(this, priority));
+    final task = _ReorderTask(this, priority);
+
+    if (isMounted) {
+      scene.schedule(task);
+      _reorderTask = task;
+    } else {
+      task.execute();
+    }
   }
 
   void _reorder(int priority) {
-    _reorderTicket = null;
+    _reorderTask = null;
     _priority = priority;
     _parent?._children?.reorder(this);
   }
@@ -499,8 +505,8 @@ class Node {
       throw StateError('Cannot mount a node that has a parent.');
     }
 
-    _reparentTicket?.cancel();
-    _reparentTicket = null;
+    _reparentTask?.cancel();
+    _reparentTask = null;
     final created = Scene(root: this);
     _mount(created);
     return created;
@@ -559,15 +565,15 @@ class Node {
   // #region Tree
 
   Node? _parent;
-  _ReparentTicket? _reparentTicket;
+  _ReparentTask? _reparentTask;
 
   /// The parent that owns this node, if any.
   Node? get parent => _parent;
 
-  /// The parent that owns or is scheduled to own this node, if any.
-  Node? get incomingParent => _reparentTicket != null ? _reparentTicket!.parent : parent;
+  /// The [parent] that owns or is scheduled to own this node, if any.
+  Node? get incomingParent => _reparentTask != null ? _reparentTask!.parent : parent;
 
-  /// True if this node has a non-null parent.
+  /// True if this node has a non-null [parent].
   bool get hasParent => parent != null;
 
   /// This node's ancestors in the tree.
@@ -583,7 +589,7 @@ class Node {
   /// Checks if this node owns the [other] node.
   bool owns(Node other) => identical(this, other.parent);
 
-  /// True if [node] is (or soon will be) an ancestor of this node.
+  /// True if [node] is, or soon will be, an ancestor of this node.
   bool cycles(Node node) {
     Node? current = this;
 
@@ -616,10 +622,15 @@ class Node {
       throw StateError('Cannot add a scene root to another node.');
     }
 
+    if (isMounted && node.isMounted && !identical(scene, node.scene)) {
+      throw StateError('Cannot move a node between two live scenes.');
+    }
+
     if (identical(node.incomingParent, this)) {
       return node;
     }
 
+    // TODO: Declared nodes should probably be accrued during actual reparenting.
     if (identical(_building, this)) {
       (_declared ??= []).add(node);
     }
@@ -640,8 +651,7 @@ class Node {
   /// accepted. Removing a parentless node, a node not owned by this node, or a
   /// node already awaiting removal, is a no-op that returns `false`.
   ///
-  /// A node still awaiting its own addition is cancelled outright, so an add
-  /// and a remove queued in the same frame settle to nothing.
+  /// If the node was scheduled to be added, that operation is cancelled instead.
   bool remove(Node node) {
     if (!identical(node.incomingParent, this)) return false;
     node._scheduleParent(null);
@@ -658,39 +668,44 @@ class Node {
     }
   }
 
-  /// Removes this node from its parent, or from the parent it is on its way to.
+  /// Removes this node from its parent.
   bool detach() => incomingParent?.remove(this) ?? false;
 
   void _scheduleParent(Node? parent) {
-    _reparentTicket?.cancel();
-    _reparentTicket = null;
+    _reparentTask?.cancel();
+    _reparentTask = null;
     if (identical(parent, _parent)) return;
-    final scheduler = Scheduler.select(_scene?.scheduler, parent?._scene?.scheduler);
-    _reparentTicket = scheduler.submit(_ReparentTicket(this, parent));
-  }
+    final task = _ReparentTask(this, parent);
+    final scene = _scene ?? parent?._scene;
 
-  void _reparent(Node? parent) {
-    _reparentTicket = null;
-    final outgoing = _scene;
-    final incoming = parent?._scene;
-
-    if (identical(outgoing, incoming)) {
-      _relink(parent);
+    if (scene != null) {
+      scene.schedule(task);
+      _reparentTask = task;
     } else {
-      try {
-        if (outgoing != null) _unmount();
-      } finally {
-        _relink(parent);
-        if (incoming != null) _mount(incoming);
-      }
+      task.execute();
     }
   }
 
-  void _relink(Node? parent) {
-    _parent?._children?.remove(this);
-    (parent?._children ??= _Children())?.add(this);
-    _parent = parent;
-    _forgetAncestry();
+  void _reparent(Node? nextParent) {
+    _reparentTask = null;
+    final outgoing = _scene;
+    final incoming = nextParent?._scene;
+
+    // TODO: It is unclear whether it is "correct" to rebuild a node when
+    //  moving it to a new parent in the same scene. However, I have no games
+    //  that move nodes, and Flame does not have rebuildable nodes, so there is
+    //  literally no point of reference. Revisit this operation when there is
+    //  finally a game that depends on moving nodes in some way.
+
+    try {
+      if (outgoing != null) _unmount();
+    } finally {
+      parent?._children?.remove(this);
+      (nextParent?._children ??= _Children())?.add(this);
+      _parent = nextParent;
+      _forgetAncestry();
+      if (incoming != null) _mount(incoming);
+    }
   }
 
   // #endregion
@@ -723,7 +738,7 @@ class Node {
 
     // Settle what the pass just declared, so the walk descends into the tree
     // as it now stands rather than as it stood before the rebuild.
-    Scheduler.select(_scene?.scheduler).flush();
+    scene.flush();
     if (children.isEmpty) return;
 
     for (final child in children.toList(growable: false)) {

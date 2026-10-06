@@ -597,7 +597,7 @@ void main() {
       },
     );
 
-    test('reparenting from within onMount moves the node without remounting it', () {
+    test('reparenting from within onMount remounts the node under its new parent', () {
       final a = Node();
       final b = Node();
       final c = Node();
@@ -612,7 +612,7 @@ void main() {
 
       expect(b.parent, same(c));
       expect(b.isMounted, isTrue);
-      expect(mounts, 1, reason: 'no mount fired for a move');
+      expect(mounts, 2, reason: 'a move remounts');
     });
 
     test('mounting a node reentrantly from within its own onMount is a no-op', () {

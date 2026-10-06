@@ -141,9 +141,6 @@ class Controls {
   /// Runs the one handler that answers [emitted], if any.
   ///
   /// Returns whether anything ran, so a device can report the event as handled.
-  ///
-  /// Every match is found before the winner runs, so a handler is free to bind
-  /// and unbind as it answers.
   bool dispatch(ControlEvent emitted) {
     List<_Control>? matched;
 
@@ -176,15 +173,10 @@ class Controls {
     return false;
   }
 
-  /// The one of [matched] that answers, by tree order.
-  ///
-  /// Walks the live scenes as a hit test would, and takes the first whose node
-  /// it reaches.
-  /// Handlers with no node rank below every node, the most recent of them
-  /// first.
+  /// Picks the winning [matched] control by looking through each active scene.
   _Control? _winner(List<_Control> matched) {
     if (matched.any((control) => control.node != null)) {
-      for (final scene in Scene.live) {
+      for (final scene in Scene.ACTIVE) {
         for (final node in scene.root.traverse(prune: (node) => !node.activity.inputs)) {
           for (final control in matched.reversed) {
             if (identical(control.node, node)) {
