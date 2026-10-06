@@ -12,6 +12,7 @@
 # so `update` and `flame_update` both work.
 set -euo pipefail
 cd "$(dirname "$0")"
+trap 'exit 130' INT
 
 mode=test
 
@@ -55,13 +56,13 @@ for target in "${targets[@]}"; do
     # and then exits non-zero complaining it found no tests. Swallowing that is
     # what lets a run cover more than one benchmark.
     test)
-      flutter test "$target" || true
+      flutter test --no-pub "$target" || true
       ;;
     profile)
-      PROFILE=1 flutter test --enable-vmservice "$target" || true
+      PROFILE=1 flutter test --no-pub --enable-vmservice "$target" || true
       ;;
     release)
-      flutter build linux --release -t "$target"
+      flutter build linux --release --no-pub -t "$target"
       ./build/linux/*/release/bundle/benchmark
       ;;
   esac
