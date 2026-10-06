@@ -81,6 +81,8 @@ abstract class LayoutNode extends SpatialNode {
   /// and positioning every [LayoutItem] child.
   ///
   /// The returned size need not satisfy [constraints]; [layout] clamps it.
+  ///
+  /// Must not add, remove, or reorder children.
   @visibleForOverriding
   Vector2 constrain(LayoutConstraints constraints);
 
