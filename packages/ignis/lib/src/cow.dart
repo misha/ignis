@@ -5,8 +5,9 @@ import 'package:flutter/foundation.dart';
 /// A specialized copy-on-write (COW) list, lovingly termed a *cow*.
 ///
 /// Once the list is shared, it is never written again. The next write creates a
-/// copy instead. In this implementation, iterating over the list implicitly
-/// shares it. The only permitted mutations are [insert] and [remove].
+/// copy instead. In this implementation, [share] hands out the list, and
+/// iterating over the list implicitly shares it. The only permitted mutations
+/// are [insert] and [remove].
 ///
 /// Additionally, the [query] method provides a live, updating view over the
 /// list for any particular type. Queries targeting the same type are handed the
@@ -52,21 +53,25 @@ final class Cow<T> extends Iterable<T> {
   @override
   bool contains(Object? element) => _items.contains(element);
 
+  /// Hands out the list, to be read by the caller.
+  ///
+  /// Per the COW contract, the list is guaranteed to never be written again.
+  List<T> share() {
+    _shared = true;
+    return _items;
+  }
+
   /// Walks the list in order.
   ///
   /// Per the COW contract, the list is guaranteed to never be written again.
   @override
-  Iterator<T> get iterator {
-    _shared = true;
-    return _items.iterator;
-  }
+  Iterator<T> get iterator => share().iterator;
 
   /// Walks the list in reverse order.
   ///
   /// Per the COW contract, the list is guaranteed to never be written again.
   Iterable<T> get reversed sync* {
-    _shared = true;
-    final items = _items;
+    final items = share();
 
     for (var i = items.length - 1; i >= 0; i -= 1) {
       yield items[i];

@@ -112,11 +112,11 @@ class Node {
       }
     }
 
-    final children = _children;
+    final children = _children?.share();
     if (children == null) return;
 
-    for (final child in children) {
-      child.update(dt);
+    for (var i = 0; i < children.length; i += 1) {
+      children[i].update(dt);
     }
   }
 
@@ -140,10 +140,12 @@ class Node {
   /// Renders this node's enabled children to [canvas], in [priority] order.
   @protected
   void renderChildren(Canvas canvas) {
-    final children = _children;
+    final children = _children?.share();
     if (children == null) return;
 
-    for (final child in children) {
+    for (var i = 0; i < children.length; i += 1) {
+      final child = children[i];
+
       if (child.activity.renders) {
         child.render(canvas);
       }
@@ -169,10 +171,12 @@ class Node {
 
   @protected
   void debugRenderChildren(Canvas canvas) {
-    final children = _children;
+    final children = _children?.share();
     if (children == null) return;
 
-    for (final child in children) {
+    for (var i = 0; i < children.length; i += 1) {
+      final child = children[i];
+
       if (child.activity.renders) {
         child.debugRender(canvas);
       }
