@@ -62,9 +62,6 @@ void main() {
     );
 
     scene.update(1);
-    expect(node.children, isNotEmpty);
-
-    scene.update(0); // Flush the self-detach.
     expect(node.children, isEmpty);
   });
 

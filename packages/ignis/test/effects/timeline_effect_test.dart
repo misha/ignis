@@ -269,9 +269,6 @@ void main() {
 
     scene.update(1);
     expect(effect.isFinished, isTrue);
-    expect(a.children, [effect]);
-
-    scene.update(0);
     expect(a.children, isEmpty);
   });
 }

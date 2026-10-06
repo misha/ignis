@@ -66,6 +66,10 @@ final class CollisionArena {
   /// Pairs confirmed overlapping as of the last [process], by key.
   final Map<int, (ColliderNode, ColliderNode)> _overlapping = {};
 
+  /// Slots removed since the last [process], left in place until it runs, so
+  /// a handler may remove colliders mid-sweep.
+  final List<int> _retired = [];
+
   CollisionArena({
     IntersectionEngine? engine,
   }) : engine = engine ?? const StandardIntersectionEngine();
@@ -101,18 +105,23 @@ final class CollisionArena {
     _colliders.remove(collider);
     final slot = _mapping.remove(collider);
     if (slot == null) return;
-    final index = _orderIndex[slot];
-
-    if (index != -1) {
-      _order.removeAt(index);
-      _reorder(index);
-    }
-
-    _colliderIndex[slot] = null;
-    _freeSlots.add(slot);
+    _retired.add(slot);
   }
 
   void process() {
+    for (final slot in _retired) {
+      final index = _orderIndex[slot];
+
+      if (index != -1) {
+        _order.removeAt(index);
+        _reorder(index);
+      }
+
+      _colliderIndex[slot] = null;
+      _freeSlots.add(slot);
+    }
+
+    _retired.clear();
     _sort();
     _detect();
   }
@@ -300,15 +309,6 @@ final class CollisionArena {
       final next = current[entry.key];
       if (next != null && _identicalPair(previous, next)) continue;
       final (a, b) = previous;
-
-      // Unregistered, not separated: no exit signal, but the survivor still
-      // forgets it.
-      if (!a.isMounted || !b.isMounted) {
-        a.dropCollision(b);
-        b.dropCollision(a);
-        continue;
-      }
-
       if ((a.mask & b.layer) != 0) a.endCollision(b);
       if ((b.mask & a.layer) != 0) b.endCollision(a);
     }

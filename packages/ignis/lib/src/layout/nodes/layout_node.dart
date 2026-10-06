@@ -58,9 +58,8 @@ abstract class LayoutNode extends SpatialNode {
   ///
   /// Queried as [SpatialNode]: [LayoutItem] is also implemented by non-nodes.
   ///
-  /// [Node.query] hands back live storage that is maintained in place rather
-  /// than replaced, so the reference is resolved once and kept; later adds and
-  /// removals show up through it.
+  /// [Node.query] hands back a live view rather than a copy, so the reference
+  /// is resolved once and kept; later adds and removals show up through it.
   @protected
   late final Iterable<LayoutItem> layoutChildren =
       query<SpatialNode>() //

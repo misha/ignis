@@ -49,11 +49,10 @@ void main() {
     final host = _Host();
 
     node.add(host);
-    final scene = node.mount();
+    node.mount();
     expect(host.target.value, same(node));
 
     host.detach();
-    scene.update(0); // Flush the pending removal.
 
     expect(() => host.target.value, throwsStateError);
   });
@@ -63,13 +62,11 @@ void main() {
     final second = SpatialNode();
     final host = _Host();
     first.add(host);
-    final scene = first.mount();
+    first.mount();
     first.add(second);
-    scene.update(0);
     expect(host.target.value, same(first));
 
     second.add(host);
-    scene.update(0);
 
     expect(host.target.value, same(second), reason: 'a move re-resolves it');
   });
@@ -111,7 +108,7 @@ void main() {
       },
     );
 
-    final scene = root.mount()..update(0);
+    final scene = root.mount();
     final dead = host;
 
     scene.reassemble();

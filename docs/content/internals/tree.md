@@ -1,6 +1,6 @@
 ---
 title: The Tree
-description: Why a mounted tree defers its own edits.
+description: How a mounted tree is edited while it is being walked.
 lane: internals
 category: internal
 status: stub

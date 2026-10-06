@@ -30,7 +30,6 @@ void main() {
   /// Puts [node] in the scene under test and builds it.
   void add(Node node) {
     scene.root.add(node);
-    scene.update(0);
   }
 
   tearDown(() => scene.destroy());
@@ -127,7 +126,6 @@ void main() {
     add(node);
 
     node.detach();
-    scene.update(0);
 
     expect(press(.f1), isFalse);
     expect(press(.f2), isFalse);

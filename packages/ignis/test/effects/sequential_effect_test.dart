@@ -44,13 +44,9 @@ void main() {
     final sequence = SequentialEffect(effects: [first, second]);
     node.add(sequence);
 
-    scene.update(0);
     expect(sequence.children, [first]);
 
     scene.update(1);
-    expect(sequence.children, [first]); // Still pending.
-
-    scene.update(0);
     expect(sequence.children, [second]);
   });
 
@@ -92,9 +88,6 @@ void main() {
     );
 
     scene.update(1);
-    expect(node.children, isNotEmpty);
-
-    scene.update(0); // Flush the self-detach.
     expect(node.children, isEmpty);
   });
 

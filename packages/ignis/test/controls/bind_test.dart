@@ -81,10 +81,9 @@ void main() {
   test('the bind dies with the node', () {
     var jumps = 0;
     final node = _Binder(() => jumps += 1);
-    final scene = Node(children: [node]).mount();
+    Node(children: [node]).mount();
 
     node.detach();
-    scene.update(0);
 
     expect(press(), isFalse);
     expect(jumps, 0);
@@ -187,13 +186,12 @@ void main() {
 
     test('releasing the winner falls back to the node beneath', () {
       final over = _Answers('over', log, priority: 1);
-      final scene = Node(children: [_Answers('under', log), over]).mount();
+      Node(children: [_Answers('under', log), over]).mount();
 
       press();
       expect(log, ['over']);
 
       over.detach();
-      scene.update(0);
 
       press();
 

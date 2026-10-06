@@ -47,7 +47,6 @@ void main() {
     node.onSceneResize((size) => heard = size);
 
     scene.root.add(node);
-    scene.update(0);
 
     expect(heard, Vector2(100, 80));
   });

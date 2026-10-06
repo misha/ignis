@@ -6,7 +6,7 @@ import 'package:ignis/src/core.dart';
 
 /// The colliders a [ColliderNode] currently overlaps.
 final class CollisionSet extends IterableBase<ColliderNode> {
-  final Set<ColliderNode> _colliders = .identity();
+  Set<ColliderNode> _colliders = .identity();
 
   @override
   Iterator<ColliderNode> get iterator => _colliders.iterator;
@@ -21,5 +21,5 @@ final class CollisionSet extends IterableBase<ColliderNode> {
   void remove(ColliderNode other) => _colliders.remove(other);
 
   @internal
-  void clear() => _colliders.clear();
+  void clear() => _colliders = .identity();
 }

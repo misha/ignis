@@ -24,12 +24,6 @@ part 'route_node.dart';
 /// the usual `build` and mount signals. Routes are built by the caller; the
 /// router keeps no registry.
 ///
-/// **Scheduling**
-///
-/// Added nodes only hit the tree on the next frame, so a [push] or [go] begins at the call but holds until its
-/// route is in the tree, so nothing moves before the *next* frame, even if the
-/// router itself has yet to update. A [pop] starts at the call, since its route
-/// is already in the tree.
 ///
 /// **Region**
 ///
@@ -51,13 +45,9 @@ class RouterNode extends SpatialNode {
   final Transition transition;
 
   /// Every [RouteNode] child, bottom to top.
-  late final Iterable<RouteNode> _routes = query<RouteNode>();
+  late final Iterable<RouteNode> routes = query<RouteNode>();
 
   /// The stack, bottom to top.
-  ///
-  /// A route taken off the stack is still a child until the next flush, so
-  /// what is leaving is filtered out rather than waited on.
-  Iterable<RouteNode> get routes => _routes.where((route) => identical(route.incomingParent, this));
 
   /// The route on top, or null while the stack is empty.
   RouteNode? get top => routes.lastOrNull;
@@ -188,7 +178,7 @@ class RouterNode extends SpatialNode {
       final incoming = navigation.incoming;
       incoming._complete(result);
 
-      // Taken back before its route reached the tree, so it never happened.
+      // Taken back before the router was mounted, so it never happened.
       if (!incoming.isMounted) _settle();
       return navigation.settled.future;
     }
@@ -236,11 +226,11 @@ class RouterNode extends SpatialNode {
     if (navigation == null) return;
     _navigation = null;
 
-    // A route that never reached the tree is played back out.
+    // A router not mounted yet never mounted its route, so it plays back out.
     if (!navigation.incoming.isMounted) navigation.turn();
     navigation.settle();
 
-    for (final route in navigation.leaving(routes).toList(growable: false)) {
+    for (final route in navigation.leaving(routes)) {
       _retire(route);
     }
 

@@ -1,6 +1,6 @@
 ---
 title: Scenes
-description: Mounting a tree, and why your edits land next frame.
+description: Mounting nodes and Flutter usage.
 lane: usage
 category: concept
 status: complete

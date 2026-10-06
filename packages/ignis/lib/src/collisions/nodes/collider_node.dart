@@ -66,7 +66,6 @@ class ColliderNode extends SpatialNode {
   @override
   void build() {
     super.build();
-
     final arena = readOrNull<CollisionArena>();
 
     if (arena == null) {
@@ -98,7 +97,4 @@ class ColliderNode extends SpatialNode {
     collisions.remove(other);
     onCollisionEnd.emit(other);
   }
-
-  @internal
-  void dropCollision(ColliderNode other) => collisions.remove(other);
 }

@@ -78,9 +78,7 @@ void main() {
     expect(nodeA.scale, Vector2(5, 0));
 
     effect.detach();
-    scene.update(0); // Flush the detach.
     nodeB.add(effect);
-    scene.update(0); // Flush the attach.
 
     scene.update(0.5);
     expect(nodeA.scale, Vector2(5, 0)); // Unchanged.

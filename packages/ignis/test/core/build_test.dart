@@ -56,12 +56,14 @@ void main() {
       expect(node.mount, throwsStateError);
     });
 
-    test('a build that throws on a live add throws out of update', () {
+    test('a build that throws on a live add throws out of add', () {
       final root = LiveTestNode(builder: (_) {});
-      final scene = root.mount();
-      root.add(LiveTestNode(builder: (_) => throw StateError('no ancestor')));
+      root.mount();
 
-      expect(() => scene.update(0), throwsStateError);
+      expect(
+        () => root.add(LiveTestNode(builder: (_) => throw StateError('no ancestor'))),
+        throwsStateError,
+      );
     });
 
     test('a throwing reassembly is reported and contained', () {
@@ -105,7 +107,7 @@ void main() {
     test('rebuilds every node that mixes in Live', () {
       final child = LiveTestNode(builder: (_) {});
       final parent = LiveTestNode(builder: (node) => node.add(child));
-      final scene = parent.mount()..update(0);
+      final scene = parent.mount();
 
       scene.reassemble();
 
@@ -139,7 +141,7 @@ void main() {
       final parent = LiveTestNode(
         builder: (node) => declared = node.add(LiveTestNode(builder: (_) {})),
       );
-      final scene = parent.mount()..update(0);
+      final scene = parent.mount();
 
       // The one declared on mount, before the rebuild replaces it.
       final first = declared;
@@ -157,13 +159,12 @@ void main() {
     test('re-runs constructor arguments, not just statements', () {
       var size = 10.0;
       final node = LiveTestNode(builder: (n) => n.add(_Sized(size)));
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
 
       expect((node.children.single as _Sized).size, 10);
 
       size = 20.0;
       scene.reassemble();
-      scene.update(0);
 
       expect((node.children.single as _Sized).size, 20);
     });
@@ -179,11 +180,10 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       expect(returned, same(given));
 
       scene.reassemble();
-      scene.update(0);
 
       expect(returned, same(given), reason: 'the newly declared instance');
       expect(node.children.single, same(given));
@@ -191,11 +191,10 @@ void main() {
 
     test('destroys the children the previous build declared', () {
       final node = LiveTestNode(builder: (n) => n.add(_A()));
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       final first = node.children.single;
 
       scene.reassemble();
-      scene.update(0);
 
       expect(first.isMounted, isFalse);
       expect(node.children.single, isNot(same(first)));
@@ -204,13 +203,11 @@ void main() {
     test('a remount replaces the children the previous build declared', () {
       final node = TestNode(builder: (n) => n.add(_A()));
       final root = Node(children: [node]);
-      final scene = root.mount()..update(0);
+      root.mount();
       final first = node.children.single;
 
       root.remove(node);
-      scene.update(0);
       root.add(node);
-      scene.update(0);
 
       expect(first.isMounted, isFalse);
       expect(node.children.single, isNot(same(first)));
@@ -218,11 +215,11 @@ void main() {
 
     test('a remount into a new scene replaces the children the previous build declared', () {
       final node = TestNode(builder: (n) => n.add(_A()));
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       final first = node.children.single;
 
       scene.destroy();
-      node.mount().update(0);
+      node.mount();
 
       expect(first.isMounted, isFalse);
       expect(node.children.single, isNot(same(first)));
@@ -231,14 +228,11 @@ void main() {
     test('a remount leaves imperative additions alone', () {
       final node = TestNode(builder: (n) => n.add(_A()));
       final root = Node(children: [node]);
-      final scene = root.mount()..update(0);
+      root.mount();
       final spawned = node.add(_B());
-      scene.update(0);
 
       root.remove(node);
-      scene.update(0);
       root.add(node);
-      scene.update(0);
 
       expect(spawned.isMounted, isTrue, reason: 'no build declared it');
       expect(node.children, hasLength(2));
@@ -253,24 +247,21 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       expect(node.children, hasLength(1));
 
       declared = false;
       scene.reassemble();
-      scene.update(0);
 
       expect(node.children, isEmpty);
     });
 
     test('leaves imperative additions alone', () {
       final node = LiveTestNode(builder: (n) => n.add(_A()));
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       final spawned = node.add(_B());
-      scene.update(0);
 
       scene.reassemble();
-      scene.update(0);
 
       expect(spawned.isMounted, isTrue, reason: 'no build declared it');
       expect(node.children, hasLength(2));
@@ -279,25 +270,23 @@ void main() {
     test('preserves a child the new build declared again', () {
       final held = TestNode();
       final node = LiveTestNode(builder: (n) => n.add(held));
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
 
       expect(held.builds, 1);
 
       scene.reassemble();
-      scene.update(0);
 
       expect(node.children.single, same(held));
       expect(held.isMounted, isTrue, reason: 'it never left the tree');
       expect(held.builds, 1, reason: 'a node without Live holds its body');
     });
 
-    test('rebuilds queued before a flush settle to one generation', () {
+    test("repeated reassemblies keep only the last build's children", () {
       final node = LiveTestNode(builder: (n) => n.add(_A()));
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
 
       scene.reassemble();
       scene.reassemble();
-      scene.update(0);
 
       expect(node.builds, 3);
       expect(node.children, hasLength(1), reason: 'only the last build stuck');
@@ -313,15 +302,13 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       scene.reassemble();
-      scene.update(0);
 
       expect(held.isMounted, isTrue);
 
       declared = false;
       scene.reassemble();
-      scene.update(0);
 
       expect(node.children, isEmpty);
       expect(held.isMounted, isFalse);
@@ -343,7 +330,6 @@ void main() {
       _reported(scene.reassemble);
       broken = false;
       scene.reassemble();
-      scene.update(0);
 
       expect(node.parent, same(root));
       expect(node.isMounted, isTrue);
@@ -518,11 +504,9 @@ void main() {
       );
 
       final scene = node.mount();
-      scene.update(0);
 
       keep = false;
       scene.reassemble();
-      scene.update(0);
 
       expect(node.children, isEmpty, reason: 'the child did leave');
 
@@ -535,7 +519,6 @@ void main() {
       final node = LiveTestNode(builder: (n) => n.onSceneResize(sizes.add));
 
       scene.root.add(node);
-      scene.update(0);
       expect(sizes, [Vector2(100, 80)]);
 
       scene.reassemble();
@@ -554,7 +537,6 @@ void main() {
       final node = LiveTestNode(builder: (node) => node.onSceneResize((size) => heard = size));
 
       scene.root.add(node);
-      scene.update(0);
 
       expect(heard, Vector2(100, 80));
     });
@@ -585,7 +567,7 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       scene.reassemble();
       scene.reassemble();
 
@@ -603,12 +585,11 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       final firstKept = kept;
       final firstFresh = fresh;
 
       scene.reassemble();
-      scene.update(0);
 
       expect(kept, same(firstKept));
       expect(firstKept.isMounted, isTrue, reason: 'kept by name, not position');
@@ -625,16 +606,14 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       final first = square;
 
       scene.reassemble();
-      scene.update(0);
       expect(square, same(first), reason: 'the keys still match');
 
       size = 20;
       scene.reassemble();
-      scene.update(0);
 
       expect(square, isNot(same(first)));
       expect(first.isMounted, isFalse, reason: 'what the keys replaced is gone');
@@ -654,13 +633,12 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       final first = thing;
       expect(first, isA<_A>());
 
       swapped = true;
       scene.reassemble();
-      scene.update(0);
 
       expect(thing, isA<_B>());
       expect(first.isMounted, isFalse, reason: 'what it replaced is gone');
@@ -677,12 +655,11 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       final first = dot;
 
       keep = false;
       scene.reassemble();
-      scene.update(0);
 
       expect(first.isMounted, isFalse);
       expect(node.children, isEmpty);
@@ -707,20 +684,18 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       final first = other;
 
       boom = true;
       _reported(() {
         scene.reassemble();
-        scene.update(0);
       });
 
       // The name was never reached, so its value is still kept, and the pass
       // that fixes the error finds it rather than building a second one.
       boom = false;
       scene.reassemble();
-      scene.update(0);
 
       expect(creates, 1);
       expect(other, same(first));
@@ -749,9 +724,8 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       scene.reassemble();
-      scene.update(0);
       scene.destroy();
 
       expect(child.unmounts, 1, reason: 'the parent rebuild did not revoke it');
@@ -767,11 +741,10 @@ void main() {
         },
       );
 
-      final scene = node.mount()..update(0);
+      final scene = node.mount();
       final first = kid;
 
       scene.reassemble();
-      scene.update(0);
 
       expect(kid, same(first));
       expect(kid.isMounted, isTrue);
@@ -788,13 +761,12 @@ void main() {
         },
       );
 
-      final scene = root.mount()..update(0);
+      final scene = root.mount();
       expect(child.builds, 1);
 
       scene.reassemble();
-      scene.update(0);
 
-      expect(child.builds, 1, reason: 'mounted by the flush, not built again by the walk');
+      expect(child.builds, 1, reason: 'built by the rebuild that added it, not again by the walk');
     });
 
     test('reassembles a kept node the pass moved into a fresh container', () {
@@ -807,11 +779,10 @@ void main() {
         },
       );
 
-      final scene = root.mount()..update(0);
+      final scene = root.mount();
       expect(deep.builds, 1);
 
       scene.reassemble();
-      scene.update(0);
 
       expect(root.builds, 2);
       expect(deep.builds, 2, reason: 'the walk reached it through the new container');
@@ -835,12 +806,11 @@ void main() {
           },
         );
 
-        final scene = node.mount()..update(0);
+        final scene = node.mount();
         expect(creates, 2);
 
         ids = [1, 2, 3];
         scene.reassemble();
-        scene.update(0);
 
         expect(creates, 3, reason: 'only the new id was built');
         expect(node.children, hasLength(3));
@@ -858,12 +828,11 @@ void main() {
           },
         );
 
-        final scene = node.mount()..update(0);
+        final scene = node.mount();
         final before = Map.of(seen);
 
         ids = [1, 3];
         scene.reassemble();
-        scene.update(0);
 
         expect(before[2]!.isMounted, isFalse);
         expect(before[1]!.isMounted, isTrue);
@@ -883,12 +852,11 @@ void main() {
           },
         );
 
-        final scene = node.mount()..update(0);
+        final scene = node.mount();
         final before = Map.of(seen);
 
         ids = [3, 1, 2];
         scene.reassemble();
-        scene.update(0);
 
         expect(seen[1], same(before[1]));
         expect(seen[2], same(before[2]));

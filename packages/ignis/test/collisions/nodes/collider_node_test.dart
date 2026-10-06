@@ -150,6 +150,6 @@ void main() {
 
     a.detach();
     expect(() => scene.update(0), returnsNormally);
-    expect(bExited, isEmpty);
+    expect(bExited, [a]);
   });
 }

@@ -193,31 +193,23 @@ void main() {
     expect(a.enabled, isTrue);
   });
 
-  test(
-    'a child removed during an update still ticks that same pass, but is gone by the next flush',
-    () {
-      final log = TestLog();
-      final a = TestNode(name: 'A', log: log);
-      final b = TestNode(name: 'B', log: log);
-      final c = TestNode(name: 'C', log: log);
-      b.action = () => a.remove(c);
-      a.add(b);
-      a.add(c);
-      final scene = a.mount();
+  test('a child removed during an update is skipped for the rest of that pass', () {
+    final log = TestLog();
+    final a = TestNode(name: 'A', log: log);
+    final b = TestNode(name: 'B', log: log);
+    final c = TestNode(name: 'C', log: log);
+    b.action = () => a.remove(c);
+    a.add(b);
+    a.add(c);
+    final scene = a.mount();
 
-      scene.update(1);
-      expect(log.updates, ['A', 'B', 'C']);
-      expect(a.children, [b, c]);
+    scene.update(1);
+    expect(log.updates, ['A', 'B']);
+    expect(a.children, [b]);
+    expect(c.isMounted, isFalse);
+  });
 
-      log.updates.clear();
-
-      scene.update(1);
-      expect(log.updates, ['A', 'B']);
-      expect(a.children, [b]);
-    },
-  );
-
-  test('defers children added during an update until the next update', () {
+  test('a child added during an update mounts at once, but first updates in the next', () {
     final log = TestLog();
     final a = TestNode(name: 'A', log: log);
     final b = TestNode(name: 'B', log: log);
@@ -228,6 +220,7 @@ void main() {
 
     scene.update(1);
     expect(log.updates, ['A', 'B']);
+    expect(c.isMounted, isTrue);
 
     log.updates.clear();
 
@@ -235,7 +228,7 @@ void main() {
     expect(log.updates, ['A', 'B', 'C']);
   });
 
-  test('defers priority changes during an update until the next update', () {
+  test('a priority change during an update reorders at once, but walks in the next', () {
     final log = TestLog();
     final a = TestNode(name: 'A', log: log);
     final b = TestNode(name: 'B', log: log);
@@ -251,6 +244,7 @@ void main() {
 
     scene.update(1);
     expect(log.updates, ['A', 'B', 'C', 'D']);
+    expect(a.children, [d, b, c]);
 
     log.updates.clear();
 
@@ -268,9 +262,8 @@ void main() {
     });
 
     a.add(b);
-    final scene = a.mount();
+    a.mount();
     a.remove(b);
-    scene.update(0);
 
     expect(calls, 1);
   });
@@ -283,9 +276,8 @@ void main() {
     b.onUnmount(() => a.add(d));
     a.add(b);
     a.add(c);
-    final scene = a.mount();
+    a.mount();
     a.removeAll();
-    scene.update(0);
 
     expect(a.children, [d]);
   });
@@ -318,53 +310,52 @@ void main() {
     expect(b.parent, isNull);
   });
 
-  test('re-adding a child cancels a removal queued in the same frame', () {
+  test('re-adding a removed child remounts it', () {
     final a = Node();
     final b = Node();
     a.add(b);
-    final scene = a.mount()..update(0);
+    a.mount();
+    var mounts = 0;
+    b.onMount(() => mounts += 1);
 
     a.remove(b);
     a.add(b);
-    scene.update(0);
 
     expect(a.children, [b]);
-    expect(b.isMounted, isTrue, reason: 'it never left the tree');
+    expect(b.isMounted, isTrue);
+    expect(mounts, 1);
   });
 
-  test('removing a child cancels an addition queued in the same frame', () {
+  test('removing an added child unmounts it', () {
     final a = Node();
     final b = Node();
-    final scene = a.mount()..update(0);
+    a.mount();
 
     a.add(b);
+    expect(b.isMounted, isTrue);
 
     expect(a.remove(b), isTrue);
-
-    scene.update(0);
-
     expect(a.children, isEmpty);
     expect(b.hasParent, isFalse);
-    expect(b.isMounted, isFalse, reason: 'it never arrived');
+    expect(b.isMounted, isFalse);
   });
 
-  test('removing a moved child in the same frame unmounts it', () {
+  test('moving a child and then removing it unmounts it from both parents', () {
     final a = Node();
     final b = Node();
     final c = Node();
     a.add(b);
     a.add(c);
-    final scene = a.mount()..update(0);
+    a.mount();
     var unmounts = 0;
     c.onUnmount(() => unmounts += 1);
 
     b.add(c);
     b.remove(c);
-    scene.update(0);
 
     expect(c.hasParent, isFalse);
     expect(c.isMounted, isFalse);
-    expect(unmounts, 1);
+    expect(unmounts, 2);
   });
 
   test('propagates destroy listener failures while still detaching the node', () {
@@ -372,10 +363,9 @@ void main() {
     final b = Node();
     b.onUnmount(() => throw StateError('Listener failed.'));
     a.add(b);
-    final scene = a.mount();
+    a.mount();
 
-    expect(a.remove(b), isTrue);
-    expect(() => scene.update(0), throwsStateError);
+    expect(() => a.remove(b), throwsStateError);
     expect(b.parent, isNull);
   });
 
@@ -383,11 +373,10 @@ void main() {
     final parent = Node();
     final child = Node();
     parent.add(child);
-    final scene = parent.mount();
+    parent.mount();
     child.onUnmount(() => expect(parent, same(child.parent)));
 
     parent.remove(child);
-    scene.update(0);
     expect(child.parent, isNull);
   });
 
@@ -396,13 +385,12 @@ void main() {
     final to = Node();
     final child = Node();
     from.add(child);
-    final scene = from.mount();
+    from.mount();
     Node? seen;
     child.onUnmount(() => seen = child.parent);
 
     from.remove(child);
     to.add(child);
-    scene.update(0);
     expect(seen, same(from));
     expect(child.parent, same(to));
     expect(child.isMounted, isFalse);
@@ -440,38 +428,30 @@ void main() {
       expect(c.isMounted, isFalse);
     });
 
-    test('adding a child to a mounted node mounts its whole subtree on the next flush', () {
+    test('adding a child to a mounted node mounts its whole subtree at once', () {
       final log = TestLog();
       final a = TestNode(name: 'A', log: log);
       final b = TestNode(name: 'B', log: log);
       final c = TestNode(name: 'C', log: log);
       b.add(c);
-      final scene = a.mount();
+      a.mount();
 
       a.add(b);
-      expect(log.mounts, ['A']);
-      expect(b.isMounted, isFalse); // Still pending.
-
-      scene.update(0);
       expect(log.mounts, ['A', 'B', 'C']);
       expect(b.isMounted, isTrue);
       expect(c.isMounted, isTrue);
     });
 
-    test('removing a child from a mounted node unmounts its whole subtree on the next flush', () {
+    test('removing a child from a mounted node unmounts its whole subtree at once', () {
       final log = TestLog();
       final a = TestNode(name: 'A', log: log);
       final b = TestNode(name: 'B', log: log);
       final c = TestNode(name: 'C', log: log);
       a.add(b);
       b.add(c);
-      final scene = a.mount();
+      a.mount();
 
       a.remove(b);
-      expect(log.unmounts, isEmpty);
-      expect(b.isMounted, isTrue); // Still pending.
-
-      scene.update(0);
       expect(log.unmounts, ['C', 'B']);
       expect(b.isMounted, isFalse);
       expect(c.isMounted, isFalse);
@@ -544,9 +524,8 @@ void main() {
       a.add(b);
       a.add(c);
       b.onMount(() => a.remove(c));
-      final scene = a.mount();
+      a.mount();
 
-      scene.update(0);
       expect(c.hasParent, isFalse);
       expect(c.isMounted, isFalse);
     });
@@ -565,7 +544,7 @@ void main() {
       expect(cUnmounts, 1);
     });
 
-    test('adding a sibling from onMount during a mount cascade mounts it on the next flush', () {
+    test('adding a sibling from onMount during a mount cascade mounts it at once', () {
       final a = Node();
       final b = Node();
       final d = Node();
@@ -574,28 +553,20 @@ void main() {
       d.onMount(() => dMounts += 1);
       b.onMount(() => a.add(d));
 
-      final scene = a.mount();
-      expect(dMounts, 0);
-
-      scene.update(0);
+      a.mount();
       expect(dMounts, 1);
     });
 
-    test(
-      'a node can detach itself from within its own onMount, taking effect on the next flush',
-      () {
-        final a = Node();
-        final b = Node();
-        a.add(b);
-        b.onMount(() => b.detach());
+    test('a node can detach itself from within its own onMount', () {
+      final a = Node();
+      final b = Node();
+      a.add(b);
+      b.onMount(() => b.detach());
 
-        final scene = a.mount();
-        expect(b.parent, same(a));
-
-        scene.update(0);
-        expect(b.parent, isNull);
-      },
-    );
+      a.mount();
+      expect(b.parent, isNull);
+      expect(b.isMounted, isFalse);
+    });
 
     test('reparenting from within onMount remounts the node under its new parent', () {
       final a = Node();
@@ -607,8 +578,7 @@ void main() {
       b.onMount(() => mounts += 1);
       b.onMount(() => c.add(b));
 
-      final scene = a.mount();
-      scene.update(0);
+      a.mount();
 
       expect(b.parent, same(c));
       expect(b.isMounted, isTrue);
@@ -626,6 +596,121 @@ void main() {
 
       a.mount();
       expect(mounts, 1);
+    });
+
+    test('adding a node elsewhere from within its own onUnmount throws', () {
+      final a = Node();
+      final b = Node();
+      final c = Node();
+      a.add(b);
+      a.add(c);
+      a.mount();
+      Object? error;
+
+      b.onUnmount(() {
+        try {
+          c.add(b);
+        } catch (thrown) {
+          error = thrown;
+        }
+      });
+
+      a.remove(b);
+      expect(error, isStateError);
+      expect(b.parent, isNull);
+    });
+
+    test('a child added by a build mounts once that build finishes', () {
+      int? read;
+
+      final parent = TestNode(
+        builder: (node) {
+          node.add(TestNode(builder: (child) => read = child.read<int>()));
+          node.provide(1);
+        },
+      );
+
+      parent.mount();
+      expect(read, 1);
+    });
+
+    test('a child a rebuild adds again stays mounted rather than remounting', () {
+      final child = TestNode();
+      final parent = LiveTestNode(builder: (node) => node.add(child));
+      final scene = parent.mount();
+
+      scene.reassemble();
+      expect(child.parent, same(parent));
+      expect(child.mounts, 1);
+      expect(child.unmounts, 0);
+    });
+  });
+
+  group('editing while walking', () {
+    test('a loop over children may remove every child it reaches', () {
+      final a = Node();
+      final b = Node();
+      final c = Node();
+      a.addAll([b, c]);
+      a.mount();
+
+      for (final child in a.children) {
+        a.remove(child);
+      }
+
+      expect(a.children, isEmpty);
+      expect(b.isMounted, isFalse);
+      expect(c.isMounted, isFalse);
+    });
+
+    test('a loop over children walks them as they stood when it began', () {
+      final a = Node();
+      final b = Node();
+      final c = Node();
+      a.addAll([b, c]);
+      final seen = <Node>[];
+
+      for (final child in a.children) {
+        seen.add(child);
+        a.remove(c);
+      }
+
+      expect(seen, [b, c]);
+      expect(a.children, [b]);
+    });
+
+    test('a loop over a query may reorder what it walks', () {
+      final a = Node();
+      final b = TestNode();
+      final c = TestNode();
+      a.addAll([b, c]);
+
+      for (final (index, child) in a.query<TestNode>().indexed) {
+        child.priority = -index;
+      }
+
+      expect(a.query<TestNode>(), [c, b]);
+    });
+
+    test('a child moved under a parent the update has yet to reach updates again there', () {
+      final log = TestLog();
+      final root = TestNode(name: 'root', log: log);
+      final a = TestNode(name: 'A', log: log);
+      final b = TestNode(name: 'B', log: log);
+      final c = TestNode(name: 'C', log: log);
+      a.add(c);
+      root.addAll([a, b]);
+      c.action = () => b.add(c);
+      final scene = root.mount();
+
+      scene.update(1);
+      expect(log.updates, ['root', 'A', 'C', 'B', 'C']);
+      expect(c.parent, same(b));
+
+      log.updates.clear();
+
+      scene.update(1);
+      expect(log.updates, ['root', 'A', 'B', 'C']);
     });
   });
 

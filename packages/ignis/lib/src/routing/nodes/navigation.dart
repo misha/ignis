@@ -36,9 +36,8 @@ sealed class _Navigation {
   }
 
   /// Moves the clock by [dt] and poses every side, reporting whether this
-  /// navigation has landed. Holds while [incoming] is on its way to the tree.
+  /// navigation has landed.
   bool tick(double dt) {
-    if (!incoming.isMounted) return false;
     final timeline = transition.timeline;
     final bool landed;
 

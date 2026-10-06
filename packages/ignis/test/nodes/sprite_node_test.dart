@@ -361,7 +361,6 @@ void main() {
     scene.update(1);
     expect(node.current.isFinished, isTrue);
 
-    scene.update(0);
     expect(a.children, [node]);
   });
 
@@ -379,9 +378,6 @@ void main() {
 
     scene.update(1);
     expect(node.current.isFinished, isTrue);
-    expect(a.children, [node]); // Still pending.
-
-    scene.update(0);
     expect(a.children, isEmpty);
   });
 

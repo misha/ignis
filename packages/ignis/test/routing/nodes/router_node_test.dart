@@ -82,7 +82,6 @@ void main() {
         ],
       ).mount();
 
-      scene.update(0);
       scene.render(canvas);
       expect(a.renders, 0);
     });
@@ -98,7 +97,7 @@ void main() {
         ],
       );
 
-      router.mount().update(0);
+      router.mount();
       final hits = router.hitTest(Vector2.all(10)).toList();
 
       expect(hits, contains(tapB));
@@ -140,7 +139,7 @@ void main() {
   });
 
   group('push', () {
-    test('begins at the call, but holds until the route is in the tree', () {
+    test('begins at the call, with the route already in the tree', () {
       final transition = TestTransition();
       final router = RouterNode(children: [RouteNode()]);
       final scene = router.mount();
@@ -148,7 +147,8 @@ void main() {
 
       router.push(pushed);
       expect(router.isTransitioning, isTrue);
-      expect(router.routes, isNot(contains(pushed)), reason: 'the add is still queued');
+      expect(router.top, pushed);
+      expect(pushed.isMounted, isTrue);
 
       scene.update(0);
       expect(router.top, pushed);
@@ -163,7 +163,6 @@ void main() {
       final pushed = RouteNode(transition: SlideTransition());
 
       router.push(pushed);
-      scene.update(0);
       scene.update(0.5);
 
       expect(pushed.position.y, 50);
@@ -202,10 +201,9 @@ void main() {
 
     test('completes with what its pop carries', () async {
       final router = RouterNode(children: [RouteNode()]);
-      final scene = router.mount();
+      router.mount();
 
       final result = router.push<String>(RouteNode());
-      scene.update(0);
       router.pop('carried');
 
       expect(await result, 'carried');
@@ -213,10 +211,9 @@ void main() {
 
     test('completes with null on a bare pop', () async {
       final router = RouterNode(children: [RouteNode()]);
-      final scene = router.mount();
+      router.mount();
 
       final result = router.push<String>(RouteNode());
-      scene.update(0);
       router.pop();
 
       expect(await result, isNull);
@@ -224,10 +221,11 @@ void main() {
 
     test('completes with null when a later navigation drops it', () async {
       final router = RouterNode(children: [RouteNode()]);
-      router.mount();
+      final scene = router.mount();
 
       final dropped = router.push<String>(RouteNode());
       router.go(RouteNode());
+      scene.update(1);
 
       expect(await dropped, isNull);
     });
@@ -238,12 +236,10 @@ void main() {
       final route = RouteNode(transition: TestTransition());
 
       router.push(route);
-      scene.update(0);
       scene.update(1);
       router.pop();
 
       final result = router.push<String>(route);
-      scene.update(0);
       scene.update(1);
       router.pop('again');
 
@@ -258,12 +254,10 @@ void main() {
       final pushed = RouteNode(transition: TestTransition());
 
       router.push(pushed);
-      scene.update(0);
       scene.update(1);
 
       router.pop();
       scene.update(1);
-      scene.update(0);
 
       expect(pushed.isMounted, isFalse);
       expect(router.routes, isNot(contains(pushed)));
@@ -279,13 +273,11 @@ void main() {
 
       final scene = router.mount();
       router.push(RouteNode(transition: TestTransition()));
-      scene.update(0);
       scene.update(1);
 
       final covered = a.updates;
       router.pop();
       scene.update(1);
-      scene.update(0);
 
       expect(a.updates, greaterThan(covered));
     });
@@ -347,12 +339,10 @@ void main() {
       final scene = router.mount();
 
       router.go(b, transition: TestTransition());
-      scene.update(0);
       scene.update(0.3);
 
       router.pop();
       scene.update(1);
-      scene.update(0);
 
       expect(router.routes, [a]);
       expect(b.isMounted, isFalse);
@@ -379,7 +369,6 @@ void main() {
 
       router.pop();
       scene.update(1);
-      scene.update(0);
 
       expect(router.routes, isEmpty);
       expect(route.isMounted, isFalse);
@@ -397,7 +386,6 @@ void main() {
       final scene = router.mount();
 
       router.push(RouteNode(transition: TestTransition()));
-      scene.update(0);
       scene.update(1);
 
       var settled = false;
@@ -418,9 +406,7 @@ void main() {
       final c = RouteNode();
 
       router.go(c, transition: TestTransition());
-      scene.update(0);
       scene.update(1);
-      scene.update(0);
 
       expect(router.routes, [c]);
       expect(a.isMounted, isFalse);
@@ -469,11 +455,10 @@ void main() {
     test('leaves the outgoing side running, but deaf', () {
       final outgoing = RouteNode();
       final router = RouterNode(children: [outgoing]);
-      final scene = router.mount();
+      router.mount();
       final incoming = RouteNode();
 
       router.go(incoming, transition: TestTransition());
-      scene.update(0);
 
       expect(outgoing.activity, Activity.update | Activity.render);
       expect(incoming.activity, Activity.all);
@@ -482,7 +467,7 @@ void main() {
     test('honors the activities its transition names for each side', () {
       final outgoing = RouteNode();
       final router = RouterNode(children: [outgoing]);
-      final scene = router.mount();
+      router.mount();
       final incoming = RouteNode();
 
       router.go(
@@ -490,7 +475,6 @@ void main() {
         transition: TestTransition(incoming: Activity.render, outgoing: Activity.none),
       );
 
-      scene.update(0);
       expect(outgoing.activity, Activity.none);
       expect(incoming.activity, Activity.render);
     });
@@ -502,13 +486,10 @@ void main() {
       final green = RouteNode();
 
       router.go(green, transition: TestTransition());
-      scene.update(0);
       scene.update(0.3);
 
       router.go(red, transition: TestTransition());
-      scene.update(0);
       scene.update(1);
-      scene.update(0);
 
       expect(router.routes, [red]);
       expect(green.isMounted, isFalse);
@@ -521,11 +502,9 @@ void main() {
       final c = RouteNode();
 
       router.go(RouteNode(), transition: TestTransition());
-      scene.update(0);
       scene.update(0.3);
 
       router.go(c, transition: TestTransition());
-      scene.update(0);
 
       expect(a.isMounted, isFalse, reason: 'the first swap was settled at the call');
       expect(router.top, c);
@@ -538,7 +517,6 @@ void main() {
       final incoming = RouteNode();
 
       router.go(incoming, transition: FadeTransition(crossFade: true));
-      scene.update(0);
       scene.update(0.5);
       expect(incoming.opacity, 0.5);
 
@@ -555,13 +533,10 @@ void main() {
       expect(builds, 1);
 
       router.go(RouteNode(), transition: TestTransition());
-      scene.update(0);
       scene.update(1);
-      scene.update(0);
       expect(a.isMounted, isFalse);
 
       router.go(a, transition: TestTransition());
-      scene.update(0);
       expect(builds, 2);
     });
   });
@@ -588,7 +563,6 @@ void main() {
         transition: TestTransition(chrome: chrome),
       );
 
-      scene.update(0);
       scene.update(0.5);
       scene.render(canvas);
       expect(log.renders, ['a', 'b', 'chrome']);
@@ -602,12 +576,9 @@ void main() {
       final scene = router.mount();
 
       router.go(RouteNode());
-      scene.update(0);
       scene.update(1);
-      scene.update(0);
 
       router.go(RouteNode());
-      scene.update(0);
       scene.update(0.5);
       scene.render(RecordingCanvas());
 
@@ -623,29 +594,25 @@ void main() {
         final incoming = RouteNode(transition: TestTransition(chrome: chrome));
 
         router.go(incoming);
-        scene.update(0);
         expect(chrome.priority, greaterThan(incoming.priority), reason: 'swap $swap');
 
         scene.update(1);
       }
     });
 
-    test('paints its last frame at settle, then leaves the tree', () {
+    test('leaves the tree as the navigation settles', () {
       final log = TestLog();
       final chrome = TestNode(name: 'chrome', log: log);
       final router = RouterNode(children: [RouteNode()]);
       final scene = router.mount();
 
       router.go(RouteNode(), transition: TestTransition(chrome: chrome));
-      scene.update(0);
       scene.update(1);
       expect(router.isTransitioning, isFalse);
+      expect(router.children, isNot(contains(chrome)));
 
       scene.render(canvas);
-      expect(log.renders, ['chrome'], reason: 'the settling frame finishes the arc');
-
-      scene.update(0);
-      expect(router.children, isNot(contains(chrome)));
+      expect(log.renders, isEmpty);
     });
   });
 }

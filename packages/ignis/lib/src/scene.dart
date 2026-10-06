@@ -5,13 +5,12 @@ import 'dart:ui' hide Scene;
 import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
-import 'package:ignis/src/scheduler.dart';
 import 'package:ignis/src/shape.dart';
 
 /// A controller for a mounted [Node] tree.
 ///
 /// TODO: Document further.
-class Scene with Scheduler {
+class Scene {
   /// This scene's root. Cannot be modified.
   final Node root;
 
@@ -78,7 +77,6 @@ class Scene with Scheduler {
 
   void update(double dt) {
     assert(_mounted, 'Cannot update a destroyed scene.');
-    flush();
     root.update(dt);
   }
 
@@ -124,6 +122,5 @@ class Scene with Scheduler {
     _mounted = false;
     _ACTIVE.remove(this);
     root.unmount();
-    flush();
   }
 }

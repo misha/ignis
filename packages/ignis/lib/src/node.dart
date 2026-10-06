@@ -23,13 +23,13 @@ typedef Cleanup = void Function();
 /// **Building**
 ///
 /// Nodes should initialize children, connect signals, and compose behavior in
-/// their [build] method. [build] is called every time a node is mounted to
-/// a live scene.
+/// their [build] method. [build] is called every time a node is mounted to a
+/// live scene.
 ///
 /// [build] must be safe to run more than once. It tracks every node added and
 /// every signal subscribed inside it. When the node is unmounted, the nodes
 /// are removed and signals automatically unsubscribed. Other resources that
-/// need disposal should be put in the [trash] manually.
+/// need disposal should be placed in the [trash] manually.
 ///
 /// **Do not make [build] `async`.**
 ///
@@ -53,14 +53,18 @@ typedef Cleanup = void Function();
 ///
 /// **Tree**
 ///
-/// Before being mounted, the [add], [remove], and [priority] tree operations
-/// take effect immediately, allowing a subtree to be freely assembled long
-/// before it goes live.
+/// A node is also a tree. You can [add] and [remove] child nodes, as well as
+/// set [priority] to control its order within the list of children.
 ///
-/// Once mounted, however, the same calls are instead merely enqueued. The
-/// scene applies pending changes right before the next [update]. As a result,
-/// operations for live node trees are always delayed a frame. The queue avoids
-/// mutation during iteration and batches changes.
+/// Changes to the tree take effect immediately.
+///
+/// *However*, in-progress updates are a little more complicated. There is no
+/// correct answer here. How *should* an update respond if a node is moved?
+///
+/// The policy for this implementation is: "best effort". If a node is added,
+/// removed, or repositioned under a parent the traversal has yet to reach, then
+/// the in-progress traversal *will* see the change. Otherwise, the change is
+/// processed from the next frame.
 ///
 /// **Dependency Injection**
 ///
@@ -108,7 +112,8 @@ class Node {
       }
     }
 
-    if (children.isEmpty) return;
+    final children = _children;
+    if (children == null) return;
 
     for (final child in children) {
       child.update(dt);
@@ -135,7 +140,8 @@ class Node {
   /// Renders this node's enabled children to [canvas], in [priority] order.
   @protected
   void renderChildren(Canvas canvas) {
-    if (children.isEmpty) return;
+    final children = _children;
+    if (children == null) return;
 
     for (final child in children) {
       if (child.activity.renders) {
@@ -163,7 +169,8 @@ class Node {
 
   @protected
   void debugRenderChildren(Canvas canvas) {
-    if (children.isEmpty) return;
+    final children = _children;
+    if (children == null) return;
 
     for (final child in children) {
       if (child.activity.renders) {
@@ -175,7 +182,8 @@ class Node {
   @internal
   void resize(Vector2 size) {
     onSceneResize.emit(size);
-    if (children.isEmpty) return;
+    final children = _children;
+    if (children == null) return;
 
     for (final child in children) {
       child.resize(size);
@@ -216,14 +224,13 @@ class Node {
   ///
   /// Everything the previous [build] made is thrown away:
   ///
-  ///   - All [add]ed direct children are removed.
+  ///   - All [add]ed direct children it does not add again are removed.
   ///   - All [tick], [draw], and [debugDraw] closures are removed.
   ///   - The [trash] is processed and cleared.
   ///
   /// When using [Live], anything named by [Live.keep] is specifically retained.
   void _rebuild() {
     _builtGeneration = _latestGeneration;
-    _discardDeclared();
 
     // Dropped rather than cleared, so a rebuild from inside an [onUpdate]
     // leaves the list that call is being iterated from intact. Its remaining
@@ -232,6 +239,8 @@ class Node {
     _draws = null;
     _debugDraws = null;
     _cleanup();
+    final declared = _declared;
+    _declared = null;
     final saved = _building;
     _building = this;
 
@@ -245,6 +254,7 @@ class Node {
     } finally {
       if (this case final Live live) live._claimed = null;
       _building = saved;
+      _discard(declared);
     }
   }
 
@@ -260,16 +270,19 @@ class Node {
   ///   want to clean them up on a code change, when that unit changes).
   List<Node>? _declared;
 
-  /// Detaches every child the last [build] declared.
-  void _discardDeclared() {
-    final declared = _declared;
+  /// Removes every child in [declared] that the current [_declared] lacks.
+  ///
+  /// A child declared again stays put rather than being removed and added back,
+  /// so it is not unmounted and remounted along the way.
+  void _discard(List<Node>? declared) {
     if (declared == null || declared.isEmpty) return;
+    final current = _declared;
 
     for (var i = declared.length - 1; i >= 0; i -= 1) {
-      declared[i].detach();
+      final child = declared[i];
+      if (current != null && current.contains(child)) continue;
+      remove(child);
     }
-
-    declared.clear();
   }
 
   /// Calls [tick] with the elapsed seconds on every frame.
@@ -414,27 +427,18 @@ class Node {
 
   // #region Children
 
-  _Children? _children;
+  Cow<Node>? _children;
 
   /// This node's children, in [priority] order.
-  Iterable<Node> get children {
-    return _children?.nodes ?? const [];
-  }
+  Iterable<Node> get children => _children ?? const [];
 
   /// This node's children, in reverse [priority] order.
-  Iterable<Node> get reverseChildren sync* {
-    final children = _children?.nodes;
-    if (children == null) return;
-
-    for (var i = children.length - 1; i >= 0; i -= 1) {
-      yield children[i];
-    }
-  }
+  Iterable<Node> get reverseChildren => _children?.reversed ?? const [];
 
   /// This node's children of type [T], in [priority] order.
   ///
   /// The returned object is a live, read-only view of all [T] children.
-  Iterable<T> query<T extends Node>() => (_children ??= _Children()).query<T>();
+  Iterable<T> query<T extends Node>() => (_children ??= .new()).query<T>();
 
   /// This node's descendants in depth-first preorder.
   Iterable<Node> get descendants sync* {
@@ -453,7 +457,6 @@ class Node {
   // #region Priority
 
   int _priority;
-  _ReorderTask? _reorderTask;
 
   /// This node's order in updating and rendering in its parent.
   ///
@@ -462,30 +465,14 @@ class Node {
   /// this internal ordering with a stable sorting algorithm.
   int get priority => _priority;
 
-  /// This node's [priority], or what it is scheduled to be.
-  int get incomingPriority => _reorderTask?.priority ?? _priority;
-
   @nonVirtual
-  set priority(int value) => _schedulePriority(value);
-
-  void _schedulePriority(int priority) {
-    _reorderTask?.cancel();
-    _reorderTask = null;
-    if (priority == _priority) return;
-    final task = _ReorderTask(this, priority);
-
-    if (isMounted) {
-      scene.schedule(task);
-      _reorderTask = task;
-    } else {
-      task.execute();
-    }
-  }
-
-  void _reorder(int priority) {
-    _reorderTask = null;
-    _priority = priority;
-    _parent?._children?.reorder(this);
+  set priority(int nextPriority) {
+    if (nextPriority == _priority) return;
+    _priority = nextPriority;
+    final parent = _parent;
+    if (parent == null) return;
+    parent._children!.remove(this);
+    parent._insert(this);
   }
 
   // #endregion
@@ -493,6 +480,7 @@ class Node {
   // #region Scene
 
   Scene? _scene;
+  bool _unmounting = false;
 
   /// True while this node is the root of a scene.
   bool get isRoot => identical(_scene?.root, this);
@@ -518,8 +506,6 @@ class Node {
       throw StateError('Cannot mount a node that has a parent.');
     }
 
-    _reparentTask?.cancel();
-    _reparentTask = null;
     final created = Scene(root: this);
     _mount(created);
     return created;
@@ -542,18 +528,36 @@ class Node {
     }
 
     onMount.emit();
-    final children = _children?.nodes;
+    _mountChildren();
+  }
+
+  /// Mounts every child not mounted yet, such as those added while this node
+  /// was building.
+  void _mountChildren() {
+    final children = _children;
     if (children == null) return;
 
-    for (final child in children.toList(growable: false)) {
-      if (!identical(child.parent, this)) continue;
-      child._mount(scene);
+    for (final child in children) {
+      // A child's mount may take this node back out of the tree.
+      if (!isMounted) return;
+
+      if (owns(child) && !child.isMounted) {
+        child._mount(scene);
+      }
     }
   }
 
   void _unmount() {
-    for (final child in reverseChildren) {
-      child._unmount();
+    if (!isMounted || _unmounting) return;
+    _unmounting = true;
+    final children = _children;
+
+    if (children != null) {
+      for (final child in children.reversed) {
+        if (owns(child)) {
+          child._unmount();
+        }
+      }
     }
 
     try {
@@ -562,10 +566,13 @@ class Node {
       _ticks = null;
       _draws = null;
       _debugDraws = null;
-      _discardDeclared();
+      final declared = _declared;
+      _declared = null;
+      _discard(declared);
       _dropAncestry();
     } finally {
       _scene = null;
+      _unmounting = false;
     }
   }
 
@@ -574,13 +581,9 @@ class Node {
   // #region Tree
 
   Node? _parent;
-  _ReparentTask? _reparentTask;
 
   /// The parent that owns this node, if any.
   Node? get parent => _parent;
-
-  /// The [parent] that owns or is scheduled to own this node, if any.
-  Node? get incomingParent => _reparentTask != null ? _reparentTask!.parent : parent;
 
   /// True if this node has a non-null [parent].
   bool get hasParent => parent != null;
@@ -598,13 +601,13 @@ class Node {
   /// Checks if this node owns the [other] node.
   bool owns(Node other) => identical(this, other.parent);
 
-  /// True if [node] is, or soon will be, an ancestor of this node.
+  /// True if [node] is this node or one of its ancestors.
   bool cycles(Node node) {
     Node? current = this;
 
     while (current != null) {
       if (identical(current, node)) return true;
-      current = current.incomingParent;
+      current = current.parent;
     }
 
     return false;
@@ -612,12 +615,12 @@ class Node {
 
   /// Adds [node] to this node. The node is returned.
   ///
-  /// Nodes cannot be added to themselves or their descendants. Adding a child
-  /// to its current parent is a no-op. If the child was pending removal, this
-  /// operation cancels that removal.
+  /// Nodes cannot be added to themselves or their descendants, and a node that
+  /// is unmounting cannot be added anywhere. Adding a child to its current
+  /// parent is a no-op.
   ///
   /// Called from this node's own [build], the child is automatically recorded
-  /// as declared, so the next [build] discards it before running again.
+  /// as declared, so the next [build] discards it unless it adds it again.
   T add<T extends Node>(T node) {
     if (identical(this, node)) {
       throw StateError('Cannot add a node to itself.');
@@ -635,16 +638,19 @@ class Node {
       throw StateError('Cannot move a node between two live scenes.');
     }
 
-    if (identical(node.incomingParent, this)) {
-      return node;
+    if (node._unmounting) {
+      throw StateError('Cannot add a node while it is unmounting.');
     }
 
-    // TODO: Declared nodes should probably be accrued during actual reparenting.
     if (identical(_building, this)) {
       (_declared ??= []).add(node);
     }
 
-    node._scheduleParent(this);
+    if (identical(node._parent, this)) {
+      return node;
+    }
+
+    node._reparent(this);
     return node;
   }
 
@@ -656,14 +662,14 @@ class Node {
 
   /// Removes the child [node].
   ///
-  /// Returns true if the node was owned by this node and its removal was
-  /// accepted. Removing a parentless node, a node not owned by this node, or a
-  /// node already awaiting removal, is a no-op that returns `false`.
-  ///
-  /// If the node was scheduled to be added, that operation is cancelled instead.
+  /// Returns true if the node was owned by this node and is now removed.
+  /// Removing a node not owned by this node is a no-op that returns `false`.
   bool remove(Node node) {
-    if (!identical(node.incomingParent, this)) return false;
-    node._scheduleParent(null);
+    if (!identical(node._parent, this)) {
+      return false;
+    }
+
+    node._reparent(null);
     return true;
   }
 
@@ -675,43 +681,49 @@ class Node {
   }
 
   /// Removes this node from its parent.
-  bool detach() => incomingParent?.remove(this) ?? false;
-
-  void _scheduleParent(Node? parent) {
-    _reparentTask?.cancel();
-    _reparentTask = null;
-    if (identical(parent, _parent)) return;
-    final task = _ReparentTask(this, parent);
-    final scene = _scene ?? parent?._scene;
-
-    if (scene != null) {
-      scene.schedule(task);
-      _reparentTask = task;
-    } else {
-      task.execute();
-    }
-  }
+  bool detach() => parent?.remove(this) ?? false;
 
   void _reparent(Node? nextParent) {
-    _reparentTask = null;
-    final outgoing = _scene;
-    final incoming = nextParent?._scene;
-
     // TODO: It is unclear whether it is "correct" to rebuild a node when
     //  moving it to a new parent in the same scene. However, I have no games
     //  that move nodes, and Flame does not have rebuildable nodes, so there is
     //  literally no point of reference. Revisit this operation when there is
     //  finally a game that depends on moving nodes in some way.
+    //
+    // TODO: rebuilding is what makes it valid for a node moved mid-update to
+    //  update again under a parent the pass has yet to reach, so a moved node
+    //  may update twice in one frame.
 
     try {
-      if (outgoing != null) _unmount();
+      _unmount();
     } finally {
       parent?._children?.remove(this);
-      (nextParent?._children ??= _Children())?.add(this);
+      nextParent?._insert(this);
       _parent = nextParent;
       _forgetAncestry();
-      if (incoming != null) _mount(incoming);
+
+      // TODO: Revisit this spaghetti.
+      if (nextParent != null &&
+          nextParent.isMounted &&
+          !nextParent._unmounting &&
+          !identical(_building, nextParent)) {
+        _mount(nextParent.scene);
+      }
     }
+  }
+
+  /// Inserts [child] after every child of equal or lower [priority].
+  ///
+  /// Ties maintain insertion order.
+  void _insert(Node child) {
+    final children = _children ??= .new();
+    var index = children.length;
+
+    while (index > 0 && children[index - 1]._priority > child._priority) {
+      index -= 1;
+    }
+
+    children.insert(index, child);
   }
 
   // #endregion
@@ -725,7 +737,7 @@ class Node {
   }
 
   void _reassemble() {
-    // Already built by the flush that mounted it, against this same code.
+    // Already built by the mount that brought it in, against this same code.
     if (this is Live && _builtGeneration != _latestGeneration) {
       // A mid-edit build throws, and must not take the rest of the walk down.
       try {
@@ -740,17 +752,17 @@ class Node {
           ),
         );
       }
+
+      _mountChildren();
     }
 
-    // Settle what the pass just declared, so the walk descends into the tree
-    // as it now stands rather than as it stood before the rebuild.
-    scene.flush();
-    if (children.isEmpty) return;
+    final children = _children;
+    if (children == null) return;
 
-    for (final child in children.toList(growable: false)) {
-      // A rebuild above queued this one's removal, so it is already gone. Its
-      // replacement built against the current code and is not in this list.
-      if (!identical(child.parent, this)) continue;
+    for (final child in children) {
+      // A rebuild above removed this one, and its replacement, if any, already
+      // built against the current code.
+      if (!child.isMounted) continue;
       child._reassemble();
     }
   }
@@ -780,12 +792,6 @@ class Node {
   ///
   /// When [Activity.inputs] is disabled, this node and its entire subtree are
   /// excluded from hit testing.
-  ///
-  /// Unlike [add], [remove], and [priority], [enabled] takes effect
-  /// immediately even on a mounted node. A handler invoked mid-walk that
-  /// disables an unvisited node will affect that same walk.
-  ///
-  /// TODO: Should it really do that? Is enabled actually a tree operation?
   @nonVirtual
   Iterable<Node> hitTest(Vector2 point) =>
       // TODO: Controls prune on this same predicate, so "input does not reach
@@ -830,7 +836,7 @@ class Node {
   /// Drops all registered targets for this node and its entire subtree.
   void _forgetAncestry() {
     _dropAncestry();
-    final children = _children?.nodes;
+    final children = _children;
     if (children == null) return;
 
     for (final child in children) {

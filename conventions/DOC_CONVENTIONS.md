@@ -29,7 +29,7 @@ Every page declares a `lane` and serves exactly one reader.
 
 ```
 "How do I make two things collide?"                         -> usage
-"Why does the collision resolve the frame after I add it?"  -> internals
+"Why can a node remove itself in the middle of an update?"  -> internals
 ```
 
 When the same topic appears in both lanes at different altitudes, cross-link them.

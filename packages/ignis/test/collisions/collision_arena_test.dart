@@ -156,24 +156,43 @@ void main() {
       expect(aEnded, isEmpty);
     });
 
-    test('does not fire onCollisionEnd for a pair with a detached member', () {
+    test('fires onCollisionEnd for a pair with a detached member', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
       arena.process();
 
       final bEnded = <ColliderNode>[];
       b.onCollisionEnd(bEnded.add);
 
-      // a's pair with b drops out because a was unregistered, not because they
-      // separated. Detaching while mounted queues the removal, so an update is
-      // needed.
       a.detach();
-      scene.update(0);
       arena.process();
 
-      expect(bEnded, isEmpty);
+      expect(bEnded, [a]);
+    });
+  });
+
+  group('removal mid-sweep', () {
+    test('a handler removing its own collider leaves the rest of the sweep intact', () {
+      final a = ColliderNode(shape: .square(10), position: .zero);
+      final b = ColliderNode(shape: .square(10), position: .new(3, 0));
+      final c = ColliderNode(shape: .square(10), position: .new(6, 0));
+      final bStarted = <ColliderNode>[];
+      final cStarted = <ColliderNode>[];
+      a.onCollisionStart((_) => a.detach());
+      b.onCollisionStart(bStarted.add);
+      c.onCollisionStart(cStarted.add);
+      CollisionArenaNode(arena: arena, children: [a, b, c]).mount();
+
+      arena.process();
+      expect(a.isMounted, isFalse);
+      expect(bStarted, [a, c]);
+      expect(cStarted, [a, b]);
+
+      arena.process();
+      expect(b.collisions, [c]);
+      expect(c.collisions, [b]);
     });
   });
 
@@ -207,27 +226,23 @@ void main() {
       expect(b.isColliding, isFalse);
     });
 
-    test(
-      'drops a detached partner from the survivor\'s active set without firing onCollisionEnd',
-      () {
-        final a = ColliderNode(shape: .square(10));
-        final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-        final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
+    test('ends a detached partner\'s collision on the survivor', () {
+      final a = ColliderNode(shape: .square(10));
+      final b = ColliderNode(shape: .square(10), position: .new(6, 0));
+      CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
-        arena.process();
+      arena.process();
 
-        final bEnded = <ColliderNode>[];
-        b.onCollisionEnd(bEnded.add);
+      final bEnded = <ColliderNode>[];
+      b.onCollisionEnd(bEnded.add);
 
-        a.detach();
-        scene.update(0);
-        arena.process();
+      a.detach();
+      arena.process();
 
-        expect(bEnded, isEmpty);
-        expect(b.collisions, isEmpty);
-        expect(b.isColliding, isFalse);
-      },
-    );
+      expect(bEnded, [a]);
+      expect(b.collisions, isEmpty);
+      expect(b.isColliding, isFalse);
+    });
 
     test('holds the other collider in active already inside onCollisionStart', () {
       final a = ColliderNode(shape: .square(10));
@@ -269,14 +284,13 @@ void main() {
     test('clears active when this collider itself is unmounted', () {
       final a = ColliderNode(shape: .square(10));
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [a, b]).mount();
 
       arena.process();
 
       expect(a.collisions, isNotEmpty);
 
       a.detach();
-      scene.update(0);
 
       expect(a.collisions, isEmpty);
     });

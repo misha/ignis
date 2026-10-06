@@ -53,7 +53,6 @@ void main() {
     );
 
     scene.update(1); // Catches up and detaches.
-    scene.update(0); // Flush the self-detach.
     expect(node.children, isEmpty);
   });
 }
