@@ -15,7 +15,7 @@ abstract base class Task extends LinkedListEntry<Task> {
 }
 
 @internal
-mixin Scheduler {
+mixin class Scheduler {
   final _tasks = LinkedList<Task>();
 
   @internal
