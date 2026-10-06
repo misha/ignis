@@ -10,6 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  collection: ^1.19.1
   ivector_math: ^0.2.0
   path: ^1.9.1
   pool: ^1.5.2
