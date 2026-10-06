@@ -883,7 +883,13 @@ extension Mount<T extends Node> on T {
   /// If this is already the root of a scene, returns that same scene.
   Scene<T> mount() {
     if (isRoot) {
-      return scene as Scene<T>;
+      final existing = scene;
+
+      if (existing is! Scene<T>) {
+        throw StateError('Cannot mount a node that is already the root of a ${existing.runtimeType}.');
+      }
+
+      return existing;
     }
 
     if (_parent != null) {

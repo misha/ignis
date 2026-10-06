@@ -68,6 +68,13 @@ void main() {
     expect(scene.root.parent, isNull);
   });
 
+  test('mounting a root again under a narrower type throws', () {
+    final node = TestNode();
+    (node as Node).mount();
+
+    expect(node.mount, throwsStateError);
+  });
+
   test('reassembles the whole tree', () {
     final a = LiveTestNode(name: 'A');
     final b = LiveTestNode(name: 'B');
