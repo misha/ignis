@@ -489,6 +489,9 @@ class Node {
   /// True while this node is part of a scene.
   bool get isMounted => _scene != null;
 
+  /// True if this node is in the process of unmounting.
+  bool get isUnmounting => _unmounting;
+
   /// This node's current scene. Only valid while [isMounted].
   Scene get scene {
     assert(isMounted, 'This node is not mounted yet.');
@@ -532,7 +535,7 @@ class Node {
   }
 
   void _unmount() {
-    if (!isMounted || _unmounting) return;
+    if (!isMounted || isUnmounting) return;
     _unmounting = true;
     final children = _children;
 
@@ -622,7 +625,7 @@ class Node {
       throw StateError('Cannot move a node between two live scenes.');
     }
 
-    if (node._unmounting) {
+    if (node.isUnmounting) {
       throw StateError('Cannot add a node while it is unmounting.');
     }
 
@@ -689,7 +692,7 @@ class Node {
       // TODO: Revisit this spaghetti.
       if (nextParent != null &&
           nextParent.isMounted &&
-          !nextParent._unmounting &&
+          !nextParent.isUnmounting &&
           !identical(_building, nextParent)) {
         _mount(nextParent.scene);
       }
