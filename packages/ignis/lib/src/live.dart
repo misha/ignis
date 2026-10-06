@@ -153,6 +153,16 @@ mixin Live on Node {
     return value;
   }
 
+  @override
+  void rebuild() {
+    try {
+      super.rebuild();
+      _sweep();
+    } finally {
+      _claimed = null;
+    }
+  }
+
   /// Drops everything the pass that just finished stopped declaring.
   void _sweep() {
     final kept = _kept;

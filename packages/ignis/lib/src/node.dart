@@ -231,9 +231,8 @@ class Node {
   ///   - All [add]ed direct children it does not add again are removed.
   ///   - All [tick], [draw], and [debugDraw] closures are removed.
   ///   - The [trash] is processed and cleared.
-  ///
-  /// When using [Live], anything named by [Live.keep] is specifically retained.
-  void _rebuild() {
+  @internal
+  void rebuild() {
     _builtGeneration = _latestGeneration;
 
     // Dropped rather than cleared, so a rebuild from inside an [onUpdate]
@@ -250,15 +249,13 @@ class Node {
 
     try {
       build();
-      // TODO: Not a fan of the control flow here. Might need a separate method
-      //  to specifically handle the two cases instead.
-      if (this case final Live live) live._sweep();
-      // TODO: Is this really the right code position for this event?
-      if (scene.hasSize) onSceneResize.emit(scene.size);
     } finally {
-      if (this case final Live live) live._claimed = null;
       _building = saved;
       _discard(declared);
+    }
+
+    if (scene.hasSize) {
+      onSceneResize.emit(scene.size);
     }
   }
 
@@ -505,7 +502,7 @@ class Node {
 
   void _mount(Scene scene) {
     _scene = scene;
-    _rebuild();
+    rebuild();
     final targets = _targets;
 
     if (targets != null) {
@@ -728,7 +725,7 @@ class Node {
     if (this is Live && _builtGeneration != _latestGeneration) {
       // A mid-edit build throws, and must not take the rest of the walk down.
       try {
-        _rebuild();
+        rebuild();
       } catch (exception, stack) {
         FlutterError.reportError(
           FlutterErrorDetails(
@@ -886,7 +883,7 @@ extension Mount<T extends Node> on T {
       final existing = scene;
 
       if (existing is! Scene<T>) {
-        throw StateError('Cannot mount a node that is already the root of a ${existing.runtimeType}.');
+        throw StateError('Cannot mount a node under a different root type.');
       }
 
       return existing;
