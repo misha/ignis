@@ -10,9 +10,9 @@ import 'package:ignis/src/shape.dart';
 /// A controller for a mounted [Node] tree.
 ///
 /// TODO: Document further.
-class Scene {
+class Scene<T extends Node> {
   /// This scene's root. Cannot be modified.
-  final Node root;
+  final T root;
 
   static final List<Scene> _ACTIVE = [];
 

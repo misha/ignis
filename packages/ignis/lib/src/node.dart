@@ -498,23 +498,6 @@ class Node {
     return _scene!;
   }
 
-  /// Mounts this node as the root of a new [Scene] and returns it.
-  ///
-  /// If this is already the root of a scene, returns that same scene.
-  Scene mount() {
-    if (isRoot) {
-      return scene;
-    }
-
-    if (_parent != null) {
-      throw StateError('Cannot mount a node that has a parent.');
-    }
-
-    final created = Scene(root: this);
-    _mount(created);
-    return created;
-  }
-
   @internal
   void unmount() {
     _unmount();
@@ -891,4 +874,24 @@ class Node {
   }
 
   // #endregion
+}
+
+/// Mounts a node as the root of a new [Scene].
+extension Mount<T extends Node> on T {
+  /// Mounts this node as the root of a new [Scene] and returns it.
+  ///
+  /// If this is already the root of a scene, returns that same scene.
+  Scene<T> mount() {
+    if (isRoot) {
+      return scene as Scene<T>;
+    }
+
+    if (_parent != null) {
+      throw StateError('Cannot mount a node that has a parent.');
+    }
+
+    final created = Scene<T>(root: this);
+    _mount(created);
+    return created;
+  }
 }
