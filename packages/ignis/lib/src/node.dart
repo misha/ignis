@@ -415,10 +415,22 @@ class Node {
 
   _Children? _children;
 
-  /// This node's direct children.
-  Iterable<Node> get children => _children?.nodes ?? const [];
+  /// This node's children, in [priority] order.
+  Iterable<Node> get children {
+    return _children?.nodes ?? const [];
+  }
 
-  /// This node's direct children of type [T], in [priority] order.
+  /// This node's children, in reverse [priority] order.
+  Iterable<Node> get reverseChildren sync* {
+    final children = _children?.nodes;
+    if (children == null) return;
+
+    for (var i = children.length - 1; i >= 0; i -= 1) {
+      yield children[i];
+    }
+  }
+
+  /// This node's children of type [T], in [priority] order.
   ///
   /// The returned object is a live, read-only view of all [T] children.
   Iterable<T> query<T extends Node>() => (_children ??= _Children()).query<T>();
@@ -539,12 +551,8 @@ class Node {
   }
 
   void _unmount() {
-    final children = _children?.nodes;
-
-    if (children != null) {
-      for (var i = children.length - 1; i >= 0; i -= 1) {
-        children[i]._unmount();
-      }
+    for (final child in reverseChildren) {
+      child._unmount();
     }
 
     try {
@@ -660,11 +668,8 @@ class Node {
 
   /// Removes all children.
   void removeAll() {
-    final children = _children?.nodes;
-    if (children == null) return;
-
-    for (var i = children.length - 1; i >= 0; i -= 1) {
-      remove(children[i]);
+    for (final child in reverseChildren) {
+      remove(child);
     }
   }
 
@@ -761,12 +766,9 @@ class Node {
   @nonVirtual
   Iterable<Node> traverse({bool Function(Node node)? prune}) sync* {
     if (prune != null && prune(this)) return;
-    final children = _children?.nodes;
 
-    if (children != null) {
-      for (var i = children.length - 1; i >= 0; i -= 1) {
-        yield* children[i].traverse(prune: prune);
-      }
+    for (final child in reverseChildren) {
+      yield* child.traverse(prune: prune);
     }
 
     yield this;
