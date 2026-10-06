@@ -67,9 +67,7 @@ final class SpriteRegion {
   );
 
   /// Whether the cache still holds the art this is cut from.
-  ///
-  /// TODO: Consider a different name.
-  bool get isLoaded => Ignis.cache.contains(asset);
+  bool get isCached => Ignis.cache.contains(asset);
 
   /// The image this is cut from, as the cache holds it now.
   Image get image => Ignis.cache.retrieve<Image>(asset);
