@@ -9,14 +9,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "99.0.0"
-  analysis_server_plugin:
-    dependency: transitive
-    description:
-      name: analysis_server_plugin
-      sha256: "3960b28ee740004df39f85d5ebfc91785f7a90e51fd7c9a185e86a36b2f581b4"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.14"
   analyzer:
     dependency: transitive
     description:
@@ -25,22 +17,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "12.1.0"
-  analyzer_plugin:
-    dependency: transitive
-    description:
-      name: analyzer_plugin
-      sha256: "0057a98d64d7bb872b0c87dff6e73d2c2d80c77156e7a03f127a26f8aa240649"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.14.8"
-  ansicolor:
-    dependency: transitive
-    description:
-      name: ansicolor
-      sha256: "50e982d500bc863e1d703448afdbf9e5a72eb48840a4f766fa361ffd6877055f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.3"
   archive:
     dependency: transitive
     description:
@@ -225,14 +201,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
-  dart_code_linter:
-    dependency: "direct dev"
-    description:
-      name: dart_code_linter
-      sha256: "030d52e4d73b2429ec50671725899f29fc3de34f6c365c1fe8a8c1a36052af46"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.4.0"
   dart_style:
     dependency: transitive
     description:
@@ -587,14 +555,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.1.0"
-  platform:
-    dependency: transitive
-    description:
-      name: platform
-      sha256: a36d119c13416516a7b5913fbe8af8531e11633d784c550b2125f76c758524ec
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.2.0"
   pool:
     dependency: transitive
     description:
@@ -611,14 +571,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.5.2"
-  process:
-    dependency: transitive
-    description:
-      name: process
-      sha256: "4242ba3508d37e01808bdf71ad1d5bb93a8d671bf2e7450e6b1b353fb0808891"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.0.6"
   protobuf:
     dependency: transitive
     description:
@@ -635,14 +587,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.1"
-  pub_updater:
-    dependency: transitive
-    description:
-      name: pub_updater
-      sha256: "739a0161d73a6974c0675b864fb0cf5147305f7b077b7f03a58fa7a9ab3e7e7d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.0"
   pubspec_parse:
     dependency: transitive
     description:
@@ -864,14 +808,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.3"
-  xml:
-    dependency: transitive
-    description:
-      name: xml
-      sha256: "0fe8cc98946def31cbcbc8734aa4067031e6f65ea3a78a508060bfed2200bfeb"
-      url: "https://pub.dev"
-    source: hosted
-    version: "7.1.0"
   yaml:
     dependency: "direct main"
     description:
@@ -880,14 +816,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.4"
-  yaml_edit:
-    dependency: transitive
-    description:
-      name: yaml_edit
-      sha256: "07c9e63ba42519745182b88ca12264a7ba2484d8239958778dfe4d44fe760488"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.4"
 sdks:
   dart: ">=3.13.0 <3.14.0-z"
   flutter: ">=3.41.0"

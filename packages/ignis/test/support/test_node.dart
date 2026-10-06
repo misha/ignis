@@ -27,21 +27,19 @@ class TestNode extends Node {
     super.enabled,
     super.priority,
     super.children,
-  }) {
-    onMount(() {
-      mounts += 1;
-      log?.mounts.add(name);
-    });
-
-    onUnmount(() {
-      unmounts += 1;
-      log?.unmounts.add(name);
-    });
-  }
+  });
 
   @override
   void build() {
     super.build();
+    mounts += 1;
+    log?.mounts.add(name);
+
+    trash(() {
+      unmounts += 1;
+      log?.unmounts.add(name);
+    });
+
     tick((dt) {
       elapsed += dt;
       updates += 1;
@@ -68,9 +66,5 @@ final class LiveTestNode extends TestNode with Live {
     super.enabled,
     super.priority,
     super.children,
-  }) : super(
-         builder: builder == null
-             ? null //
-             : (node) => builder(node as LiveTestNode),
-       );
+  }) : super(builder: (node) => builder?.call(node as LiveTestNode));
 }

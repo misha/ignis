@@ -112,10 +112,4 @@ However, `priority` only applies to siblings of the same node. A child is *alway
 
 ## Signals
 
-`Node` comes with three signals, which makes them available on every node in the engine.
-
-- `onMount` is emitted when entering a scene.
-- `onUnmount` is emitted when exiting a scene.
-- `onSceneResize` is emitted when entering a scene, and again whenever the scene changes size.
-
 Signals watched inside `build` do not need to be unsubscribed from. See [Signals](/concepts/signals).

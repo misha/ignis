@@ -2,11 +2,9 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:ignis/src/core.dart';
 import 'package:ignis/src/scene.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/flutter/scene_render_box.dart';
-import 'package:ignis/src/inputs/nodes/hover_input.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/inputs/nodes/input_node.dart';
 
@@ -17,17 +15,12 @@ class InputServer {
   final SceneRenderBox box;
   Scene get scene => box.scene;
 
-  final Map<int, _Hover> _hovered = {};
-
   InputServer(this.box);
 
   bool dispatch(PointerEvent event) {
     switch (event) {
       case PointerDownEvent():
         return _handleDown(event);
-
-      case PointerHoverEvent():
-        return _handleHover(event);
 
       default:
         return false;
@@ -37,38 +30,6 @@ class InputServer {
   bool _handleDown(PointerDownEvent event) {
     final point = event.localPosition.toVector2();
     return _offer(point, (node) => node.register(event, box.globalToLocal)) != null;
-  }
-
-  bool _handleHover(PointerHoverEvent event) {
-    final point = event.localPosition.toVector2();
-    final target = _offer(point, (node) => node is HoverInput ? .handled : .ignored);
-    final previous = _hovered[event.pointer];
-    if (identical(target, previous?.node)) return target != null;
-    if (previous != null) _exit(event.pointer, _wrap(previous.node, event));
-    if (target != null) _enter(event.pointer, target, event);
-    return target != null;
-  }
-
-  /// Records [target] as [pointer]'s hover, emitting `onHoverEnter`.
-  void _enter(int pointer, InputNode target, PointerHoverEvent event) {
-    final hover = _wrap(target, event);
-
-    _hovered[pointer] = _Hover(
-      node: target,
-      // Arm a cleanup in case the node is unmounted mid-hover.
-      cleanup: target.onUnmount(() => _exit(pointer, hover)),
-    );
-
-    if (target is HoverInput) target.reportEnter(hover);
-  }
-
-  /// Drops [pointer]'s hover, emitting `onHoverExit`.
-  void _exit(int pointer, HoverEvent event) {
-    final hovered = _hovered.remove(pointer);
-    if (hovered == null) return;
-    hovered.cleanup();
-    final node = hovered.node;
-    if (node is HoverInput && node.isMounted) node.reportExit(event);
   }
 
   /// Walks [point]'s hit-test chain, offering each [InputNode] to [respond]
@@ -85,25 +46,4 @@ class InputServer {
 
     return result;
   }
-
-  static HoverEvent _wrap(InputNode node, PointerEvent event) {
-    final scenePoint = event.localPosition.toVector2();
-
-    return HoverEvent(
-      scene: scenePoint,
-      local: node.toLocal(scenePoint),
-      source: event,
-    );
-  }
-}
-
-/// A pointer's current hover, and the subscription arming its exit on unmount.
-final class _Hover {
-  final InputNode node;
-  final Cleanup cleanup;
-
-  const _Hover({
-    required this.node,
-    required this.cleanup,
-  });
 }

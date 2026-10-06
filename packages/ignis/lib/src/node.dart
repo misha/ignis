@@ -46,10 +46,7 @@ typedef Cleanup = void Function();
 ///
 /// **Scenes**
 ///
-/// Nodes may be mounted to a [Scene], which drives them with a game loop. When
-/// mounted, the scene will propagate through the entire subtree emitting the
-/// [onMount] signal on each node, from top to bottom. Unmounting does the
-/// reverse, emitting the [onUnmount] signal from the leaves upward.
+/// Nodes may be mounted to a [Scene], which drives them with a game loop.
 ///
 /// **Tree**
 ///
@@ -183,17 +180,6 @@ class Node {
     }
   }
 
-  @internal
-  void resize(Vector2 size) {
-    onSceneResize.emit(size);
-    final children = _children;
-    if (children == null) return;
-
-    for (final child in children) {
-      child.resize(size);
-    }
-  }
-
   // #region Building
 
   /// Which reassembly is running, bumped once per [Scene.reassemble].
@@ -255,16 +241,13 @@ class Node {
     _draws = null;
     _debugDraws = null;
     _cleanup();
-    final declared = _declared;
+    final previouslyDeclared = _declared;
     _declared = null;
+
     try {
       _construct(this, build);
     } finally {
-      _discard(declared);
-    }
-
-    if (scene.hasSize) {
-      onSceneResize.emit(scene.size);
+      _discard(previouslyDeclared);
     }
   }
 
@@ -423,19 +406,6 @@ class Node {
 
   // #endregion
 
-  // #region Signals
-
-  /// Emitted when this node is added to a scene.
-  final onMount = Signal0();
-
-  /// Emitted when this node is removed from a scene.
-  final onUnmount = Signal0();
-
-  /// Emitted when the scene resizes, and once at mount.
-  final onSceneResize = Signal1<Vector2>();
-
-  // #endregion
-
   // #region Children
 
   Cow<Node>? _children;
@@ -515,7 +485,6 @@ class Node {
 
   void _mount(Scene scene) {
     _scene = scene;
-    rebuild();
     final targets = _targets;
 
     if (targets != null) {
@@ -524,22 +493,22 @@ class Node {
       }
     }
 
-    onMount.emit();
-    _mountChildren();
+    _assemble();
   }
 
-  /// Mounts every child not mounted yet, such as those added while this node
-  /// was building.
-  void _mountChildren() {
-    final children = _children;
-    if (children == null) return;
+  void _assemble() {
+    try {
+      rebuild();
+    } finally {
+      for (final child in children) {
+        // A child's mount might have detached this node.
+        if (!isMounted) {
+          break;
+        }
 
-    for (final child in children) {
-      // A child's mount may take this node back out of the tree.
-      if (!isMounted) return;
-
-      if (owns(child) && !child.isMounted) {
-        child._mount(scene);
+        if (owns(child) && !child.isMounted) {
+          child._mount(scene);
+        }
       }
     }
   }
@@ -558,7 +527,6 @@ class Node {
     }
 
     try {
-      onUnmount.emit();
       _cleanup();
       _ticks = null;
       _draws = null;
@@ -738,7 +706,7 @@ class Node {
     if (this is Live && _builtGeneration != _latestGeneration) {
       // A mid-edit build throws, and must not take the rest of the walk down.
       try {
-        rebuild();
+        _assemble();
       } catch (exception, stack) {
         FlutterError.reportError(
           FlutterErrorDetails(
@@ -749,8 +717,6 @@ class Node {
           ),
         );
       }
-
-      _mountChildren();
     }
 
     final children = _children;

@@ -112,7 +112,6 @@ class Scene<T extends Node> {
     _size = .new(width, height);
     _shape = Rectangle(_size);
     _sized = true;
-    root.resize(size);
   }
 
   /// Unmounts the tree, permanently. Idempotent; every other way of driving
