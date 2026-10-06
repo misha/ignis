@@ -462,7 +462,7 @@ class Node {
   /// this internal ordering with a stable sorting algorithm.
   int get priority => _priority;
 
-  /// This node's [priority], or what it will be next frame.
+  /// This node's [priority], or what it is scheduled to be.
   int get incomingPriority => _reorderTask?.priority ?? _priority;
 
   @nonVirtual
