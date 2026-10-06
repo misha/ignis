@@ -572,6 +572,9 @@ class Node {
   /// True if this node has a non-null [parent].
   bool get hasParent => parent != null;
 
+  /// Checks if this node owns the [other] node.
+  bool owns(Node other) => identical(this, other.parent);
+
   /// This node's ancestors in the tree.
   Iterable<Node> get ancestors sync* {
     var ancestor = parent;
@@ -581,9 +584,6 @@ class Node {
       ancestor = ancestor.parent;
     }
   }
-
-  /// Checks if this node owns the [other] node.
-  bool owns(Node other) => identical(this, other.parent);
 
   /// True if [node] is this node or one of its ancestors.
   bool cycles(Node node) {
