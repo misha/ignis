@@ -24,7 +24,6 @@ part 'route_node.dart';
 /// the usual `build` and mount signals. Routes are built by the caller; the
 /// router keeps no registry.
 ///
-///
 /// **Region**
 ///
 /// The region routed is the [shape] in effect above this node, or the scene's
@@ -46,8 +45,6 @@ class RouterNode extends SpatialNode {
 
   /// Every [RouteNode] child, bottom to top.
   late final Iterable<RouteNode> routes = query<RouteNode>();
-
-  /// The stack, bottom to top.
 
   /// The route on top, or null while the stack is empty.
   RouteNode? get top => routes.lastOrNull;
