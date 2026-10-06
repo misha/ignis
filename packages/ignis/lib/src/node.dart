@@ -240,6 +240,7 @@ class Node {
       // TODO: Not a fan of the control flow here. Might need a separate method
       //  to specifically handle the two cases instead.
       if (this case final Live live) live._sweep();
+      // TODO: Is this really the right code position for this event?
       if (scene.hasSize) onSceneResize.emit(scene.size);
     } finally {
       if (this case final Live live) live._claimed = null;
