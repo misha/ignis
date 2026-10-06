@@ -271,16 +271,17 @@ class Node {
   ///   want to clean them up on a code change, when that unit changes).
   List<Node>? _declared;
 
-  /// Removes every child in [declared] that the current [_declared] lacks.
+  /// Removes every child in [previouslyDeclared] that the current list of
+  /// declared nodes lacks.
   ///
   /// A child declared again stays put rather than being removed and added back,
   /// so it is not unmounted and remounted along the way.
-  void _discard(List<Node>? declared) {
-    if (declared == null || declared.isEmpty) return;
+  void _discard(List<Node>? previouslyDeclared) {
+    if (previouslyDeclared == null || previouslyDeclared.isEmpty) return;
     final current = _declared;
 
-    for (var i = declared.length - 1; i >= 0; i -= 1) {
-      final child = declared[i];
+    for (var i = previouslyDeclared.length - 1; i >= 0; i -= 1) {
+      final child = previouslyDeclared[i];
       if (current != null && current.contains(child)) continue;
       remove(child);
     }
