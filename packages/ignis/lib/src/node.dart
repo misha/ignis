@@ -208,6 +208,19 @@ class Node {
   /// The node whose [build] is currently running, or null between builds.
   static Node? _building;
 
+  /// Runs [body] with [node] as the node building, restoring the previous one
+  /// afterward.
+  static T _construct<T>(Node? node, T Function() body) {
+    final saved = _building;
+    _building = node;
+
+    try {
+      return body();
+    } finally {
+      _building = saved;
+    }
+  }
+
   // The following fields belong to a single, logical run of `Node.build`. When
   // the node is unmounted or rebuilt, they are processed and/or dropped.
 
@@ -244,13 +257,9 @@ class Node {
     _cleanup();
     final declared = _declared;
     _declared = null;
-    final saved = _building;
-    _building = this;
-
     try {
-      build();
+      _construct(this, build);
     } finally {
-      _building = saved;
       _discard(declared);
     }
 

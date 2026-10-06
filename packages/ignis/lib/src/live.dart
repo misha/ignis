@@ -144,7 +144,10 @@ mixin Live on Node {
     }
 
     previous?.discard();
-    final value = _construct(create);
+
+    // Run with no pass current, so a node built inside one does not hand its
+    // constructor's subscriptions to the node that built it.
+    final value = Node._construct(null, create);
 
     Cleanup? cleanup;
     if (dispose != null) cleanup = () => dispose(value);
@@ -174,18 +177,5 @@ mixin Live on Node {
       entry.discard();
       return true;
     });
-  }
-
-  /// Runs [create] with no pass current, so a node built inside one does not
-  /// hand its constructor's subscriptions to the node that built it.
-  static T _construct<T>(T Function() create) {
-    final building = Node._building;
-    Node._building = null;
-
-    try {
-      return create();
-    } finally {
-      Node._building = building;
-    }
   }
 }
