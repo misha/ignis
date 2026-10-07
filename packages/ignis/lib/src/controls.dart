@@ -35,10 +35,6 @@ abstract base class ControlDevice {
   void stop();
 
   /// Dispatches [event], reporting whether anything answered it.
-  ///
-  /// The answer is what a platform listener wants back, to say whether what it
-  /// delivered was handled. Dispatches nothing while stopped, so a listener
-  /// that outlives [stop] is inert rather than wrong.
   @protected
   bool emit(ControlEvent event) {
     final dispatch = _dispatch;
@@ -61,15 +57,15 @@ abstract base class ControlDevice {
   }
 }
 
-/// One handler, the events that reach it, and the groups that gate it.
+/// Represents a single handler, alongside any metadata needed to match it.
 class _Control {
   /// What answers the events.
   final ControlHandler handler;
 
-  /// The events it answers, any one of which is enough.
+  /// The events the handler respond to. At least one must be satisfied.
   final Set<ControlEvent> matchers;
 
-  /// The groups gating it, if any.
+  /// The groups gating the handler. If not empty, at least one must be enabled.
   final Set<String> groups;
 
   /// The node whose build bound this, or null where nothing was building.
@@ -78,12 +74,25 @@ class _Control {
   const _Control(this.handler, this.matchers, this.groups, this.node);
 }
 
-/// Routes events emitted by control devices to the handlers bound to them.
+/// Routes control events to handlers registered with [bind].
 ///
-/// One call binds the lot: the events that reach a handler, the handler, and
-/// any groups that switch it on and off.
+/// This class essentially has two sides, one meant for [ControlDevice]s and
+/// another meant for [ControlHandler]s.
 ///
-/// TODO: Document further.
+/// A [ControlDevice] is usually a singleton that hooks into hardware or another
+/// globally shared resource, then funnels events into this class. Devices use
+/// [install] and [uninstall] to register themselves. Internally, it will then
+/// translate any device events into calls to [dispatch].
+///
+/// There is only one device built into vanilla Ignis: the `KeyboardDevice`.
+///
+/// Meanwhile, [bind] allows any number of scenes to register a [ControlHandler]
+/// to respond to those events. Its parameters provide additional features for
+/// managing precisely when the handler is permitted to respond, and to which
+/// specific control events.
+///
+/// User code is welcome to call [dispatch] manually to simulate or test events
+/// that would normally come from a device.
 class Controls {
   final List<_Control> _controls = [];
   final Set<String> _disabled = {};
@@ -105,14 +114,15 @@ class Controls {
     device._stop();
   }
 
-  /// Answers any of [matchers] with [handler], until the returned [Cleanup] is
+  /// Answers any of [matchers] with [handler], until the returned function is
   /// called or the [Node.build] that bound it is gone.
   ///
   /// Where several live handlers match one event the topmost node wins and the
   /// rest never run, as a hit test would pick it.
   ///
-  /// [groups] gates the handler: it answers if at least one group is enabled.
-  /// If [groups] is empty, it always answers.
+  /// If [groups] has any names, at least one of those groups must be enabled
+  /// in order for the handler to respond. Use [enable] and [disable] to manage
+  /// the enabled names.
   Cleanup bind(
     ControlHandler handler, {
     required Set<ControlEvent> matchers,
@@ -196,7 +206,7 @@ class Controls {
     return null;
   }
 
-  /// Stops every device, and drops every control.
+  /// Stops every device and drops every control.
   void dispose() {
     for (final device in _devices) {
       device._stop();

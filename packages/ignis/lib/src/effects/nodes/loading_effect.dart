@@ -44,7 +44,7 @@ class LoadingEffect extends EffectNode {
       if (snapshot.cancelled) {
         // TODO: Not sure disabling the effect is the right thing to do.
         //  Realistically, what are you supposed to do if it fails?
-        //  Detatching the node might be the more intuitive response.
+        //  Detaching the node might be the more intuitive response.
         disable();
         return;
       }
