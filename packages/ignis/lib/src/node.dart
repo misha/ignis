@@ -431,8 +431,7 @@ class Node {
   /// This node's order in updating and rendering in its parent.
   ///
   /// The default priority is 0. Children that share a priority are kept in
-  /// insertion order, like a queue. Changing the priority of a child maintains
-  /// this internal ordering with a stable sorting algorithm.
+  /// insertion order, like a queue.
   int get priority => _priority;
 
   /// This node's [priority], or what it is scheduled to be.
