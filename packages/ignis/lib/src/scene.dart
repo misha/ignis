@@ -11,9 +11,9 @@ import 'package:ignis/src/shape.dart';
 /// A controller for a mounted [Node] tree.
 ///
 /// TODO: Document further.
-class Scene with Scheduler {
+class Scene<T extends Node> with Scheduler {
   /// This scene's root. Cannot be modified.
-  final Node root;
+  final T root;
 
   static final List<Scene> _ACTIVE = [];
 

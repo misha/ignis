@@ -196,6 +196,19 @@ class Node {
   /// The node whose [build] is currently running, or null between builds.
   static Node? _building;
 
+  /// Runs [body] with [node] as the node building, restoring the previous one
+  /// afterward.
+  static T _construct<T>(Node? node, T Function() body) {
+    final saved = _building;
+    _building = node;
+
+    try {
+      return body();
+    } finally {
+      _building = saved;
+    }
+  }
+
   // The following fields belong to a single, logical run of `Node.build`. When
   // the node is unmounted or rebuilt, they are processed and/or dropped.
 
@@ -219,9 +232,8 @@ class Node {
   ///   - All [add]ed direct children are removed.
   ///   - All [tick], [draw], and [debugDraw] closures are removed.
   ///   - The [trash] is processed and cleared.
-  ///
-  /// When using [Live], anything named by [Live.keep] is specifically retained.
-  void _rebuild() {
+  @internal
+  void rebuild() {
     _builtGeneration = _latestGeneration;
     _discardDeclared();
 
@@ -232,19 +244,10 @@ class Node {
     _draws = null;
     _debugDraws = null;
     _cleanup();
-    final saved = _building;
-    _building = this;
+    _construct(this, build);
 
-    try {
-      build();
-      // TODO: Not a fan of the control flow here. Might need a separate method
-      //  to specifically handle the two cases instead.
-      if (this case final Live live) live._sweep();
-      // TODO: Is this really the right code position for this event?
-      if (scene.hasSize) onSceneResize.emit(scene.size);
-    } finally {
-      if (this case final Live live) live._claimed = null;
-      _building = saved;
+    if (scene.hasSize) {
+      onSceneResize.emit(scene.size);
     }
   }
 
@@ -506,25 +509,6 @@ class Node {
     return _scene!;
   }
 
-  /// Mounts this node as the root of a new [Scene] and returns it.
-  ///
-  /// If this is already the root of a scene, returns that same scene.
-  Scene mount() {
-    if (isRoot) {
-      return scene;
-    }
-
-    if (_parent != null) {
-      throw StateError('Cannot mount a node that has a parent.');
-    }
-
-    _reparentTask?.cancel();
-    _reparentTask = null;
-    final created = Scene(root: this);
-    _mount(created);
-    return created;
-  }
-
   @internal
   void unmount() {
     _unmount();
@@ -532,7 +516,7 @@ class Node {
 
   void _mount(Scene scene) {
     _scene = scene;
-    _rebuild();
+    rebuild();
     final targets = _targets;
 
     if (targets != null) {
@@ -585,6 +569,9 @@ class Node {
   /// True if this node has a non-null [parent].
   bool get hasParent => parent != null;
 
+  /// Checks if this node owns the [other] node.
+  bool owns(Node other) => identical(this, other.parent);
+
   /// This node's ancestors in the tree.
   Iterable<Node> get ancestors sync* {
     var ancestor = parent;
@@ -594,9 +581,6 @@ class Node {
       ancestor = ancestor.parent;
     }
   }
-
-  /// Checks if this node owns the [other] node.
-  bool owns(Node other) => identical(this, other.parent);
 
   /// True if [node] is, or soon will be, an ancestor of this node.
   bool cycles(Node node) {
@@ -729,7 +713,7 @@ class Node {
     if (this is Live && _builtGeneration != _latestGeneration) {
       // A mid-edit build throws, and must not take the rest of the walk down.
       try {
-        _rebuild();
+        rebuild();
       } catch (exception, stack) {
         FlutterError.reportError(
           FlutterErrorDetails(
@@ -881,4 +865,32 @@ class Node {
   }
 
   // #endregion
+}
+
+/// Mounts a node as the root of a new [Scene].
+extension Mount<T extends Node> on T {
+  /// Mounts this node as the root of a new [Scene] and returns it.
+  ///
+  /// If this is already the root of a scene, returns that same scene.
+  Scene<T> mount() {
+    if (isRoot) {
+      final existing = scene;
+
+      if (existing is! Scene<T>) {
+        throw StateError('Cannot mount a node under a different root type.');
+      }
+
+      return existing;
+    }
+
+    if (_parent != null) {
+      throw StateError('Cannot mount a node that has a parent.');
+    }
+
+    _reparentTask?.cancel();
+    _reparentTask = null;
+    final created = Scene<T>(root: this);
+    _mount(created);
+    return created;
+  }
 }

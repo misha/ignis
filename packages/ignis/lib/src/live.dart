@@ -2,6 +2,8 @@
 
 part of 'core.dart';
 
+const _KEY_EQUALITY = DeepCollectionEquality(SameValueEquality());
+
 /// A [Node.keep] declaration's key: its name, and its id within a collection.
 typedef _Key = (Symbol name, Object? id);
 
@@ -19,42 +21,13 @@ final class _Kept {
   const _Kept(this.value, this.keys, this.dispose, this.shape);
 
   /// Whether a declaration carrying [other] may keep this value.
-  bool matches(List<Object?> other) => _sameKeys(keys, other);
+  bool matches(List<Object?> other) => _KEY_EQUALITY.equals(keys, other);
 
   /// Detaches [value] if it is a [Node], then runs [dispose].
   void discard() {
     if (value case final Node stale) stale.detach();
     dispose?.call();
   }
-}
-
-/// Whether two key lists mean the same thing, and so whether the value they
-/// guard may be kept.
-///
-/// TODO: Maybe there's a deep value equality that does this even better?
-bool _sameKeys(List<Object?> a, List<Object?> b) {
-  if (identical(a, b)) return true;
-  if (a.length != b.length) return false;
-
-  for (var i = 0; i < a.length; i += 1) {
-    final left = a[i];
-    final right = b[i];
-
-    if (left is num && right is num) {
-      // NaN never equals itself, so two of them have to be paired directly.
-      if (left.isNaN && right.isNaN) continue;
-
-      // 0.0 and -0.0 are equal, but they are not the same key.
-      if (left == 0 && right == 0) {
-        if (left.isNegative != right.isNegative) return false;
-        continue;
-      }
-    }
-
-    if (left != right) return false;
-  }
-
-  return true;
 }
 
 /// Re-runs a node's [Node.build] on every reload, and grants [keep].
@@ -144,13 +117,26 @@ mixin Live on Node {
     }
 
     previous?.discard();
-    final value = _construct(create);
+
+    // Run with no pass current, so a node built inside one does not hand its
+    // constructor's subscriptions to the node that built it.
+    final value = Node._construct(null, create);
 
     Cleanup? cleanup;
     if (dispose != null) cleanup = () => dispose(value);
 
     kept[key] = _Kept(value, keys, cleanup, shape);
     return value;
+  }
+
+  @override
+  void rebuild() {
+    try {
+      super.rebuild();
+      _sweep();
+    } finally {
+      _claimed = null;
+    }
   }
 
   /// Drops everything the pass that just finished stopped declaring.
@@ -164,18 +150,5 @@ mixin Live on Node {
       entry.discard();
       return true;
     });
-  }
-
-  /// Runs [create] with no pass current, so a node built inside one does not
-  /// hand its constructor's subscriptions to the node that built it.
-  static T _construct<T>(T Function() create) {
-    final building = Node._building;
-    Node._building = null;
-
-    try {
-      return create();
-    } finally {
-      Node._building = building;
-    }
   }
 }
