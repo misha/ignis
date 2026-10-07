@@ -34,14 +34,6 @@ linter:
     avoid_escaping_inner_quotes: false
     prefer_const_literals_to_create_immutables: false
     curly_braces_in_flow_control_structures: false
-dart_code_linter:
-  metrics:
-    cyclomatic-complexity: 20
-    maximum-nesting-level: 5
-    number-of-methods: 10
-    source-lines-of-code: 50
-  metrics-exclude:
-    - test/**
 plugins:
   jaspr_lints:
     version: ^0.7.2
