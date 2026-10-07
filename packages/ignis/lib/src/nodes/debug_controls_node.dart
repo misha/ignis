@@ -64,43 +64,46 @@ class DebugControlsNode extends Node {
        clear = clear ?? {const KeyPress(.f6)};
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    Ignis.controls.bind(
-      (_) => Ignis.debug.toggle(.spatial),
-      matchers: spatial,
-      groups: groups,
-    );
+    switch (state) {
+      case Build():
+        Ignis.controls.bind(
+          (_) => Ignis.debug.toggle(.spatial),
+          matchers: spatial,
+          groups: groups,
+        );
 
-    Ignis.controls.bind(
-      (_) => Ignis.debug.toggle(.collision),
-      matchers: collision,
-      groups: groups,
-    );
+        Ignis.controls.bind(
+          (_) => Ignis.debug.toggle(.collision),
+          matchers: collision,
+          groups: groups,
+        );
 
-    Ignis.controls.bind(
-      (_) => Ignis.debug.toggle(.input),
-      matchers: input,
-      groups: groups,
-    );
+        Ignis.controls.bind(
+          (_) => Ignis.debug.toggle(.input),
+          matchers: input,
+          groups: groups,
+        );
 
-    Ignis.controls.bind(
-      (_) => Ignis.debug.toggle(.layout),
-      matchers: layout,
-      groups: groups,
-    );
+        Ignis.controls.bind(
+          (_) => Ignis.debug.toggle(.layout),
+          matchers: layout,
+          groups: groups,
+        );
 
-    Ignis.controls.bind(
-      (_) => scene.paused = !scene.paused,
-      matchers: pause,
-      groups: groups,
-    );
+        Ignis.controls.bind(
+          (_) => scene.paused = !scene.paused,
+          matchers: pause,
+          groups: groups,
+        );
 
-    Ignis.controls.bind(
-      (_) => Ignis.debug.mode = null,
-      matchers: clear,
-      groups: groups,
-    );
+        Ignis.controls.bind(
+          (_) => Ignis.debug.mode = null,
+          matchers: clear,
+          groups: groups,
+        );
+    }
   }
 }

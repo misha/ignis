@@ -25,26 +25,28 @@ class FpsNode extends Node {
        windowSize = windowSize ?? 60;
 
   @override
-  void build() {
-    super.build();
-    tick((dt) {
-      if (dt <= 0 || !dt.isFinite) return;
-      _window.add(dt);
-      _sum += dt;
+  void process(State state) {
+    super.process(state);
 
-      if (_window.length > windowSize) {
-        _sum -= _window.first;
-        _window.removeAt(0);
-      }
+    switch (state) {
+      case Update(:final dt):
+        if (dt <= 0 || !dt.isFinite) break;
+        _window.add(dt);
+        _sum += dt;
 
-      final fps = _window.length / _sum;
-      this.fps = fps.isFinite ? fps : 0;
-      final rounded = this.fps.round();
+        if (_window.length > windowSize) {
+          _sum -= _window.first;
+          _window.removeAt(0);
+        }
 
-      if (rounded != _last) {
-        _last = rounded;
-        onFpsChange.emit(rounded);
-      }
-    });
+        final fps = _window.length / _sum;
+        this.fps = fps.isFinite ? fps : 0;
+        final rounded = this.fps.round();
+
+        if (rounded != _last) {
+          _last = rounded;
+          onFpsChange.emit(rounded);
+        }
+    }
   }
 }

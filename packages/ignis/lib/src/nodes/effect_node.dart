@@ -25,10 +25,14 @@ abstract class EffectNode extends Node {
   }) : cleanup = cleanup ?? false;
 
   @override
-  void build() {
-    super.build();
-    onFinish(() {
-      if (cleanup) detach();
-    });
+  void process(State state) {
+    super.process(state);
+
+    switch (state) {
+      case Build():
+        onFinish(() {
+          if (cleanup) detach();
+        });
+    }
   }
 }

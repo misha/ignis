@@ -16,7 +16,7 @@ import 'package:ignis/src/shape.dart';
 ///
 /// A [LayoutNode] whose parent is a [LayoutNode] is laid out by that parent,
 /// via a direct [layout] call inside its [constrain]. Any other one is a
-/// layout root: it lays itself out from [tick], every frame, against the
+/// layout root: it lays itself out under [Update], every frame, against the
 /// scene's size.
 ///
 /// Layout only ever flows from a [LayoutNode] to its direct children, so a
@@ -86,23 +86,25 @@ abstract class LayoutNode extends SpatialNode {
   Vector2 constrain(LayoutConstraints constraints);
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    tick((_) {
-      if (!isLayoutRoot) {
-        return;
-      } else if (!isMounted || !scene.hasSize) {
-        layout(const .unbounded());
-      } else {
-        layout(.loose(scene.size));
-      }
-    });
+    switch (state) {
+      case Update():
+        if (!isLayoutRoot) {
+          break;
+        } else if (!isMounted || !scene.hasSize) {
+          layout(const .unbounded());
+        } else {
+          layout(.loose(scene.size));
+        }
+    }
 
-    debugDraw((canvas) {
-      final debug = Ignis.debug;
-      if (!debug.draws(.layout)) return;
-      canvas.drawRect(.fromLTWH(0, 0, width, height), debug.paint);
-    });
+    switch (state) {
+      case DebugDraw(:final canvas):
+        final debug = Ignis.debug;
+        if (!debug.draws(.layout)) break;
+        canvas.drawRect(.fromLTWH(0, 0, width, height), debug.paint);
+    }
   }
 }

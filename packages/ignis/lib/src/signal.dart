@@ -7,9 +7,9 @@ part of 'core.dart';
 /// A subscription outlives the statement that made it and freezes the handler
 /// it was given, so it both leaks and goes stale unless something owns it.
 ///
-/// Subscribing inside a [Node.build] hands that ownership to the node: the
-/// cleanup goes straight into its [Node.trash], so the handler is resubscribed
-/// fresh by every build and torn down with the node. The returned [Cleanup] is
+/// Subscribing inside a [Build] hands that ownership to the node: the cleanup
+/// is deferred until it unmounts, so the handler is resubscribed fresh by every
+/// build and torn down with the node. The returned [Cleanup] is
 /// a no-op there.
 ///
 /// Everywhere else the caller owns the subscription: keep the [Cleanup] and

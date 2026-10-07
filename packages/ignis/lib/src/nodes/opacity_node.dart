@@ -2,6 +2,7 @@
 
 import 'dart:ui';
 
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/owners/opacity_owner.dart';
 
@@ -50,17 +51,18 @@ class OpacityNode extends SpatialNode implements OpacityOwner {
   }
 
   @override
-  void render(Canvas canvas) {
+  void render(Draw draw) {
     switch (opacity) {
       case <= 0:
         return;
 
       case >= 1:
-        super.render(canvas);
+        super.render(draw);
 
       default:
+        final canvas = draw.canvas;
         canvas.saveLayer(null, _paint!);
-        super.render(canvas);
+        super.render(draw);
         canvas.restore();
     }
   }

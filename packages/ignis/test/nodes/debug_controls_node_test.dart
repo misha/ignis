@@ -10,9 +10,13 @@ final class _Mine extends Node {
   _Mine(this.matcher, this.onFire);
 
   @override
-  void build() {
-    super.build();
-    Ignis.controls.bind((_) => onFire(), matchers: {matcher});
+  void process(State state) {
+    super.process(state);
+
+    switch (state) {
+      case Build():
+        Ignis.controls.bind((_) => onFire(), matchers: {matcher});
+    }
   }
 }
 

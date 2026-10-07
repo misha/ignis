@@ -87,14 +87,14 @@ void main() {
     final timeline = effect.timeline;
     effect.mount();
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(timeline.progress, 0.5);
 
     timeline.setToStart();
     expect(timeline.progress, 0);
 
     effect.distance = 20; // Ignored: measure() is never called again.
-    effect.update(1);
+    effect.update(Update(1));
     expect(timeline.progress, 1); // Finished after 1s, not halfway through 20/10 = 2s.
   });
 
@@ -103,7 +103,7 @@ void main() {
     final timeline = effect.timeline;
     effect.mount();
 
-    effect.update(1);
+    effect.update(Update(1));
     expect(timeline.recede(1.5), 0.5); // Only 1s of progress to give back.
 
     effect.distance = 20; // Ignored: measure() is never called again.

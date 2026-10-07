@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:docs/rng.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide State;
 import 'package:ignis/ignis.dart';
 
 import '../colors.dart';
@@ -102,136 +102,155 @@ void _colorOnContact(ShapeNode node, ColliderNode collider) {
 /// A circle sliding through a square, reporting each edge as it crosses.
 class _PairNode extends CollisionArenaNode {
   @override
-  void build() {
-    super.build();
-    final log = DemoLog();
+  void process(State state) {
+    super.process(state);
 
-    final wall = add(_still(.square(_BLOCK), position: _CENTER));
-    wall.add(ColliderNode());
+    switch (state) {
+      case Build():
+        final log = DemoLog();
 
-    final mover = add(_mover(.circle(_PROBE))..paint.blendMode = .plus);
+        final wall = add(_still(.square(_BLOCK), position: _CENTER));
+        wall.add(ColliderNode());
 
-    // demo on collision-pair
-    final collider = mover.add(ColliderNode());
+        final mover = add(_mover(.circle(_PROBE))..paint.blendMode = .plus);
 
-    collider
-      ..onCollisionStart((_) => log('colliding', RED))
-      ..onCollisionEnd((_) => log('not colliding', GREEN));
-    // demo off
+        // demo on collision-pair
+        final collider = mover.add(ColliderNode());
 
-    log('not colliding', GREEN);
-    add(_caption(log));
+        collider
+          ..onCollisionStart((_) => log('colliding', RED))
+          ..onCollisionEnd((_) => log('not colliding', GREEN));
+        // demo off
+
+        log('not colliding', GREEN);
+        add(_caption(log));
+    }
   }
 }
 
 /// A circle crossing three squares, counting what it touches every tick.
 class _ActiveNode extends CollisionArenaNode {
-  @override
-  void build() {
-    super.build();
-    final log = DemoLog();
-    final blocks = [
-      for (var i = 0; i < 3; i += 1) //
-        _still(.square(_BLOCK)),
-    ];
+  late DemoLog log;
+  late ColliderNode collider;
 
-    for (final block in blocks) {
-      block.add(ColliderNode());
+  @override
+  void process(State state) {
+    super.process(state);
+
+    switch (state) {
+      case Build():
+        final blocks = [
+          for (var i = 0; i < 3; i += 1) //
+            _still(.square(_BLOCK)),
+        ];
+
+        for (final block in blocks) {
+          block.add(ColliderNode());
+        }
+
+        add(
+          BoxNode(
+            alignment: .center,
+            children: [
+              RowNode(
+                mainAxisSize: .min,
+                spacing: _GAP,
+                children: blocks,
+              ),
+            ],
+          ),
+        );
+
+        final mover = add(
+          _mover(.circle(_PROBE)) //
+            ..paint.blendMode = .plus,
+        );
+
+        collider = mover.add(ColliderNode());
     }
 
-    add(
-      BoxNode(
-        alignment: .center,
-        children: [
-          RowNode(
-            mainAxisSize: .min,
-            spacing: _GAP,
-            children: blocks,
-          ),
-        ],
-      ),
-    );
-
-    final mover = add(
-      _mover(.circle(_PROBE)) //
-        ..paint.blendMode = .plus,
-    );
-
     // demo on collision-active
-    final collider = mover.add(ColliderNode());
-
-    tick((_) {
-      log(switch (collider.collisions.length) {
-        0 => "can't touch this!",
-        final n => 'touching $n',
-      });
-    });
+    switch (state) {
+      case Build():
+        log = DemoLog();
+        add(_caption(log));
+      case Update():
+        log(switch (collider.collisions.length) {
+          0 => "can't touch this!",
+          final n => 'touching $n',
+        });
+    }
     // demo off
-
-    add(_caption(log));
   }
 }
 
 /// A long hitbox turning through a circle its bounding box never leaves.
 class _SpinNode extends CollisionArenaNode {
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    final circle = add(_still(.circle(16), position: _CENTER / 2));
+    switch (state) {
+      case Build():
+        final circle = add(_still(.circle(16), position: _CENTER / 2));
 
-    circle.add(ColliderNode());
+        circle.add(ColliderNode());
 
-    // demo on collision-spin
-    final blade = add(
-      ShapeNode(
-        shape: .rectangle(.new(70, 10)),
-        anchor: .center,
-        position: _CENTER,
-        paint: Paint()..color = _IDLE_COLOR,
-      ),
-    );
+        // demo on collision-spin
+        final blade = add(
+          ShapeNode(
+            shape: .rectangle(.new(70, 10)),
+            anchor: .center,
+            position: _CENTER,
+            paint: Paint()..color = _IDLE_COLOR,
+          ),
+        );
 
-    final collider = blade.add(ColliderNode());
+        final collider = blade.add(ColliderNode());
 
-    blade.add(SpinEffect(speed: pi / 2));
-    // demo off
+        blade.add(SpinEffect(speed: pi / 2));
+        // demo off
 
-    blade.palette.add(_stroke());
-    _colorOnContact(blade, collider);
+        blade.palette.add(_stroke());
+        _colorOnContact(blade, collider);
+    }
   }
 }
 
 /// A circle that reports over one of the two squares it crosses, not the other.
 class _LayerNode extends CollisionArenaNode {
   @override
-  void build() {
-    super.build();
-    final blue = _still(.square(_BLOCK));
-    final orange = _still(.square(_BLOCK), color: ORANGE);
+  void process(State state) {
+    super.process(state);
 
-    add(
-      BoxNode(
-        alignment: .center,
-        children: [
-          RowNode(
-            mainAxisSize: .min,
-            spacing: _BLOCK + _GAP,
-            children: [blue, orange],
+    switch (state) {
+      case Build():
+        final blue = _still(.square(_BLOCK));
+        final orange = _still(.square(_BLOCK), color: ORANGE);
+
+        add(
+          BoxNode(
+            alignment: .center,
+            children: [
+              RowNode(
+                mainAxisSize: .min,
+                spacing: _BLOCK + _GAP,
+                children: [blue, orange],
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
 
-    final mover = add(_mover(.circle(_PROBE)));
+        final mover = add(_mover(.circle(_PROBE)));
 
-    // demo on collision-layer
-    blue.add(ColliderNode(layer: BLUE_LAYER));
-    orange.add(ColliderNode(layer: ORANGE_LAYER));
-    final collider = mover.add(ColliderNode(mask: ORANGE_LAYER));
-    // demo off
+        // demo on collision-layer
+        blue.add(ColliderNode(layer: BLUE_LAYER));
+        orange.add(ColliderNode(layer: ORANGE_LAYER));
+        final collider = mover.add(ColliderNode(mask: ORANGE_LAYER));
+        // demo off
 
-    _colorOnContact(mover, collider);
+        _colorOnContact(mover, collider);
+    }
   }
 }
 
@@ -256,10 +275,14 @@ class _LabelNode extends BoxNode {
        );
 
   @override
-  void build() {
-    super.build();
-    add(_outline);
-    add(_fill..priority = 1);
+  void process(State state) {
+    super.process(state);
+
+    switch (state) {
+      case Build():
+        add(_outline);
+        add(_fill..priority = 1);
+    }
   }
 
   void call(String text) {
@@ -278,62 +301,65 @@ class _ArenaNode extends CollisionArenaNode {
   int _balls = 0;
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    add(_count);
-    add(_fps);
+    switch (state) {
+      case Build():
+        add(_count);
+        add(_fps);
 
-    final frames = add(FpsNode());
+        final frames = add(FpsNode());
 
-    frames.onFpsChange((value) {
-      _fps('$value fps');
-    });
+        frames.onFpsChange((value) {
+          _fps('$value fps');
+        });
 
-    _count('$_balls balls');
+        _count('$_balls balls');
 
-    final pour = add(
-      TimerNode(
-        interval: _SPAWN_INTERVAL,
-        count: _INITIAL_SPAWN_COUNT,
-        cleanup: true,
-      ),
-    );
+        final pour = add(
+          TimerNode(
+            interval: _SPAWN_INTERVAL,
+            count: _INITIAL_SPAWN_COUNT,
+            cleanup: true,
+          ),
+        );
 
-    pour.onTrigger(() {
-      _spawn(_CENTER);
-    });
+        pour.onTrigger(() {
+          _spawn(_CENTER);
+        });
 
-    final spawner = add(
-      TimerNode(
-        interval: _SPAWN_INTERVAL,
-        repeat: true,
-        enabled: false,
-      ),
-    );
+        final spawner = add(
+          TimerNode(
+            interval: _SPAWN_INTERVAL,
+            repeat: true,
+            enabled: false,
+          ),
+        );
 
-    spawner.onTrigger(() {
-      _spawn(_source);
-    });
+        spawner.onTrigger(() {
+          _spawn(_source);
+        });
 
-    final drags = add(
-      DragInput(
-        shape: .rectangle(DEMO_SIZE),
-        endOnCancel: true,
-      ),
-    );
+        final drags = add(
+          DragInput(
+            shape: .rectangle(DEMO_SIZE),
+            endOnCancel: true,
+          ),
+        );
 
-    drags
-      ..onDragStart((event) {
-        _source.setFrom(event.scene);
-        spawner.enable();
-      })
-      ..onDragUpdate((event) {
-        _source.setFrom(event.scene);
-      })
-      ..onDragEnd((_) {
-        spawner.disable();
-      });
+        drags
+          ..onDragStart((event) {
+            _source.setFrom(event.scene);
+            spawner.enable();
+          })
+          ..onDragUpdate((event) {
+            _source.setFrom(event.scene);
+          })
+          ..onDragEnd((_) {
+            spawner.disable();
+          });
+    }
   }
 
   void _spawn(Vector2 at) {
@@ -363,28 +389,33 @@ class _BallNode extends ShapeNode {
        );
 
   @override
-  void build() {
-    super.build();
-    add(VelocityEffect(velocity: velocity));
+  void process(State state) {
+    super.process(state);
 
-    // demo on collision-balls
-    final collider = add(ColliderNode());
+    switch (state) {
+      case Build():
+        add(VelocityEffect(velocity: velocity));
 
-    collider
-      ..onCollisionStart((_) {
-        paint.color = _HIT_COLOR;
-      })
-      ..onCollisionEnd((_) {
-        if (!collider.isColliding) {
-          paint.color = _IDLE_COLOR;
-        }
-      });
-    // demo off
+        // demo on collision-balls
+        final collider = add(ColliderNode());
 
-    tick((_) {
-      if (position.x < _RADIUS || position.x > _LIMIT) velocity.x *= -1;
-      if (position.y < _RADIUS || position.y > _LIMIT) velocity.y *= -1;
-      position.clampTo(_RADIUS, _LIMIT);
-    });
+        collider
+          ..onCollisionStart((_) {
+            paint.color = _HIT_COLOR;
+          })
+          ..onCollisionEnd((_) {
+            if (!collider.isColliding) {
+              paint.color = _IDLE_COLOR;
+            }
+          });
+      // demo off
+    }
+
+    switch (state) {
+      case Update():
+        if (position.x < _RADIUS || position.x > _LIMIT) velocity.x *= -1;
+        if (position.y < _RADIUS || position.y > _LIMIT) velocity.y *= -1;
+        position.clampTo(_RADIUS, _LIMIT);
+    }
   }
 }

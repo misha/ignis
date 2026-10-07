@@ -1,5 +1,6 @@
 // SPDX-AI-Disclosure: none
 
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 
 /// A node that chains [effects] one after another.
@@ -17,20 +18,23 @@ class SequentialEffect extends EffectNode {
   }) : assert(effects.isNotEmpty, 'At least 1 effect is required.');
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    for (var index = 0; index < effects.length; index += 1) {
-      effects[index].onFinish(() {
-        if (index == _current) {
-          effects[_current].detach();
-          _current += 1;
-          _advance();
+    switch (state) {
+      case Build():
+        for (var index = 0; index < effects.length; index += 1) {
+          effects[index].onFinish(() {
+            if (index == _current) {
+              effects[_current].detach();
+              _current += 1;
+              _advance();
+            }
+          });
         }
-      });
-    }
 
-    _advance();
+        _advance();
+    }
   }
 
   @override

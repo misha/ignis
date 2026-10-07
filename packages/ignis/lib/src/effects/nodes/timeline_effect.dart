@@ -81,58 +81,59 @@ class TimelineEffect extends EffectNode {
   }
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    tick((dt) {
-      if (!_fitted) {
-        _fitted = true;
+    switch (state) {
+      case Update(:final dt):
+        if (!_fitted) {
+          _fitted = true;
 
-        if (this case final MeasurableEffect measurable) {
-          timeline.fit(measurable.measure());
+          if (this case final MeasurableEffect measurable) {
+            timeline.fit(measurable.measure());
+          }
         }
-      }
 
-      if (_forward) {
-        timeline.advance(dt);
-      } else {
-        timeline.recede(dt);
-      }
+        if (_forward) {
+          timeline.advance(dt);
+        } else {
+          timeline.recede(dt);
+        }
 
-      if (!timeline.hasStarted) {
-        _started = false;
-        return;
-      }
+        if (!timeline.hasStarted) {
+          _started = false;
+          break;
+        }
 
-      if (!_started) {
-        _started = true;
-        onStart.emit();
-      }
+        if (!_started) {
+          _started = true;
+          onStart.emit();
+        }
 
-      final progress = timeline.progress;
+        final progress = timeline.progress;
 
-      if (progress == 1 && _previousProgress != 1) {
-        onMax.emit();
-      }
+        if (progress == 1 && _previousProgress != 1) {
+          onMax.emit();
+        }
 
-      if (progress == 0 && _previousProgress != 0) {
-        onMin.emit();
-      }
+        if (progress == 0 && _previousProgress != 0) {
+          onMin.emit();
+        }
 
-      onProgress.emit(progress);
-      _previousProgress = progress;
+        onProgress.emit(progress);
+        _previousProgress = progress;
 
-      if (!timeline.isFinished) {
-        _finished = false;
-        return;
-      }
+        if (!timeline.isFinished) {
+          _finished = false;
+          break;
+        }
 
-      if (_finished) {
-        return;
-      }
+        if (_finished) {
+          break;
+        }
 
-      _finished = true;
-      onFinish.emit();
-    });
+        _finished = true;
+        onFinish.emit();
+    }
   }
 }

@@ -163,11 +163,13 @@ class _Ball extends SpatialNode {
   }
 
   @override
-  void build() {
-    super.build();
-    tick((dt) {
-      position.addScaled(velocity, dt);
-    });
+  void process(State state) {
+    super.process(state);
+
+    switch (state) {
+      case Update(:final dt):
+        position.addScaled(velocity, dt);
+    }
   }
 }
 

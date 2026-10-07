@@ -1,7 +1,6 @@
 // SPDX-AI-Disclosure: none
 
-import 'dart:ui';
-
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 
 /// Clips its subtree to its [shape].
@@ -20,9 +19,9 @@ class ClipNode extends SpatialNode {
   }) : super(inherit: .parent);
 
   @override
-  void renderChildren(Canvas canvas) {
+  void renderChildren(Draw draw) {
     // TODO: No-op without an explicit shape. Require one?
-    shape.clip(canvas);
-    super.renderChildren(canvas);
+    shape.clip(draw.canvas);
+    super.renderChildren(draw);
   }
 }

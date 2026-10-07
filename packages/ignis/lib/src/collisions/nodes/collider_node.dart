@@ -64,27 +64,32 @@ class ColliderNode extends SpatialNode {
        super(inherit: .parent);
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    final arena = readOrNull<CollisionArena>();
+    switch (state) {
+      case Build():
+        final arena = readOrNull<CollisionArena>();
 
-    if (arena == null) {
-      if (strict) {
-        throw StateError('ColliderNode requires a CollisionArenaNode ancestor.');
-      } else {
-        return;
-      }
+        if (arena == null) {
+          if (strict) {
+            throw StateError('ColliderNode requires a CollisionArenaNode ancestor.');
+          } else {
+            break;
+          }
+        }
+
+        arena.add(this);
+      case Destroy():
+        collisions.clear();
     }
 
-    arena.add(this);
-    trash(collisions.clear);
-
-    debugDraw((canvas) {
-      final debug = Ignis.debug;
-      if (!debug.draws(.collision)) return;
-      shape.draw(canvas, debug.paint);
-    });
+    switch (state) {
+      case DebugDraw(:final canvas):
+        final debug = Ignis.debug;
+        if (!debug.draws(.collision)) break;
+        shape.draw(canvas, debug.paint);
+    }
   }
 
   @internal

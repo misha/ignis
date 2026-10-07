@@ -105,10 +105,10 @@ void main() {
     a.add(d);
     a.mount();
 
-    a.update(1);
+    a.update(Update(1));
     expect(log.updates, ['A', 'C', 'B', 'D']);
 
-    a.render(RecordingCanvas());
+    a.render(Draw(RecordingCanvas()));
     expect(log.renders, ['A', 'C', 'B', 'D']);
   });
 
@@ -119,7 +119,7 @@ void main() {
     final scene = a.mount();
     a.enabled = false;
 
-    a.update(1);
+    a.update(Update(1));
     expect(a.updates, 0);
     expect(b.updates, 0);
 
@@ -140,11 +140,11 @@ void main() {
       a.mount();
       b.enabled = false;
 
-      a.update(1);
+      a.update(Update(1));
       expect(b.updates, 0);
       expect(c.updates, 1);
 
-      a.render(RecordingCanvas());
+      a.render(Draw(RecordingCanvas()));
       expect(b.renders, 0);
       expect(c.renders, 1);
     },
@@ -230,11 +230,12 @@ void main() {
     var calls = 0;
 
     final b = TestNode(
-      builder: (node) {
-        node.trash(() {
-          calls += 1;
-          node.detach();
-        });
+      processor: (node, state) {
+        switch (state) {
+          case Destroy():
+            calls += 1;
+            node.detach();
+        }
       },
     );
 
@@ -250,7 +251,15 @@ void main() {
     final a = Node();
     final c = Node();
     final d = Node();
-    final b = TestNode(builder: (node) => node.trash(() => a.add(d)));
+    final b = TestNode(
+      processor: (node, state) {
+        switch (state) {
+          case Destroy():
+            a.add(d);
+        }
+      },
+    );
+
     a.add(b);
     a.add(c);
     final scene = a.mount();
@@ -338,7 +347,16 @@ void main() {
   test('node tears down its build before detaching', () {
     final parent = Node();
     Node? seen;
-    final child = TestNode(builder: (node) => node.trash(() => seen = node.parent));
+
+    final child = TestNode(
+      processor: (node, state) {
+        switch (state) {
+          case Destroy():
+            seen = node.parent;
+        }
+      },
+    );
+
     parent.add(child);
     final scene = parent.mount();
 
@@ -352,7 +370,16 @@ void main() {
     final from = Node();
     final to = Node();
     Node? seen;
-    final child = TestNode(builder: (node) => node.trash(() => seen = node.parent));
+
+    final child = TestNode(
+      processor: (node, state) {
+        switch (state) {
+          case Destroy():
+            seen = node.parent;
+        }
+      },
+    );
+
     from.add(child);
     final scene = from.mount();
 
@@ -507,7 +534,15 @@ void main() {
     test('removing a sibling from a teardown during an unmount cascade unmounts it once', () {
       final a = Node();
       final c = TestNode();
-      final b = TestNode(builder: (node) => node.trash(() => a.remove(c)));
+      final b = TestNode(
+        processor: (node, state) {
+          switch (state) {
+            case Destroy():
+              a.remove(c);
+          }
+        },
+      );
+
       a.add(b);
       a.add(c);
       final scene = a.mount();

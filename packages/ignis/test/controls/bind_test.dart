@@ -16,14 +16,18 @@ final class _Answers extends Node {
   });
 
   @override
-  void build() {
-    super.build();
-    Ignis.controls.bind(
-      (_) => log.add(name),
-      matchers: {
-        const TestEvent(),
-      },
-    );
+  void process(State state) {
+    super.process(state);
+
+    switch (state) {
+      case Build():
+        Ignis.controls.bind(
+          (_) => log.add(name),
+          matchers: {
+            const TestEvent(),
+          },
+        );
+    }
   }
 }
 
@@ -34,14 +38,18 @@ final class _Binder extends Node {
   _Binder(this.onJump);
 
   @override
-  void build() {
-    super.build();
-    Ignis.controls.bind(
-      (_) => onJump(),
-      matchers: {
-        const TestEvent(),
-      },
-    );
+  void process(State state) {
+    super.process(state);
+
+    switch (state) {
+      case Build():
+        Ignis.controls.bind(
+          (_) => onJump(),
+          matchers: {
+            const TestEvent(),
+          },
+        );
+    }
   }
 }
 
@@ -208,12 +216,16 @@ final class _Gated extends Node {
   _Gated(this.name, this.log) : super(priority: 1);
 
   @override
-  void build() {
-    super.build();
-    Ignis.controls.bind(
-      (_) => log.add(name),
-      matchers: {const TestEvent()},
-      groups: {'ui'},
-    );
+  void process(State state) {
+    super.process(state);
+
+    switch (state) {
+      case Build():
+        Ignis.controls.bind(
+          (_) => log.add(name),
+          matchers: {const TestEvent()},
+          groups: {'ui'},
+        );
+    }
   }
 }

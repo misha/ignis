@@ -2,15 +2,6 @@
 
 part of 'core.dart';
 
-/// Advances a node by the seconds elapsed since the last frame.
-typedef Tick = void Function(double dt);
-
-/// Paints a node to the canvas, in its own coordinate space.
-typedef Draw = void Function(Canvas canvas);
-
-/// Paints a node's debug overlay, in the same space as a [Draw].
-typedef DebugDraw = void Function(Canvas canvas);
-
 /// Call to undo whatever was set up.
 typedef Cleanup = void Function();
 
@@ -23,15 +14,15 @@ typedef Cleanup = void Function();
 /// **Building**
 ///
 /// Nodes should initialize children, connect signals, and compose behavior in
-/// their [build] method. [build] is called every time a node is mounted to
-/// a live scene.
+/// their [process] method, under [Build]. [Build] is processed every time a
+/// node is mounted to a live scene.
 ///
-/// [build] must be safe to run more than once. It tracks every node added and
-/// every signal subscribed inside it. When the node is unmounted, the nodes
+/// [Build] must be safe to process more than once. It tracks every node added
+/// and every signal subscribed inside it. When the node is unmounted, the nodes
 /// are removed and signals automatically unsubscribed. Other resources that
-/// need disposal should be put in the [trash] manually.
+/// need disposal should be disposed under [Destroy] manually.
 ///
-/// **Do not make [build] `async`.**
+/// **Do not make [process] `async`.**
 ///
 /// **Signals**
 ///
@@ -84,85 +75,81 @@ class Node {
     addAll(children);
   }
 
-  /// Updates this node and its children by [dt] seconds.
+  /// Executes all this node's behavior for the given [state].
+  @mustCallSuper
+  @visibleForOverriding
+  void process(State state) {}
+
+  /// Updates this node and its children by [Update.dt] seconds.
   @nonVirtual
-  void update(double dt) {
+  void update(Update update) {
     if (!activity.updates) return;
-    final ticks = _ticks;
+    process(update);
 
-    if (ticks != null) {
-      for (var i = 0; i < ticks.length; i += 1) {
-        ticks[i](dt);
-      }
-    }
+    final children = _children?.nodes;
+    if (children == null || children.isEmpty) return;
 
-    if (children.isEmpty) return;
-
-    for (final child in children) {
-      child.update(dt);
+    for (var i = 0; i < children.length; i += 1) {
+      children[i].update(update);
     }
   }
 
-  /// Renders this node and its children to [canvas].
-  void render(Canvas canvas) {
-    renderSelf(canvas);
-    renderChildren(canvas);
+  /// Renders this node and its children to [Draw.canvas].
+  void render(Draw draw) {
+    renderSelf(draw);
+    renderChildren(draw);
   }
 
-  /// Runs this node's [draw] callbacks.
+  /// Processes [Draw] for this node.
   @protected
-  void renderSelf(Canvas canvas) {
-    final draws = _draws;
-    if (draws == null) return;
-
-    for (var i = 0; i < draws.length; i += 1) {
-      draws[i](canvas);
-    }
+  void renderSelf(Draw draw) {
+    process(draw);
   }
 
-  /// Renders this node's enabled children to [canvas], in [priority] order.
+  /// Renders this node's enabled children to [Draw.canvas], in [priority] order.
   @protected
-  void renderChildren(Canvas canvas) {
-    if (children.isEmpty) return;
+  void renderChildren(Draw draw) {
+    final children = _children?.nodes;
+    if (children == null || children.isEmpty) return;
 
-    for (final child in children) {
+    for (var i = 0; i < children.length; i += 1) {
+      final child = children[i];
+
       if (child.activity.renders) {
-        child.render(canvas);
+        child.render(draw);
       }
     }
   }
 
-  /// Renders the debug overlay for this node and its children to [canvas].
-  void debugRender(Canvas canvas) {
-    debugRenderSelf(canvas);
-    debugRenderChildren(canvas);
+  /// Renders the debug overlay for this node and its children to [DebugDraw.canvas].
+  void debugRender(DebugDraw draw) {
+    debugRenderSelf(draw);
+    debugRenderChildren(draw);
   }
 
-  /// Runs this node's [debugDraw] callbacks, in the same space as [renderSelf].
+  /// Processes [DebugDraw] for this node, in the same space as [renderSelf].
   @protected
-  void debugRenderSelf(Canvas canvas) {
-    final debugDraws = _debugDraws;
-    if (debugDraws == null) return;
-
-    for (var i = 0; i < debugDraws.length; i += 1) {
-      debugDraws[i](canvas);
-    }
+  void debugRenderSelf(DebugDraw draw) {
+    process(draw);
   }
 
   @protected
-  void debugRenderChildren(Canvas canvas) {
-    if (children.isEmpty) return;
+  void debugRenderChildren(DebugDraw draw) {
+    final children = _children?.nodes;
+    if (children == null || children.isEmpty) return;
 
-    for (final child in children) {
+    for (var i = 0; i < children.length; i += 1) {
+      final child = children[i];
+
       if (child.activity.renders) {
-        child.debugRender(canvas);
+        child.debugRender(draw);
       }
     }
   }
 
   // #region Building
 
-  /// The node whose [build] is currently running, or null between builds.
+  /// The node processing [Build], or null between builds.
   static Node? _building;
 
   /// Runs [body] with [node] as the node building, restoring the previous one
@@ -178,23 +165,12 @@ class Node {
     }
   }
 
-  // The following fields belong to a single, logical run of `Node.build`. When
-  // the node is unmounted or rebuilt, they are processed and/or dropped.
+  // The following fields belong to a single, logical [Build]. When the node is
+  // unmounted, they are processed and/or dropped.
 
-  List<Tick>? _ticks;
-  List<Draw>? _draws;
-  List<DebugDraw>? _debugDraws;
   List<Cleanup>? _cleanups;
 
-  /// Declares this node's children and behavior.
-  ///
-  /// Runs every time the node is mounted to a scene. Declared nodes, signals,
-  /// and other [trash]ed resources are cleaned up when unmounted.
-  @mustCallSuper
-  @visibleForOverriding
-  void build() {}
-
-  /// The children this node's [build] added, in declaration order.
+  /// The children this node's [Build] added, in declaration order.
   ///
   /// Separate from [children], which also holds whatever was added imperatively.
   ///
@@ -206,7 +182,7 @@ class Node {
   ///   want to clean them up on a code change, when that unit changes).
   List<Node>? _declared;
 
-  /// Detaches every child the last [build] declared.
+  /// Detaches every child the last [Build] declared.
   void _discardDeclared() {
     final declared = _declared;
     if (declared == null || declared.isEmpty) return;
@@ -218,75 +194,8 @@ class Node {
     declared.clear();
   }
 
-  /// Calls [tick] with the elapsed seconds on every frame.
-  ///
-  /// ```dart
-  /// tick((dt) {
-  ///   turret.angle += pi / 4 * dt;
-  /// });
-  /// ```
-  ///
-  /// Discarded by the next [build]. Only valid inside this node's own [build].
-  @nonVirtual
-  void tick(Tick tick) {
-    assert(
-      identical(_building, this),
-      'tick() is only available inside this node\'s own build.',
-    );
-
-    (_ticks ??= []).add(tick);
-  }
-
-  /// Draws to [canvas] every frame, in this node's own coordinate space.
-  ///
-  /// ```dart
-  /// draw((canvas) {
-  ///   canvas.drawCircle(.zero, radius, paint);
-  /// });
-  /// ```
-  ///
-  /// Discarded by the next [build]. Only valid inside this node's own [build].
-  @nonVirtual
-  void draw(Draw draw) {
-    assert(
-      identical(_building, this),
-      'draw() is only available inside this node\'s own build.',
-    );
-
-    (_draws ??= []).add(draw);
-  }
-
-  /// Draws to the debug overlay every frame, in the same space as [draw].
-  ///
-  /// Discarded by the next [build]. Only valid inside this node's own [build].
-  @nonVirtual
-  void debugDraw(DebugDraw draw) {
-    assert(
-      identical(_building, this),
-      'debugDraw() is only available inside this node\'s own build.',
-    );
-
-    (_debugDraws ??= []).add(draw);
-  }
-
-  /// Defers [cleanup] until this [build] stops being current.
-  ///
-  /// The trash is emptied right before every rebuild and once at unmount, so
-  /// each build cleans up after the one it replaced:
-  ///
-  /// ```dart
-  /// painter = TextPainter(text: span);
-  /// trash(painter.dispose);
-  /// ```
-  ///
-  /// Emptied first-in-last-out. Only valid inside this node's own [build].
-  @nonVirtual
-  void trash(Cleanup cleanup) {
-    assert(
-      identical(_building, this),
-      'trash() is only available inside this node\'s own build.',
-    );
-
+  /// Defers [cleanup] until this node is unmounted.
+  void _trash(Cleanup cleanup) {
     (_cleanups ??= []).add(cleanup);
   }
 
@@ -454,7 +363,7 @@ class Node {
     }
 
     try {
-      _construct(this, build);
+      _construct(this, () => process(const Build()));
     } finally {
       final children = _children?.nodes;
 
@@ -473,10 +382,20 @@ class Node {
     }
 
     try {
+      try {
+        process(const Destroy());
+      } catch (exception, stack) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: exception,
+            stack: stack,
+            library: 'ignis',
+            context: ErrorDescription('while destroying $runtimeType'),
+          ),
+        );
+      }
+
       _cleanup();
-      _ticks = null;
-      _draws = null;
-      _debugDraws = null;
       _discardDeclared();
       _dropAncestry();
     } finally {
@@ -531,8 +450,8 @@ class Node {
   /// to its current parent is a no-op. If the child was pending removal, this
   /// operation cancels that removal.
   ///
-  /// Called from this node's own [build], the child is automatically recorded
-  /// as declared, so the next [build] discards it before running again.
+  /// Called from this node's own [Build], the child is automatically recorded
+  /// as declared, so unmounting discards it.
   T add<T extends Node>(T node) {
     if (identical(this, node)) {
       throw StateError('Cannot add a node to itself.');

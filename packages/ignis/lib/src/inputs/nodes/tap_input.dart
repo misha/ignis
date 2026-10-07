@@ -50,24 +50,25 @@ class TapInput extends InputNode {
   }) : upOnCancel = upOnCancel ?? false;
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    final recognizer = _recognizer = TapGestureRecognizer(
-      preAcceptSlopTolerance: slop,
-      postAcceptSlopTolerance: slop,
-    );
+    switch (state) {
+      case Build():
+        final recognizer = _recognizer = TapGestureRecognizer(
+          preAcceptSlopTolerance: slop,
+          postAcceptSlopTolerance: slop,
+        );
 
-    recognizer
-      ..onTapDown = _handleDown
-      ..onTapUp = _handleUp
-      ..onTap = _handleTap
-      ..onTapCancel = _handleCancel;
-
-    trash(() {
-      recognizer.dispose();
-      _recognizer = null;
-    });
+        recognizer
+          ..onTapDown = _handleDown
+          ..onTapUp = _handleUp
+          ..onTap = _handleTap
+          ..onTapCancel = _handleCancel;
+      case Destroy():
+        _recognizer?.dispose();
+        _recognizer = null;
+    }
   }
 
   @override

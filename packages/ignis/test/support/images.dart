@@ -54,7 +54,7 @@ Future<String> pixelAsset(List<List<Color>> colors) async {
 /// Renders [node] to a [width]x[height] image.
 Future<Image> renderImage(Node node, int width, int height) {
   final recorder = PictureRecorder();
-  node.render(Canvas(recorder));
+  node.render(Draw(Canvas(recorder)));
   return recorder.endRecording().toImage(width, height);
 }
 

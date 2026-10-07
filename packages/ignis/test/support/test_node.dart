@@ -19,41 +19,49 @@ class TestNode extends Node {
   int builds = 0;
   void Function()? action;
   void Function(TestNode node)? builder;
+  void Function(TestNode node, State state)? processor;
 
   TestNode({
     this.name = 'test',
     this.log,
     this.builder,
+    this.processor,
     super.enabled,
     super.priority,
     super.children,
   });
 
   @override
-  void build() {
-    super.build();
-    mounts += 1;
-    log?.mounts.add(name);
+  void process(State state) {
+    super.process(state);
 
-    trash(() {
-      unmounts += 1;
-      log?.unmounts.add(name);
-    });
+    switch (state) {
+      case Build():
+        mounts += 1;
+        log?.mounts.add(name);
 
-    tick((dt) {
-      elapsed += dt;
-      updates += 1;
-      log?.updates.add(name);
-      action?.call();
-    });
+        builds += 1;
+        log?.builds.add(name);
+        builder?.call(this);
+      case Destroy():
+        unmounts += 1;
+        log?.unmounts.add(name);
+    }
 
-    draw((canvas) {
-      renders += 1;
-      log?.renders.add(name);
-    });
+    switch (state) {
+      case Update(:final dt):
+        elapsed += dt;
+        updates += 1;
+        log?.updates.add(name);
+        action?.call();
+    }
 
-    builds += 1;
-    log?.builds.add(name);
-    builder?.call(this);
+    switch (state) {
+      case Draw():
+        renders += 1;
+        log?.renders.add(name);
+    }
+
+    processor?.call(this, state);
   }
 }

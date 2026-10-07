@@ -21,7 +21,7 @@ part 'route_node.dart';
 ///   - [pop] removes a route from the top of the stack.
 ///
 /// Leaving the router is leaving the tree, so routes respond to routing through
-/// the usual `build` and mount signals. Routes are built by the caller; the
+/// the usual [Build] and [Destroy]. Routes are built by the caller; the
 /// router keeps no registry.
 ///
 /// **Scheduling**
@@ -113,14 +113,15 @@ class RouterNode extends SpatialNode {
   }
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    tick((dt) {
-      if (_navigation?.tick(dt) ?? false) {
-        _settle();
-      }
-    });
+    switch (state) {
+      case Update(:final dt):
+        if (_navigation?.tick(dt) ?? false) {
+          _settle();
+        }
+    }
   }
 
   /// Replaces the whole stack with [route], playing [transition] over the

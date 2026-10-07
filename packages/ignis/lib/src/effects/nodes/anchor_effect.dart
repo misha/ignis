@@ -52,14 +52,17 @@ class _AnchorByEffect extends AnchorEffect {
        super._();
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    onProgress((progress) {
-      final delta = _offset.scaled(progress - previousProgress);
-      final next = target.anchor + delta;
-      target.anchor = Anchor(next.x, next.y);
-    });
+    switch (state) {
+      case Build():
+        onProgress((progress) {
+          final delta = _offset.scaled(progress - previousProgress);
+          final next = target.anchor + delta;
+          target.anchor = Anchor(next.x, next.y);
+        });
+    }
   }
 }
 
@@ -76,17 +79,20 @@ class _AnchorToEffect extends AnchorEffect {
        super._();
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    _offset
-      ..setFrom(_destination)
-      ..subtract(target.anchor);
+    switch (state) {
+      case Build():
+        _offset
+          ..setFrom(_destination)
+          ..subtract(target.anchor);
 
-    onProgress((progress) {
-      final delta = _offset.scaled(progress - previousProgress);
-      final next = target.anchor + delta;
-      target.anchor = Anchor(next.x, next.y);
-    });
+        onProgress((progress) {
+          final delta = _offset.scaled(progress - previousProgress);
+          final next = target.anchor + delta;
+          target.anchor = Anchor(next.x, next.y);
+        });
+    }
   }
 }

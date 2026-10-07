@@ -25,6 +25,10 @@ class Scene<T extends Node> with Scheduler {
   bool _sized = false;
   bool _paused = false;
 
+  final Update _update = Update(0);
+  Draw? _draw;
+  DebugDraw? _debugDraw;
+
   Vector2 _size = .zero;
   Rectangle _shape = const Rectangle(.zero);
 
@@ -78,15 +82,21 @@ class Scene<T extends Node> with Scheduler {
   void update(double dt) {
     assert(_mounted, 'Cannot update a destroyed scene.');
     flush();
-    root.update(dt);
+    _update.dt = dt;
+    root.update(_update);
   }
 
   /// Renders this scene to [canvas].
   void render(Canvas canvas) {
     assert(_mounted, 'Cannot render a destroyed scene.');
     if (!root.activity.renders) return;
-    root.render(canvas);
-    if (Debug.instance.enabled) root.debugRender(canvas);
+    final draw = _draw ??= Draw(canvas);
+    draw.canvas = canvas;
+    root.render(draw);
+    if (!Debug.instance.enabled) return;
+    final debugDraw = _debugDraw ??= DebugDraw(canvas);
+    debugDraw.canvas = canvas;
+    root.debugRender(debugDraw);
   }
 
   void resize(double width, double height) {

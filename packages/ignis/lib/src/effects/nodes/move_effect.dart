@@ -52,12 +52,15 @@ class _MoveByEffect extends MoveEffect {
        super._();
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    onProgress((progress) {
-      target.position.addScaled(_offset, progress - previousProgress);
-    });
+    switch (state) {
+      case Build():
+        onProgress((progress) {
+          target.position.addScaled(_offset, progress - previousProgress);
+        });
+    }
   }
 
   @override
@@ -77,16 +80,19 @@ class _MoveToEffect extends MoveEffect {
        super._();
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    _offset
-      ..setFrom(_destination)
-      ..subtract(target.position);
+    switch (state) {
+      case Build():
+        _offset
+          ..setFrom(_destination)
+          ..subtract(target.position);
 
-    onProgress((progress) {
-      target.position.addScaled(_offset, progress - previousProgress);
-    });
+        onProgress((progress) {
+          target.position.addScaled(_offset, progress - previousProgress);
+        });
+    }
   }
 
   @override

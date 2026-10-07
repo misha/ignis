@@ -21,11 +21,12 @@ class CollisionArenaNode extends Node {
   }
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    tick((_) {
-      arena.process();
-    });
+    switch (state) {
+      case Update():
+        arena.process();
+    }
   }
 }

@@ -62,31 +62,34 @@ class TextNode extends SpatialNode {
        _textDirection = textDirection ?? .ltr;
 
   @override
-  void build() {
-    super.build();
-    final painter = _painter = TextPainter(
-      text: TextSpan(text: _text, style: _style),
-      textAlign: _textAlign,
-      textDirection: _textDirection,
-    );
+  void process(State state) {
+    super.process(state);
 
-    trash(() {
-      painter.dispose();
-      _painter = null;
-    });
+    switch (state) {
+      case Build():
+        _painter = TextPainter(
+          text: TextSpan(text: _text, style: _style),
+          textAlign: _textAlign,
+          textDirection: _textDirection,
+        );
 
-    _target.value?.onStyleChange(() {
-      _resolved = null;
-      _dirty = true;
-    });
+        _target.value?.onStyleChange(() {
+          _resolved = null;
+          _dirty = true;
+        });
 
-    _resolved = null;
-    _dirty = true;
+        _resolved = null;
+        _dirty = true;
+      case Destroy():
+        painter.dispose();
+        _painter = null;
+    }
 
-    draw((canvas) {
-      _reflow();
-      painter.paint(canvas, .zero);
-    });
+    switch (state) {
+      case Draw(:final canvas):
+        _reflow();
+        painter.paint(canvas, .zero);
+    }
   }
 
   /// The text to draw.

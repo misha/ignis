@@ -52,12 +52,15 @@ class _ScaleByEffect extends ScaleEffect {
        super._();
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    onProgress((progress) {
-      target.scale.addScaled(_offset, progress - previousProgress);
-    });
+    switch (state) {
+      case Build():
+        onProgress((progress) {
+          target.scale.addScaled(_offset, progress - previousProgress);
+        });
+    }
   }
 
   @override
@@ -77,16 +80,19 @@ class _ScaleToEffect extends ScaleEffect {
        super._();
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    _offset
-      ..setFrom(_destination)
-      ..subtract(target.scale);
+    switch (state) {
+      case Build():
+        _offset
+          ..setFrom(_destination)
+          ..subtract(target.scale);
 
-    onProgress((progress) {
-      target.scale.addScaled(_offset, progress - previousProgress);
-    });
+        onProgress((progress) {
+          target.scale.addScaled(_offset, progress - previousProgress);
+        });
+    }
   }
 
   @override

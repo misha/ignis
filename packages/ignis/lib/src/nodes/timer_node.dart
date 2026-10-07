@@ -59,25 +59,27 @@ class TimerNode extends Node {
   }
 
   @override
-  void build() {
-    super.build();
-    tick((dt) {
-      if (_finished) return;
-      _elapsed += dt;
+  void process(State state) {
+    super.process(state);
 
-      while (_elapsed >= interval) {
-        _elapsed -= interval;
-        onTrigger.emit();
-        if (repeat) continue;
+    switch (state) {
+      case Update(:final dt):
+        if (_finished) break;
+        _elapsed += dt;
 
-        _triggers += 1;
-        if (_triggers < count) continue;
+        while (_elapsed >= interval) {
+          _elapsed -= interval;
+          onTrigger.emit();
+          if (repeat) continue;
 
-        _finished = true;
-        _elapsed = 0;
-        if (cleanup) detach();
-        return;
-      }
-    });
+          _triggers += 1;
+          if (_triggers < count) continue;
+
+          _finished = true;
+          _elapsed = 0;
+          if (cleanup) detach();
+          break;
+        }
+    }
   }
 }

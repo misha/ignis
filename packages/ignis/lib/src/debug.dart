@@ -36,7 +36,7 @@ class Debug {
 
   /// Whether the overlay draws at all.
   ///
-  /// Every [Node.debugDraw] runs while this is on, whatever [mode] is.
+  /// Every [DebugDraw] runs while this is on, whatever [mode] is.
   bool get enabled => mode != null;
 
   /// What the [DebugMode.spatial] wireframe draws with.

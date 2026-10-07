@@ -6,7 +6,7 @@ import 'package:ignis/ignis.dart';
 import 'runner.dart';
 
 /// `UpdateBenchmark`'s tree (see `update_benchmark.dart`), except every node
-/// registers one [Node.tick] that counts the frames it sees.
+/// counts the frames it sees under [Update].
 ///
 /// The smallest per-node work there is, so whatever this scores over `Update`
 /// is the cost of a tick.
@@ -57,12 +57,13 @@ class CounterNode extends Node {
   int count = 0;
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    tick((_) {
-      count += 1;
-    });
+    switch (state) {
+      case Update():
+        count += 1;
+    }
   }
 }
 

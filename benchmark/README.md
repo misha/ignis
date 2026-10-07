@@ -15,29 +15,29 @@ A bare name resolves to `<name>_benchmark.dart`, or to the same under `flame/`.
 
 > :warning: This is not the performance tuning log and does not explain changes.
 
-Measured with `flutter test` on 2026/08/26, average of 3 or more runs.
+Measured with `flutter test` on 2026/10/07, average of 3 or more runs.
 
 | Benchmark                     | Runtime     |
 |-------------------------------|-------------|
-| Collisions                    | 7721.87 us  |
-| Intersect Circle-Circle       | 2122.28 us  |
-| Intersect Circle-Rectangle    | 14451.17 us |
-| Intersect Rectangle-Rectangle | 9262.52 us  |
-| Layout                        | 23755.91 us |
-| Lifecycle Events              | 46558.53 us |
-| Nearest                       | 9161.10 us  |
-| Signal Emissions              | 2563.62 us  |
-| Tick                          | 40907.14 us |
-| Tick 2                        | 48466.64 us |
-| Update                        | 16015.22 us |
-| Update + Render               | 31606.76 us |
+| Churn                         | 30950.99 us |
+| Collisions                    | 7831.46 us  |
+| Intersect Circle-Circle       | 2207.16 us  |
+| Intersect Circle-Rectangle    | 15717.38 us |
+| Intersect Rectangle-Rectangle | 9744.52 us  |
+| Layout                        | 34788.14 us |
+| Lifecycle Events              | 47570.00 us |
+| Nearest                       | 9350.08 us  |
+| Signal Emissions              | 2570.09 us  |
+| Tick                          | 19863.12 us |
+| Update                        | 17797.94 us |
+| Update + Render               | 30564.37 us |
 
 System details:
 
 - CPU: AMD Ryzen 7 9700X (8 cores / 16 threads)
 - Memory: 59 GiB
-- OS: Ubuntu 26.04 LTS, Linux 7.0.0-30-generic
-- Flutter 3.47.0 (stable) • Dart 3.13.0
+- OS: Ubuntu 26.04.1 LTS, Linux 7.0.0-38-generic
+- Flutter 3.47.5 (stable) • Dart 3.13.4
 
 ## Flame Benchmarks
 

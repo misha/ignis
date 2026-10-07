@@ -91,9 +91,10 @@ class Palette {
   /// ```dart
   /// void painter(Canvas canvas, Paint paint) { ... }
   ///
-  /// draw((canvas) {
-  ///   palette.draw(canvas, painter);
-  /// });
+  /// switch (state) {
+  ///   case Draw(:final canvas):
+  ///     palette.draw(canvas, painter);
+  /// }
   /// ```
   void draw(Canvas canvas, Painter painter) {
     for (final entry in _paints) {

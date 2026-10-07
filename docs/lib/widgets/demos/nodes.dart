@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart' hide State;
 import 'package:ignis/ignis.dart';
 
 import '../colors.dart';
@@ -44,16 +44,19 @@ class _OrderNode extends SpatialNode {
   _OrderNode() : super(position: _CENTER);
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    final circle = _circle();
-    final box = _box();
+    switch (state) {
+      case Build():
+        final circle = _circle();
+        final box = _box();
 
-    // demo on node-priority-order
-    add(circle);
-    add(box);
-    // demo off
+        // demo on node-priority-order
+        add(circle);
+        add(box);
+      // demo off
+    }
   }
 }
 
@@ -62,16 +65,19 @@ class _LiftedNode extends SpatialNode {
   _LiftedNode() : super(position: _CENTER);
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    final circle = _circle();
-    final box = _box();
+    switch (state) {
+      case Build():
+        final circle = _circle();
+        final box = _box();
 
-    // demo on node-priority-lifted
-    add(circle..priority = 1);
-    add(box);
-    // demo off
+        // demo on node-priority-lifted
+        add(circle..priority = 1);
+        add(box);
+      // demo off
+    }
   }
 }
 
@@ -80,50 +86,56 @@ class _NestedNode extends SpatialNode {
   _NestedNode() : super(position: _CENTER);
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    final circle = _circle();
-    final box = _box();
+    switch (state) {
+      case Build():
+        final circle = _circle();
+        final box = _box();
 
-    // demo on node-priority-nested
-    add(box..priority = 1000);
-    box.add(circle);
-    // demo off
+        // demo on node-priority-nested
+        add(box..priority = 1000);
+        box.add(circle);
+      // demo off
+    }
   }
 }
 
 /// Two dots side by side, one of them switched in and out by a tap.
 class _EnabledNode extends Node {
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    final green = _dot(GREEN);
-    final red = _dot(RED);
-    final taps = TapInput(shape: .rectangle(DEMO_SIZE));
+    switch (state) {
+      case Build():
+        final green = _dot(GREEN);
+        final red = _dot(RED);
+        final taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
-    // demo on node-enabled
-    red.enabled = false;
+        // demo on node-enabled
+        red.enabled = false;
 
-    taps.onTap(() {
-      red.enabled = !red.enabled;
-    });
-    // demo off
+        taps.onTap(() {
+          red.enabled = !red.enabled;
+        });
+        // demo off
 
-    addAll([
-      BoxNode(
-        alignment: .center,
-        children: [
-          RowNode(
-            mainAxisSize: .min,
-            crossAxisAlignment: .center,
-            spacing: 16,
-            children: [green, red],
+        addAll([
+          BoxNode(
+            alignment: .center,
+            children: [
+              RowNode(
+                mainAxisSize: .min,
+                crossAxisAlignment: .center,
+                spacing: 16,
+                children: [green, red],
+              ),
+            ],
           ),
-        ],
-      ),
-      taps,
-    ]);
+          taps,
+        ]);
+    }
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:ignis/ignis.dart';
+import 'package:ignis/ignis.dart' hide State;
 
 import 'colors.dart';
 import 'debug_shortcuts.dart';

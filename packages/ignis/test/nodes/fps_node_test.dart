@@ -6,11 +6,11 @@ void main() {
     final node = FpsNode(windowSize: 2);
     node.mount();
 
-    node.update(0.5);
-    node.update(0.25);
+    node.update(Update(0.5));
+    node.update(Update(0.25));
     expect(node.fps, closeTo(2.666, 0.001));
 
-    node.update(0.25);
+    node.update(Update(0.25));
     expect(node.fps, closeTo(4, 0.001));
   });
 
@@ -21,9 +21,9 @@ void main() {
     final updates = <int>[];
     node.onFpsChange((value) => updates.add(value));
 
-    node.update(0.1); // fps = 10
-    node.update(0.1); // fps = 10, unchanged
-    node.update(0.05); // fps = 20
+    node.update(Update(0.1)); // fps = 10
+    node.update(Update(0.1)); // fps = 10, unchanged
+    node.update(Update(0.05)); // fps = 20
 
     expect(updates, [10, 20]);
   });
@@ -32,13 +32,13 @@ void main() {
     final node = FpsNode();
     node.mount();
 
-    node.update(0);
-    node.update(-1);
-    node.update(double.nan);
-    node.update(double.infinity);
+    node.update(Update(0));
+    node.update(Update(-1));
+    node.update(Update(double.nan));
+    node.update(Update(double.infinity));
     expect(node.fps, closeTo(0, 0.001));
 
-    node.update(0.5);
+    node.update(Update(0.5));
     expect(node.fps, closeTo(2, 0.001));
   });
 }

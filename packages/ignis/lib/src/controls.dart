@@ -115,7 +115,7 @@ class Controls {
   }
 
   /// Answers any of [matchers] with [handler], until the returned function is
-  /// called or the [Node.build] that bound it is gone.
+  /// called or the [Build] that bound it is gone.
   ///
   /// Where several live handlers match one event the topmost node wins and the
   /// rest never run, as a hit test would pick it.

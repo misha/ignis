@@ -33,40 +33,41 @@ class LoadingEffect extends EffectNode {
   });
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    tick((dt) {
-      final snapshot = request.value;
-      if (_reported || !snapshot.done) return;
-      _reported = true;
+    switch (state) {
+      case Update():
+        final snapshot = request.value;
+        if (_reported || !snapshot.done) break;
+        _reported = true;
 
-      if (snapshot.cancelled) {
-        // TODO: Not sure disabling the effect is the right thing to do.
-        //  Realistically, what are you supposed to do if it fails?
-        //  Detaching the node might be the more intuitive response.
-        disable();
-        return;
-      }
+        if (snapshot.cancelled) {
+          // TODO: Not sure disabling the effect is the right thing to do.
+          //  Realistically, what are you supposed to do if it fails?
+          //  Detaching the node might be the more intuitive response.
+          disable();
+          break;
+        }
 
-      if (snapshot.hasError) {
-        disable();
+        if (snapshot.hasError) {
+          disable();
 
-        FlutterError.reportError(
-          FlutterErrorDetails(
-            exception: snapshot.error!,
-            stack: snapshot.stackTrace,
-            library: 'ignis',
-            context: ErrorDescription('while preloading'),
-          ),
-        );
+          FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: snapshot.error!,
+              stack: snapshot.stackTrace,
+              library: 'ignis',
+              context: ErrorDescription('while preloading'),
+            ),
+          );
 
-        onError.emit(snapshot);
-        return;
-      }
+          onError.emit(snapshot);
+          break;
+        }
 
-      onFinish.emit();
-    });
+        onFinish.emit();
+    }
   }
 
   @override

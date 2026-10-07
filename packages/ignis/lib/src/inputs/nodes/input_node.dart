@@ -2,6 +2,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
@@ -33,14 +34,15 @@ abstract class InputNode extends SpatialNode {
        super(inherit: .parent);
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    debugDraw((canvas) {
-      final debug = Ignis.debug;
-      if (!debug.draws(.input)) return;
-      shape.draw(canvas, debug.paint);
-    });
+    switch (state) {
+      case DebugDraw(:final canvas):
+        final debug = Ignis.debug;
+        if (!debug.draws(.input)) break;
+        shape.draw(canvas, debug.paint);
+    }
   }
 
   /// Registers [event] with this node's gesture recognizer, if it has one.

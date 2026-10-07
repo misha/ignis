@@ -24,10 +24,10 @@ void main() {
     var triggers = 0;
     node.onTrigger(() => triggers += 1);
 
-    node.update(0.5);
+    node.update(Update(0.5));
     expect(triggers, 0);
 
-    node.update(0.5);
+    node.update(Update(0.5));
     expect(triggers, 1);
   });
 
@@ -105,16 +105,16 @@ void main() {
     var triggers = 0;
     timer.onTrigger(() => triggers += 1);
 
-    timer.update(1);
+    timer.update(Update(1));
     expect(triggers, 1);
 
-    timer.update(1);
+    timer.update(Update(1));
     expect(triggers, 1); // Finished, so this tick is a no-op.
 
     timer.reset();
     expect(timer.isFinished, isFalse);
 
-    timer.update(1);
+    timer.update(Update(1));
     expect(triggers, 2);
   });
 
@@ -124,11 +124,11 @@ void main() {
     var triggers = 0;
     timer.onTrigger(() => triggers += 1);
 
-    timer.update(3);
+    timer.update(Update(3));
     expect(triggers, 2);
 
     timer.reset();
-    timer.update(3);
+    timer.update(Update(3));
     expect(triggers, 4);
   });
 }

@@ -50,12 +50,15 @@ class _RotateByEffect extends RotateEffect {
   }) : super._();
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    onProgress((progress) {
-      target.angle += _angle * (progress - previousProgress);
-    });
+    switch (state) {
+      case Build():
+        onProgress((progress) {
+          target.angle += _angle * (progress - previousProgress);
+        });
+    }
   }
 
   @override
@@ -75,13 +78,17 @@ class _RotateToEffect extends RotateEffect {
        super._();
 
   @override
-  void build() {
-    super.build();
-    _offset = _destination - target.angle;
+  void process(State state) {
+    super.process(state);
 
-    onProgress((progress) {
-      target.angle += _offset * (progress - previousProgress);
-    });
+    switch (state) {
+      case Build():
+        _offset = _destination - target.angle;
+
+        onProgress((progress) {
+          target.angle += _offset * (progress - previousProgress);
+        });
+    }
   }
 
   @override

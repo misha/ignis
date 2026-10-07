@@ -38,15 +38,16 @@ class HoverInput extends InputNode
   });
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    // The tracker skips the exit of a node no longer mounted.
-    trash(() {
-      if (_pointers == 0) return;
-      _pointers = 0;
-      onHoverExit.emit();
-    });
+    switch (state) {
+      case Destroy():
+        // The tracker skips the exit of a node no longer mounted.
+        if (_pointers == 0) break;
+        _pointers = 0;
+        onHoverExit.emit();
+    }
   }
 
   void _enter(PointerEnterEvent event) {

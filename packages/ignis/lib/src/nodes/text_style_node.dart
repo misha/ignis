@@ -35,13 +35,17 @@ class TextStyleNode extends Node {
   }
 
   @override
-  void build() {
-    super.build();
-    _resolved = null;
+  void process(State state) {
+    super.process(state);
 
-    _target.value?.onStyleChange(() {
-      _resolved = null;
-      onStyleChange.emit();
-    });
+    switch (state) {
+      case Build():
+        _resolved = null;
+
+        _target.value?.onStyleChange(() {
+          _resolved = null;
+          onStyleChange.emit();
+        });
+    }
   }
 }

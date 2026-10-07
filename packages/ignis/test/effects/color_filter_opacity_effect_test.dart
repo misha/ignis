@@ -15,10 +15,10 @@ void main() {
     );
 
     effect.mount();
-    effect.update(0.25);
+    effect.update(Update(0.25));
     expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0.25), .srcIn));
 
-    effect.update(0.75);
+    effect.update(Update(0.75));
     expect(paint.colorFilter, ColorFilter.mode(COLOR, .srcIn));
   });
 
@@ -31,10 +31,10 @@ void main() {
     );
 
     effect.mount();
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0.5), .srcIn));
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0), .srcIn));
   });
 
@@ -47,7 +47,7 @@ void main() {
     );
 
     effect.mount();
-    effect.update(1);
+    effect.update(Update(1));
     expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0.5), .srcIn));
   });
 
@@ -61,10 +61,10 @@ void main() {
     );
 
     effect.mount();
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0.2), .srcIn));
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(paint.colorFilter, ColorFilter.mode(COLOR.withValues(alpha: 0.4), .srcIn));
   });
 
@@ -79,7 +79,7 @@ void main() {
     );
 
     effect.mount();
-    effect.update(0.5);
+    effect.update(Update(0.5));
 
     expect(
       paint.colorFilter,

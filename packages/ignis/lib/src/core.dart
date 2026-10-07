@@ -15,5 +15,6 @@ part 'children.dart';
 part 'debug.dart';
 part 'node.dart';
 part 'signal.dart';
+part 'state.dart';
 part 'target.dart';
 part 'tasks.dart';

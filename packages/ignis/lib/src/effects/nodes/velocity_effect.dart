@@ -34,11 +34,13 @@ class VelocityEffect extends EffectNode implements SpeedOwner {
   }
 
   @override
-  void build() {
-    super.build();
-    tick((dt) {
-      target.position.addScaled(velocity, dt);
-    });
+  void process(State state) {
+    super.process(state);
+
+    switch (state) {
+      case Update(:final dt):
+        target.position.addScaled(velocity, dt);
+    }
   }
 
   @override

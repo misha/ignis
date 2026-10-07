@@ -10,13 +10,13 @@ void main() {
     var starts = 0;
     effect.onStart(() => starts += 1);
 
-    effect.update(0.25);
+    effect.update(Update(0.25));
     expect(starts, 0);
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(starts, 1);
 
-    effect.update(0.25);
+    effect.update(Update(0.25));
     expect(starts, 1);
   });
 
@@ -26,10 +26,10 @@ void main() {
     var starts = 0;
     effect.onStart(() => starts += 1);
 
-    effect.update(1);
+    effect.update(Update(1));
     expect(starts, 1);
 
-    effect.update(1);
+    effect.update(Update(1));
     expect(starts, 1);
   });
 
@@ -39,10 +39,10 @@ void main() {
     var maxes = 0;
     effect.onMax(() => maxes += 1);
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(maxes, 0);
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(maxes, 1);
   });
 
@@ -53,10 +53,10 @@ void main() {
     var mins = 0;
     effect.onMin(() => mins += 1);
 
-    effect.update(1);
+    effect.update(Update(1));
     expect(mins, 0);
 
-    effect.update(1);
+    effect.update(Update(1));
     expect(mins, 1);
   });
 
@@ -66,14 +66,14 @@ void main() {
     );
     effect.mount();
 
-    effect.update(1.5); // Clears the initial delay, finishes lap 1, into lap 2.
+    effect.update(Update(1.5)); // Clears the initial delay, finishes lap 1, into lap 2.
 
     effect.reverse();
-    effect.update(0.5); // Recedes within lap 2, never touching the initial delay.
+    effect.update(Update(0.5)); // Recedes within lap 2, never touching the initial delay.
     expect(effect.isRunning, isTrue);
 
     effect.forward();
-    effect.update(0.1);
+    effect.update(Update(0.1));
     expect(effect.previousProgress, closeTo(0.6, 1e-9));
   });
 
@@ -83,8 +83,8 @@ void main() {
     final progresses = <double>[];
     effect.onProgress(progresses.add);
 
-    effect.update(0.25);
-    effect.update(0.75);
+    effect.update(Update(0.25));
+    effect.update(Update(0.75));
 
     expect(progresses, [0.25, 1]);
   });
@@ -95,20 +95,20 @@ void main() {
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(finishes, 0);
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(finishes, 1);
 
-    effect.update(1);
+    effect.update(Update(1));
     expect(finishes, 1);
   });
 
   test('resets back to its start', () {
     final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
-    effect.update(1);
+    effect.update(Update(1));
     expect(effect.isFinished, isTrue);
 
     effect.reset();
@@ -124,15 +124,15 @@ void main() {
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
 
-    effect.update(1);
+    effect.update(Update(1));
     expect(effect.previousProgress, 1); // Lands exactly on lap 1's boundary.
     expect(finishes, 0);
     expect(effect.isFinished, isFalse);
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(effect.previousProgress, 0.5);
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(finishes, 1);
     expect(effect.isFinished, isTrue);
   });
@@ -144,7 +144,7 @@ void main() {
     effect.onFinish(() => finishes += 1);
 
     for (var i = 0; i < 10; i += 1) {
-      effect.update(1);
+      effect.update(Update(1));
       expect(effect.isFinished, isFalse);
     }
 
@@ -157,13 +157,13 @@ void main() {
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
 
-    effect.update(1);
-    effect.update(1);
+    effect.update(Update(1));
+    effect.update(Update(1));
     expect(finishes, 1);
 
     effect.reset();
-    effect.update(1);
-    effect.update(1);
+    effect.update(Update(1));
+    effect.update(Update(1));
     expect(finishes, 2);
   });
 
@@ -174,11 +174,11 @@ void main() {
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
 
-    effect.update(1);
+    effect.update(Update(1));
     expect(effect.previousProgress, 1); // The forward phase is done.
     expect(finishes, 0);
 
-    effect.update(1);
+    effect.update(Update(1));
     expect(effect.previousProgress, 0); // Back at the start.
     expect(finishes, 1);
   });
@@ -194,14 +194,14 @@ void main() {
     final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
 
-    effect.update(0.75);
+    effect.update(Update(0.75));
     expect(effect.previousProgress, 0.75);
 
     effect.reverse();
     expect(effect.isForward, isFalse);
     expect(effect.isReverse, isTrue);
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(effect.previousProgress, 0.25);
   });
 
@@ -209,13 +209,13 @@ void main() {
     final effect = TimelineEffect(timeline: .duration(1));
     effect.mount();
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     effect.reverse();
-    effect.update(0.25);
+    effect.update(Update(0.25));
     expect(effect.previousProgress, 0.25);
 
     effect.forward();
-    effect.update(0.25);
+    effect.update(Update(0.25));
     expect(effect.previousProgress, 0.5);
   });
 
@@ -225,11 +225,11 @@ void main() {
     var finishes = 0;
     effect.onFinish(() => finishes += 1);
 
-    effect.update(1);
+    effect.update(Update(1));
     expect(effect.isFinished, isTrue);
 
     effect.reverse();
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(effect.isFinished, isFalse);
     expect(effect.previousProgress, 0.5);
     expect(finishes, 1);

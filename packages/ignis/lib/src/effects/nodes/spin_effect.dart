@@ -25,12 +25,13 @@ class SpinEffect extends EffectNode implements SpeedOwner {
   }
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    tick((dt) {
-      target.angle += speed * dt;
-    });
+    switch (state) {
+      case Update(:final dt):
+        target.angle += speed * dt;
+    }
   }
 
   @override

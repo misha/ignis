@@ -41,12 +41,15 @@ class _FadeInEffect extends OpacityEffect {
   }) : super._();
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    onProgress((progress) {
-      target.opacity = progress;
-    });
+    switch (state) {
+      case Build():
+        onProgress((progress) {
+          target.opacity = progress;
+        });
+    }
   }
 }
 
@@ -58,11 +61,14 @@ class _FadeOutEffect extends OpacityEffect {
   }) : super._();
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    onProgress((progress) {
-      target.opacity = 1 - progress;
-    });
+    switch (state) {
+      case Build():
+        onProgress((progress) {
+          target.opacity = 1 - progress;
+        });
+    }
   }
 }

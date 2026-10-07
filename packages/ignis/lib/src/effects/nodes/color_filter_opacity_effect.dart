@@ -2,6 +2,7 @@
 
 import 'dart:ui';
 
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 
 /// An effect that fades a [color] in or out on a [Paint] by animating a
@@ -54,13 +55,17 @@ class ColorFilterOpacityEffect extends TimelineEffect {
        _to = toAlpha;
 
   @override
-  void build() {
-    super.build();
-    final from = _from ?? color.a;
-    final to = _to ?? color.a;
+  void process(State state) {
+    super.process(state);
 
-    onProgress((progress) {
-      paint.colorFilter = .mode(color.withValues(alpha: from + (to - from) * progress), .srcIn);
-    });
+    switch (state) {
+      case Build():
+        final from = _from ?? color.a;
+        final to = _to ?? color.a;
+
+        onProgress((progress) {
+          paint.colorFilter = .mode(color.withValues(alpha: from + (to - from) * progress), .srcIn);
+        });
+    }
   }
 }

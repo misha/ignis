@@ -74,16 +74,17 @@ class Spawner extends Node {
   Spawner(this.benchmark) : super(priority: -1);
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    tick((_) {
-      final world = parent!;
+    switch (state) {
+      case Update():
+        final world = parent!;
 
-      for (var i = world.query<Leaf>().length; i < benchmark.leaves; i += 1) {
-        world.add(benchmark.spawn());
-      }
-    });
+        for (var i = world.query<Leaf>().length; i < benchmark.leaves; i += 1) {
+          world.add(benchmark.spawn());
+        }
+    }
   }
 }
 
@@ -94,13 +95,14 @@ class Leaf extends Node {
   Leaf(this.remaining);
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    tick((_) {
-      remaining -= 1;
-      if (remaining == 0) detach();
-    });
+    switch (state) {
+      case Update():
+        remaining -= 1;
+        if (remaining == 0) detach();
+    }
   }
 }
 

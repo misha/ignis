@@ -52,15 +52,17 @@ class DragInput extends InputNode {
   }) : endOnCancel = endOnCancel ?? false;
 
   @override
-  void build() {
-    super.build();
-    final recognizer = _recognizer = ImmediateMultiDragGestureRecognizer()..onStart = _handleStart;
+  void process(State state) {
+    super.process(state);
 
-    trash(() {
-      _drag?.cancel();
-      recognizer.dispose();
-      _recognizer = null;
-    });
+    switch (state) {
+      case Build():
+        _recognizer = ImmediateMultiDragGestureRecognizer()..onStart = _handleStart;
+      case Destroy():
+        _drag?.cancel();
+        _recognizer?.dispose();
+        _recognizer = null;
+    }
   }
 
   @override

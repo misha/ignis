@@ -12,10 +12,10 @@ void main() {
     final effect = ColorOpacityEffect.fadeIn(paint: paint, timeline: .duration(1));
     effect.mount();
 
-    effect.update(0.25);
+    effect.update(Update(0.25));
     expect(paint.color.a, closeTo(0.25, EPSILON));
 
-    effect.update(0.75);
+    effect.update(Update(0.75));
     expect(paint.color.a, closeTo(1, EPSILON));
     expect(paint.color.r, closeTo(COLOR.r, EPSILON));
     expect(paint.color.g, closeTo(COLOR.g, EPSILON));
@@ -27,10 +27,10 @@ void main() {
     final effect = ColorOpacityEffect.fadeOut(paint: paint, timeline: .duration(1));
     effect.mount();
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(paint.color.a, closeTo(0.5, EPSILON));
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(paint.color.a, closeTo(0, EPSILON));
   });
 
@@ -39,10 +39,10 @@ void main() {
     final effect = ColorOpacityEffect.by(paint: paint, opacity: 0.5, timeline: .duration(1));
     effect.mount();
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(paint.color.a, closeTo(0.45, EPSILON));
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(paint.color.a, closeTo(0.7, EPSILON));
   });
 
@@ -53,7 +53,7 @@ void main() {
     paint.color = COLOR.withValues(alpha: 0.4); // Changed before mounting.
     effect.mount();
 
-    effect.update(0.5);
+    effect.update(Update(0.5));
     expect(paint.color.a, closeTo(0.65, EPSILON));
   });
 }

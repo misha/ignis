@@ -16,7 +16,7 @@ void main() {
 
     clip.mount();
     final canvas = RecordingCanvas();
-    clip.render(canvas);
+    clip.render(Draw(canvas));
 
     expect(canvas.clips, [const Rect.fromLTWH(0, 0, 50, 50)]);
     expect(canvas.rects, [const Rect.fromLTWH(0, 0, 100, 100)]);
@@ -26,7 +26,7 @@ void main() {
     final clip = ClipNode(children: [TestNode()]);
     ShapeNode(shape: .square(40), children: [clip]).mount();
     final canvas = RecordingCanvas();
-    clip.render(canvas);
+    clip.render(Draw(canvas));
 
     expect(canvas.clips, [const Rect.fromLTWH(0, 0, 40, 40)]);
   });

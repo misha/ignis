@@ -143,80 +143,85 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
   }
 
   @override
-  void build() {
-    super.build();
+  void process(State state) {
+    super.process(state);
 
-    tick((dt) {
-      final state = _current;
-      if (state.isFinished) return;
-      final amount = dt * speed;
-      if (amount <= 0 || !amount.isFinite) return;
+    switch (state) {
+      case Build():
+        Ignis.cache.onChanged(() {
+          _sprite = _sprite.reload();
 
-      state._elapsed += amount;
+          // Follow the entry by name. A dropped entry falls back to the first; a
+          // shorter one starts over.
+          final entry = _sprite.resolve(_current.key);
 
-      // Every pass re-reads the state, so a handler calling play() redirects
-      // this loop instead of racing it.
-      while (true) {
-        final duration = state._entry.duration(state.frame);
-
-        if (duration <= 0 || !duration.isFinite) {
-          state._elapsed = 0;
-          return;
-        }
-
-        if (state._elapsed < duration) return;
-        state._elapsed -= duration;
-        final next = state.frame + 1;
-
-        if (next < state._entry.frames) {
-          state._seek(next);
-        } else if (state.loops) {
-          state._seek(0);
-          onLoop.emit();
-        } else {
-          state._elapsed = 0;
-          state._finished = true;
-          onFinish.emit();
-
-          if (cleanup) {
-            detach();
+          if (entry == null) {
+            _current._select(_sprite.entries.first, 0);
+            return;
           }
 
-          return;
-        }
-      }
-    });
-
-    void painter(Canvas canvas, Paint paint) {
-      final state = _current;
-
-      canvas.drawImageRect(
-        state._entry.image,
-        state._source ??= state._entry.rect(state.frame),
-        state._destination ??= .fromLTWH(0, 0, width, height),
-        paint,
-      );
+          final frame = _current.frame;
+          _current._select(entry, frame < entry.frames ? frame : 0);
+        });
     }
 
-    draw((canvas) {
-      palette.draw(canvas, painter);
-    });
+    switch (state) {
+      case Update(:final dt):
+        final current = _current;
+        if (current.isFinished) break;
+        final amount = dt * speed;
+        if (amount <= 0 || !amount.isFinite) break;
 
-    Ignis.cache.onChanged(() {
-      _sprite = _sprite.reload();
+        current._elapsed += amount;
 
-      // Follow the entry by name. A dropped entry falls back to the first; a
-      // shorter one starts over.
-      final entry = _sprite.resolve(_current.key);
+        // Every pass re-reads the state, so a handler calling play() redirects
+        // this loop instead of racing it.
+        while (true) {
+          final duration = current._entry.duration(current.frame);
 
-      if (entry == null) {
-        _current._select(_sprite.entries.first, 0);
-        return;
-      }
+          if (duration <= 0 || !duration.isFinite) {
+            current._elapsed = 0;
+            break;
+          }
 
-      final frame = _current.frame;
-      _current._select(entry, frame < entry.frames ? frame : 0);
-    });
+          if (current._elapsed < duration) break;
+          current._elapsed -= duration;
+          final next = current.frame + 1;
+
+          if (next < current._entry.frames) {
+            current._seek(next);
+          } else if (current.loops) {
+            current._seek(0);
+            onLoop.emit();
+          } else {
+            current._elapsed = 0;
+            current._finished = true;
+            onFinish.emit();
+
+            if (cleanup) {
+              detach();
+            }
+
+            break;
+          }
+        }
+    }
+
+    switch (state) {
+      case Draw(:final canvas):
+        palette.draw(canvas, _paint);
+    }
+  }
+
+  void _paint(Canvas canvas, Paint paint) {
+    final current = _current;
+
+    canvas.drawImageRect(
+      current._entry.image,
+      current._source ??= current._entry.rect(current.frame),
+      current._destination ??= .fromLTWH(0, 0, width, height),
+      paint,
+    );
   }
 
   /// Plays the entry [key] names, from the given [frame].

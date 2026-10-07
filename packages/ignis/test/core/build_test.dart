@@ -48,28 +48,6 @@ void main() {
     });
   });
 
-  group('declaring', () {
-    test('asserts on a tick before the node has built', () {
-      expect(() => Node().tick((_) {}), throwsAssertionError);
-    });
-
-    test('asserts on a declaration once the build has returned', () {
-      final node = TestNode()..mount();
-
-      expect(() => node.tick((_) {}), throwsAssertionError);
-      expect(() => node.draw((_) {}), throwsAssertionError);
-      expect(() => node.debugDraw((_) {}), throwsAssertionError);
-      expect(() => node.trash(() {}), throwsAssertionError);
-    });
-
-    test('asserts on a tick aimed at another node from a build', () {
-      final child = Node();
-      final parent = TestNode(builder: (_) => child.tick((_) {}));
-
-      expect(parent.mount, throwsAssertionError);
-    });
-  });
-
   group('declarations', () {
     test('returns the node it was given, on every build', () {
       Node? given;
@@ -132,10 +110,18 @@ void main() {
     });
   });
 
-  group('onUpdate', () {
-    test('runs its callback every update', () {
+  group('update', () {
+    test('runs every update', () {
       var elapsed = 0.0;
-      final scene = TestNode(builder: (node) => node.tick((dt) => elapsed += dt)).mount();
+
+      final scene = TestNode(
+        processor: (node, state) {
+          switch (state) {
+            case Update(:final dt):
+              elapsed += dt;
+          }
+        },
+      ).mount();
 
       scene.update(0.5);
       scene.update(0.5);
@@ -144,47 +130,44 @@ void main() {
     });
   });
 
-  group('trash', () {
-    test('empties at unmount', () {
-      final log = <String>[];
-      final scene = TestNode(builder: (node) => node.trash(() => log.add('cleaned'))).mount();
-
-      scene.destroy();
-
-      expect(log, ['cleaned']);
-    });
-
-    test('empties in reverse order', () {
+  group('destroy', () {
+    test('runs at unmount', () {
       final log = <String>[];
 
       final scene = TestNode(
-        builder: (node) {
-          node.trash(() => log.add('a'));
-          node.trash(() => log.add('b'));
-          node.trash(() => log.add('c'));
+        processor: (node, state) {
+          switch (state) {
+            case Destroy():
+              log.add('destroyed');
+          }
         },
       ).mount();
 
       scene.destroy();
 
-      expect(log, ['c', 'b', 'a']);
+      expect(log, ['destroyed']);
     });
 
-    test('a throwing cleanup is reported and contained', () {
-      final log = <String>[];
+    test('a throwing destroy is reported and contained', () {
+      final signal = Signal0();
+      var emissions = 0;
 
       final scene = TestNode(
-        builder: (node) {
-          node.trash(() => log.add('after'));
-          node.trash(() => throw StateError('bad'));
+        builder: (_) => signal(() => emissions += 1),
+        processor: (node, state) {
+          switch (state) {
+            case Destroy():
+              throw StateError('bad');
+          }
         },
       ).mount();
 
       final reported = _reported(scene.destroy);
+      signal.emit();
 
       expect(reported, hasLength(1));
       expect(reported.single.exception, isStateError);
-      expect(log, ['after'], reason: 'the rest still emptied');
+      expect(emissions, 0, reason: 'the build was still torn down');
     });
   });
 

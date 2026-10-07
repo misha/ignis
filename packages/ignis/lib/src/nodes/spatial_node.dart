@@ -313,10 +313,11 @@ class SpatialNode extends Node
   }
 
   @override
-  void render(Canvas canvas) {
+  void render(Draw draw) {
+    final canvas = draw.canvas;
     canvas.save();
     canvas.transform(_renderTransform);
-    super.render(canvas);
+    super.render(draw);
     canvas.restore();
   }
 
@@ -327,11 +328,11 @@ class SpatialNode extends Node
   /// wireframe of one category still says where each node sits.
   /// [DebugMode.spatial] adds the bounds.
   ///
-  /// Overridden rather than drawn through [debugDraw] because the transform
-  /// has to wrap the children too, and a callback would cost every node in the
-  /// engine a list and a closure it may never use.
+  /// Overridden rather than drawn under [DebugDraw] because the transform
+  /// has to wrap the children too.
   @override
-  void debugRender(Canvas canvas) {
+  void debugRender(DebugDraw draw) {
+    final canvas = draw.canvas;
     canvas.save();
     canvas.transform(_renderTransform);
 
@@ -347,7 +348,7 @@ class SpatialNode extends Node
       canvas.drawRect(shape.rect(), paint);
     }
 
-    super.debugRender(canvas);
+    super.debugRender(draw);
     canvas.restore();
   }
 }

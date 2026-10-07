@@ -2,6 +2,7 @@
 
 import 'dart:ui';
 
+import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 
 /// An effect that animates a [Paint]'s opacity by mutating its alpha.
@@ -42,12 +43,16 @@ class ColorOpacityEffect extends TimelineEffect {
        _span = opacity;
 
   @override
-  void build() {
-    super.build();
-    final base = _base ?? paint.color.a;
+  void process(State state) {
+    super.process(state);
 
-    onProgress((progress) {
-      paint.color = paint.color.withValues(alpha: base + _span * progress);
-    });
+    switch (state) {
+      case Build():
+        final base = _base ?? paint.color.a;
+
+        onProgress((progress) {
+          paint.color = paint.color.withValues(alpha: base + _span * progress);
+        });
+    }
   }
 }

@@ -18,7 +18,7 @@ void main() {
 
     layer.mount();
     final canvas = RecordingCanvas();
-    layer.render(canvas);
+    layer.render(Draw(canvas));
 
     expect(canvas.saveLayers, 0);
   });
@@ -36,7 +36,7 @@ void main() {
 
     layer.mount();
     final canvas = RecordingCanvas();
-    layer.render(canvas);
+    layer.render(Draw(canvas));
 
     expect(canvas.saveLayers, 1);
   });
@@ -46,7 +46,7 @@ void main() {
     final layer = OpacityNode(opacity: 0, children: [child]);
 
     layer.mount();
-    layer.render(RecordingCanvas());
+    layer.render(Draw(RecordingCanvas()));
 
     expect(child.renders, 0);
   });
@@ -56,7 +56,7 @@ void main() {
     final layer = OpacityNode(opacity: 0.5, children: [child]);
 
     layer.mount();
-    layer.render(RecordingCanvas());
+    layer.render(Draw(RecordingCanvas()));
 
     expect(child.renders, 0);
   });

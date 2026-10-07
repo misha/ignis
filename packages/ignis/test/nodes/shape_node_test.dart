@@ -11,7 +11,7 @@ void main() {
     final node = ShapeNode(shape: .square(40), paint: Paint()..color = RED);
     node.mount();
     final canvas = RecordingCanvas();
-    node.render(canvas);
+    node.render(Draw(canvas));
 
     expect(canvas.rects, [const Rect.fromLTWH(0, 0, 40, 40)]);
   });
@@ -20,7 +20,7 @@ void main() {
     final fill = ShapeNode(paint: Paint()..color = RED);
     ShapeNode(shape: .square(40), children: [fill]).mount();
     final canvas = RecordingCanvas();
-    fill.render(canvas);
+    fill.render(Draw(canvas));
 
     expect(canvas.rects, [const Rect.fromLTWH(0, 0, 40, 40)]);
   });
