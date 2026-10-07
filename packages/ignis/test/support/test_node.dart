@@ -57,14 +57,3 @@ class TestNode extends Node {
     builder?.call(this);
   }
 }
-
-final class LiveTestNode extends TestNode with Live {
-  LiveTestNode({
-    super.name,
-    super.log,
-    void Function(LiveTestNode node)? builder,
-    super.enabled,
-    super.priority,
-    super.children,
-  }) : super(builder: (node) => builder?.call(node as LiveTestNode));
-}

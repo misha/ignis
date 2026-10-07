@@ -27,17 +27,15 @@ final class _Answers extends Node {
   }
 }
 
-/// A node whose build binds an event, and which can be rebuilt on demand.
-final class _Binder extends Node with Live {
+/// A node whose build binds an event.
+final class _Binder extends Node {
   final void Function() onJump;
-  int builds = 0;
 
   _Binder(this.onJump);
 
   @override
   void build() {
     super.build();
-    builds += 1;
     Ignis.controls.bind(
       (_) => onJump(),
       matchers: {
@@ -64,18 +62,6 @@ void main() {
 
     expect(press(), isTrue);
     expect(jumps, 1);
-  });
-
-  test('a rebuild replaces the bind rather than stacking one', () {
-    var jumps = 0;
-    final node = _Binder(() => jumps += 1);
-    final scene = node.mount();
-
-    scene.reassemble();
-    expect(node.builds, 2, reason: 'the node rebuilt');
-
-    press();
-    expect(jumps, 1, reason: 'the old bind was trashed');
   });
 
   test('the bind dies with the node', () {

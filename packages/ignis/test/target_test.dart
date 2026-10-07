@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-import 'support/test_node.dart';
-
 /// A host that builds its target where every effect does, in its constructor.
 final class _Host extends Node {
   late final Target<PositionOwner> target;
@@ -98,28 +96,5 @@ void main() {
     node.mount();
 
     expect(host.target.value, same(node));
-  });
-
-  test('a kept effect follows the host its container was rebuilt into', () {
-    late SpinEffect effect;
-    late ShapeNode host;
-
-    final root = LiveTestNode(
-      builder: (node) {
-        effect = node.keep(#spin, () => SpinEffect(speed: 1));
-        host = node.add(ShapeNode(shape: .square(10), children: [effect]));
-      },
-    );
-
-    final scene = root.mount()..update(0);
-    final dead = host;
-
-    scene.reassemble();
-    scene.update(1);
-
-    expect(host, isNot(same(dead)), reason: 'the container was rebuilt');
-    expect(effect.target, same(host));
-    expect(host.angle, 1.0, reason: 'it drives the host it now sits under');
-    expect(dead.angle, 0.0, reason: 'the detached host is untouched');
   });
 }

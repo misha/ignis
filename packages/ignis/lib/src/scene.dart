@@ -23,7 +23,6 @@ class Scene<T extends Node> with Scheduler {
 
   bool _mounted = true;
   bool _sized = false;
-  bool _reassembling = false;
   bool _paused = false;
 
   Vector2 _size = .zero;
@@ -80,18 +79,6 @@ class Scene<T extends Node> with Scheduler {
     assert(_mounted, 'Cannot update a destroyed scene.');
     flush();
     root.update(dt);
-  }
-
-  void reassemble() {
-    assert(_mounted, 'Cannot reassemble a destroyed scene.');
-    if (_reassembling) return;
-    _reassembling = true;
-
-    try {
-      root.reassemble();
-    } finally {
-      _reassembling = false;
-    }
   }
 
   /// Renders this scene to [canvas].

@@ -17,7 +17,6 @@ void main() {
     scene.destroy();
 
     expect(() => scene.update(0), throwsAssertionError);
-    expect(scene.reassemble, throwsAssertionError);
     expect(() => scene.resize(100, 80), throwsAssertionError);
     expect(scene.destroy, returnsNormally);
   });
@@ -34,28 +33,6 @@ void main() {
     (node as Node).mount();
 
     expect(node.mount, throwsStateError);
-  });
-
-  test('reassembles the whole tree', () {
-    final a = LiveTestNode(name: 'A');
-    final b = LiveTestNode(name: 'B');
-    a.add(b);
-    final scene = a.mount();
-
-    scene.reassemble();
-
-    expect(a.builds, 2, reason: 'once on mount, once on the walk');
-    expect(b.builds, 2);
-  });
-
-  test('drops a reassemble triggered from inside a reassemble', () {
-    final node = LiveTestNode();
-    final scene = node.mount();
-    node.builder = (_) => scene.reassemble();
-
-    scene.reassemble();
-
-    expect(node.builds, 2);
   });
 
   group('pause', () {

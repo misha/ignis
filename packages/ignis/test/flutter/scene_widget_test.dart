@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
@@ -193,23 +191,6 @@ void main() {
     expect(scene.root.mounts, 1);
     expect(scene.root.updates, 1);
     expect(scene.root.elapsed, 0);
-  });
-
-  testWidgets('reassembles the scene on hot reload', (tester) async {
-    final scene = LiveTestNode().mount();
-
-    await tester.pumpWidget(
-      SizedBox.square(
-        dimension: 100,
-        child: SceneWidget(scene),
-      ),
-    );
-
-    // Never awaited directly: it locks events until the tree is pumped.
-    unawaited(tester.binding.reassembleApplication());
-    await tester.pump();
-
-    expect(scene.root.builds, 2);
   });
 
   testWidgets('paints against the given background color', (tester) async {

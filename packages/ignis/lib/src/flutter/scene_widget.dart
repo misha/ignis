@@ -51,12 +51,6 @@ class _SceneWidgetState extends State<SceneWidget> {
   }
 
   @override
-  void reassemble() {
-    super.reassemble();
-    widget.scene.reassemble();
-  }
-
-  @override
   Widget build(context) {
     // Hidden UI disables its tickers. Follow suit so a covered scene stops.
     final muted = !TickerMode.valuesOf(context).enabled;

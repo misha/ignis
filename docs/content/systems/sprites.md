@@ -5,7 +5,7 @@ lane: usage
 category: system
 status: complete
 reference: [SpriteNode, Sprite, SpriteImage, SpriteAnimation, SpriteRegion, SpriteSheet, SpriteMap, SpriteGroup]
-related: [/systems/assets, /concepts/nodes, /systems/live-reload]
+related: [/systems/assets, /concepts/nodes]
 ---
 <!-- SPDX-AI-Disclosure: none -->
 

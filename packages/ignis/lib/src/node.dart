@@ -65,15 +65,6 @@ typedef Cleanup = void Function();
 /// A node may [provide] a value to its entire subtree, keyed by its type.
 /// [read] resolves the nearest match, checking the node itself before its
 /// [ancestors].
-///
-/// **Reassembly**
-///
-/// By default nothing in particular happens when the code reassembles. You can
-/// change this by opting into the [Live] mixin.
-///
-/// With [Live], a reassembly completely rebuilds the node. Even disabled nodes
-/// are rebuilt. Anything kept with [Live.keep] is retained from the last build.
-/// See [Live] for more detailed usage examples.
 class Node {
   /// Creates a new node.
   ///
@@ -171,21 +162,12 @@ class Node {
 
   // #region Building
 
-  /// Which reassembly is running, bumped once per [Scene.reassemble].
-  ///
-  /// A node records the pass it last built in, so a subtree the walk mounts on
-  /// its way down is not built a second time when the walk reaches it.
-  static int _latestGeneration = 0;
-
-  /// The last built generation, which generally lags behind [_latestGeneration].
-  int _builtGeneration = -1;
-
   /// The node whose [build] is currently running, or null between builds.
   static Node? _building;
 
   /// Runs [body] with [node] as the node building, restoring the previous one
   /// afterward.
-  static T _construct<T>(Node? node, T Function() body) {
+  static T _construct<T>(Node node, T Function() body) {
     final saved = _building;
     _building = node;
 
@@ -211,28 +193,6 @@ class Node {
   @mustCallSuper
   @visibleForOverriding
   void build() {}
-
-  /// Re-derives this node by running [build] again from scratch.
-  ///
-  /// Everything the previous [build] made is thrown away:
-  ///
-  ///   - All [add]ed direct children are removed.
-  ///   - All [tick], [draw], and [debugDraw] closures are removed.
-  ///   - The [trash] is processed and cleared.
-  @internal
-  void rebuild() {
-    _builtGeneration = _latestGeneration;
-    _discardDeclared();
-
-    // Dropped rather than cleared, so a rebuild from inside an [onUpdate]
-    // leaves the list that call is being iterated from intact. Its remaining
-    // closures run out the frame; the new build installs its own for the next.
-    _ticks = null;
-    _draws = null;
-    _debugDraws = null;
-    _cleanup();
-    _construct(this, build);
-  }
 
   /// The children this node's [build] added, in declaration order.
   ///
@@ -494,7 +454,7 @@ class Node {
     }
 
     try {
-      rebuild();
+      _construct(this, build);
     } finally {
       final children = _children?.nodes;
 
@@ -666,47 +626,6 @@ class Node {
       _parent = nextParent;
       _forgetAncestry();
       if (incoming != null) _mount(incoming);
-    }
-  }
-
-  // #endregion
-
-  // #region Reassembly
-
-  @internal
-  void reassemble() {
-    _latestGeneration += 1;
-    _reassemble();
-  }
-
-  void _reassemble() {
-    // Already built by the flush that mounted it, against this same code.
-    if (this is Live && _builtGeneration != _latestGeneration) {
-      // A mid-edit build throws, and must not take the rest of the walk down.
-      try {
-        rebuild();
-      } catch (exception, stack) {
-        FlutterError.reportError(
-          FlutterErrorDetails(
-            exception: exception,
-            stack: stack,
-            library: 'ignis',
-            context: ErrorDescription('while reassembling $runtimeType'),
-          ),
-        );
-      }
-    }
-
-    // Settle what the pass just declared, so the walk descends into the tree
-    // as it now stands rather than as it stood before the rebuild.
-    scene.flush();
-    if (children.isEmpty) return;
-
-    for (final child in children.toList(growable: false)) {
-      // A rebuild above queued this one's removal, so it is already gone. Its
-      // replacement built against the current code and is not in this list.
-      if (!identical(child.parent, this)) continue;
-      child._reassemble();
     }
   }
 
