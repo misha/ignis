@@ -46,10 +46,7 @@ typedef Cleanup = void Function();
 ///
 /// **Scenes**
 ///
-/// Nodes may be mounted to a [Scene], which drives them with a game loop. When
-/// mounted, the scene will propagate through the entire subtree emitting the
-/// [onMount] signal on each node, from top to bottom. Unmounting does the
-/// reverse, emitting the [onUnmount] signal from the leaves upward.
+/// Nodes may be mounted to a [Scene], which drives them with a game loop.
 ///
 /// **Tree**
 ///
@@ -172,16 +169,6 @@ class Node {
     }
   }
 
-  @internal
-  void resize(Vector2 size) {
-    onSceneResize.emit(size);
-    if (children.isEmpty) return;
-
-    for (final child in children) {
-      child.resize(size);
-    }
-  }
-
   // #region Building
 
   /// Which reassembly is running, bumped once per [Scene.reassemble].
@@ -245,10 +232,6 @@ class Node {
     _debugDraws = null;
     _cleanup();
     _construct(this, build);
-
-    if (scene.hasSize) {
-      onSceneResize.emit(scene.size);
-    }
   }
 
   /// The children this node's [build] added, in declaration order.
@@ -402,19 +385,6 @@ class Node {
 
   // #endregion
 
-  // #region Signals
-
-  /// Emitted when this node is added to a scene.
-  final onMount = Signal0();
-
-  /// Emitted when this node is removed from a scene.
-  final onUnmount = Signal0();
-
-  /// Emitted when the scene resizes, and once at mount.
-  final onSceneResize = Signal1<Vector2>();
-
-  // #endregion
-
   // #region Children
 
   _Children? _children;
@@ -516,7 +486,6 @@ class Node {
 
   void _mount(Scene scene) {
     _scene = scene;
-    rebuild();
     final targets = _targets;
 
     if (targets != null) {
@@ -525,13 +494,17 @@ class Node {
       }
     }
 
-    onMount.emit();
-    final children = _children?.nodes;
-    if (children == null) return;
+    try {
+      rebuild();
+    } finally {
+      final children = _children?.nodes;
 
-    for (final child in children.toList(growable: false)) {
-      if (!identical(child.parent, this)) continue;
-      child._mount(scene);
+      if (children != null) {
+        for (final child in children.toList(growable: false)) {
+          if (!identical(child.parent, this)) continue;
+          child._mount(scene);
+        }
+      }
     }
   }
 
@@ -541,7 +514,6 @@ class Node {
     }
 
     try {
-      onUnmount.emit();
       _cleanup();
       _ticks = null;
       _draws = null;

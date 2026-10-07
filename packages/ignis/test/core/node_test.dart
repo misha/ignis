@@ -260,12 +260,16 @@ void main() {
 
   test('prevents reentrant removal', () {
     final a = Node();
-    final b = Node();
     var calls = 0;
-    b.onUnmount(() {
-      calls += 1;
-      b.detach();
-    });
+
+    final b = TestNode(
+      builder: (node) {
+        node.trash(() {
+          calls += 1;
+          node.detach();
+        });
+      },
+    );
 
     a.add(b);
     final scene = a.mount();
@@ -277,10 +281,9 @@ void main() {
 
   test('preserves children added during remove-all', () {
     final a = Node();
-    final b = Node();
     final c = Node();
     final d = Node();
-    b.onUnmount(() => a.add(d));
+    final b = TestNode(builder: (node) => node.trash(() => a.add(d)));
     a.add(b);
     a.add(c);
     final scene = a.mount();
@@ -351,12 +354,10 @@ void main() {
   test('removing a moved child in the same frame unmounts it', () {
     final a = Node();
     final b = Node();
-    final c = Node();
+    final c = TestNode();
     a.add(b);
     a.add(c);
     final scene = a.mount()..update(0);
-    var unmounts = 0;
-    c.onUnmount(() => unmounts += 1);
 
     b.add(c);
     b.remove(c);
@@ -364,41 +365,29 @@ void main() {
 
     expect(c.hasParent, isFalse);
     expect(c.isMounted, isFalse);
-    expect(unmounts, 1);
+    expect(c.unmounts, 1);
   });
 
-  test('propagates destroy listener failures while still detaching the node', () {
-    final a = Node();
-    final b = Node();
-    b.onUnmount(() => throw StateError('Listener failed.'));
-    a.add(b);
-    final scene = a.mount();
-
-    expect(a.remove(b), isTrue);
-    expect(() => scene.update(0), throwsStateError);
-    expect(b.parent, isNull);
-  });
-
-  test('node emits onUnmount before detaching', () {
+  test('node tears down its build before detaching', () {
     final parent = Node();
-    final child = Node();
+    Node? seen;
+    final child = TestNode(builder: (node) => node.trash(() => seen = node.parent));
     parent.add(child);
     final scene = parent.mount();
-    child.onUnmount(() => expect(parent, same(child.parent)));
 
     parent.remove(child);
     scene.update(0);
+    expect(seen, same(parent));
     expect(child.parent, isNull);
   });
 
-  test('node emits onUnmount before moving out of its scene', () {
+  test('node tears down its build before moving out of its scene', () {
     final from = Node();
     final to = Node();
-    final child = Node();
+    Node? seen;
+    final child = TestNode(builder: (node) => node.trash(() => seen = node.parent));
     from.add(child);
     final scene = from.mount();
-    Node? seen;
-    child.onUnmount(() => seen = child.parent);
 
     from.remove(child);
     to.add(child);
@@ -489,14 +478,12 @@ void main() {
     });
 
     test('mounting an already-mounted node is a no-op', () {
-      final a = Node();
-      var mounts = 0;
-      a.onMount(() => mounts += 1);
+      final a = TestNode();
       final scene = a.mount();
       final result = a.mount();
 
       expect(result, same(scene));
-      expect(mounts, 1);
+      expect(a.mounts, 1);
     });
 
     test('propagates the owning scene to the whole subtree once mounted', () {
@@ -537,13 +524,12 @@ void main() {
   });
 
   group('reentrant mutation during mount/unmount', () {
-    test('removing a sibling from onMount during a mount cascade removes it', () {
+    test('removing a sibling from a build during a mount cascade removes it', () {
       final a = Node();
-      final b = Node();
       final c = Node();
+      final b = TestNode(builder: (_) => a.remove(c));
       a.add(b);
       a.add(c);
-      b.onMount(() => a.remove(c));
       final scene = a.mount();
 
       scene.update(0);
@@ -551,43 +537,36 @@ void main() {
       expect(c.isMounted, isFalse);
     });
 
-    test('removing a sibling from onUnmount during an unmount cascade unmounts it once', () {
+    test('removing a sibling from a teardown during an unmount cascade unmounts it once', () {
       final a = Node();
-      final b = Node();
-      final c = Node();
+      final c = TestNode();
+      final b = TestNode(builder: (node) => node.trash(() => a.remove(c)));
       a.add(b);
       a.add(c);
       final scene = a.mount();
-      var cUnmounts = 0;
-      c.onUnmount(() => cUnmounts += 1);
-      b.onUnmount(() => a.remove(c));
       scene.destroy();
-      expect(cUnmounts, 1);
+      expect(c.unmounts, 1);
     });
 
-    test('adding a sibling from onMount during a mount cascade mounts it on the next flush', () {
+    test('adding a sibling from a build during a mount cascade mounts it on the next flush', () {
       final a = Node();
-      final b = Node();
-      final d = Node();
+      final d = TestNode();
+      final b = TestNode(builder: (_) => a.add(d));
       a.add(b);
-      var dMounts = 0;
-      d.onMount(() => dMounts += 1);
-      b.onMount(() => a.add(d));
 
       final scene = a.mount();
-      expect(dMounts, 0);
+      expect(d.mounts, 0);
 
       scene.update(0);
-      expect(dMounts, 1);
+      expect(d.mounts, 1);
     });
 
     test(
-      'a node can detach itself from within its own onMount, taking effect on the next flush',
+      'a node can detach itself from within its own build, taking effect on the next flush',
       () {
         final a = Node();
-        final b = Node();
+        final b = TestNode(builder: (node) => node.detach());
         a.add(b);
-        b.onMount(() => b.detach());
 
         final scene = a.mount();
         expect(b.parent, same(a));
@@ -597,35 +576,26 @@ void main() {
       },
     );
 
-    test('reparenting from within onMount remounts the node under its new parent', () {
+    test('reparenting from within a build remounts the node under its new parent', () {
       final a = Node();
-      final b = Node();
       final c = Node();
+      final b = TestNode(builder: (node) => c.add(node));
       a.add(b);
       a.add(c);
-      var mounts = 0;
-      b.onMount(() => mounts += 1);
-      b.onMount(() => c.add(b));
 
       final scene = a.mount();
       scene.update(0);
 
       expect(b.parent, same(c));
       expect(b.isMounted, isTrue);
-      expect(mounts, 2, reason: 'a move remounts');
+      expect(b.mounts, 2, reason: 'a move remounts');
     });
 
-    test('mounting a node reentrantly from within its own onMount is a no-op', () {
-      final a = Node();
-      var mounts = 0;
-
-      a.onMount(() {
-        mounts += 1;
-        a.mount();
-      });
+    test('mounting a node reentrantly from within its own build is a no-op', () {
+      final a = TestNode(builder: (node) => node.mount());
 
       a.mount();
-      expect(mounts, 1);
+      expect(a.mounts, 1);
     });
   });
 

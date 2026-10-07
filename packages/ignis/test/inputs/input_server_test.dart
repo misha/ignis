@@ -344,8 +344,8 @@ void main() {
     final drag = DragInput(shape: .square(200), priority: 1);
     final hover = HoverInput(shape: .square(200));
     await pumpScene(tester, [drag, hover]);
-    final enters = <HoverEvent>[];
-    hover.onHoverEnter(enters.add);
+    var enters = 0;
+    hover.onHoverEnter(() => enters += 1);
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500)); // Starts outside the hit area.
@@ -354,7 +354,7 @@ void main() {
     await gesture.moveTo(const Offset(5, 5));
     await tester.pump();
 
-    expect(enters, hasLength(1));
+    expect(enters, 1);
   });
 
   testWidgets('a HoverInput above a TapInput still lets taps through', (tester) async {
@@ -375,8 +375,8 @@ void main() {
     final tap = TapInput(shape: .square(200), priority: 1);
     final hover = HoverInput(shape: .square(200));
     await pumpScene(tester, [tap, hover]);
-    final enters = <HoverEvent>[];
-    hover.onHoverEnter(enters.add);
+    var enters = 0;
+    hover.onHoverEnter(() => enters += 1);
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500)); // Starts outside the hit area.
@@ -385,7 +385,7 @@ void main() {
     await gesture.moveTo(const Offset(5, 5));
     await tester.pump();
 
-    expect(enters, hasLength(1));
+    expect(enters, 1);
   });
 
   testWidgets('isHovering tracks hover', (tester) async {
@@ -430,13 +430,27 @@ void main() {
     expect(downs, hasLength(1));
   });
 
+  testWidgets('hover enters as the event arrives, before the next frame', (tester) async {
+    final hover = HoverInput(shape: .square(20));
+    await pumpScene(tester, [hover]);
+    var enters = 0;
+    hover.onHoverEnter(() => enters += 1);
+
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: const Offset(500, 500));
+    await tester.pump();
+
+    await gesture.moveTo(const Offset(5, 5));
+    expect(enters, 1);
+  });
+
   testWidgets('hover emits enter then exit', (tester) async {
     final hover = HoverInput(shape: .square(20));
     await pumpScene(tester, [hover]);
-    final enters = <HoverEvent>[];
-    final exits = <HoverEvent>[];
-    hover.onHoverEnter(enters.add);
-    hover.onHoverExit(exits.add);
+    var enters = 0;
+    var exits = 0;
+    hover.onHoverEnter(() => enters += 1);
+    hover.onHoverExit(() => exits += 1);
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500)); // Starts outside the hit area.
@@ -444,12 +458,12 @@ void main() {
 
     await gesture.moveTo(const Offset(5, 5));
     await tester.pump();
-    expect(enters, hasLength(1));
-    expect(exits, isEmpty);
+    expect(enters, 1);
+    expect(exits, 0);
 
     await gesture.moveTo(const Offset(500, 500));
     await tester.pump();
-    expect(exits, hasLength(1));
+    expect(exits, 1);
   });
 
   testWidgets('unmounting mid-hover emits onHoverExit', (tester) async {
@@ -457,11 +471,11 @@ void main() {
     final subtree = Node(children: [hover]);
     final scene = await pumpScene(tester, [subtree]);
     scene.root.provide('cursor');
-    final exits = <HoverEvent>[];
+    var exits = 0;
     final reads = <String>[];
 
-    hover.onHoverExit((event) {
-      exits.add(event);
+    hover.onHoverExit(() {
+      exits += 1;
       reads.add(hover.read<String>());
     });
 
@@ -476,8 +490,7 @@ void main() {
     scene.root.remove(subtree);
     await tester.pump();
 
-    expect(exits, hasLength(1));
-    expect(exits.single.scene, Vector2.all(5));
+    expect(exits, 1);
     expect(reads, ['cursor']);
     expect(hover.isHovering, isFalse);
   });
@@ -485,8 +498,8 @@ void main() {
   testWidgets('a hover event after the hovered node unmounted emits nothing', (tester) async {
     final hover = HoverInput(shape: .square(20));
     final scene = await pumpScene(tester, [hover]);
-    final exits = <HoverEvent>[];
-    hover.onHoverExit(exits.add);
+    var exits = 0;
+    hover.onHoverExit(() => exits += 1);
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500));
@@ -497,21 +510,19 @@ void main() {
 
     scene.root.remove(hover);
     await tester.pump();
-    expect(exits, hasLength(1));
+    expect(exits, 1);
 
     await gesture.moveTo(const Offset(500, 500));
     await tester.pump();
 
-    expect(exits, hasLength(1));
+    expect(exits, 1);
   });
 
-  testWidgets('still tracks hover after unmounting mid-hover and being re-added', (tester) async {
+  testWidgets('a node re-added under a still cursor is hovered again', (tester) async {
     final hover = HoverInput(shape: .square(20));
     final scene = await pumpScene(tester, [hover]);
-    final enters = <HoverEvent>[];
-    final exits = <HoverEvent>[];
-    hover.onHoverEnter(enters.add);
-    hover.onHoverExit(exits.add);
+    var enters = 0;
+    hover.onHoverEnter(() => enters += 1);
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500));
@@ -524,14 +535,44 @@ void main() {
     scene.root.add(hover);
     await tester.pump();
 
-    await gesture.moveTo(const Offset(500, 500));
-    await tester.pump();
-    await gesture.moveTo(const Offset(5, 5));
+    expect(enters, 2);
+    expect(hover.isHovering, isTrue);
+  });
+
+  testWidgets('a node that moves under a still cursor is hovered', (tester) async {
+    final hover = HoverInput(shape: .square(20), position: .all(100));
+    await pumpScene(tester, [hover]);
+
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: const Offset(500, 500));
     await tester.pump();
 
-    expect(enters, hasLength(2));
-    expect(exits, hasLength(1));
+    await gesture.moveTo(const Offset(5, 5));
+    await tester.pump();
+    expect(hover.isHovering, isFalse);
+
+    hover.position.setZero();
+    await tester.pump();
+
     expect(hover.isHovering, isTrue);
+  });
+
+  testWidgets('a mouse leaving the scene clears its hover', (tester) async {
+    final hover = HoverInput(shape: .square(20));
+    await pumpScene(tester, [hover]);
+
+    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await gesture.addPointer(location: const Offset(500, 500));
+    await tester.pump();
+
+    await gesture.moveTo(const Offset(5, 5));
+    await tester.pump();
+    expect(hover.isHovering, isTrue);
+
+    await gesture.removePointer();
+    await tester.pump();
+
+    expect(hover.isHovering, isFalse);
   });
 
   testWidgets('unmounting mid-drag cancels the drag', (tester) async {

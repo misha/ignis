@@ -12,46 +12,6 @@ void main() {
     expect(scene.size, Vector2(100, 80));
   });
 
-  test('resize emits only when the size actually changes', () {
-    final node = Node();
-    final scene = node.mount();
-    var emissions = 0;
-    node.onSceneResize((_) => emissions += 1);
-
-    scene.resize(100, 80);
-    scene.resize(100, 80);
-    scene.resize(100, 90);
-
-    expect(emissions, 2);
-  });
-
-  test('resize reaches every node in the tree', () {
-    final parent = Node();
-    final child = Node();
-    parent.add(child);
-    final scene = parent.mount();
-    final sizes = <Vector2>[];
-    parent.onSceneResize(sizes.add);
-    child.onSceneResize(sizes.add);
-
-    scene.resize(100, 80);
-
-    expect(sizes, [Vector2(100, 80), Vector2(100, 80)]);
-  });
-
-  test('a node mounted into a sized scene hears the current size', () {
-    final scene = Node().mount();
-    scene.resize(100, 80);
-    final node = Node();
-    Vector2? heard;
-    node.onSceneResize((size) => heard = size);
-
-    scene.root.add(node);
-    scene.update(0);
-
-    expect(heard, Vector2(100, 80));
-  });
-
   test('a destroyed scene refuses to be driven', () {
     final scene = Node().mount();
     scene.destroy();

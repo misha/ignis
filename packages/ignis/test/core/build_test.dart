@@ -25,6 +25,15 @@ final class _A extends Node {}
 
 final class _B extends Node {}
 
+/// A node that subscribes to [signal] in its constructor.
+final class _Listener extends Node {
+  int heard = 0;
+
+  _Listener(Signal0 signal) {
+    signal(() => heard += 1);
+  }
+}
+
 /// A node configured entirely by its constructor, as a composed node is.
 final class _Sized extends Node {
   final double size;
@@ -484,81 +493,6 @@ void main() {
       expect(log, ['old 1', 'new 2']);
     });
 
-    test('onMount subscribed in build hears the mount that ran it', () {
-      var mounted = 0;
-      final node = LiveTestNode(builder: (node) => node.onMount(() => mounted += 1));
-
-      node.mount();
-
-      expect(mounted, 1);
-    });
-
-    test('onUnmount subscribed in build fires once, at unmount', () {
-      var unmounted = 0;
-      final node = LiveTestNode(builder: (node) => node.onUnmount(() => unmounted += 1));
-      final scene = node.mount();
-
-      scene.reassemble();
-      scene.destroy();
-
-      expect(unmounted, 1);
-    });
-
-    test('a rebuild does not report the unmount it causes', () {
-      var keep = true;
-      var unmounted = 0;
-
-      final node = LiveTestNode(
-        builder: (node) {
-          if (!keep) return;
-          final child = Node();
-          node.add(child);
-          child.onUnmount(() => unmounted += 1);
-        },
-      );
-
-      final scene = node.mount();
-      scene.update(0);
-
-      keep = false;
-      scene.reassemble();
-      scene.update(0);
-
-      expect(node.children, isEmpty, reason: 'the child did leave');
-
-      expect(unmounted, 0, reason: 'no unmount fired for a reassembly');
-    });
-
-    test('onSceneResize fires again for the handler a rebuild installed', () {
-      final scene = Node().mount()..resize(100, 80);
-      final sizes = <Vector2>[];
-      final node = LiveTestNode(builder: (n) => n.onSceneResize(sizes.add));
-
-      scene.root.add(node);
-      scene.update(0);
-      expect(sizes, [Vector2(100, 80)]);
-
-      scene.reassemble();
-
-      expect(
-        sizes,
-        [Vector2(100, 80), Vector2(100, 80)],
-        reason: 'the new handler had never heard it',
-      );
-    });
-
-    test('onSceneResize subscribed in build hears the mount emission', () {
-      final scene = Node().mount();
-      scene.resize(100, 80);
-      Vector2? heard;
-      final node = LiveTestNode(builder: (node) => node.onSceneResize((size) => heard = size));
-
-      scene.root.add(node);
-      scene.update(0);
-
-      expect(heard, Vector2(100, 80));
-    });
-
     test('outside a build, the caller owns the subscription', () {
       final signal = Signal0();
       var emissions = 0;
@@ -739,22 +673,23 @@ void main() {
     });
 
     test('a kept child owns its own subscriptions', () {
-      late TestNode child;
+      final signal = Signal0();
+      late _Listener child;
 
-      // TestNode subscribes to its own onUnmount in its constructor, which a
-      // pass left current during creation would claim.
+      // _Listener subscribes in its constructor, which a pass left current
+      // during creation would claim.
       final node = LiveTestNode(
         builder: (node) {
-          child = node.add(node.keep(#child, TestNode.new));
+          child = node.add(node.keep(#child, () => _Listener(signal)));
         },
       );
 
       final scene = node.mount()..update(0);
       scene.reassemble();
       scene.update(0);
-      scene.destroy();
+      signal.emit();
 
-      expect(child.unmounts, 1, reason: 'the parent rebuild did not revoke it');
+      expect(child.heard, 1, reason: 'the parent rebuild did not revoke it');
     });
 
     test('moves a kept child into the container the new pass built', () {
