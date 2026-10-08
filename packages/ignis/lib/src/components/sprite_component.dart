@@ -13,6 +13,7 @@ import 'package:ignis/src/message.dart';
 import 'package:ignis/src/owners/speed_owner.dart';
 import 'package:ignis/src/palette.dart';
 import 'package:ignis/src/shape.dart';
+import 'package:ignis/src/transform.dart';
 import 'package:ignis/src/sprite.dart';
 import 'package:ignis/src/sprites/sprite_entry.dart';
 
@@ -86,8 +87,8 @@ final class SpriteState<T> {
 /// ```
 ///
 /// [speed] scales the sprite's own rate, and [play] chooses the entry.
-class SpriteComponent<T> extends Component with Geometry implements SpeedOwner {
-  final SpriteState<T> _current = SpriteState._();
+class SpriteComponent<T> extends Component with Transform, Geometry implements SpeedOwner {
+  final _current = SpriteState<T>._();
   Sprite<T> _sprite;
 
   /// What this sprite draws.

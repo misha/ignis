@@ -16,7 +16,7 @@ final Map<String, Widget Function()> debuggingDemos = {
 
 /// A slime for the overlay to outline.
 class _WireframesEntity extends Entity {
-  _WireframesEntity() : super(anchor: .center, position: DEMO_SIZE / 2);
+  _WireframesEntity() : super(position: DEMO_SIZE / 2);
 
   @override
   void process(Message message) {
@@ -25,8 +25,6 @@ class _WireframesEntity extends Entity {
     // demo on debug-wireframes
     switch (message) {
       case Build():
-        shape = .rectangle(SLIME_SIZE);
-
         components.add(
           SpriteComponent(
             sprite: SpriteAnimation(
@@ -34,6 +32,7 @@ class _WireframesEntity extends Entity {
               SLIME_SIZE,
               fps: 16,
             ),
+            anchor: .center,
           ),
         );
     }

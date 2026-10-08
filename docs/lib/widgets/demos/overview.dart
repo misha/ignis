@@ -25,11 +25,10 @@ class _SpinnerEntity extends Entity {
       case Build():
         square = add(
           Entity(
-            shape: .square(40),
-            anchor: .center,
             components: [
               ShapeComponent(
                 shape: .square(40),
+                anchor: .center,
                 paint: Paint()..color = Colors.orange,
               ),
             ],

@@ -12,7 +12,6 @@ void main() {
     );
 
     final entity = Entity(
-      shape: .square(40),
       position: .all(20),
       components: [shape],
     );
@@ -54,7 +53,6 @@ void main() {
     );
 
     final entity = Entity(
-      shape: .square(30),
       position: .all(10),
       components: [shape],
     );

@@ -6,9 +6,6 @@ import '../demo_scene.dart';
 /// One frame of a bonfire sheet.
 const BONFIRE_SIZE = Vector2(55, 79);
 
-/// One frame of the explosion sheet.
-const EXPLOSION_SIZE = Vector2.all(112);
-
 /// One frame of any of the slime's sheets.
 const SLIME_SIZE = Vector2.all(56);
 
@@ -134,6 +131,7 @@ class _LayeredEntity extends Entity {
             BONFIRE_SIZE,
             fps: 10,
           ),
+          anchor: .center,
         );
 
         final flame = SpriteComponent(
@@ -142,6 +140,7 @@ class _LayeredEntity extends Entity {
             BONFIRE_SIZE,
             fps: 16,
           ),
+          anchor: .center,
         );
 
         final wood = SpriteComponent(
@@ -150,14 +149,13 @@ class _LayeredEntity extends Entity {
             BONFIRE_SIZE,
             fps: 6,
           ),
+          anchor: .center,
         );
         // demo off
 
         add(
           Entity(
-            shape: .rectangle(BONFIRE_SIZE),
             position: DEMO_SIZE / 2,
-            anchor: .center,
             components: [smoke, flame, wood],
           ),
         );
@@ -175,7 +173,6 @@ class _RatesEntity extends Entity {
       case Build():
         // demo on sprite-rates
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
-
         final slow = SpriteComponent(sprite: sheet.animation(row: 1, end: 30, fps: 8));
         final fast = SpriteComponent(sprite: sheet.animation(row: 1, end: 30, fps: 24));
         // demo off
@@ -223,7 +220,12 @@ class _PartialEntity extends Entity {
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
 
         final slime = SpriteComponent(
-          sprite: sheet.animation(row: 0, start: 6, end: 12, fps: 12), // idle
+          sprite: sheet.animation(
+            row: 0, // idle
+            start: 6,
+            end: 12,
+            fps: 12,
+          ),
         );
         // demo off
 

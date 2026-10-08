@@ -32,7 +32,6 @@ class UpdateRenderBenchmark extends AsyncBenchmarkBase {
 
     for (var i = 0; i < entities; i += 1) {
       final entity = Entity(
-        shape: .square(2),
         components: [
           ShapeComponent(
             shape: .square(2),
@@ -43,7 +42,6 @@ class UpdateRenderBenchmark extends AsyncBenchmarkBase {
       for (var j = 0; j < children; j += 1) {
         entity.add(
           Entity(
-            shape: .square(2),
             components: [
               ShapeComponent(
                 shape: .square(2),

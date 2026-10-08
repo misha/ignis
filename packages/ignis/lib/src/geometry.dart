@@ -4,27 +4,13 @@ import 'package:flutter/foundation.dart';
 import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/owners/anchor_owner.dart';
-import 'package:ignis/src/owners/angle_owner.dart';
-import 'package:ignis/src/owners/position_owner.dart';
-import 'package:ignis/src/owners/scale_owner.dart';
 import 'package:ignis/src/shape.dart';
+import 'package:ignis/src/transform.dart';
 
-/// A [shape] placed by a [position], [scale], [angle], and [anchor].
-mixin Geometry implements PositionOwner, ScaleOwner, AngleOwner, AnchorOwner {
+/// A [shape] on a [Transform], measured from its [anchor].
+mixin Geometry on Transform implements AnchorOwner {
   /// The shape. Defaults to no shape.
   Shape shape = .none;
-
-  /// The position. Defaults to (0, 0).
-  @override
-  final MVector2 position = .zero();
-
-  /// The scale. Defaults to (1, 1).
-  @override
-  final MVector2 scale = .all(1);
-
-  /// The clockwise rotation, in radians. Defaults to 0.
-  @override
-  double angle = 0;
 
   /// Where [shape] sits relative to [position]. Defaults to `topLeft`.
   @override
@@ -47,9 +33,10 @@ mixin Geometry implements PositionOwner, ScaleOwner, AngleOwner, AnchorOwner {
 
   final MMatrix3 _lastLocalTransform = .identity();
 
-  /// The local transform.
+  /// The local transform, offset so [anchor] sits on [position].
   ///
   /// The returned matrix is owned by this object and should not be retained.
+  @override
   MMatrix3 get localTransform {
     final transform = _lastLocalTransform;
     final cosA = math.cos(angle);
@@ -97,9 +84,8 @@ mixin Geometry implements PositionOwner, ScaleOwner, AngleOwner, AnchorOwner {
   /// stored in a `Canvas`-friendly `typed_data` structure for performance
   /// reasons.
   ///
-  /// The returned float list is owned by this object and should not be
-  /// retained.
-  @protected
+  /// The returned list is owned by this object and should not be retained.
+  @override
   Float64List get renderTransform {
     final transform = _lastRenderTransform;
     final cosA = math.cos(angle);

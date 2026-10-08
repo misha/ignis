@@ -13,10 +13,14 @@ void main() {
       tester,
       'goldens/transform_position.png',
       Entity(
-        shape: .square(20),
         position: .all(25),
-        anchor: .center,
-        components: [ShapeComponent(shape: .square(20), paint: Paint()..color = BLACK)],
+        components: [
+          ShapeComponent(
+            shape: .square(20),
+            anchor: .center,
+            paint: Paint()..color = BLACK,
+          ),
+        ],
       ),
       debug: .spatial,
     ),
@@ -28,11 +32,15 @@ void main() {
       tester,
       'goldens/transform_scale.png',
       Entity(
-        shape: .square(25),
         position: .all(50),
         scale: .new(2, 1),
-        anchor: .center,
-        components: [ShapeComponent(shape: .square(25), paint: Paint()..color = BLACK)],
+        components: [
+          ShapeComponent(
+            shape: .square(25),
+            anchor: .center,
+            paint: Paint()..color = BLACK,
+          ),
+        ],
       ),
       debug: .spatial,
     ),
@@ -44,12 +52,14 @@ void main() {
       tester,
       'goldens/transform_angle.png',
       Entity(
-        shape: .rectangle(.new(30, 10)),
         position: .all(50),
         angle: math.pi / 4,
-        anchor: .center,
         components: [
-          ShapeComponent(shape: .rectangle(.new(30, 10)), paint: Paint()..color = BLACK),
+          ShapeComponent(
+            anchor: .center,
+            shape: .rectangle(.new(30, 10)),
+            paint: Paint()..color = BLACK,
+          ),
         ],
       ),
       debug: .spatial,
@@ -65,9 +75,13 @@ void main() {
         position: .all(50),
         children: [
           Entity(
-            shape: .square(30),
-            anchor: .topLeft,
-            components: [ShapeComponent(shape: .square(30), paint: Paint()..color = BLACK)],
+            components: [
+              ShapeComponent(
+                shape: .square(30),
+                anchor: .topLeft,
+                paint: Paint()..color = BLACK,
+              ),
+            ],
           ),
         ],
       ),
@@ -84,9 +98,13 @@ void main() {
         position: .all(50),
         children: [
           Entity(
-            shape: .square(30),
-            anchor: .bottomRight,
-            components: [ShapeComponent(shape: .square(30), paint: Paint()..color = BLACK)],
+            components: [
+              ShapeComponent(
+                anchor: .bottomRight,
+                shape: .square(30),
+                paint: Paint()..color = BLACK,
+              ),
+            ],
           ),
         ],
       ),

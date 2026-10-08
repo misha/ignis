@@ -11,11 +11,10 @@ void main() {
       tester,
       'goldens/shape_red_square.png',
       Entity(
-        shape: .square(50),
-        anchor: .center,
         position: .all(50),
         components: [
           ShapeComponent(
+            anchor: .center,
             shape: .square(50),
             paint: Paint()..color = RED,
           ),
@@ -31,11 +30,10 @@ void main() {
       tester,
       'goldens/shape_blue_circle.png',
       Entity(
-        shape: .circle(25),
-        anchor: .center,
         position: .all(50),
         components: [
           ShapeComponent(
+            anchor: .center,
             shape: .circle(25),
             paint: Paint()..color = BLUE,
           ),

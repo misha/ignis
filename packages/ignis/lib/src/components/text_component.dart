@@ -10,8 +10,9 @@ import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/message.dart';
 import 'package:ignis/src/shape.dart';
+import 'package:ignis/src/transform.dart';
 
-class TextComponent extends Component with Geometry {
+class TextComponent extends Component with Transform, Geometry {
   /// The style beneath every [TextComponent], in effect when nothing is declared.
   static const DEFAULT_STYLE = TextStyle(
     color: Color(0xFFFFFFFF),
@@ -58,7 +59,10 @@ class TextComponent extends Component with Geometry {
   set text(String text) {
     if (_text == text) return;
     _text = text;
-    _painter?.text = TextSpan(text: text, style: style);
+    _painter?.text = TextSpan(
+      text: text,
+      style: style,
+    );
   }
 
   TextStyle? _style;
@@ -74,7 +78,10 @@ class TextComponent extends Component with Geometry {
     if (_style == style) return;
     _style = style;
     _resolved = null;
-    _painter?.text = TextSpan(text: _text, style: this.style);
+    _painter?.text = TextSpan(
+      text: _text,
+      style: this.style,
+    );
   }
 
   /// How each line of text is aligned horizontally.
@@ -122,7 +129,10 @@ class TextComponent extends Component with Geometry {
     switch (message) {
       case Build():
         _painter = TextPainter(
-          text: TextSpan(text: _text, style: style),
+          text: TextSpan(
+            text: _text,
+            style: style,
+          ),
           textAlign: _textAlign,
           textDirection: _textDirection,
         );

@@ -6,9 +6,8 @@ part of 'core.dart';
 /// acyclic tree, with [children] ordered by [priority]. Entities are assembled
 /// into subtrees using [add] and [remove].
 ///
-/// An entity is a transform: a [position], [scale], [angle], and [anchor],
-/// with a [shape] the anchor is measured against. It holds [components],
-/// which carry everything else.
+/// An entity is a transform: a [position], [scale], and [angle]. It holds
+/// [components], which carry everything else.
 ///
 /// **Processing**
 ///
@@ -49,7 +48,7 @@ part of 'core.dart';
 /// system. An entity may [provide] a value to its entire subtree, keyed by its
 /// type. [read] resolves the nearest match, checking the entity itself before
 /// its [ancestors].
-class Entity with Address, Geometry {
+class Entity with Address, Transform {
   /// Creates a new entity.
   ///
   /// [activity] sets whether the entity ticks and renders.
@@ -61,22 +60,18 @@ class Entity with Address, Geometry {
   /// If [components] or [children] are provided, they are immediately added to
   /// the entity.
   Entity({
-    Shape? shape,
     Vector2? position,
     Vector2? scale,
     double? angle,
-    Anchor? anchor,
     bool? enabled,
     int? priority,
     Iterable<Component> components = const [],
     Iterable<Entity> children = const [],
   }) : _priority = priority ?? 0,
        activity = (enabled ?? true) ? .all : .none {
-    if (shape != null) this.shape = shape;
     if (position != null) this.position.setFrom(position);
     if (scale != null) this.scale.setFrom(scale);
     if (angle != null) this.angle = angle;
-    if (anchor != null) this.anchor = anchor;
 
     this.components.addAll(components);
     addAll(children);
@@ -162,23 +157,13 @@ class Entity with Address, Geometry {
   ///
   /// The cross draws under every [DebugMode], in that mode's own color, so a
   /// wireframe of one category still says where each entity sits.
-  /// [DebugMode.spatial] adds the bounds.
   void debugRender(Canvas canvas) {
     canvas.save();
     canvas.transform(renderTransform);
 
-    final debug = Ignis.debug;
-    final paint = debug.paint;
-    final anchor = pointAt(this.anchor);
-    final x = anchor.x;
-    final y = anchor.y;
-
-    canvas.drawLine(.new(x - 1, y), .new(x + 1, y), paint);
-    canvas.drawLine(.new(x, y - 1), .new(x, y + 1), paint);
-
-    if (debug.draws(.spatial)) {
-      canvas.drawRect(shape.rect(), paint);
-    }
+    final paint = Ignis.debug.paint;
+    canvas.drawLine(const .new(-1, 0), const .new(1, 0), paint);
+    canvas.drawLine(const .new(0, -1), const .new(0, 1), paint);
 
     final components = _components;
 

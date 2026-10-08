@@ -3,10 +3,8 @@
 part of 'core.dart';
 
 /// What the debug overlay draws, one wireframe at a time.
-///
-/// [spatial] bounds every entity.
 enum DebugMode {
-  /// Every entity's bounds.
+  /// The origin of every `Transform` and the bounds of all `Geometry`.
   spatial,
 }
 
