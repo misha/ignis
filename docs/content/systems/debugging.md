@@ -4,8 +4,8 @@ description: Seeing what the engine is actually doing.
 lane: usage
 category: system
 status: complete
-related: [/systems/globals, /systems/controls]
-reference: [Debug, DebugControlsNode]
+related: [/systems/globals]
+reference: [Debug]
 ---
 <!-- SPDX-AI-Disclosure: none -->
 
@@ -13,9 +13,7 @@ reference: [Debug, DebugControlsNode]
 
 Ignis ships with a handful of high-level debugging tools. But first, a demonstration.
 
-This site binds the numbers `1` through `4` on your keyboard to debug mode toggles. The status of each debug mode is reflected in the site's header.
-
-The demo on the right has a hidden input box. Hit `3` to find the input box, then tap it!
+This site binds the number `1` on your keyboard to the debug mode toggle. The status of each debug mode is reflected in the site's header.
 
 ## Debug Modes
 
@@ -24,15 +22,12 @@ The demo on the right has a hidden input box. Hit `3` to find the input box, the
 | Mode        | Renders                           |
 |-------------|-----------------------------------|
 | `spatial`   | `SpatialNode` origin and extents. |
-| `collision` | `ColliderNode` shapes.            |
-| `input`     | `InputNode` hit areas.            |
-| `layout`    | `LayoutNode` boxes.               |
 
-One mode draws at a time. `spatial` shows the most, covering every node that has a shape, drawn as its bounding box. The other three narrow to a single category, and draw its true shape rather than the box around it, so reach for them when `spatial` starts getting too noisy.
+One mode draws at a time. `spatial` shows the most, covering every node that has a shape, drawn as its bounding box.
 
-In all four modes, every `SpatialNode` marks its origin with a small cross, drawn in that mode's own color, so narrowing to one category still tells you where each node is placed.
+Every `SpatialNode` marks its origin with a small cross.
 
-You can also customize the `Paint` for each debug mode. For example, `Ignis.debug.inputPaint` specifies how `InputNode` will draw its debug visuals.
+You can also customize the `Paint` for each debug mode.
 
 ## `debugDraw`
 
@@ -48,35 +43,6 @@ debugDraw((canvas) {
 <Info>
 
   `debugDraw` follows the same rules and restrictions as `draw`.
-
-</Info>
-
-## `DebugControlsNode`
-
-`DebugControlsNode` sets up standard debugging controls for any scene, binding several common debugging actions to `Ignis.controls`. The key(s) that trigger each action are completely customizable.
-
-| Key  | Action                              |
-|------|-------------------------------------|
-| `F1` | Toggles the `spatial` debug mode.   |
-| `F2` | Toggles the `collision` debug mode. |
-| `F3` | Toggles the `input` debug mode.     |
-| `F4` | Toggles the `layout` debug mode.    |
-| `F5` | Pauses and resumes the scene.       |
-| `F6` | Turns debug mode off.               |
-
-Add it to your scenes in debug builds for instant debuggability:
-
-```dart
-@override
-void build() {
-  super.build();
-  if (kDebugMode) add(DebugControlsNode());
-}
-```
-
-<Info>
-
-  If your game binds any of these keys, the low default `priority` on `DebugControlsNode` will let your game respond instead.
 
 </Info>
 

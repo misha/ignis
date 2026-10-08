@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
-import '../support/test_node.dart';
+import '../support/test_entity.dart';
 
 void main() {
   test('tracks size and layout state after resize', () {
-    final scene = Node().mount();
+    final scene = Scene(Entity());
     scene.resize(100, 80);
 
     expect(scene.hasSize, isTrue);
@@ -13,7 +13,7 @@ void main() {
   });
 
   test('a destroyed scene refuses to be driven', () {
-    final scene = Node().mount();
+    final scene = Scene(Entity());
     scene.destroy();
 
     expect(() => scene.update(0), throwsAssertionError);
@@ -23,30 +23,23 @@ void main() {
   });
 
   test('reassembling posts Reassemble to every node once', () {
-    final reassembled = <TestNode>[];
+    final reassembled = <TestEntity>[];
 
-    void record(TestNode node, Message message) {
-      if (message is Reassemble) reassembled.add(node);
+    void record(TestEntity entity, Message message) {
+      if (message is Reassemble) reassembled.add(entity);
     }
 
-    final child = TestNode(processor: record);
-    final root = TestNode(processor: record, children: [child]);
-    root.mount().reassemble();
+    final child = TestEntity(processor: record);
+    final root = TestEntity(processor: record, children: [child]);
+    Scene(root).reassemble();
 
     expect(reassembled, unorderedEquals([root, child]));
   });
 
   test('keeps the given node parentless once loaded', () {
-    final node = Node();
-    final scene = node.mount();
+    final entity = Entity();
+    final scene = Scene(entity);
 
     expect(scene.root.parent, isNull);
-  });
-
-  test('mounting a root again under a narrower type throws', () {
-    final node = TestNode();
-    (node as Node).mount();
-
-    expect(node.mount, throwsStateError);
   });
 }

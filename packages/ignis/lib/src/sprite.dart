@@ -3,7 +3,7 @@
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/sprites/sprite_entry.dart';
 
-/// The frames a [SpriteNode] draws, and how long each is held.
+/// The frames a [SpriteComponent] draws, and how long each is held.
 ///
 /// Four implementations ship: a [SpriteImage] is one image, a
 /// [SpriteAnimation] is one run of frames, a [SpriteGroup] lays several of
@@ -13,7 +13,7 @@ import 'package:ignis/src/sprites/sprite_entry.dart';
 /// A [SpriteEntry] states everything about one entry, so each may have its own
 /// image and size.
 ///
-/// A sprite has one name type at a time, [T]. [SpriteNode]
+/// A sprite has one name type at a time, [T]. [SpriteComponent]
 /// then enforces that all sprites use the same naming scheme.
 abstract class Sprite<T> {
   const Sprite();

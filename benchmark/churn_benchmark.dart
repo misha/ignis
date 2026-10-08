@@ -36,10 +36,10 @@ class ChurnBenchmark extends AsyncBenchmarkBase {
 
   @override
   Future<void> setup() async {
-    final root = Node();
+    final root = Entity();
 
     for (var i = 0; i < worlds; i += 1) {
-      final world = Node();
+      final world = Entity();
       world.add(Spawner(this));
 
       for (var j = 0; j < leaves; j += 1) {
@@ -49,7 +49,7 @@ class ChurnBenchmark extends AsyncBenchmarkBase {
       root.add(world);
     }
 
-    scene = root.mount();
+    scene = Scene(root);
   }
 
   /// A leaf with a lifetime between 1 and [lifetime] frames.
@@ -68,7 +68,7 @@ class ChurnBenchmark extends AsyncBenchmarkBase {
 
 /// Refills its parent to [ChurnBenchmark.leaves] leaves every frame, ticking
 /// ahead of them.
-class Spawner extends Node {
+class Spawner extends Entity {
   final ChurnBenchmark benchmark;
 
   Spawner(this.benchmark) : super(priority: -1);
@@ -89,7 +89,7 @@ class Spawner extends Node {
 }
 
 /// Detaches itself once [remaining] frames have passed.
-class Leaf extends Node {
+class Leaf extends Entity {
   int remaining;
 
   Leaf(this.remaining);

@@ -1,7 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:ignis/ignis.dart';
 
-import '../colors.dart';
 import '../demo_scene.dart';
 
 /// One frame of a bonfire sheet.
@@ -18,13 +17,13 @@ final Map<String, Widget Function()> spriteDemos = {
   'sprite-still': () {
     return DemoScene(
       assets: const ['assets/images/bonfire.png'],
-      builder: _StillNode.new,
+      builder: _StillEntity.new,
     );
   },
   'sprite-animation': () {
     return DemoScene(
       assets: const ['assets/sheets/bonfire.png'],
-      builder: _BonfireNode.new,
+      builder: _BonfireEntity.new,
     );
   },
   'sprite-layers': () {
@@ -34,76 +33,54 @@ final Map<String, Widget Function()> spriteDemos = {
         'assets/sheets/bonfire_flame.png',
         'assets/sheets/bonfire_smoke.png',
       ],
-      builder: _LayeredNode.new,
-    );
-  },
-  'sprite-rows': () {
-    return DemoScene(
-      assets: const ['assets/sheets/slime.png'],
-      builder: _PackedNode.new,
-    );
-  },
-  'sprite-keys': () {
-    return DemoScene(
-      assets: const ['assets/sheets/slime.png'],
-      builder: _KeyedNode.new,
+      builder: _LayeredEntity.new,
     );
   },
   'sprite-rates': () {
     return DemoScene(
       assets: const ['assets/sheets/slime.png'],
-      builder: _RatesNode.new,
+      builder: _RatesEntity.new,
     );
   },
   'sprite-tiles': () {
     return DemoScene(
       assets: const ['assets/sheets/slime.png'],
-      builder: _TilesNode.new,
+      builder: _TilesEntity.new,
     );
   },
   'sprite-partial': () {
     return DemoScene(
       assets: const ['assets/sheets/slime.png'],
-      builder: _PartialNode.new,
+      builder: _PartialEntity.new,
     );
   },
   'sprite-timed': () {
     return DemoScene(
       assets: const ['assets/sheets/slime.png'],
-      builder: _TimedNode.new,
+      builder: _TimedEntity.new,
     );
   },
   'sprite-speed': () {
     return DemoScene(
       assets: const ['assets/sheets/bonfire.png'],
-      builder: _SpeedNode.new,
-    );
-  },
-  'sprite-group': () {
-    return DemoScene(
-      assets: const [
-        'assets/images/bonfire.png',
-        'assets/sheets/slime_jump.png',
-      ],
-      builder: _GroupNode.new,
-    );
-  },
-  'sprite-signals': () {
-    return DemoScene(
-      assets: const ['assets/sheets/slime_jump.png'],
-      builder: _SignalsNode.new,
-    );
-  },
-  'sprite-finish': () {
-    return DemoScene(
-      assets: const ['assets/sheets/explosion.png'],
-      builder: _ExplosionsNode.new,
+      builder: _SpeedEntity.new,
     );
   },
 };
 
+/// An entity drawing [sprite] with its [anchor] on the center.
+Entity _sprite(
+  SpriteComponent sprite, {
+  Anchor anchor = .center,
+}) {
+  return Entity(
+    position: DEMO_SIZE / 2,
+    components: [sprite..anchor = anchor],
+  );
+}
+
 /// An image with no grid to it, drawn as a single frame.
-class _StillNode extends Node {
+class _StillEntity extends Entity {
   @override
   void process(Message message) {
     super.process(message);
@@ -111,21 +88,16 @@ class _StillNode extends Node {
     switch (message) {
       case Build():
         // demo on sprite-still
-        final fire = SpriteNode(sprite: SpriteImage('assets/images/bonfire.png'));
+        final fire = SpriteComponent(sprite: SpriteImage('assets/images/bonfire.png'));
         // demo off
 
-        add(
-          BoxNode(
-            alignment: .center,
-            children: [fire],
-          ),
-        );
+        add(_sprite(fire));
     }
   }
 }
 
 /// The same fire, cut into twenty frames and played on a loop.
-class _BonfireNode extends Node {
+class _BonfireEntity extends Entity {
   @override
   void process(Message message) {
     super.process(message);
@@ -133,7 +105,7 @@ class _BonfireNode extends Node {
     switch (message) {
       case Build():
         // demo on sprite-animation
-        final fire = SpriteNode(
+        final fire = SpriteComponent(
           sprite: SpriteAnimation(
             'assets/sheets/bonfire.png',
             BONFIRE_SIZE,
@@ -142,18 +114,13 @@ class _BonfireNode extends Node {
         );
         // demo off
 
-        add(
-          BoxNode(
-            alignment: .center,
-            children: [fire],
-          ),
-        );
+        add(_sprite(fire));
     }
   }
 }
 
 /// One fire out of three sheets, each running at its own speed.
-class _LayeredNode extends Node {
+class _LayeredEntity extends Entity {
   @override
   void process(Message message) {
     super.process(message);
@@ -161,7 +128,7 @@ class _LayeredNode extends Node {
     switch (message) {
       case Build():
         // demo on sprite-layers
-        final smoke = SpriteNode(
+        final smoke = SpriteComponent(
           sprite: SpriteAnimation(
             'assets/sheets/bonfire_smoke.png',
             BONFIRE_SIZE,
@@ -169,7 +136,7 @@ class _LayeredNode extends Node {
           ),
         );
 
-        final flame = SpriteNode(
+        final flame = SpriteComponent(
           sprite: SpriteAnimation(
             'assets/sheets/bonfire_flame.png',
             BONFIRE_SIZE,
@@ -177,7 +144,7 @@ class _LayeredNode extends Node {
           ),
         );
 
-        final wood = SpriteNode(
+        final wood = SpriteComponent(
           sprite: SpriteAnimation(
             'assets/sheets/bonfire_wood.png',
             BONFIRE_SIZE,
@@ -187,111 +154,19 @@ class _LayeredNode extends Node {
         // demo off
 
         add(
-          BoxNode(
-            alignment: .center,
-            children: [smoke, flame, wood],
+          Entity(
+            shape: .rectangle(BONFIRE_SIZE),
+            position: DEMO_SIZE / 2,
+            anchor: .center,
+            components: [smoke, flame, wood],
           ),
         );
-    }
-  }
-}
-
-/// Eleven animations of different lengths, packed into one grid.
-class _PackedNode extends Node {
-  late SpriteNode slime;
-  late TapInput taps;
-
-  @override
-  void process(Message message) {
-    super.process(message);
-
-    // demo on sprite-rows
-    switch (message) {
-      case Build():
-        final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
-
-        slime = SpriteNode(
-          sprite: sheet.animations(
-            fps: 16,
-            rows: [
-              .new(end: 14), // idle
-              .new(end: 30), // jump
-              .new(end: 25), // jump_forward
-              .new(end: 17), // spit
-              .new(end: 30), // spike
-              .new(end: 12), // injured1
-              .new(end: 13), // injured2
-              .new(end: 13), // injured3
-              .new(end: 45), // splat_wall
-              .new(end: 27), // recover
-              .new(end: 49), // death
-            ],
-          ),
-        );
-
-        taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
-      case Tap():
-        slime.playNext();
-    }
-    // demo off
-
-    switch (message) {
-      case Build():
-        addAll([
-          BoxNode(
-            alignment: .center,
-            children: [slime],
-          ),
-          taps,
-        ]);
-    }
-  }
-}
-
-/// Rows that answer to a name, played by it.
-class _KeyedNode extends Node {
-  late SpriteNode slime;
-  late TapInput taps;
-
-  @override
-  void process(Message message) {
-    super.process(message);
-
-    // demo on sprite-keys
-    switch (message) {
-      case Build():
-        final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
-
-        slime = SpriteNode(
-          sprite: SpriteMap({
-            'idle': sheet.animation(row: 0, end: 14, fps: 16),
-            'jump': sheet.animation(row: 1, end: 30, fps: 16),
-          }),
-        );
-
-        taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
-      case Tap():
-        slime.play(slime.current.key == 'idle' ? 'jump' : 'idle');
-    }
-    // demo off
-
-    switch (message) {
-      case Build():
-        addAll([
-          BoxNode(
-            alignment: .center,
-            children: [slime],
-          ),
-          taps,
-        ]);
     }
   }
 }
 
 /// One row of a sheet, taken twice and played at two rates.
-class _RatesNode extends Node {
+class _RatesEntity extends Entity {
   @override
   void process(Message message) {
     super.process(message);
@@ -301,27 +176,18 @@ class _RatesNode extends Node {
         // demo on sprite-rates
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
 
-        final slow = SpriteNode(sprite: sheet.animation(row: 1, end: 30, fps: 8));
-        final fast = SpriteNode(sprite: sheet.animation(row: 1, end: 30, fps: 24));
+        final slow = SpriteComponent(sprite: sheet.animation(row: 1, end: 30, fps: 8));
+        final fast = SpriteComponent(sprite: sheet.animation(row: 1, end: 30, fps: 24));
         // demo off
 
-        add(
-          BoxNode(
-            alignment: .center,
-            children: [
-              RowNode(
-                mainAxisSize: .min,
-                children: [slow, fast],
-              ),
-            ],
-          ),
-        );
+        add(_sprite(slow, anchor: .centerRight));
+        add(_sprite(fast, anchor: .centerLeft));
     }
   }
 }
 
 /// Four cells of the grid, drawn where they sit rather than played.
-class _TilesNode extends Node {
+class _TilesEntity extends Entity {
   @override
   void process(Message message) {
     super.process(message);
@@ -331,38 +197,22 @@ class _TilesNode extends Node {
         // demo on sprite-tiles
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
 
-        final crouch = SpriteNode(sprite: sheet.image(row: 1, column: 0));
-        final launch = SpriteNode(sprite: sheet.image(row: 1, column: 9));
-        final peak = SpriteNode(sprite: sheet.image(row: 1, column: 18));
-        final land = SpriteNode(sprite: sheet.image(row: 1, column: 27));
+        final crouch = SpriteComponent(sprite: sheet.image(row: 1, column: 0));
+        final launch = SpriteComponent(sprite: sheet.image(row: 1, column: 9));
+        final peak = SpriteComponent(sprite: sheet.image(row: 1, column: 18));
+        final land = SpriteComponent(sprite: sheet.image(row: 1, column: 27));
         // demo off
 
-        add(
-          BoxNode(
-            alignment: .center,
-            children: [
-              ColumnNode(
-                mainAxisSize: .min,
-                children: [
-                  RowNode(
-                    mainAxisSize: .min,
-                    children: [crouch, launch],
-                  ),
-                  RowNode(
-                    mainAxisSize: .min,
-                    children: [peak, land],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
+        add(_sprite(crouch, anchor: .bottomRight));
+        add(_sprite(launch, anchor: .bottomLeft));
+        add(_sprite(peak, anchor: .topRight));
+        add(_sprite(land, anchor: .topLeft));
     }
   }
 }
 
 /// Six frames out of the middle of a row.
-class _PartialNode extends Node {
+class _PartialEntity extends Entity {
   @override
   void process(Message message) {
     super.process(message);
@@ -372,23 +222,18 @@ class _PartialNode extends Node {
         // demo on sprite-partial
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
 
-        final slime = SpriteNode(
+        final slime = SpriteComponent(
           sprite: sheet.animation(row: 0, start: 6, end: 12, fps: 12), // idle
         );
         // demo off
 
-        add(
-          BoxNode(
-            alignment: .center,
-            children: [slime],
-          ),
-        );
+        add(_sprite(slime));
     }
   }
 }
 
 /// A row that hangs on its first frame, then runs out the rest.
-class _TimedNode extends Node {
+class _TimedEntity extends Entity {
   @override
   void process(Message message) {
     super.process(message);
@@ -398,23 +243,18 @@ class _TimedNode extends Node {
         // demo on sprite-timed
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
 
-        final slime = SpriteNode(
+        final slime = SpriteComponent(
           sprite: sheet.timed([0.8, 0.06, 0.06, 0.06, 0.06, 0.06]), // idle
         );
         // demo off
 
-        add(
-          BoxNode(
-            alignment: .center,
-            children: [slime],
-          ),
-        );
+        add(_sprite(slime));
     }
   }
 }
 
 /// One sheet at the rate it was drawn for, and at a quarter of it.
-class _SpeedNode extends Node {
+class _SpeedEntity extends Entity {
   @override
   void process(Message message) {
     super.process(message);
@@ -428,153 +268,12 @@ class _SpeedNode extends Node {
           fps: 16,
         );
 
-        final fire = SpriteNode(sprite: bonfire);
-        final embers = SpriteNode(sprite: bonfire, speed: 0.25);
+        final fire = SpriteComponent(sprite: bonfire);
+        final embers = SpriteComponent(sprite: bonfire, speed: 0.25);
         // demo off
 
-        add(
-          BoxNode(
-            alignment: .center,
-            children: [
-              RowNode(
-                mainAxisSize: .min,
-                children: [fire, embers],
-              ),
-            ],
-          ),
-        );
-    }
-  }
-}
-
-/// A still image and a sheet, numbered as one run of rows.
-class _GroupNode extends Node {
-  late SpriteNode creature;
-  late TapInput taps;
-
-  @override
-  void process(Message message) {
-    super.process(message);
-
-    // demo on sprite-group
-    switch (message) {
-      case Build():
-        creature = SpriteNode(
-          sprite: SpriteMap({
-            'fire': SpriteImage('assets/images/bonfire.png'),
-            'slime': SpriteAnimation(
-              'assets/sheets/slime_jump.png',
-              SLIME_SIZE,
-              fps: 16,
-            ),
-          }),
-        );
-
-        taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
-      case Tap():
-        switch (creature.current.key) {
-          case 'fire':
-            creature.play('slime');
-
-          case 'slime':
-            creature.play('fire');
-        }
-    }
-    // demo off
-
-    switch (message) {
-      case Build():
-        addAll([
-          BoxNode(
-            alignment: .center,
-            children: [creature],
-          ),
-          taps,
-        ]);
-    }
-  }
-}
-
-/// A sprite that runs once and takes itself out of the tree.
-class _ExplosionsNode extends Node {
-  late TapInput taps;
-
-  @override
-  void process(Message message) {
-    super.process(message);
-
-    // demo on sprite-finish
-    switch (message) {
-      case Build():
-        taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
-      case TapDown(:final scene):
-        add(
-          SpriteNode(
-            sprite: SpriteAnimation(
-              'assets/sheets/explosion.png',
-              EXPLOSION_SIZE,
-              fps: 20,
-              loop: false,
-            ),
-            cleanup: true,
-            position: scene,
-            anchor: .bottomCenter,
-          ),
-        );
-    }
-    // demo off
-
-    switch (message) {
-      case Build():
-        add(taps);
-    }
-  }
-}
-
-/// A sprite reporting its own progress, with nothing on screen to show for it.
-class _SignalsNode extends Node {
-  late DemoLog log;
-  late SpriteNode slime;
-  late int count;
-
-  @override
-  void process(Message message) {
-    super.process(message);
-
-    // demo on sprite-signals
-    switch (message) {
-      case Build():
-        log = DemoLog();
-
-        slime = SpriteNode(
-          sprite: SpriteAnimation(
-            'assets/sheets/slime_jump.png',
-            SLIME_SIZE,
-            fps: 16,
-          ),
-          anchor: .center,
-          position: DEMO_SIZE / 2,
-        );
-
-        count = 0;
-
-      case SpriteLoop():
-        log('SpriteLoop ${count += 1}', ORANGE);
-    }
-    // demo off
-
-    switch (message) {
-      case Build():
-        addAll([
-          slime,
-          BoxNode(
-            padding: .all(4),
-            alignment: .topRight,
-            children: [log],
-          ),
-        ]);
+        add(_sprite(fire, anchor: .centerRight));
+        add(_sprite(embers, anchor: .centerLeft));
     }
   }
 }

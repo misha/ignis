@@ -3,7 +3,7 @@ import 'package:ignis/ignis.dart';
 
 import 'package:flutter/foundation.dart';
 
-import '../support/test_node.dart';
+import '../support/test_entity.dart';
 
 /// Runs [body] with error reporting captured instead of presented.
 List<FlutterErrorDetails> _reported(void Function() body) {
@@ -23,21 +23,22 @@ List<FlutterErrorDetails> _reported(void Function() body) {
 void main() {
   group('builds', () {
     test('build runs on mount', () {
-      final node = TestNode(builder: (_) {})..mount();
+      final entity = TestEntity();
+      Scene(entity);
 
-      expect(node.builds, 1);
+      expect(entity.builds, 1);
     });
 
     test('a build that throws on mount throws out of mount', () {
-      final node = TestNode(builder: (_) => throw StateError('no ancestor'));
+      final entity = TestEntity(builder: (_) => throw StateError('no ancestor'));
 
-      expect(node.mount, throwsStateError);
+      expect(() => Scene(entity), throwsStateError);
     });
 
     test('a build that throws on a live add throws out of update', () {
-      final root = TestNode(builder: (_) {});
-      final scene = root.mount();
-      root.add(TestNode(builder: (_) => throw StateError('no ancestor')));
+      final root = TestEntity();
+      final scene = Scene(root);
+      root.add(TestEntity(builder: (_) => throw StateError('no ancestor')));
 
       expect(() => scene.update(0), throwsStateError);
     });
@@ -45,20 +46,20 @@ void main() {
 
   group('add', () {
     test('returns the node it was given, on every build', () {
-      Node? given;
-      Node? returned;
+      Entity? given;
+      Entity? returned;
 
-      final node = TestNode(
+      final entity = TestEntity(
         builder: (n) {
-          given = Node();
+          given = Entity();
           returned = n.add(given!);
         },
       );
 
-      node.mount().update(0);
+      Scene(entity).update(0);
 
       expect(returned, same(given));
-      expect(node.children.single, same(given));
+      expect(entity.children.single, same(given));
     });
   });
 
@@ -66,14 +67,16 @@ void main() {
     test('runs every update', () {
       var elapsed = 0.0;
 
-      final scene = TestNode(
-        processor: (node, event) {
-          switch (event) {
-            case Update(:final dt):
-              elapsed += dt;
-          }
-        },
-      ).mount();
+      final scene = Scene(
+        TestEntity(
+          processor: (entity, event) {
+            switch (event) {
+              case Update(:final dt):
+                elapsed += dt;
+            }
+          },
+        ),
+      );
 
       scene.update(0.5);
       scene.update(0.5);
@@ -86,14 +89,16 @@ void main() {
     test('runs at unmount', () {
       final log = <String>[];
 
-      final scene = TestNode(
-        processor: (node, event) {
-          switch (event) {
-            case Destroy():
-              log.add('destroyed');
-          }
-        },
-      ).mount();
+      final scene = Scene(
+        TestEntity(
+          processor: (entity, event) {
+            switch (event) {
+              case Destroy():
+                log.add('destroyed');
+            }
+          },
+        ),
+      );
 
       scene.destroy();
 
@@ -101,8 +106,8 @@ void main() {
     });
 
     test('a throwing destroy is reported and contained', () {
-      final node = TestNode(
-        processor: (node, event) {
+      final entity = TestEntity(
+        processor: (entity, event) {
           switch (event) {
             case Destroy():
               throw StateError('bad');
@@ -110,12 +115,12 @@ void main() {
         },
       );
 
-      final scene = node.mount();
+      final scene = Scene(entity);
       final reported = _reported(scene.destroy);
 
       expect(reported, hasLength(1));
       expect(reported.single.exception, isStateError);
-      expect(node.isMounted, isFalse, reason: 'the unmount still finished');
+      expect(entity.isMounted, isFalse, reason: 'the unmount still finished');
     });
   });
 }

@@ -2,7 +2,7 @@
 
 part of 'core.dart';
 
-/// A node's children: a flat list kept in [Node.priority] order, alongside
+/// An entity's children: a flat list kept in [Entity.priority] order, alongside
 /// an index per queried type.
 ///
 /// Each index built by [query] is maintained as nodes come and go, rather than
@@ -10,97 +10,97 @@ part of 'core.dart';
 /// recomputed. That is only affordable because every mutation runs through
 /// this one type.
 final class _Children {
-  List<Node>? _nodes;
-  Map<Type, _Index<Node>>? _indexes;
+  List<Entity>? _entities;
+  Map<Type, _Index<Entity>>? _indexes;
 
-  /// These nodes, in [Node.priority] order.
-  List<Node> get nodes => _nodes ?? const [];
+  /// These nodes, in [Entity.priority] order.
+  List<Entity> get entities => _entities ?? const [];
 
-  /// The nodes of type [T], in [Node.priority] order.
+  /// The nodes of type [T], in [Entity.priority] order.
   ///
   /// Kept up to date as nodes come and go, so repeated calls cost nothing and
   /// allocate nothing. The first call for a given [T] pays one pass to build
   /// its index.
-  Iterable<T> query<T extends Node>() {
+  Iterable<T> query<T extends Entity>() {
     final indexes = _indexes ??= {};
     final existing = indexes[T];
 
     if (existing != null) {
-      return (existing as _Index<T>).nodes;
+      return (existing as _Index<T>).entities;
     }
 
     final index = _Index<T>();
 
-    for (final node in nodes) {
-      if (node is T) index.nodes.add(node);
+    for (final entity in entities) {
+      if (entity is T) index.entities.add(entity);
     }
 
     indexes[T] = index;
-    return index.nodes;
+    return index.entities;
   }
 
-  /// Adds [node] at its [Node.priority] position, and to every index that
+  /// Adds [entity] at its [Entity.priority] position, and to every index that
   /// accepts it.
-  void add(Node node) {
-    _insert(_nodes ??= [], node);
+  void add(Entity entity) {
+    _insert(_entities ??= [], entity);
 
     final indexes = _indexes;
     if (indexes == null) return;
 
     for (final index in indexes.values) {
-      if (index.accepts(node)) {
-        _insert(index.nodes, node);
+      if (index.accepts(entity)) {
+        _insert(index.entities, entity);
       }
     }
   }
 
-  /// Removes [node] from this egg and every index holding it, reporting
+  /// Removes [entity] from this egg and every index holding it, reporting
   /// whether it was here at all.
-  bool remove(Node node) {
-    if (_nodes?.remove(node) != true) return false;
+  bool remove(Entity entity) {
+    if (_entities?.remove(entity) != true) return false;
 
     final indexes = _indexes;
     if (indexes == null) return true;
 
     for (final index in indexes.values) {
-      if (index.accepts(node)) {
-        index.nodes.remove(node);
+      if (index.accepts(entity)) {
+        index.entities.remove(entity);
       }
     }
 
     return true;
   }
 
-  /// Moves [node] to its current [Node.priority] position, here and in every
+  /// Moves [entity] to its current [Entity.priority] position, here and in every
   /// index holding it.
-  void reorder(Node node) {
-    if (remove(node)) add(node);
+  void reorder(Entity entity) {
+    if (remove(entity)) add(entity);
   }
 
-  /// Inserts [node] into [nodes], keeping it ordered by [Node.priority]. Ties
+  /// Inserts [entity] into [entities], keeping it ordered by [Entity.priority]. Ties
   /// go after the nodes already there.
-  static void _insert(List<Node> nodes, Node node) {
+  static void _insert(List<Entity> entities, Entity entity) {
     var low = 0;
-    var high = nodes.length;
+    var high = entities.length;
 
     while (low < high) {
       final middle = (low + high) >> 1;
 
-      if (nodes[middle].priority <= node.priority) {
+      if (entities[middle].priority <= entity.priority) {
         low = middle + 1;
       } else {
         high = middle;
       }
     }
 
-    nodes.insert(low, node);
+    entities.insert(low, entity);
   }
 }
 
 /// One type's view of a [_Children], holding every node of type [T].
-final class _Index<T extends Node> {
-  final List<T> nodes = [];
+final class _Index<T extends Entity> {
+  final List<T> entities = [];
 
-  /// Whether [node] belongs in [nodes].
-  bool accepts(Node node) => node is T;
+  /// Whether [entity] belongs in [entities].
+  bool accepts(Entity entity) => entity is T;
 }

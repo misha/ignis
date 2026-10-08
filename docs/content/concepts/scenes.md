@@ -4,7 +4,7 @@ description: Mounting a tree, and why your edits land next frame.
 lane: usage
 category: concept
 status: complete
-related: [/concepts/nodes]
+related: [/concepts/entities]
 ---
 <!-- SPDX-AI-Disclosure: none -->
 
@@ -12,7 +12,7 @@ A *scene* is a tree of nodes. Any node can be mounted as the root of a `Scene`. 
 
 ```dart
 final game = GameNode();
-final scene = game.mount(); // Ready to go!
+final scene = Scene(game); // Ready to go!
 ```
 
 ## Flutter Usage

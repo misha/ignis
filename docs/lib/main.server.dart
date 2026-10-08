@@ -155,9 +155,8 @@ void main() {
               SidebarGroup(
                 title: 'Concepts',
                 links: [
-                  SidebarLink(text: 'Nodes', href: '/concepts/nodes'),
+                  SidebarLink(text: 'Entities', href: '/concepts/entities'),
                   SidebarLink(text: 'Scenes', href: '/concepts/scenes'),
-                  SidebarLink(text: 'Signals', href: '/concepts/signals'),
                   SidebarLink(text: 'Time', href: '/concepts/time'),
                   SidebarLink(text: 'Math', href: '/concepts/math'),
                 ],
@@ -165,16 +164,8 @@ void main() {
               SidebarGroup(
                 title: 'Systems',
                 links: [
-                  SidebarLink(text: 'Built-in Nodes', href: '/systems/nodes'),
-                  SidebarLink(text: 'Layout', href: '/systems/layout'),
-                  SidebarLink(text: 'Effects', href: '/systems/effects'),
-                  SidebarLink(text: 'Timelines', href: '/systems/timelines'),
-                  SidebarLink(text: 'Transitions', href: '/systems/transitions'),
                   SidebarLink(text: 'Sprites', href: '/systems/sprites'),
                   SidebarLink(text: 'Palettes', href: '/systems/palettes'),
-                  SidebarLink(text: 'Collisions', href: '/systems/collisions'),
-                  SidebarLink(text: 'Inputs', href: '/systems/inputs'),
-                  SidebarLink(text: 'Controls', href: '/systems/controls'),
                   SidebarLink(text: 'Assets', href: '/systems/assets'),
                   SidebarLink(text: 'Shapes and Anchors', href: '/systems/shapes-anchors'),
                   SidebarLink(text: 'Globals', href: '/systems/globals'),
@@ -186,9 +177,6 @@ void main() {
                 title: 'Internals',
                 links: [
                   SidebarLink(text: 'Tree', href: '/internals/tree'),
-                  SidebarLink(text: 'Collision Detection', href: '/internals/collisions'),
-                  SidebarLink(text: 'Layout Engine', href: '/internals/layout'),
-                  SidebarLink(text: 'Input Routing', href: '/internals/inputs'),
                   SidebarLink(text: 'Documentation', href: '/internals/documentation'),
                   SidebarLink(text: 'AI Disclosure', href: '/internals/ai-disclosure'),
                 ],

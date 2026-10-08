@@ -1,20 +1,14 @@
 import 'package:flutter/widgets.dart';
 
-import 'demos/collisions.dart';
 import 'demos/debugging.dart';
-import 'demos/nodes.dart';
 import 'demos/overview.dart';
 import 'demos/sprites.dart';
-import 'demos/transitions.dart';
 
 /// Every demo scene on the site, by the name its `<Demo/>` slot carries.
 final Map<String, Widget Function()> _demos = {
-  ...collisionDemos,
   ...debuggingDemos,
-  ...nodeDemos,
   ...overviewDemos,
   ...spriteDemos,
-  ...transitionsDemos,
 };
 
 /// The scene one `<Demo name="..."/>` slot resolves to.

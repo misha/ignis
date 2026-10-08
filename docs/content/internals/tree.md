@@ -4,7 +4,7 @@ description: Why a mounted tree defers its own edits.
 lane: internals
 category: internal
 status: stub
-reference: [Node, Scene]
+reference: [Entity, Scene]
 ---
 <!-- SPDX-AI-Disclosure: none -->
 

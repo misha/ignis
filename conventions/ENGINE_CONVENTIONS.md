@@ -7,9 +7,8 @@ Conventions for writing engine code, on top of what `dart format` and `dart anal
 1. [Node Constructors](#1-node-constructors)
 2. [Parameter Defaults](#2-parameter-defaults)
 3. [The `cleanup` Parameter](#3-the-cleanup-parameter)
-4. [No Mixins](#4-no-mixins)
-5. [Effect Controller Constructors](#5-effect-controller-constructors)
-6. [Prose](#6-prose)
+4. [Effect Controller Constructors](#4-effect-controller-constructors)
+5. [Prose](#5-prose)
 
 ## 1. Node Constructors
 
@@ -71,11 +70,7 @@ EffectNode({
 }
 ```
 
-## 4. No Mixins
-
-Avoid `mixin`. Prefer composition, or implementing an interface directly.
-
-## 5. Effect Controller Constructors
+## 4. Effect Controller Constructors
 
 Effect controller constructors always use positional parameters (`[...]`), not named (`{...}`). 
 
@@ -86,7 +81,7 @@ class DurationEffectController extends EffectController {
 }
 ```
 
-## 6. Prose
+## 5. Prose
 
 Comments, doc comments, and test `reason` strings state a fact and stop.
 

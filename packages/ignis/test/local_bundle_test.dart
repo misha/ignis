@@ -142,12 +142,12 @@ flutter:
     expect(entry.image, same(cached('assets/hero.png')));
   });
 
-  test('carries a live change into a mounted SpriteNode', () async {
+  test('carries a live change into a mounted SpriteComponent', () async {
     await start();
 
-    final node = SpriteNode(sprite: SpriteAnimation('assets/hero.png', .all(1), fps: 0));
-    node.mount();
-    expect(node.sprite.entries[0].frames, 2);
+    final sprite = SpriteComponent(sprite: SpriteAnimation('assets/hero.png', .all(1), fps: 0));
+    Scene(Entity(components: [sprite]));
+    expect(sprite.sprite.entries[0].frames, 2);
 
     await write(['assets', 'hero.png'], await solidImage(4, 1, BLUE));
 
@@ -156,7 +156,7 @@ flutter:
       'the changed asset never reached the cache',
     );
 
-    final entry = node.sprite.entries[0];
+    final entry = sprite.sprite.entries[0];
 
     expect(entry.frames, 4, reason: 'the node did not re-read the cache');
     expect(entry.image, same(cached('assets/hero.png')));
@@ -167,10 +167,10 @@ flutter:
     await write(['assets', 'hero.png'], await solidImage(4, 1, RED));
     await start();
 
-    final node = SpriteNode(sprite: SpriteAnimation('assets/hero.png', .all(1), fps: 0));
-    node.mount();
-    node.play(0, frame: 3);
-    expect(node.current.frame, 3);
+    final sprite = SpriteComponent(sprite: SpriteAnimation('assets/hero.png', .all(1), fps: 0));
+    Scene(Entity(components: [sprite]));
+    sprite.play(0, frame: 3);
+    expect(sprite.current.frame, 3);
 
     // Down to two frames, leaving frame 3 out of range.
     await write(['assets', 'hero.png'], await solidImage(2, 1, BLUE));
@@ -180,8 +180,8 @@ flutter:
       'the changed asset never reached the cache',
     );
 
-    expect(node.sprite.entries[0].frames, 2);
-    expect(node.current.frame, 0, reason: 'the stale frame index was not clamped');
+    expect(sprite.sprite.entries[0].frames, 2);
+    expect(sprite.current.frame, 0, reason: 'the stale frame index was not clamped');
   });
 
   test('ignores a change outside the pubspec manifest', () async {

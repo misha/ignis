@@ -2,25 +2,21 @@
 
 part of 'core.dart';
 
-/// A bitmap indicating what kinds of activity a node responds to.
+/// A bitmap indicating what kinds of activity an entity or component responds to.
 ///
-/// Nodes may be separately instrumented to respond to updates, renders, and
-/// inputs.
+/// Entities and components may be separately instrumented to respond to updates and renders.
 extension type const Activity(int bits) {
   /// Nothing.
   static const none = Activity(0);
 
-  /// Runs [Node.update].
+  /// Runs [Entity.update].
   static const update = Activity(1);
 
-  /// Runs [Node.render].
+  /// Runs [Entity.render].
   static const render = Activity(2);
 
-  /// Accepts inputs via [Node.hitTest].
-  static const input = Activity(4);
-
-  /// Participates in all activities: [update], [render], and [input].
-  static const all = Activity(7);
+  /// Participates in all activities: [update] and [render].
+  static const all = Activity(3);
 
   Activity operator |(Activity other) => Activity(bits | other.bits);
 
@@ -33,7 +29,4 @@ extension type const Activity(int bits) {
 
   /// Whether this includes [render].
   bool get renders => (bits & render.bits) != 0;
-
-  /// Whether this includes [input].
-  bool get inputs => (bits & input.bits) != 0;
 }

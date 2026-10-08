@@ -25,7 +25,7 @@ status: complete
 ## Start Here
 
 - [Motivation](/motivation) - why this engine exists.
-- [Nodes](/concepts/nodes) - how to use a `Node`.
+- [Entities](/concepts/entities) - how to use an `Entity`.
 
 ## AI Usage
 

@@ -13,20 +13,20 @@ import 'runner.dart';
 /// Keep parameters in sync with `FlameLifecycleEventsBenchmark`.
 class LifecycleEventsBenchmark extends AsyncBenchmarkBase {
   final int seed;
-  final int nodes;
+  final int entities;
   final int ticks;
   final int addsPerTick;
   final int removesPerTick;
   final int repositionsPerTick;
   final Random random;
 
-  late Node root;
+  late Entity root;
   late Scene scene;
-  late List<Node> leaves;
+  late List<Entity> leaves;
 
   LifecycleEventsBenchmark({
     this.seed = 12345,
-    this.nodes = 500,
+    this.entities = 500,
     this.ticks = 1000,
     this.addsPerTick = 20,
     this.removesPerTick = 20,
@@ -36,9 +36,9 @@ class LifecycleEventsBenchmark extends AsyncBenchmarkBase {
 
   @override
   Future<void> setup() async {
-    root = Node();
-    root.addAll(List.generate(nodes, (_) => Node()));
-    scene = root.mount();
+    root = Entity();
+    root.addAll(List.generate(entities, (_) => Entity()));
+    scene = Scene(root);
     leaves = root.children.toList();
   }
 
@@ -55,13 +55,13 @@ class LifecycleEventsBenchmark extends AsyncBenchmarkBase {
       }
 
       for (var i = 0; i < addsPerTick; i += 1) {
-        final fresh = Node();
+        final fresh = Entity();
         root.add(fresh);
         leaves.add(fresh);
       }
 
       for (var i = 0; i < repositionsPerTick; i += 1) {
-        leaves[random.nextInt(leaves.length)].priority = random.nextInt(nodes);
+        leaves[random.nextInt(leaves.length)].priority = random.nextInt(entities);
       }
 
       scene.update(1 / 60);

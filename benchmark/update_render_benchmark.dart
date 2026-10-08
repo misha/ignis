@@ -9,38 +9,54 @@ import 'runner.dart';
 
 /// Like `UpdateBenchmark` (see `update_benchmark.dart`), but each
 /// tick also renders the tree to a real (headless) [Canvas]. The leaves are
-/// [ShapeNode]s instead of bare [Node]s, so rendering the root issues an
+/// [ShapeComponent]s instead of bare [Entity]s, so rendering the root issues an
 /// actual draw call per node instead of just traversing.
 ///
 /// Keep parameters in sync with `FlameUpdateRenderBenchmark`.
 class UpdateRenderBenchmark extends AsyncBenchmarkBase {
-  final int nodes;
+  final int entities;
   final int ticks;
   final int children;
 
   late final Scene scene;
 
   UpdateRenderBenchmark({
-    this.nodes = 100,
+    this.entities = 100,
     this.ticks = 100,
     this.children = 10,
   }) : super('Update + Render');
 
   @override
   Future<void> setup() async {
-    final root = Node();
+    final root = Entity();
 
-    for (var i = 0; i < nodes; i += 1) {
-      final node = ShapeNode(shape: .square(2));
+    for (var i = 0; i < entities; i += 1) {
+      final entity = Entity(
+        shape: .square(2),
+        components: [
+          ShapeComponent(
+            shape: .square(2),
+          ),
+        ],
+      );
 
       for (var j = 0; j < children; j += 1) {
-        node.add(ShapeNode(shape: .square(2)));
+        entity.add(
+          Entity(
+            shape: .square(2),
+            components: [
+              ShapeComponent(
+                shape: .square(2),
+              ),
+            ],
+          ),
+        );
       }
 
-      root.add(node);
+      root.add(entity);
     }
 
-    scene = root.mount();
+    scene = Scene(root);
     scene.resize(800, 600);
   }
 

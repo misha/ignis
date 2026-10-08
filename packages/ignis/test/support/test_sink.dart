@@ -1,11 +1,11 @@
 import 'package:ignis/ignis.dart';
 
-/// A node that records every non-system [Message] it processes, such as those
-/// its children post to it.
-final class TestSink extends Node {
+/// An entity that records every non-system [Message] it processes, such as
+/// those its components post to it.
+final class TestSink extends Entity {
   final received = <Message>[];
 
-  TestSink([Iterable<Node> children = const []]) : super(children: children);
+  TestSink([Iterable<Component> components = const []]) : super(components: components);
 
   /// The recorded messages of type [T], in the order they arrived.
   List<T> of<T extends Message>() => received.whereType<T>().toList();

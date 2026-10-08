@@ -26,7 +26,7 @@ List<String> _symbols(Page page) {
 /// it, so the prose never carries the links itself:
 ///
 /// ```yaml
-/// reference: [SpriteNode, SpriteImage, SpriteAnimation, SpriteSheet]
+/// reference: [SpriteComponent, SpriteImage, SpriteAnimation, SpriteSheet]
 /// ```
 ///
 /// List the major classes a reader constructs; every entry links to its `-class.html`.

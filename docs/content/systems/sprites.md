@@ -4,8 +4,8 @@ description: Cutting art into frames, and playing them.
 lane: usage
 category: system
 status: complete
-reference: [SpriteNode, Sprite, SpriteImage, SpriteAnimation, SpriteRegion, SpriteSheet, SpriteMap, SpriteGroup]
-related: [/systems/assets, /concepts/nodes]
+reference: [SpriteComponent, Sprite, SpriteImage, SpriteAnimation, SpriteRegion, SpriteSheet, SpriteMap, SpriteGroup]
+related: [/systems/assets, /concepts/entities]
 ---
 <!-- SPDX-AI-Disclosure: none -->
 
@@ -72,14 +72,6 @@ final slime = sheet.animations(fps: 16, rows: [.new(start: 6), .new(end: 30)]);
 
 <Demo name="sprite-layers"/>
 
-### Packing a sheet
-
-<Demo name="sprite-rows" hint="Try tapping!"/>
-
-### Naming sprites
-
-<Demo name="sprite-keys" hint="Try tapping!"/>
-
 ### Setting a rate per animation
 
 <Demo name="sprite-rates"/>
@@ -99,15 +91,3 @@ final slime = sheet.animations(fps: 16, rows: [.new(start: 6), .new(end: 30)]);
 ### Scaling the rate
 
 <Demo name="sprite-speed"/>
-
-### Mixing stills and animations
-
-<Demo name="sprite-group" hint="Try tapping!"/>
-
-### Reporting progress
-
-<Demo name="sprite-signals"/>
-
-### Playing once
-
-<Demo name="sprite-finish" hint="Try tapping!"/>

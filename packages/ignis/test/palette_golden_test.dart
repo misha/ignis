@@ -6,13 +6,18 @@ import 'support/expect.dart';
 
 void main() {
   testWidgets('draws every enabled paint, in priority order', (tester) async {
-    final node = ShapeNode(
+    final shape = ShapeComponent(
       shape: .square(40),
-      position: .all(20),
       paint: Paint()..color = RED,
     );
 
-    node.palette
+    final entity = Entity(
+      shape: .square(40),
+      position: .all(20),
+      components: [shape],
+    );
+
+    shape.palette
       ..add(
         .new(
           'under',
@@ -39,17 +44,22 @@ void main() {
         ),
       );
 
-    await expectGolden(tester, 'goldens/palette_priority.png', node);
+    await expectGolden(tester, 'goldens/palette_priority.png', entity);
   });
 
   testWidgets("translates by each paint's own offset, never accumulating them", (tester) async {
-    final node = ShapeNode(
+    final shape = ShapeComponent(
       shape: .square(30),
-      position: .all(10),
       paint: Paint()..color = RED,
     );
 
-    node.palette
+    final entity = Entity(
+      shape: .square(30),
+      position: .all(10),
+      components: [shape],
+    );
+
+    shape.palette
       ..add(
         .new(
           'shadow',
@@ -67,6 +77,6 @@ void main() {
         ),
       );
 
-    await expectGolden(tester, 'goldens/palette_offsets.png', node);
+    await expectGolden(tester, 'goldens/palette_offsets.png', entity);
   });
 }

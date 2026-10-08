@@ -20,13 +20,7 @@ Measured with `flutter test` on 2026/10/07, average of 3 or more runs.
 | Benchmark                     | Runtime     |
 |-------------------------------|-------------|
 | Churn                         | 30950.99 us |
-| Collisions                    | 7831.46 us  |
-| Intersect Circle-Circle       | 2207.16 us  |
-| Intersect Circle-Rectangle    | 15717.38 us |
-| Intersect Rectangle-Rectangle | 9744.52 us  |
-| Layout                        | 34788.14 us |
 | Lifecycle Events              | 47570.00 us |
-| Nearest                       | 9350.08 us  |
 | Tick                          | 19863.12 us |
 | Update                        | 17797.94 us |
 | Update + Render               | 30564.37 us |

@@ -4,7 +4,7 @@ description: Why Ignis exists when Flame already does.
 lane: usage
 category: essay
 status: complete
-related: [/concepts/nodes, /concepts/signals, /concepts/math]
+related: [/concepts/entities, /concepts/math]
 ---
 <!-- SPDX-AI-Disclosure: none -->
 
@@ -74,6 +74,8 @@ With this API, it is not possible to write all the code related to `velocity` or
 
 Now, let's consider a different game engine, one that accepts function closures instead of virtual method overrides. `Ball` would be refactored as follows:
 
+// TODO: Rewrite this example using messages.
+
 ```dart
 class Ball extends GameObject {
   final position = Vector2.zero();
@@ -127,11 +129,11 @@ In Ignis, nodes *must* set themselves up synchronously. A synchronous node is ea
 
 To compensate, Ignis ships with a highly configurable [preloading system](/systems/assets). That system also happens to enable live assets, as the engine is now aware of how your application loads its assets.
 
-### Virtual Methods vs. Signals
+### Virtual Methods vs. Messages
 
 In Flame, implementing behavior for special events (like collisions and gestures) usually requires extending a component and overriding a virtual method.
 
-In Ignis, nodes receive events using [signals](/concepts/signals). Signals are explicit, accessible without subclasses, and natively support any number of listeners. If you can access the signal, you can watch it and you can emit it.
+TODO: Add more here.
 
 As explained above, the primary motivation for this change is to permit a high degree of [locality of behavior](#locality-of-behavior) in the source code.
 

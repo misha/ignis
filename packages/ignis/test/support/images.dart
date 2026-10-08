@@ -51,10 +51,10 @@ Future<String> pixelAsset(List<List<Color>> colors) async {
   return key;
 }
 
-/// Renders [node] to a [width]x[height] image.
-Future<Image> renderImage(Node node, int width, int height) {
+/// Renders [entity] to a [width]x[height] image.
+Future<Image> renderImage(Entity entity, int width, int height) {
   final recorder = PictureRecorder();
-  node.render(Draw(Canvas(recorder)));
+  entity.render(Canvas(recorder));
   return recorder.endRecording().toImage(width, height);
 }
 

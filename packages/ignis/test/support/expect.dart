@@ -18,7 +18,7 @@ final _GUTTER_COLOR = img.ColorRgb8(68, 68, 68);
 Future<void> expectGolden(
   WidgetTester tester,
   String goldenFile,
-  Node node, {
+  Entity entity, {
   double width = 100,
   double height = 100,
   Color color = const Color(0xFFFFFFFF),
@@ -38,7 +38,7 @@ Future<void> expectGolden(
           width: width,
           height: height,
           child: SceneWidget(
-            node.mount(),
+            Scene(entity),
             color: color,
           ),
         ),
@@ -50,13 +50,13 @@ Future<void> expectGolden(
   await expectLater(find.byKey(key), matchesGoldenFile(goldenFile));
 }
 
-/// Records [frames] frames of [node], each [dt] seconds apart, into a golden
+/// Records [frames] frames of [entity], each [dt] seconds apart, into a golden
 /// filmstrip PNG compared pixel-exact, plus an animated GIF beside it for
 /// playback review. [goldenFile] names the GIF; the strip is its .png sibling.
 Future<void> expectGoldenGif(
   WidgetTester tester,
   String goldenFile,
-  Node node, {
+  Entity entity, {
   int frames = 10,
   double dt = 0.125,
   double width = 100,
@@ -80,7 +80,7 @@ Future<void> expectGoldenGif(
           width: width,
           height: height,
           child: SceneWidget(
-            node.mount(),
+            Scene(entity),
             color: color,
           ),
         ),

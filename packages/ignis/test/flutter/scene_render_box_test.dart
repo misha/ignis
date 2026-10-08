@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 import 'package:ignis/src/flutter/scene_render_box.dart';
 
-import '../support/test_node.dart';
+import '../support/test_entity.dart';
 
 void main() {
-  Scene<TestNode> makeScene() {
-    final scene = TestNode().mount();
+  Scene<TestEntity> makeScene() {
+    final scene = Scene(TestEntity());
     scene.resize(100, 80);
     return scene;
   }

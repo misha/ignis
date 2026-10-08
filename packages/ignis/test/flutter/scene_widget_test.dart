@@ -3,11 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 import 'package:ignis/src/flutter/scene_render_box.dart';
 
-import '../support/test_node.dart';
+import '../support/test_entity.dart';
 
 void main() {
   testWidgets('passes the same scene through on rebuild', (tester) async {
-    final scene = TestNode().mount();
+    final scene = Scene(TestEntity());
 
     await tester.pumpWidget(
       SizedBox.square(
@@ -28,8 +28,8 @@ void main() {
   });
 
   testWidgets('swaps to a new scene when given a different one', (tester) async {
-    final sceneA = Node().mount();
-    final sceneB = Node().mount();
+    final sceneA = Scene(Entity());
+    final sceneB = Scene(Entity());
 
     await tester.pumpWidget(
       SizedBox.square(
@@ -52,7 +52,7 @@ void main() {
 
   testWidgets('survives being reparented', (tester) async {
     final key = GlobalKey();
-    final scene = TestNode().mount();
+    final scene = Scene(TestEntity());
 
     await tester.pumpWidget(
       SizedBox.square(
@@ -75,7 +75,7 @@ void main() {
   });
 
   testWidgets('survives a transiently empty layout', (tester) async {
-    final scene = TestNode().mount();
+    final scene = Scene(TestEntity());
 
     await tester.pumpWidget(
       SizedBox.square(
@@ -106,7 +106,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(100, 80));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final scene = TestNode().mount()..paused = true;
+    final scene = Scene(TestEntity())..paused = true;
     await tester.pumpWidget(SceneWidget(scene));
     expect(scene.root.updates, 1);
 
@@ -118,7 +118,7 @@ void main() {
   });
 
   testWidgets('auto-pauses while its tickers are disabled', (tester) async {
-    final scene = TestNode().mount();
+    final scene = Scene(TestEntity());
 
     Widget harness({required bool enabled}) {
       return TickerMode(
@@ -149,8 +149,8 @@ void main() {
   });
 
   testWidgets('destroys the scene when swapped for a different one', (tester) async {
-    final sceneA = Node().mount();
-    final sceneB = Node().mount();
+    final sceneA = Scene(Entity());
+    final sceneB = Scene(Entity());
 
     await tester.pumpWidget(
       SizedBox.square(
@@ -171,7 +171,7 @@ void main() {
   });
 
   testWidgets('destroys the scene when disposed', (tester) async {
-    final scene = TestNode().mount();
+    final scene = Scene(TestEntity());
 
     await tester.pumpWidget(SceneWidget(scene));
     await tester.pumpWidget(const SizedBox());
@@ -184,7 +184,7 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(100, 80));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
-    final scene = TestNode().mount();
+    final scene = Scene(TestEntity());
     await tester.pumpWidget(SceneWidget(scene));
 
     expect(scene.size, Vector2(100, 80));
@@ -200,7 +200,7 @@ void main() {
       SizedBox.square(
         dimension: 100,
         child: SceneWidget(
-          Node().mount(),
+          Scene(Entity()),
           color: COLOR,
         ),
       ),

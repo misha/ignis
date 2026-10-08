@@ -29,7 +29,7 @@ class DemoSource {
   ///
   /// ```dart
   /// // demo on sprite-animation
-  /// final fire = SpriteNode(...);
+  /// final fire = SpriteComponent(...);
   /// // demo off
   /// ```
   ///

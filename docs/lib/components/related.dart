@@ -9,7 +9,7 @@ import 'package:jaspr_content/theme.dart';
 /// the title:
 ///
 /// ```yaml
-/// related: [/systems/assets, /concepts/nodes]
+/// related: [/systems/assets, /concepts/entities]
 /// internals: [/internals/tree]
 /// ```
 ///

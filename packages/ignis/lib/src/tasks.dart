@@ -1,21 +1,31 @@
 part of 'core.dart';
 
 final class _ReparentTask extends Task {
-  final Node node;
-  final Node? parent;
+  final Entity entity;
+  final Entity? parent;
 
-  _ReparentTask(this.node, this.parent);
+  _ReparentTask(this.entity, this.parent);
 
   @override
-  void execute() => node._reparent(parent);
+  void execute() => entity._reparent(parent);
 }
 
 final class _ReorderTask extends Task {
-  final Node node;
+  final Entity entity;
   final int priority;
 
-  _ReorderTask(this.node, this.priority);
+  _ReorderTask(this.entity, this.priority);
 
   @override
-  void execute() => node._reorder(priority);
+  void execute() => entity._reorder(priority);
+}
+
+final class _AttachTask extends Task {
+  final Component component;
+  final Entity? entity;
+
+  _AttachTask(this.component, this.entity);
+
+  @override
+  void execute() => component._attach(entity);
 }

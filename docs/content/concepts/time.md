@@ -36,7 +36,4 @@ Additionally, all Ignis objects that accept an interval or duration are expresse
 ```dart
 // Triggers after 200 milliseconds.
 final timer = TimerNode(interval: 0.2);
-
-// Progresses an effect over the course of 1.5 seconds.
-final timeline = Timeline.duration(1.5);
 ```

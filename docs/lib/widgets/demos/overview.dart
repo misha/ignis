@@ -7,15 +7,15 @@ import '../demo_scene.dart';
 
 /// The scene the overview opens on.
 final Map<String, Widget Function()> overviewDemos = {
-  'spinner': () => DemoScene(builder: _SpinnerNode.new),
+  'spinner': () => DemoScene(builder: _SpinnerEntity.new),
 };
 
 /// A square turning in place, at the middle of the stage.
-class _SpinnerNode extends SpatialNode {
-  _SpinnerNode() : super(position: DEMO_SIZE / 2);
+class _SpinnerEntity extends Entity {
+  _SpinnerEntity() : super(position: DEMO_SIZE / 2);
 
   // demo on spinner
-  late ShapeNode square;
+  late Entity square;
 
   @override
   void process(Message message) {
@@ -24,10 +24,15 @@ class _SpinnerNode extends SpatialNode {
     switch (message) {
       case Build():
         square = add(
-          ShapeNode(
+          Entity(
             shape: .square(40),
             anchor: .center,
-            paint: Paint()..color = Colors.orange,
+            components: [
+              ShapeComponent(
+                shape: .square(40),
+                paint: Paint()..color = Colors.orange,
+              ),
+            ],
           ),
         );
 

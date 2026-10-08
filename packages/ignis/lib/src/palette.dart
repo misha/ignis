@@ -38,7 +38,7 @@ class PaletteEntry {
 
   /// Creates a named paint entry, to be registered with [Palette.add].
   PaletteEntry(
-    String this.name,
+    this.name,
     this.paint, {
     Vector2? offset,
     int? priority,
@@ -85,15 +85,15 @@ class Palette {
   /// Calls [painter] once per enabled paint, in ascending priority order, with
   /// [canvas] translated to that entry's offset and back again.
   ///
-  /// Pass a function that already exists rather than a literal, so a node
-  /// drawing every frame allocates nothing:
+  /// Pass a function that already exists rather than a literal, so a
+  /// component drawing every frame allocates nothing:
   ///
   /// ```dart
   /// void painter(Canvas canvas, Paint paint) { ... }
   ///
-  /// switch (message) {
-  ///   case Draw(:final canvas):
-  ///     palette.draw(canvas, painter);
+  /// @override
+  /// void render(Canvas canvas) {
+  ///   palette.draw(canvas, painter);
   /// }
   /// ```
   void draw(Canvas canvas, Painter painter) {

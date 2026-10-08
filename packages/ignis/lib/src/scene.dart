@@ -2,31 +2,22 @@
 
 import 'dart:ui' hide Scene;
 
-import 'package:flutter/foundation.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/scheduler.dart';
 import 'package:ignis/src/shape.dart';
 
-/// A controller for a mounted [Node] tree.
+/// A controller for a mounted [Entity] tree.
 ///
 /// TODO: Document further.
-class Scene<T extends Node> with Scheduler {
+class Scene<T extends Entity> with Scheduler {
   /// This scene's root. Cannot be modified.
   final T root;
-
-  static final List<Scene> _ACTIVE = [];
-
-  /// Every scene currently mounted, the most recent first.
-  @internal
-  static Iterable<Scene> get ACTIVE => _ACTIVE.reversed;
 
   bool _mounted = true;
   bool _sized = false;
 
-  final Update _update = Update(0);
-  Draw? _draw;
-  DebugDraw? _debugDraw;
+  final _update = Update(0);
 
   Vector2 _size = .zero;
   Rectangle _shape = const Rectangle(.zero);
@@ -43,11 +34,8 @@ class Scene<T extends Node> with Scheduler {
   /// Whether this scene is frozen: it neither updates nor advances time.
   bool paused = false;
 
-  @internal
-  Scene({
-    required this.root,
-  }) {
-    _ACTIVE.add(this);
+  Scene(this.root) {
+    root.mount(this);
   }
 
   void update(double dt) {
@@ -61,13 +49,9 @@ class Scene<T extends Node> with Scheduler {
   void render(Canvas canvas) {
     assert(_mounted, 'Cannot render a destroyed scene.');
     if (!root.activity.renders) return;
-    final draw = _draw ??= Draw(canvas);
-    draw.canvas = canvas;
-    root.render(draw);
+    root.render(canvas);
     if (!Debug.instance.enabled) return;
-    final debugDraw = _debugDraw ??= DebugDraw(canvas);
-    debugDraw.canvas = canvas;
-    root.debugRender(debugDraw);
+    root.debugRender(canvas);
   }
 
   void resize(double width, double height) {
@@ -84,12 +68,17 @@ class Scene<T extends Node> with Scheduler {
     _sized = true;
   }
 
-  /// Posts [Reassemble] to every node in this scene, after a hot reload.
+  /// Posts [Reassemble] to every entity and component in this scene, after a
+  /// hot reload.
   void reassemble() {
     assert(_mounted, 'Cannot reassemble a destroyed scene.');
 
-    for (final node in root.traverse()) {
-      node.post(const Reassemble());
+    for (final entity in root.traverse()) {
+      entity.post(const Reassemble());
+
+      for (final component in entity.components) {
+        component.post(const Reassemble());
+      }
     }
   }
 
@@ -98,7 +87,6 @@ class Scene<T extends Node> with Scheduler {
   void destroy() {
     if (!_mounted) return;
     _mounted = false;
-    _ACTIVE.remove(this);
     root.unmount();
     flush();
   }

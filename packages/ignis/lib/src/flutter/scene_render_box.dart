@@ -6,9 +6,6 @@ import 'package:flutter/widgets.dart';
 import 'package:ignis/src/scene.dart';
 import 'package:ignis/src/flutter/render_loop.dart';
 import 'package:ignis/src/flutter/scene_widget.dart';
-import 'package:ignis/src/extensions.dart';
-import 'package:ignis/src/inputs/input_server.dart';
-import 'package:ignis/src/inputs/nodes/hover_input.dart';
 
 /// Hosts a [SceneRenderBox] for [SceneWidget].
 @internal
@@ -49,7 +46,6 @@ class SceneRenderBox extends RenderBox {
   Scene _scene;
   bool _isRepaintBoundary;
   bool _muted;
-  late final _input = InputServer(this);
 
   Scene get scene => _scene;
 
@@ -118,26 +114,6 @@ class SceneRenderBox extends RenderBox {
 
   @override
   bool hitTestSelf(Offset position) => true;
-
-  @override
-  bool hitTestChildren(
-    BoxHitTestResult result, {
-    required Offset position,
-  }) {
-    final nodes = scene.root
-        .hitTest(position.toVector2()) //
-        .whereType<HoverInput>();
-
-    for (final node in nodes) {
-      result.add(HitTestEntry(node));
-      if (node.behavior == .opaque) break;
-    }
-
-    return false;
-  }
-
-  @override
-  void handleEvent(PointerEvent event, HitTestEntry entry) => _input.dispatch(event);
 
   @override
   void paint(PaintingContext context, Offset offset) {

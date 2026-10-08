@@ -19,26 +19,9 @@ Future<void> _load(Iterable<String> assets) {
   ]);
 }
 
-/// The style every demo sets text in. A caller supplies the [color] or
-/// [TextStyle.foreground].
-const DEMO_TEXT_STYLE = TextStyle(
-  fontFamily: 'iA Writer Mono',
-  fontFamilyFallback: ['Roboto'],
-  fontSize: 7,
-);
-
-class DemoLog extends TextNode {
-  DemoLog() : super(style: TextStyle(color: GREY));
-
-  void call(String line, [Color color = GREY]) {
-    text = line;
-    style = TextStyle(color: color);
-  }
-}
-
 class DemoScene extends StatefulWidget {
-  /// Builds the root node. Called once, after [assets] land.
-  final Node Function() builder;
+  /// Builds the root entity. Called once, after [assets] land.
+  final Entity Function() builder;
 
   /// The asset keys this scene reads out of the cache.
   final List<String> assets;
@@ -63,13 +46,8 @@ class _DemoSceneState extends State<DemoScene> {
       if (!mounted) return;
 
       setState(() {
-        scene = TextStyleNode(
-          style: DEMO_TEXT_STYLE,
-          children: [
-            widget.builder(),
-            DebugShortcutsNode(),
-          ],
-        ).mount();
+        DebugShortcuts.attach();
+        scene = Scene(widget.builder());
       });
     });
   }

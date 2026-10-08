@@ -12,33 +12,33 @@ import 'runner.dart';
 ///
 /// Keep parameters in sync with `FlameUpdateBenchmark`.
 class UpdateBenchmark extends AsyncBenchmarkBase {
-  final int nodes;
+  final int entities;
   final int ticks;
   final int children;
 
   late Scene scene;
 
   UpdateBenchmark({
-    this.nodes = 1000,
+    this.entities = 1000,
     this.ticks = 500,
     this.children = 10,
   }) : super('Update');
 
   @override
   Future<void> setup() async {
-    final root = Node();
+    final root = Entity();
 
-    for (var i = 0; i < nodes; i += 1) {
-      final node = Node();
+    for (var i = 0; i < entities; i += 1) {
+      final entity = Entity();
 
       for (var j = 0; j < children; j += 1) {
-        node.add(Node());
+        entity.add(Entity());
       }
 
-      root.add(node);
+      root.add(entity);
     }
 
-    scene = root.mount();
+    scene = Scene(root);
   }
 
   @override
