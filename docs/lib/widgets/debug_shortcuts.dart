@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:ignis/ignis.dart';
 
 /// One wireframe as the header reads it.
@@ -46,16 +47,17 @@ String _css(Paint paint) {
 /// 1 to 4 in the same order. [Ignis.debug] is global, so one press answers for
 /// every demo on the page.
 abstract final class DebugShortcuts {
-  /// Emitted whenever a press changes what the demos draw.
-  static final onChange = Signal0();
-
-  static bool _bound = false;
-
   /// Every wireframe the header names, or null until a demo comes up.
-  static List<Wireframe>? get wireframes {
-    if (!_bound) return null;
+  static final wireframes = ValueNotifier<List<Wireframe>?>(null);
 
-    return [
+  /// Toggles the wireframe the header draws [index]th, and reports it.
+  static void toggle(int index) {
+    Ignis.debug.toggle(_WIREFRAMES[index].mode);
+    _report();
+  }
+
+  static void _report() {
+    wireframes.value = [
       for (final wireframe in _WIREFRAMES)
         (
           label: wireframe.label,
@@ -64,40 +66,28 @@ abstract final class DebugShortcuts {
         ),
     ];
   }
+}
 
-  /// Toggles the wireframe the header draws [index]th, and reports it.
-  static void toggle(int index) {
-    Ignis.debug.toggle(_WIREFRAMES[index].mode);
-    onChange.emit();
-  }
+/// Binds the [DebugShortcuts] for the scene it is in, which every demo adds.
+final class DebugShortcutsNode extends Node {
+  @override
+  void process(Message message) {
+    super.process(message);
 
-  /// Binds the shortcuts, which every demo asks for as it comes up.
-  ///
-  /// Idempotent: the first demo to come up binds them.
-  static void install() {
-    if (_bound) return;
-    _bound = true;
+    switch (message) {
+      case Build():
+        Ignis.controls.bind(this, 0, matchers: {_WIREFRAMES[0].key});
+        Ignis.controls.bind(this, 1, matchers: {_WIREFRAMES[1].key});
+        Ignis.controls.bind(this, 2, matchers: {_WIREFRAMES[2].key});
+        Ignis.controls.bind(this, 3, matchers: {_WIREFRAMES[3].key});
+        DebugShortcuts._report();
 
-    Ignis.controls.bind(
-      (_) => toggle(0),
-      matchers: {_WIREFRAMES[0].key},
-    );
+      case Destroy():
+        Ignis.controls.release(this);
 
-    Ignis.controls.bind(
-      (_) => toggle(1),
-      matchers: {_WIREFRAMES[1].key},
-    );
-
-    Ignis.controls.bind(
-      (_) => toggle(2),
-      matchers: {_WIREFRAMES[2].key},
-    );
-
-    Ignis.controls.bind(
-      (_) => toggle(3),
-      matchers: {_WIREFRAMES[3].key},
-    );
-
-    onChange.emit();
+      case Control(:final action):
+        if (action is! int) break;
+        DebugShortcuts.toggle(action);
+    }
   }
 }

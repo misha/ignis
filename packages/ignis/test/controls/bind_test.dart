@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 import '../support/test_device.dart';
+import '../support/test_sink.dart';
 
 /// A node whose build binds the event, logging its name when it answers.
 final class _Answers extends Node {
@@ -16,17 +17,21 @@ final class _Answers extends Node {
   });
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         Ignis.controls.bind(
-          (_) => log.add(name),
+          this,
+          name,
           matchers: {
-            const TestEvent(),
+            const TestTrigger(),
           },
         );
+
+      case Control():
+        log.add(name);
     }
   }
 }
@@ -38,17 +43,21 @@ final class _Binder extends Node {
   _Binder(this.onJump);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         Ignis.controls.bind(
-          (_) => onJump(),
+          this,
+          'jump',
           matchers: {
-            const TestEvent(),
+            const TestTrigger(),
           },
         );
+
+      case Control():
+        onJump();
     }
   }
 }
@@ -61,15 +70,16 @@ void main() {
   });
 
   bool press() {
-    return Ignis.controls.dispatch(const TestEvent());
+    return Ignis.controls.dispatch(const TestTrigger());
   }
 
   test('a bind made in build answers once the node is mounted', () {
     var jumps = 0;
-    _Binder(() => jumps += 1).mount();
+    final scene = _Binder(() => jumps += 1).mount();
 
     expect(press(), isTrue);
     expect(jumps, 1);
+    scene.destroy();
   });
 
   test('the bind dies with the node', () {
@@ -82,22 +92,26 @@ void main() {
 
     expect(press(), isFalse);
     expect(jumps, 0);
+    scene.destroy();
   });
 
   test('a bind made outside a build is the caller to release', () {
-    var jumps = 0;
+    final sink = TestSink();
+    final scene = sink.mount();
 
-    final release = Ignis.controls.bind(
-      (_) => jumps += 1,
+    Ignis.controls.bind(
+      sink,
+      'jump',
       matchers: {
-        const TestEvent(),
+        const TestTrigger(),
       },
     );
 
     expect(press(), isTrue);
-    release();
+    Ignis.controls.release(sink);
     expect(press(), isFalse);
-    expect(jumps, 1);
+    expect(sink.of<Control>(), hasLength(1));
+    scene.destroy();
   });
 
   group('tree order', () {
@@ -106,7 +120,7 @@ void main() {
     setUp(() => log = []);
 
     test('the topmost sibling wins', () {
-      Node(
+      final scene = Node(
         children: [
           _Answers('under', log),
           _Answers('over', log, priority: 1),
@@ -116,19 +130,21 @@ void main() {
       press();
 
       expect(log, ['over'], reason: 'reverse priority, as a hit test walks it');
+      scene.destroy();
     });
 
     test('a child beats its parent', () {
-      _Answers('parent', log, children: [_Answers('child', log)]).mount();
+      final scene = _Answers('parent', log, children: [_Answers('child', log)]).mount();
 
       press();
 
       expect(log, ['child']);
+      scene.destroy();
     });
 
     test('a disabled node is skipped, and the one beneath answers', () {
       final over = _Answers('over', log, priority: 1);
-      Node(children: [_Answers('under', log), over]).mount();
+      final scene = Node(children: [_Answers('under', log), over]).mount();
 
       press();
       expect(log, ['over']);
@@ -137,11 +153,12 @@ void main() {
       press();
 
       expect(log, ['over', 'under'], reason: 'a disabled node is skipped; its bind stays');
+      scene.destroy();
     });
 
     test('a disabled node answers nothing, even uncontested', () {
       final only = _Answers('only', log);
-      Node(children: [only]).mount();
+      final scene = Node(children: [only]).mount();
 
       press();
       expect(log, ['only']);
@@ -150,24 +167,11 @@ void main() {
 
       expect(press(), isFalse);
       expect(log, ['only'], reason: 'the walk never reaches it');
-    });
-
-    test('any node beats a bind made outside a build', () {
-      Ignis.controls.bind(
-        (_) => log.add('loose'),
-        matchers: {
-          const TestEvent(),
-        },
-      );
-
-      _Answers('node', log).mount();
-      press();
-
-      expect(log, ['node']);
+      scene.destroy();
     });
 
     test('the most recently mounted scene wins', () {
-      _Answers('first', log).mount();
+      final first = _Answers('first', log).mount();
       final second = _Answers('second', log).mount();
 
       press();
@@ -177,6 +181,7 @@ void main() {
       press();
 
       expect(log, ['second', 'first']);
+      first.destroy();
     });
 
     test('releasing the winner falls back to the node beneath', () {
@@ -192,10 +197,11 @@ void main() {
       press();
 
       expect(log, ['over', 'under']);
+      scene.destroy();
     });
 
     test('a group gates a node bind like any other', () {
-      Node(children: [_Answers('under', log), _Gated('over', log)]).mount();
+      final scene = Node(children: [_Answers('under', log), _Gated('over', log)]).mount();
 
       press();
       expect(log, ['over'], reason: 'topmost, and its group is enabled');
@@ -204,6 +210,7 @@ void main() {
       press();
 
       expect(log, ['over', 'under'], reason: 'the press falls through');
+      scene.destroy();
     });
   });
 }
@@ -216,16 +223,20 @@ final class _Gated extends Node {
   _Gated(this.name, this.log) : super(priority: 1);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         Ignis.controls.bind(
-          (_) => log.add(name),
-          matchers: {const TestEvent()},
+          this,
+          name,
+          matchers: {const TestTrigger()},
           groups: {'ui'},
         );
+
+      case Control():
+        log.add(name);
     }
   }
 }

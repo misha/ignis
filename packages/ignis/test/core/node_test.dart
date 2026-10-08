@@ -6,6 +6,10 @@ import 'package:ignis/ignis.dart';
 import '../support/canvas.dart';
 import '../support/test_node.dart';
 
+final class _Ping extends Message {
+  const _Ping();
+}
+
 void main() {
   test('ignores duplicate child additions', () {
     final a = Node();
@@ -189,7 +193,11 @@ void main() {
     final a = TestNode(name: 'A', log: log);
     final b = TestNode(name: 'B', log: log);
     final c = TestNode(name: 'C', log: log);
-    b.action = () => a.add(c);
+    b.action = () {
+      a.add(c);
+      b.action = null;
+    };
+
     a.add(b);
     final scene = a.mount();
 
@@ -230,8 +238,8 @@ void main() {
     var calls = 0;
 
     final b = TestNode(
-      processor: (node, state) {
-        switch (state) {
+      processor: (node, event) {
+        switch (event) {
           case Destroy():
             calls += 1;
             node.detach();
@@ -252,8 +260,8 @@ void main() {
     final c = Node();
     final d = Node();
     final b = TestNode(
-      processor: (node, state) {
-        switch (state) {
+      processor: (node, event) {
+        switch (event) {
           case Destroy():
             a.add(d);
         }
@@ -297,20 +305,6 @@ void main() {
     expect(b.parent, isNull);
   });
 
-  test('re-adding a child cancels a removal queued in the same frame', () {
-    final a = Node();
-    final b = Node();
-    a.add(b);
-    final scene = a.mount()..update(0);
-
-    a.remove(b);
-    a.add(b);
-    scene.update(0);
-
-    expect(a.children, [b]);
-    expect(b.isMounted, isTrue, reason: 'it never left the tree');
-  });
-
   test('removing a child cancels an addition queued in the same frame', () {
     final a = Node();
     final b = Node();
@@ -327,30 +321,13 @@ void main() {
     expect(b.isMounted, isFalse, reason: 'it never arrived');
   });
 
-  test('removing a moved child in the same frame unmounts it', () {
-    final a = Node();
-    final b = Node();
-    final c = TestNode();
-    a.add(b);
-    a.add(c);
-    final scene = a.mount()..update(0);
-
-    b.add(c);
-    b.remove(c);
-    scene.update(0);
-
-    expect(c.hasParent, isFalse);
-    expect(c.isMounted, isFalse);
-    expect(c.unmounts, 1);
-  });
-
   test('node tears down its build before detaching', () {
     final parent = Node();
     Node? seen;
 
     final child = TestNode(
-      processor: (node, state) {
-        switch (state) {
+      processor: (node, event) {
+        switch (event) {
           case Destroy():
             seen = node.parent;
         }
@@ -366,29 +343,14 @@ void main() {
     expect(child.parent, isNull);
   });
 
-  test('node tears down its build before moving out of its scene', () {
-    final from = Node();
-    final to = Node();
-    Node? seen;
+  test('post processes the event on the node', () {
+    final processed = <Message>[];
+    final node = TestNode(processor: (node, event) => processed.add(event));
+    const ping = _Ping();
 
-    final child = TestNode(
-      processor: (node, state) {
-        switch (state) {
-          case Destroy():
-            seen = node.parent;
-        }
-      },
-    );
+    node.post(ping);
 
-    from.add(child);
-    final scene = from.mount();
-
-    from.remove(child);
-    to.add(child);
-    scene.update(0);
-    expect(seen, same(from));
-    expect(child.parent, same(to));
-    expect(child.isMounted, isFalse);
+    expect(processed, [ping]);
   });
 
   group('mounting', () {
@@ -504,16 +466,54 @@ void main() {
       expect(b.isMounted, isFalse);
     });
 
-    test('a node can be unmounted and remounted', () {
-      final log = TestLog();
-      final a = TestNode(name: 'A', log: log);
+    test('a removed node is destroyed once the removal flushes', () {
+      final a = Node();
+      final b = Node();
+      a.add(b);
       final scene = a.mount();
-      scene.destroy();
-      final newScene = a.mount();
-      expect(log.mounts, ['A', 'A']);
-      expect(log.unmounts, ['A']);
-      expect(a.isMounted, isTrue);
-      expect(newScene, isNot(same(scene)));
+
+      a.remove(b);
+      expect(b.isDestroyed, isFalse);
+
+      scene.update(0);
+      expect(b.isDestroyed, isTrue);
+    });
+
+    test('adding a mounted node throws, even to its own parent', () {
+      final a = Node();
+      final b = Node();
+      final c = Node();
+      a.add(b);
+      a.add(c);
+      a.mount();
+
+      expect(() => c.add(b), throwsStateError);
+      expect(() => a.add(b), throwsStateError);
+    });
+
+    test('adding a destroyed node throws', () {
+      final a = Node();
+      final b = Node();
+      a.add(b);
+      final scene = a.mount();
+      a.remove(b);
+      scene.update(0);
+
+      expect(() => a.add(b), throwsStateError);
+    });
+
+    test('mounting a destroyed node throws', () {
+      final a = Node();
+      a.mount().destroy();
+
+      expect(() => a.mount(), throwsStateError);
+    });
+
+    test('posting to a destroyed node throws', () {
+      final a = Node();
+      a.mount().destroy();
+
+      expect(() => a.post(const Build()), throwsAssertionError);
     });
   });
 
@@ -535,8 +535,8 @@ void main() {
       final a = Node();
       final c = TestNode();
       final b = TestNode(
-        processor: (node, state) {
-          switch (state) {
+        processor: (node, event) {
+          switch (event) {
             case Destroy():
               a.remove(c);
           }
@@ -577,21 +577,6 @@ void main() {
         expect(b.parent, isNull);
       },
     );
-
-    test('reparenting from within a build remounts the node under its new parent', () {
-      final a = Node();
-      final c = Node();
-      final b = TestNode(builder: (node) => c.add(node));
-      a.add(b);
-      a.add(c);
-
-      final scene = a.mount();
-      scene.update(0);
-
-      expect(b.parent, same(c));
-      expect(b.isMounted, isTrue);
-      expect(b.mounts, 2, reason: 'a move remounts');
-    });
 
     test('mounting a node reentrantly from within its own build is a no-op', () {
       final a = TestNode(builder: (node) => node.mount());
@@ -682,21 +667,6 @@ void main() {
 
       scene.destroy();
       expect(() => a.readOrNull<int>(), throwsStateError);
-    });
-
-    test('resolves anew after an unmount/remount cycle', () {
-      final parent = Node();
-      final child = Node();
-      parent.provide(1);
-      parent.add(child);
-      final scene = parent.mount();
-      expect(child.readOrNull<int>(), 1);
-
-      scene.destroy();
-      parent.provide(2);
-      parent.mount();
-
-      expect(child.readOrNull<int>(), 2);
     });
 
     test('read returns the value readOrNull finds, or throws when it finds none', () {

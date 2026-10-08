@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' hide State;
+import 'package:flutter/widgets.dart';
 import 'package:ignis/ignis.dart';
 
 import '../colors.dart';
@@ -105,10 +105,10 @@ final Map<String, Widget Function()> spriteDemos = {
 /// An image with no grid to it, drawn as a single frame.
 class _StillNode extends Node {
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         // demo on sprite-still
         final fire = SpriteNode(sprite: SpriteImage('assets/images/bonfire.png'));
@@ -127,10 +127,10 @@ class _StillNode extends Node {
 /// The same fire, cut into twenty frames and played on a loop.
 class _BonfireNode extends Node {
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         // demo on sprite-animation
         final fire = SpriteNode(
@@ -155,10 +155,10 @@ class _BonfireNode extends Node {
 /// One fire out of three sheets, each running at its own speed.
 class _LayeredNode extends Node {
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         // demo on sprite-layers
         final smoke = SpriteNode(
@@ -198,16 +198,19 @@ class _LayeredNode extends Node {
 
 /// Eleven animations of different lengths, packed into one grid.
 class _PackedNode extends Node {
-  @override
-  void process(State state) {
-    super.process(state);
+  late SpriteNode slime;
+  late TapInput taps;
 
-    switch (state) {
+  @override
+  void process(Message message) {
+    super.process(message);
+
+    // demo on sprite-rows
+    switch (message) {
       case Build():
-        // demo on sprite-rows
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
 
-        final slime = SpriteNode(
+        slime = SpriteNode(
           sprite: sheet.animations(
             fps: 16,
             rows: [
@@ -226,10 +229,15 @@ class _PackedNode extends Node {
           ),
         );
 
-        final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-        taps.onTap(slime.playNext);
-        // demo off
+        taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
+      case Tap():
+        slime.playNext();
+    }
+    // demo off
+
+    switch (message) {
+      case Build():
         addAll([
           BoxNode(
             alignment: .center,
@@ -243,26 +251,34 @@ class _PackedNode extends Node {
 
 /// Rows that answer to a name, played by it.
 class _KeyedNode extends Node {
-  @override
-  void process(State state) {
-    super.process(state);
+  late SpriteNode slime;
+  late TapInput taps;
 
-    switch (state) {
+  @override
+  void process(Message message) {
+    super.process(message);
+
+    // demo on sprite-keys
+    switch (message) {
       case Build():
-        // demo on sprite-keys
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
 
-        final slime = SpriteNode(
+        slime = SpriteNode(
           sprite: SpriteMap({
             'idle': sheet.animation(row: 0, end: 14, fps: 16),
             'jump': sheet.animation(row: 1, end: 30, fps: 16),
           }),
         );
 
-        final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-        taps.onTap(() => slime.play(slime.current.key == 'idle' ? 'jump' : 'idle'));
-        // demo off
+        taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
+      case Tap():
+        slime.play(slime.current.key == 'idle' ? 'jump' : 'idle');
+    }
+    // demo off
+
+    switch (message) {
+      case Build():
         addAll([
           BoxNode(
             alignment: .center,
@@ -277,10 +293,10 @@ class _KeyedNode extends Node {
 /// One row of a sheet, taken twice and played at two rates.
 class _RatesNode extends Node {
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         // demo on sprite-rates
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
@@ -307,10 +323,10 @@ class _RatesNode extends Node {
 /// Four cells of the grid, drawn where they sit rather than played.
 class _TilesNode extends Node {
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         // demo on sprite-tiles
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
@@ -348,10 +364,10 @@ class _TilesNode extends Node {
 /// Six frames out of the middle of a row.
 class _PartialNode extends Node {
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         // demo on sprite-partial
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
@@ -374,10 +390,10 @@ class _PartialNode extends Node {
 /// A row that hangs on its first frame, then runs out the rest.
 class _TimedNode extends Node {
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         // demo on sprite-timed
         final sheet = SpriteSheet('assets/sheets/slime.png', SLIME_SIZE);
@@ -400,10 +416,10 @@ class _TimedNode extends Node {
 /// One sheet at the rate it was drawn for, and at a quarter of it.
 class _SpeedNode extends Node {
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         // demo on sprite-speed
         final bonfire = SpriteAnimation(
@@ -433,14 +449,17 @@ class _SpeedNode extends Node {
 
 /// A still image and a sheet, numbered as one run of rows.
 class _GroupNode extends Node {
-  @override
-  void process(State state) {
-    super.process(state);
+  late SpriteNode creature;
+  late TapInput taps;
 
-    switch (state) {
+  @override
+  void process(Message message) {
+    super.process(message);
+
+    // demo on sprite-group
+    switch (message) {
       case Build():
-        // demo on sprite-group
-        final creature = SpriteNode(
+        creature = SpriteNode(
           sprite: SpriteMap({
             'fire': SpriteImage('assets/images/bonfire.png'),
             'slime': SpriteAnimation(
@@ -451,19 +470,21 @@ class _GroupNode extends Node {
           }),
         );
 
-        final taps = TapInput(shape: .rectangle(DEMO_SIZE));
+        taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
-        taps.onTap(() {
-          switch (creature.current.key) {
-            case 'fire':
-              creature.play('slime');
+      case Tap():
+        switch (creature.current.key) {
+          case 'fire':
+            creature.play('slime');
 
-            case 'slime':
-              creature.play('fire');
-          }
-        });
-        // demo off
+          case 'slime':
+            creature.play('fire');
+        }
+    }
+    // demo off
 
+    switch (message) {
+      case Build():
         addAll([
           BoxNode(
             alignment: .center,
@@ -477,31 +498,36 @@ class _GroupNode extends Node {
 
 /// A sprite that runs once and takes itself out of the tree.
 class _ExplosionsNode extends Node {
+  late TapInput taps;
+
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    // demo on sprite-finish
+    switch (message) {
       case Build():
-        // demo on sprite-finish
-        final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-        taps.onTapDown((event) {
-          add(
-            SpriteNode(
-              sprite: SpriteAnimation(
-                'assets/sheets/explosion.png',
-                EXPLOSION_SIZE,
-                fps: 20,
-                loop: false,
-              ),
-              cleanup: true,
-              position: event.scene,
-              anchor: .bottomCenter,
-            ),
-          );
-        });
-        // demo off
+        taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
+      case TapDown(:final scene):
+        add(
+          SpriteNode(
+            sprite: SpriteAnimation(
+              'assets/sheets/explosion.png',
+              EXPLOSION_SIZE,
+              fps: 20,
+              loop: false,
+            ),
+            cleanup: true,
+            position: scene,
+            anchor: .bottomCenter,
+          ),
+        );
+    }
+    // demo off
+
+    switch (message) {
+      case Build():
         add(taps);
     }
   }
@@ -509,33 +535,40 @@ class _ExplosionsNode extends Node {
 
 /// A sprite reporting its own progress, with nothing on screen to show for it.
 class _SignalsNode extends Node {
+  late DemoLog log;
+  late SpriteNode slime;
+  late int count;
+
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    // demo on sprite-signals
+    switch (message) {
       case Build():
-        final log = DemoLog();
+        log = DemoLog();
 
-        // demo on sprite-signals
-        final slime = SpriteNode(
+        slime = SpriteNode(
           sprite: SpriteAnimation(
             'assets/sheets/slime_jump.png',
             SLIME_SIZE,
             fps: 16,
           ),
+          anchor: .center,
+          position: DEMO_SIZE / 2,
         );
 
-        var count = 0;
+        count = 0;
 
-        slime.onLoop(() => log('onLoop ${count += 1}', ORANGE));
-        // demo off
+      case SpriteLoop():
+        log('SpriteLoop ${count += 1}', ORANGE);
+    }
+    // demo off
 
+    switch (message) {
+      case Build():
         addAll([
-          BoxNode(
-            alignment: .center,
-            children: [slime],
-          ),
+          slime,
           BoxNode(
             padding: .all(4),
             alignment: .topRight,

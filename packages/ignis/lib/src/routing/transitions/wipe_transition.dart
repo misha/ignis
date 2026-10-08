@@ -12,14 +12,14 @@ class WipeTransition extends Transition {
   /// The direction the panel travels. Defaults to [AxisDirection.right].
   final AxisDirection direction;
 
-  /// What sweeps across.
-  final Node panel;
+  /// Builds what sweeps across, once per navigation.
+  final Node Function() panel;
 
   /// The progress at which the sides trade places. Defaults to 0.5.
   final double swapAt;
 
   @override
-  late final OpacityNode chrome = .new(children: [panel]);
+  OpacityNode buildChrome() => .new(children: [panel()]);
 
   WipeTransition({
     required this.panel,
@@ -34,7 +34,7 @@ class WipeTransition extends Transition {
        super(timeline: .duration(duration ?? 1, curve));
 
   @override
-  void apply(progress, incoming, outgoing) {
+  void apply(progress, incoming, outgoing, OpacityNode chrome) {
     final covering = progress < swapAt;
     incoming.opacity = covering ? 0 : 1;
     outgoing?.opacity = covering ? 1 : 0;

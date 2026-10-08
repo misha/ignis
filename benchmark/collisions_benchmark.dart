@@ -133,42 +133,42 @@ class _Ball extends SpatialNode {
   }) {
     add(
       ColliderNode(
-          shape: shape,
-          anchor: .center,
-          layer: _BALL_LAYER,
-          mask: _WALL_LAYER | _BALL_LAYER,
-        )
-        ..onCollisionStart((other) {
-          switch (other.parent) {
-            case _Ball():
-              balls += 1;
-
-            case _Wall(:final axis):
-              switch (axis) {
-                case .x:
-                  velocity.x *= -1;
-
-                case .y:
-                  velocity.y *= -1;
-              }
-          }
-        })
-        ..onCollisionEnd((other) {
-          switch (other.parent) {
-            case _Ball():
-              balls -= 1;
-          }
-        }),
+        shape: shape,
+        anchor: .center,
+        layer: _BALL_LAYER,
+        mask: _WALL_LAYER | _BALL_LAYER,
+      ),
     );
   }
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update(:final dt):
         position.addScaled(velocity, dt);
+
+      case CollisionStart(:final other):
+        switch (other.parent) {
+          case _Ball():
+            balls += 1;
+
+          case _Wall(:final axis):
+            switch (axis) {
+              case .x:
+                velocity.x *= -1;
+
+              case .y:
+                velocity.y *= -1;
+            }
+        }
+
+      case CollisionEnd(:final other):
+        switch (other.parent) {
+          case _Ball():
+            balls -= 1;
+        }
     }
   }
 }

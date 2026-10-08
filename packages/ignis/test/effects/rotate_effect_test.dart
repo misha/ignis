@@ -60,30 +60,4 @@ void main() {
     scene.update(0.5);
     expect(node.angle, 6);
   });
-
-  test('re-resolves its target after being remounted elsewhere', () {
-    final root = SpatialNode();
-    final nodeA = SpatialNode(angle: 0);
-    final nodeB = SpatialNode(angle: 10);
-    root.addAll([nodeA, nodeB]);
-    final scene = root.mount();
-
-    final effect = RotateEffect.by(
-      angle: 2,
-      timeline: .duration(1),
-    );
-    nodeA.add(effect);
-
-    scene.update(0.5);
-    expect(nodeA.angle, 1);
-
-    effect.detach();
-    scene.update(0); // Flush the detach.
-    nodeB.add(effect);
-    scene.update(0); // Flush the attach.
-
-    scene.update(0.5);
-    expect(nodeA.angle, 1); // Unchanged.
-    expect(nodeB.angle, 11);
-  });
 }

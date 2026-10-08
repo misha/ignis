@@ -3,6 +3,7 @@ import 'package:ignis/ignis.dart';
 
 import '../support/colors.dart';
 import '../support/images.dart';
+import '../support/test_sink.dart';
 
 void main() {
   test('starts on the first frame of the first row', () async {
@@ -133,7 +134,7 @@ void main() {
   });
 
   test('emits once per loop', () async {
-    final a = Node();
+    final a = TestSink();
 
     final sheet = SpriteSheet(
       await pixelAsset([
@@ -144,9 +145,6 @@ void main() {
     );
 
     final node = SpriteNode(sprite: sheet.animations(fps: 4));
-
-    var loops = 0;
-    node.onLoop(() => loops += 1);
     node.play(1);
 
     a.add(node);
@@ -154,7 +152,38 @@ void main() {
 
     scene.update(0.5);
 
-    expect(loops, 1);
+    expect(a.of<SpriteLoop>().length, 1);
+  });
+
+  test('reports its size once it builds', () async {
+    final sink = TestSink([
+      SpriteNode(
+        sprite: SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 0),
+      ),
+    ]);
+
+    sink.mount();
+
+    expect(sink.of<SpriteResize>().single.sprite.size, Vector2.all(4));
+  });
+
+  test('reports a change of size, and only a change', () async {
+    final sprite = SpriteMap({
+      'small': SpriteAnimation(await solidAsset(2, 2, RED), .all(2), fps: 0),
+      'same': SpriteAnimation(await solidAsset(2, 2, BLUE), .all(2), fps: 0),
+      'large': SpriteAnimation(await solidAsset(4, 4, GREEN), .all(4), fps: 0),
+    });
+
+    final node = SpriteNode(sprite: sprite);
+    final sink = TestSink([node]);
+    sink.mount();
+    sink.received.clear();
+
+    node.play('same');
+    expect(sink.of<SpriteResize>(), isEmpty);
+
+    node.play('large');
+    expect(sink.of<SpriteResize>().single.sprite.size, Vector2.all(4));
   });
 
   test('scales the rate its sprite states', () async {

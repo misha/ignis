@@ -1,13 +1,13 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:ignis/src/core.dart';
+import 'package:ignis/src/mailer.dart';
+import 'package:ignis/src/message.dart';
 
 /// Storage for arbitrary assets.
-class Cache {
+///
+/// Every modification mails [CacheChange] to each subscriber.
+class Cache with Mailer {
   final Map<String, dynamic> _entries = {};
-
-  /// Emitted whenever the cache is modified.
-  final onChanged = Signal0();
 
   int get length => _entries.length;
   bool contains(String key) => _entries.containsKey(key);
@@ -15,7 +15,7 @@ class Cache {
 
   void add<T>(String key, T value) {
     _entries[key] = value;
-    onChanged.emit();
+    mail(CacheChange(this));
   }
 
   T retrieve<T>(String key) {
@@ -38,13 +38,20 @@ class Cache {
   bool evict(String key) {
     final contained = contains(key);
     _entries.remove(key);
-    if (contained) onChanged.emit();
+    if (contained) mail(CacheChange(this));
     return contained;
   }
 
   void clear() {
     if (_entries.isEmpty) return;
     _entries.clear();
-    onChanged.emit();
+    mail(CacheChange(this));
   }
+}
+
+/// Emitted whenever [cache] is modified.
+final class CacheChange extends Message {
+  final Cache cache;
+
+  const CacheChange(this.cache);
 }

@@ -57,10 +57,10 @@ class CounterNode extends Node {
   int count = 0;
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update():
         count += 1;
     }

@@ -8,6 +8,7 @@ import 'package:ignis/src/layout/layout_engine.dart';
 import 'package:ignis/src/layout/layout_flex.dart';
 import 'package:ignis/src/layout/layout_item.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/shape.dart';
 
@@ -86,10 +87,10 @@ abstract class LayoutNode extends SpatialNode {
   Vector2 constrain(LayoutConstraints constraints);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update():
         if (!isLayoutRoot) {
           break;
@@ -100,7 +101,7 @@ abstract class LayoutNode extends SpatialNode {
         }
     }
 
-    switch (state) {
+    switch (message) {
       case DebugDraw(:final canvas):
         final debug = Ignis.debug;
         if (!debug.draws(.layout)) break;

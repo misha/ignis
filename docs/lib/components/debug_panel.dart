@@ -77,7 +77,9 @@ class _DebugPanelState extends State<DebugPanel> {
 
       // Read once behind the subscription, in case a demo came up and bound
       // the keys while the library was still loading.
-      _unwatch = debug_shortcuts.DebugShortcuts.onChange.watch(_read);
+      final notifier = debug_shortcuts.DebugShortcuts.wireframes;
+      notifier.addListener(_read);
+      _unwatch = () => notifier.removeListener(_read);
       _read();
     });
   }
@@ -90,7 +92,7 @@ class _DebugPanelState extends State<DebugPanel> {
 
   void _read() {
     setState(() {
-      wireframes = debug_shortcuts.DebugShortcuts.wireframes;
+      wireframes = debug_shortcuts.DebugShortcuts.wireframes.value;
     });
   }
 

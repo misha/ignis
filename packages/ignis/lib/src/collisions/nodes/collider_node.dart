@@ -5,6 +5,7 @@ import 'package:ignis/src/collisions/collision_arena.dart';
 import 'package:ignis/src/collisions/collision_set.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 
 /// A hitbox that reports overlaps against other colliders registered to the
@@ -23,34 +24,19 @@ class ColliderNode extends SpatialNode {
   /// when added to a tree without a [CollisionArenaNode] ancestor.
   bool strict;
 
-  Node? _owner;
-
-  /// The node this collider stands for. Defaults to its [parent].
-  ///
-  /// A collider is usually a hitbox for the node above it, but one placed
-  /// deeper in a subtree, or shared by a group, says who it belongs to here.
-  Node? get owner => _owner ?? parent;
-
-  set owner(Node? value) => _owner = value;
-
-  /// Emitted with the other collider when this collider starts overlapping it.
-  final onCollisionStart = Signal1<ColliderNode>();
-
-  /// Emitted with the other collider when this collider stops overlapping it.
-  final onCollisionEnd = Signal1<ColliderNode>();
-
   /// The colliders this node currently overlaps.
   final collisions = CollisionSet();
 
   /// Whether this node currently overlaps anything.
   bool get isColliding => collisions.isNotEmpty;
 
+  CollisionArena? _arena;
+
   ColliderNode({
     super.shape,
     int? layer,
     int? mask,
     bool? strict,
-    this._owner,
     super.position,
     super.scale,
     super.angle,
@@ -64,27 +50,26 @@ class ColliderNode extends SpatialNode {
        super(inherit: .parent);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
-        final arena = readOrNull<CollisionArena>();
+        final arena = _arena = readOrNull<CollisionArena>();
 
-        if (arena == null) {
-          if (strict) {
-            throw StateError('ColliderNode requires a CollisionArenaNode ancestor.');
-          } else {
-            break;
-          }
+        if (arena != null) {
+          arena.add(this);
+        } else if (strict) {
+          throw StateError('ColliderNode requires a CollisionArenaNode ancestor.');
         }
 
-        arena.add(this);
       case Destroy():
         collisions.clear();
+        _arena?.remove(this);
+        _arena = null;
     }
 
-    switch (state) {
+    switch (message) {
       case DebugDraw(:final canvas):
         final debug = Ignis.debug;
         if (!debug.draws(.collision)) break;
@@ -95,15 +80,33 @@ class ColliderNode extends SpatialNode {
   @internal
   void startCollision(ColliderNode other) {
     collisions.add(other);
-    onCollisionStart.emit(other);
+    parent?.post(CollisionStart(this, other));
   }
 
   @internal
   void endCollision(ColliderNode other) {
     collisions.remove(other);
-    onCollisionEnd.emit(other);
+    parent?.post(CollisionEnd(this, other));
   }
 
   @internal
   void dropCollision(ColliderNode other) => collisions.remove(other);
+}
+
+/// Emitted with the other collider when [collider] starts overlapping it.
+final class CollisionStart extends Message {
+  final ColliderNode collider;
+
+  final ColliderNode other;
+
+  const CollisionStart(this.collider, this.other);
+}
+
+/// Emitted with the other collider when [collider] stops overlapping it.
+final class CollisionEnd extends Message {
+  final ColliderNode collider;
+
+  final ColliderNode other;
+
+  const CollisionEnd(this.collider, this.other);
 }

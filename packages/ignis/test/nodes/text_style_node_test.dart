@@ -88,6 +88,27 @@ void main() {
     expect(node.painter.text?.style?.fontWeight, FontWeight.bold);
   });
 
+  test('caches the style until something above it changes', () {
+    final node = TextNode(text: 'I');
+    final outer = TextStyleNode(
+      style: BASE,
+      children: [
+        TextStyleNode(
+          style: const TextStyle(fontWeight: .bold),
+          children: [node],
+        ),
+      ],
+    );
+
+    outer.mount();
+    final cached = node.style;
+    expect(node.style, same(cached));
+
+    outer.style = const TextStyle(fontSize: 9);
+    expect(node.style, isNot(same(cached)));
+    expect(node.style.fontSize, 9);
+  });
+
   test('falls back to the default style with nothing above', () {
     final node = TextNode(text: 'I');
     node.mount();

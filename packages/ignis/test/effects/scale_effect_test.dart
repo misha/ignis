@@ -60,30 +60,4 @@ void main() {
     scene.update(2.5);
     expect(node.scale, Vector2(40, 60));
   });
-
-  test('re-resolves its target after being remounted elsewhere', () {
-    final root = SpatialNode();
-    final nodeA = SpatialNode(scale: .zero);
-    final nodeB = SpatialNode(scale: .all(100));
-    root.addAll([nodeA, nodeB]);
-    final scene = root.mount();
-    final effect = ScaleEffect.by(
-      offset: .new(10, 0),
-      timeline: .duration(1),
-    );
-
-    nodeA.add(effect);
-
-    scene.update(0.5);
-    expect(nodeA.scale, Vector2(5, 0));
-
-    effect.detach();
-    scene.update(0); // Flush the detach.
-    nodeB.add(effect);
-    scene.update(0); // Flush the attach.
-
-    scene.update(0.5);
-    expect(nodeA.scale, Vector2(5, 0)); // Unchanged.
-    expect(nodeB.scale, Vector2(105, 100));
-  });
 }

@@ -1,10 +1,11 @@
 export 'dart:ui' show Canvas, Paint;
 
+export 'src/address.dart';
 export 'src/anchor.dart';
 export 'src/assets.dart';
 export 'src/collisions.dart';
 export 'src/controls.dart';
-export 'src/core.dart' hide building, scope;
+export 'src/core.dart';
 export 'src/curves.dart';
 export 'src/devices.dart';
 export 'src/effects.dart';
@@ -13,7 +14,9 @@ export 'src/flutter/scene_widget.dart';
 export 'src/globals.dart';
 export 'src/inputs.dart';
 export 'src/layout.dart';
+export 'src/mailer.dart';
 export 'src/math.dart';
+export 'src/message.dart';
 export 'src/nodes.dart';
 export 'src/owners.dart';
 export 'src/palette.dart';

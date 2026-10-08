@@ -6,6 +6,9 @@ sealed class _Navigation {
   final Transition transition;
   final RouteNode incoming;
 
+  /// This navigation's own [Transition.buildChrome], or null for none.
+  final Node? chrome;
+
   /// Which way the clock runs. A pop before it lands turns it around.
   bool forward;
 
@@ -16,7 +19,8 @@ sealed class _Navigation {
     this.transition, {
     required this.incoming,
     bool? forward,
-  }) : forward = forward ?? true {
+  }) : forward = forward ?? true,
+       chrome = transition.buildChrome() {
     if (this.forward) {
       transition.timeline.setToStart();
     } else {
@@ -86,7 +90,7 @@ final class _Swap extends _Navigation {
 
   @override
   void _pose() {
-    transition.apply(progress, incoming, outgoing);
+    transition.apply(progress, incoming, outgoing, chrome);
   }
 
   @override
@@ -125,7 +129,7 @@ final class _Layer extends _Navigation {
 
   @override
   void _pose() {
-    transition.apply(progress, incoming, null);
+    transition.apply(progress, incoming, null, chrome);
     final covered = this.covered;
     if (covered != null) backdrop.apply(progress, covered);
   }

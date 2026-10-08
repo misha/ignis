@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:ignis/ignis.dart' hide State;
+import 'package:ignis/ignis.dart';
 
 import 'colors.dart';
 import 'debug_shortcuts.dart';
@@ -58,7 +58,6 @@ class _DemoSceneState extends State<DemoScene> {
   @override
   void initState() {
     super.initState();
-    DebugShortcuts.install();
 
     _load(widget.assets).then((_) {
       if (!mounted) return;
@@ -66,7 +65,10 @@ class _DemoSceneState extends State<DemoScene> {
       setState(() {
         scene = TextStyleNode(
           style: DEMO_TEXT_STYLE,
-          children: [widget.builder()],
+          children: [
+            widget.builder(),
+            DebugShortcutsNode(),
+          ],
         ).mount();
       });
     });

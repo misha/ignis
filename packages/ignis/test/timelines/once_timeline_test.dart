@@ -59,10 +59,13 @@ void main() {
     expect(timeline.isFinished, isTrue);
   });
 
-  test('delegates duration and progress to its child', () {
+  test('delegates duration, and progress once started, to its child', () {
     final timeline = OnceTimeline(WaitTimeline(0.5));
 
     expect(timeline.duration, 0.5);
+    expect(timeline.progress, 0, reason: 'nothing has started yet');
+
+    timeline.advance(0.5);
     expect(timeline.progress, 1);
   });
 }

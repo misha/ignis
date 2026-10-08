@@ -3,6 +3,7 @@
 import 'package:ignis/src/collisions/collision_arena.dart';
 import 'package:ignis/src/collisions/nodes/collider_node.dart';
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/message.dart';
 
 /// Steps a [CollisionArena] once per tick.
 ///
@@ -21,10 +22,10 @@ class CollisionArenaNode extends Node {
   }
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update():
         arena.process();
     }

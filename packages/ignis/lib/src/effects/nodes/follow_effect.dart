@@ -2,6 +2,7 @@
 
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/owners/position_owner.dart';
 
@@ -37,10 +38,10 @@ class FollowEffect extends EffectNode {
   }
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update(:final dt):
         final position = target.position;
         final offset = destination - position;
@@ -52,7 +53,7 @@ class FollowEffect extends EffectNode {
 
           if (!_arrived) {
             _arrived = true;
-            onFinish.emit();
+            finish();
           }
         } else {
           position.addScaled(offset, step / distance);

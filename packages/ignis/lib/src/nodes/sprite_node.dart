@@ -2,8 +2,11 @@
 
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
+import 'package:ignis/src/assets/cache.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/owners/speed_owner.dart';
 import 'package:ignis/src/palette.dart';
@@ -116,12 +119,6 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
   /// Ignored while looping, since animation never finishes.
   bool cleanup;
 
-  /// Emitted when a looping animation wraps to the start of its entry.
-  final onLoop = Signal0();
-
-  /// Emitted when a non-looping animation reaches its final frame.
-  final onFinish = Signal0();
-
   /// Creates a node that draws [sprite].
   SpriteNode({
     required this._sprite,
@@ -143,29 +140,13 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
   }
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
-        Ignis.cache.onChanged(() {
-          _sprite = _sprite.reload();
+        parent?.post(SpriteResize(this));
 
-          // Follow the entry by name. A dropped entry falls back to the first; a
-          // shorter one starts over.
-          final entry = _sprite.resolve(_current.key);
-
-          if (entry == null) {
-            _current._select(_sprite.entries.first, 0);
-            return;
-          }
-
-          final frame = _current.frame;
-          _current._select(entry, frame < entry.frames ? frame : 0);
-        });
-    }
-
-    switch (state) {
       case Update(:final dt):
         final current = _current;
         if (current.isFinished) break;
@@ -192,11 +173,11 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
             current._seek(next);
           } else if (current.loops) {
             current._seek(0);
-            onLoop.emit();
+            parent?.post(SpriteLoop(this));
           } else {
             current._elapsed = 0;
             current._finished = true;
-            onFinish.emit();
+            parent?.post(SpriteFinish(this));
 
             if (cleanup) {
               detach();
@@ -205,11 +186,34 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
             break;
           }
         }
-    }
 
-    switch (state) {
       case Draw(:final canvas):
         palette.draw(canvas, _paint);
+    }
+
+    if (kDebugMode) {
+      switch (message) {
+        case Build():
+          Ignis.cache.subscribe(this);
+
+        case CacheChange():
+          _sprite = _sprite.reload();
+
+          // Follow the entry by name. A dropped entry falls back to the first; a
+          // shorter one starts over.
+          final entry = _sprite.resolve(_current.key);
+
+          if (entry == null) {
+            _select(_sprite.entries.first, 0);
+            break;
+          }
+
+          final frame = _current.frame;
+          _select(entry, frame < entry.frames ? frame : 0);
+
+        case Destroy():
+          Ignis.cache.unsubscribe(this);
+      }
     }
   }
 
@@ -268,8 +272,17 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
 
     _current
       .._loop = loop
-      .._elapsed = 0
-      .._select(entry, frame);
+      .._elapsed = 0;
+
+    _select(entry, frame);
+  }
+
+  /// Moves onto [frame] of [entry], posting [SpriteResize] if that changes this
+  /// node's size.
+  void _select(SpriteEntry<T> entry, int frame) {
+    final size = _current.shape.size;
+    _current._select(entry, frame);
+    if (_current.shape.size != size) parent?.post(SpriteResize(this));
   }
 
   /// Plays the entry after the one playing, wrapping past the last.
@@ -283,4 +296,25 @@ class SpriteNode<T> extends SpatialNode implements SpeedOwner {
     final entries = _sprite.entries;
     play(entries[(_current.index - 1) % entries.length].key);
   }
+}
+
+/// Emitted when [sprite]'s looping animation wraps to the start of its entry.
+final class SpriteLoop extends Message {
+  final SpriteNode sprite;
+
+  const SpriteLoop(this.sprite);
+}
+
+/// Emitted when [sprite] builds, and whenever the frame it draws changes size.
+final class SpriteResize extends Message {
+  final SpriteNode sprite;
+
+  const SpriteResize(this.sprite);
+}
+
+/// Emitted when [sprite]'s non-looping animation reaches its final frame.
+final class SpriteFinish extends Message {
+  final SpriteNode sprite;
+
+  const SpriteFinish(this.sprite);
 }

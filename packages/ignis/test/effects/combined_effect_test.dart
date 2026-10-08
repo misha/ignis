@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../support/test_sink.dart';
+
 void main() {
   test('runs its effects in parallel', () {
     final node = SpatialNode();
@@ -20,7 +22,7 @@ void main() {
     expect(node.angle, 1);
   });
 
-  test('emits onFinish once every effect has finished', () {
+  test('emits EffectFinish once every effect has finished', () {
     final node = SpatialNode();
     final scene = node.mount();
     final combined = CombinedEffect(
@@ -30,15 +32,14 @@ void main() {
       ],
     );
 
-    var finishes = 0;
-    combined.onFinish(() => finishes += 1);
-    node.add(combined);
+    final sink = TestSink([combined]);
+    node.add(sink);
 
     scene.update(1);
-    expect(finishes, 0); // The move effect finished; the rotate one hasn't.
+    expect(sink.of<EffectFinish>().length, 0); // The move effect finished; the rotate one hasn't.
 
     scene.update(1);
-    expect(finishes, 1);
+    expect(sink.of<EffectFinish>().length, 1);
   });
 
   test('detaches itself once every effect finishes, when cleanup is true', () {
@@ -84,18 +85,17 @@ void main() {
       ],
     );
 
-    var finishes = 0;
-    combined.onFinish(() => finishes += 1);
-    node.add(combined);
+    final sink = TestSink([combined]);
+    node.add(sink);
 
     scene.update(1);
-    expect(finishes, 1);
+    expect(sink.of<EffectFinish>().length, 1);
     expect(node.position, Vector2(10, 0));
     expect(node.angle, 2);
 
     combined.reset();
     scene.update(1);
-    expect(finishes, 2);
+    expect(sink.of<EffectFinish>().length, 2);
     expect(node.position, Vector2(20, 0));
     expect(node.angle, 4);
   });

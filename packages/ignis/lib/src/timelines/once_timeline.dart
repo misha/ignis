@@ -22,7 +22,7 @@ class OnceTimeline extends Timeline {
   bool get isFinished => child.isFinished;
 
   @override
-  double get progress => child.progress;
+  double get progress => hasStarted ? child.progress : 0;
 
   @override
   double advance(double dt) => child.advance(dt);

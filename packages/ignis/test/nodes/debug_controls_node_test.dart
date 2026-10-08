@@ -4,18 +4,21 @@ import 'package:ignis/ignis.dart';
 
 /// A game's own node, answering a key from inside the scene.
 final class _Mine extends Node {
-  final ControlEvent matcher;
+  final Trigger matcher;
   final void Function() onFire;
 
   _Mine(this.matcher, this.onFire);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
-        Ignis.controls.bind((_) => onFire(), matchers: {matcher});
+        Ignis.controls.bind(this, 'fire', matchers: {matcher});
+
+      case Control():
+        onFire();
     }
   }
 }

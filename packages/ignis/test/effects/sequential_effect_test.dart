@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../support/test_sink.dart';
+
 void main() {
   test('only starts the next effect once the previous one finishes', () {
     final node = SpatialNode();
@@ -28,7 +30,7 @@ void main() {
     expect(node.position, Vector2(10, 10));
   });
 
-  test('detaches each effect once it finishes', () {
+  test('enables only the current effect', () {
     final node = SpatialNode();
     final scene = node.mount();
     final first = MoveEffect.by(
@@ -45,16 +47,17 @@ void main() {
     node.add(sequence);
 
     scene.update(0);
-    expect(sequence.children, [first]);
+    expect(sequence.children, [first, second]);
+    expect([first.enabled, second.enabled], [true, false]);
 
     scene.update(1);
-    expect(sequence.children, [first]); // Still pending.
+    expect([first.enabled, second.enabled], [false, false]); // Still pending.
 
     scene.update(0);
-    expect(sequence.children, [second]);
+    expect([first.enabled, second.enabled], [false, true]);
   });
 
-  test('emits onFinish once the last effect finishes', () {
+  test('emits EffectFinish once the last effect finishes', () {
     final node = SpatialNode();
     final scene = node.mount();
     final sequence = SequentialEffect(
@@ -64,15 +67,14 @@ void main() {
       ],
     );
 
-    var finishes = 0;
-    sequence.onFinish(() => finishes += 1);
-    node.add(sequence);
+    final sink = TestSink([sequence]);
+    node.add(sink);
 
     scene.update(1);
-    expect(finishes, 0);
+    expect(sink.of<EffectFinish>().length, 0);
 
     scene.update(1);
-    expect(finishes, 1);
+    expect(sink.of<EffectFinish>().length, 1);
   });
 
   test('detaches itself once the last effect finishes, when cleanup is true', () {
@@ -132,7 +134,6 @@ void main() {
   test('reset() after finishing replays the whole sequence', () {
     final node = SpatialNode();
     final scene = node.mount();
-    var finishes = 0;
 
     final sequence = SequentialEffect(
       effects: [
@@ -147,18 +148,18 @@ void main() {
       ],
     );
 
-    sequence.onFinish(() => finishes += 1);
-    node.add(sequence);
+    final sink = TestSink([sequence]);
+    node.add(sink);
 
     scene.update(1);
     scene.update(1);
-    expect(finishes, 1);
+    expect(sink.of<EffectFinish>().length, 1);
     expect(node.position, Vector2(10, 10));
 
     sequence.reset();
     scene.update(1);
     scene.update(1);
-    expect(finishes, 2);
+    expect(sink.of<EffectFinish>().length, 2);
     expect(node.position, Vector2(20, 20));
   });
 }

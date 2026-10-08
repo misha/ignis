@@ -25,7 +25,7 @@ import 'package:ignis/src/controls.dart';
 /// | `true`    | Only a press with the modifier held.        |
 /// | `false`   | Only a press with the modifier released.    |
 /// | `null`    | Any press, whether it was held or released. |
-final class KeyPress implements ControlEvent {
+final class KeyPress implements Trigger {
   /// The key that went down.
   final LogicalKeyboardKey key;
 
@@ -50,13 +50,13 @@ final class KeyPress implements ControlEvent {
   });
 
   @override
-  bool accepts(ControlEvent emitted) {
-    if (emitted is! KeyPress) return false;
-    if (key != emitted.key) return false;
-    if (alt != null && alt != (emitted.alt ?? false)) return false;
-    if (control != null && control != (emitted.control ?? false)) return false;
-    if (shift != null && shift != (emitted.shift ?? false)) return false;
-    if (meta != null && meta != (emitted.meta ?? false)) return false;
+  bool accepts(Trigger trigger) {
+    if (trigger is! KeyPress) return false;
+    if (key != trigger.key) return false;
+    if (alt != null && alt != (trigger.alt ?? false)) return false;
+    if (control != null && control != (trigger.control ?? false)) return false;
+    if (shift != null && shift != (trigger.shift ?? false)) return false;
+    if (meta != null && meta != (trigger.meta ?? false)) return false;
     return true;
   }
 

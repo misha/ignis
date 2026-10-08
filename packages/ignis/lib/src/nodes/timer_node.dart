@@ -1,10 +1,11 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/message.dart';
 
-/// A node that emits [onTrigger] every [interval] seconds.
+/// A node that emits [TimerTrigger] every [interval] seconds.
 class TimerNode extends Node {
-  /// How often [onTrigger] emits, in seconds.
+  /// How often [TimerTrigger] emits, in seconds.
   double interval;
 
   /// Whether the timer triggers indefinitely, overriding [count]. Defaults to
@@ -21,9 +22,6 @@ class TimerNode extends Node {
   /// Ignored while [repeat] is true, since an indefinitely repeating timer
   /// never finishes.
   bool cleanup;
-
-  /// Emitted every time [interval] seconds elapse.
-  final onTrigger = Signal0();
 
   double _elapsed = 0;
   int _triggers = 0;
@@ -59,17 +57,17 @@ class TimerNode extends Node {
   }
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update(:final dt):
         if (_finished) break;
         _elapsed += dt;
 
         while (_elapsed >= interval) {
           _elapsed -= interval;
-          onTrigger.emit();
+          parent?.post(TimerTrigger(this));
           if (repeat) continue;
 
           _triggers += 1;
@@ -82,4 +80,11 @@ class TimerNode extends Node {
         }
     }
   }
+}
+
+/// Emitted every time [TimerNode.interval] seconds elapse on [timer].
+final class TimerTrigger extends Message {
+  final TimerNode timer;
+
+  const TimerTrigger(this.timer);
 }

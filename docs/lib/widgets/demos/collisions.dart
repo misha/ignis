@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:docs/rng.dart';
-import 'package:flutter/material.dart' hide State;
+import 'package:flutter/material.dart';
 import 'package:ignis/ignis.dart';
 
 import '../colors.dart';
@@ -63,13 +63,18 @@ ShapeNode _still(
 ShapeNode _mover(
   Shape shape, {
   double seconds = 1.6,
+  bool contact = false,
 }) {
-  final node = ShapeNode(
-    shape: shape,
-    anchor: .center,
-    position: .new(shape.width / 2, _CENTER.y),
-    paint: Paint()..color = _IDLE_COLOR,
-  );
+  final position = Vector2(shape.width / 2, _CENTER.y);
+
+  final node = contact
+      ? _ContactShape(shape: shape, anchor: .center, position: position)
+      : ShapeNode(
+          shape: shape,
+          anchor: .center,
+          position: position,
+          paint: Paint()..color = _IDLE_COLOR,
+        );
 
   return node
     ..palette.add(_stroke())
@@ -89,42 +94,66 @@ BoxNode _caption(DemoLog log) {
   );
 }
 
-void _colorOnContact(ShapeNode node, ColliderNode collider) {
-  collider
-    ..onCollisionStart((_) {
-      node.paint.color = _HIT_COLOR;
-    })
-    ..onCollisionEnd((_) {
-      if (!collider.isColliding) node.paint.color = _IDLE_COLOR;
-    });
+/// A shape colored while the colliders it owns touch anything.
+class _ContactShape extends ShapeNode {
+  _ContactShape({
+    required super.shape,
+    super.anchor,
+    super.position,
+  }) : super(paint: Paint()..color = _IDLE_COLOR);
+
+  @override
+  void process(Message message) {
+    super.process(message);
+
+    switch (message) {
+      case CollisionStart():
+        paint.color = _HIT_COLOR;
+
+      case CollisionEnd(:final collider):
+        if (!collider.isColliding) paint.color = _IDLE_COLOR;
+    }
+  }
 }
 
 /// A circle sliding through a square, reporting each edge as it crosses.
 class _PairNode extends CollisionArenaNode {
+  late DemoLog log;
+  late ShapeNode mover;
+
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
-        final log = DemoLog();
+        log = DemoLog();
 
-        final wall = add(_still(.square(_BLOCK), position: _CENTER));
-        wall.add(ColliderNode());
-
-        final mover = add(_mover(.circle(_PROBE))..paint.blendMode = .plus);
-
-        // demo on collision-pair
-        final collider = mover.add(ColliderNode());
-
-        collider
-          ..onCollisionStart((_) => log('colliding', RED))
-          ..onCollisionEnd((_) => log('not colliding', GREEN));
-        // demo off
-
+        add(_still(.square(_BLOCK), position: _CENTER));
+        mover = add(_mover(.circle(_PROBE))..paint.blendMode = .plus);
+        mover.add(ColliderNode());
         log('not colliding', GREEN);
         add(_caption(log));
     }
+
+    // demo on collision-pair
+    switch (message) {
+      case Build():
+        add(
+          ColliderNode(
+            shape: .square(_BLOCK),
+            anchor: .center,
+            position: _CENTER,
+          ),
+        );
+
+      case CollisionStart():
+        log('colliding', RED);
+
+      case CollisionEnd():
+        log('not colliding', GREEN);
+    }
+    // demo off
   }
 }
 
@@ -134,10 +163,10 @@ class _ActiveNode extends CollisionArenaNode {
   late ColliderNode collider;
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         final blocks = [
           for (var i = 0; i < 3; i += 1) //
@@ -170,10 +199,11 @@ class _ActiveNode extends CollisionArenaNode {
     }
 
     // demo on collision-active
-    switch (state) {
+    switch (message) {
       case Build():
         log = DemoLog();
         add(_caption(log));
+
       case Update():
         log(switch (collider.collisions.length) {
           0 => "can't touch this!",
@@ -187,10 +217,10 @@ class _ActiveNode extends CollisionArenaNode {
 /// A long hitbox turning through a circle its bounding box never leaves.
 class _SpinNode extends CollisionArenaNode {
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         final circle = add(_still(.circle(16), position: _CENTER / 2));
 
@@ -198,21 +228,18 @@ class _SpinNode extends CollisionArenaNode {
 
         // demo on collision-spin
         final blade = add(
-          ShapeNode(
+          _ContactShape(
             shape: .rectangle(.new(70, 10)),
             anchor: .center,
             position: _CENTER,
-            paint: Paint()..color = _IDLE_COLOR,
           ),
         );
 
-        final collider = blade.add(ColliderNode());
-
+        blade.add(ColliderNode());
         blade.add(SpinEffect(speed: pi / 2));
         // demo off
 
         blade.palette.add(_stroke());
-        _colorOnContact(blade, collider);
     }
   }
 }
@@ -220,10 +247,10 @@ class _SpinNode extends CollisionArenaNode {
 /// A circle that reports over one of the two squares it crosses, not the other.
 class _LayerNode extends CollisionArenaNode {
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         final blue = _still(.square(_BLOCK));
         final orange = _still(.square(_BLOCK), color: ORANGE);
@@ -241,15 +268,13 @@ class _LayerNode extends CollisionArenaNode {
           ),
         );
 
-        final mover = add(_mover(.circle(_PROBE)));
+        final mover = add(_mover(.circle(_PROBE), contact: true));
 
         // demo on collision-layer
         blue.add(ColliderNode(layer: BLUE_LAYER));
         orange.add(ColliderNode(layer: ORANGE_LAYER));
-        final collider = mover.add(ColliderNode(mask: ORANGE_LAYER));
-        // demo off
-
-        _colorOnContact(mover, collider);
+        mover.add(ColliderNode(mask: ORANGE_LAYER));
+      // demo off
     }
   }
 }
@@ -275,10 +300,10 @@ class _LabelNode extends BoxNode {
        );
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         add(_outline);
         add(_fill..priority = 1);
@@ -297,27 +322,24 @@ class _ArenaNode extends CollisionArenaNode {
 
   final _count = _LabelNode(alignment: .topRight);
   final _fps = _LabelNode(alignment: .topLeft);
+  late TimerNode _pour;
+  late TimerNode _spawner;
 
   int _balls = 0;
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         add(_count);
         add(_fps);
 
-        final frames = add(FpsNode());
-
-        frames.onFpsChange((value) {
-          _fps('$value fps');
-        });
-
+        add(FpsNode());
         _count('$_balls balls');
 
-        final pour = add(
+        _pour = add(
           TimerNode(
             interval: _SPAWN_INTERVAL,
             count: _INITIAL_SPAWN_COUNT,
@@ -325,11 +347,7 @@ class _ArenaNode extends CollisionArenaNode {
           ),
         );
 
-        pour.onTrigger(() {
-          _spawn(_CENTER);
-        });
-
-        final spawner = add(
+        _spawner = add(
           TimerNode(
             interval: _SPAWN_INTERVAL,
             repeat: true,
@@ -337,28 +355,28 @@ class _ArenaNode extends CollisionArenaNode {
           ),
         );
 
-        spawner.onTrigger(() {
-          _spawn(_source);
-        });
-
-        final drags = add(
+        add(
           DragInput(
             shape: .rectangle(DEMO_SIZE),
             endOnCancel: true,
           ),
         );
 
-        drags
-          ..onDragStart((event) {
-            _source.setFrom(event.scene);
-            spawner.enable();
-          })
-          ..onDragUpdate((event) {
-            _source.setFrom(event.scene);
-          })
-          ..onDragEnd((_) {
-            spawner.disable();
-          });
+      case FpsUpdate(:final fps):
+        _fps('$fps fps');
+
+      case TimerTrigger(:final timer):
+        _spawn(identical(timer, _pour) ? _CENTER : _source);
+
+      case DragStart(scene: final point):
+        _source.setFrom(point);
+        _spawner.enable();
+
+      case DragUpdate(scene: final point):
+        _source.setFrom(point);
+
+      case DragEnd():
+        _spawner.disable();
     }
   }
 
@@ -378,6 +396,7 @@ class _ArenaNode extends CollisionArenaNode {
 
 class _BallNode extends ShapeNode {
   final MVector2 velocity;
+  late ColliderNode collider;
 
   _BallNode({
     required this.velocity,
@@ -389,29 +408,30 @@ class _BallNode extends ShapeNode {
        );
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         add(VelocityEffect(velocity: velocity));
-
-        // demo on collision-balls
-        final collider = add(ColliderNode());
-
-        collider
-          ..onCollisionStart((_) {
-            paint.color = _HIT_COLOR;
-          })
-          ..onCollisionEnd((_) {
-            if (!collider.isColliding) {
-              paint.color = _IDLE_COLOR;
-            }
-          });
-      // demo off
     }
 
-    switch (state) {
+    // demo on collision-balls
+    switch (message) {
+      case Build():
+        collider = add(ColliderNode());
+
+      case CollisionStart():
+        paint.color = _HIT_COLOR;
+
+      case CollisionEnd():
+        if (!collider.isColliding) {
+          paint.color = _IDLE_COLOR;
+        }
+    }
+    // demo off
+
+    switch (message) {
       case Update():
         if (position.x < _RADIUS || position.x > _LIMIT) velocity.x *= -1;
         if (position.y < _RADIUS || position.y > _LIMIT) velocity.y *= -1;

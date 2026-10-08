@@ -1,6 +1,7 @@
 // SPDX-AI-Disclosure: none
 
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/message.dart';
 
 class FpsNode extends Node {
   /// The window size to use for FPS calculations. Defaults to 60.
@@ -8,9 +9,6 @@ class FpsNode extends Node {
 
   /// The current frames per second (FPS).
   double fps = 0;
-
-  /// Emits the latest rounded [fps] whenever it changes.
-  final onFpsChange = Signal1<int>();
 
   final List<double> _window = [];
   double _sum = 0;
@@ -25,10 +23,10 @@ class FpsNode extends Node {
        windowSize = windowSize ?? 60;
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update(:final dt):
         if (dt <= 0 || !dt.isFinite) break;
         _window.add(dt);
@@ -45,8 +43,17 @@ class FpsNode extends Node {
 
         if (rounded != _last) {
           _last = rounded;
-          onFpsChange.emit(rounded);
+          parent?.post(FpsUpdate(this, rounded));
         }
     }
   }
+}
+
+/// Emitted with the latest rounded [FpsNode.fps] whenever it changes.
+final class FpsUpdate extends Message {
+  final FpsNode node;
+
+  final int fps;
+
+  const FpsUpdate(this.node, this.fps);
 }

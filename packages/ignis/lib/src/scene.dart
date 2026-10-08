@@ -23,7 +23,6 @@ class Scene<T extends Node> with Scheduler {
 
   bool _mounted = true;
   bool _sized = false;
-  bool _paused = false;
 
   final Update _update = Update(0);
   Draw? _draw;
@@ -42,35 +41,7 @@ class Scene<T extends Node> with Scheduler {
   bool get hasSize => _sized;
 
   /// Whether this scene is frozen: it neither updates nor advances time.
-  bool get paused => _paused;
-
-  /// Freezes this scene, so it stops updating and advancing time.
-  @mustCallSuper
-  void pause() {
-    if (_paused) return;
-    _paused = true;
-    onPause.emit(true);
-  }
-
-  /// Unfreezes this scene, so it resumes updating.
-  @mustCallSuper
-  void resume() {
-    if (!_paused) return;
-    _paused = false;
-    onPause.emit(false);
-  }
-
-  @nonVirtual
-  set paused(bool value) {
-    if (value) {
-      pause();
-    } else {
-      resume();
-    }
-  }
-
-  /// Emitted whenever [paused] changes.
-  final onPause = Signal1<bool>();
+  bool paused = false;
 
   @internal
   Scene({
@@ -111,6 +82,15 @@ class Scene<T extends Node> with Scheduler {
     _size = .new(width, height);
     _shape = Rectangle(_size);
     _sized = true;
+  }
+
+  /// Posts [Reassemble] to every node in this scene, after a hot reload.
+  void reassemble() {
+    assert(_mounted, 'Cannot reassemble a destroyed scene.');
+
+    for (final node in root.traverse()) {
+      node.post(const Reassemble());
+    }
   }
 
   /// Unmounts the tree, permanently. Idempotent; every other way of driving

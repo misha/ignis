@@ -19,7 +19,7 @@ class TestNode extends Node {
   int builds = 0;
   void Function()? action;
   void Function(TestNode node)? builder;
-  void Function(TestNode node, State state)? processor;
+  void Function(TestNode node, Message message)? processor;
 
   TestNode({
     this.name = 'test',
@@ -32,10 +32,10 @@ class TestNode extends Node {
   });
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         mounts += 1;
         log?.mounts.add(name);
@@ -43,12 +43,13 @@ class TestNode extends Node {
         builds += 1;
         log?.builds.add(name);
         builder?.call(this);
+
       case Destroy():
         unmounts += 1;
         log?.unmounts.add(name);
     }
 
-    switch (state) {
+    switch (message) {
       case Update(:final dt):
         elapsed += dt;
         updates += 1;
@@ -56,12 +57,12 @@ class TestNode extends Node {
         action?.call();
     }
 
-    switch (state) {
+    switch (message) {
       case Draw():
         renders += 1;
         log?.renders.add(name);
     }
 
-    processor?.call(this, state);
+    processor?.call(this, message);
   }
 }

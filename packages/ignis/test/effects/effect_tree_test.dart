@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../support/test_sink.dart';
+
 void main() {
   test('composites nest inside one another', () {
     final node = SpatialNode();
@@ -26,9 +28,8 @@ void main() {
       ],
     );
 
-    var finishes = 0;
-    sequence.onFinish(() => finishes += 1);
-    node.add(sequence);
+    final sink = TestSink([sequence]);
+    node.add(sink);
 
     scene.update(0.5);
     expect(node.position, Vector2(5, 0));
@@ -37,13 +38,13 @@ void main() {
     scene.update(0.5);
     expect(node.position, Vector2(10, 0)); // The combined effect just finished.
     expect(node.angle, 2);
-    expect(finishes, 0);
+    expect(sink.of<EffectFinish>().length, 0);
 
     scene.update(0.5);
     expect(node.position, Vector2(10, 5)); // The trailing move effect is running.
 
     scene.update(0.5);
     expect(node.position, Vector2(10, 10));
-    expect(finishes, 1);
+    expect(sink.of<EffectFinish>().length, 1);
   });
 }

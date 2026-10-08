@@ -1,5 +1,6 @@
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/nodes/timeline_effect.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/owners/opacity_owner.dart';
 import 'package:ignis/src/timeline.dart';
 
@@ -41,14 +42,12 @@ class _FadeInEffect extends OpacityEffect {
   }) : super._();
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
-      case Build():
-        onProgress((progress) {
-          target.opacity = progress;
-        });
+    switch (message) {
+      case Update():
+        target.opacity = progress;
     }
   }
 }
@@ -61,14 +60,12 @@ class _FadeOutEffect extends OpacityEffect {
   }) : super._();
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
-      case Build():
-        onProgress((progress) {
-          target.opacity = 1 - progress;
-        });
+    switch (message) {
+      case Update():
+        target.opacity = 1 - progress;
     }
   }
 }

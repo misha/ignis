@@ -4,6 +4,16 @@ import 'package:ignis/src/controls.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/devices/keyboard.dart';
 import 'package:ignis/src/globals.dart';
+import 'package:ignis/src/message.dart';
+
+enum _Action {
+  spatial,
+  collision,
+  input,
+  layout,
+  pause,
+  clear,
+}
 
 /// Wires the engine's own debug controls to the keyboard for as long as this
 /// node is mounted.
@@ -26,33 +36,33 @@ import 'package:ignis/src/globals.dart';
 /// actual game controls, if they overlap with the debug controls.
 class DebugControlsNode extends Node {
   /// Toggles every spatial node's bounds.
-  final Set<ControlEvent> spatial;
+  final Set<Trigger> spatial;
 
   /// Toggles every collider's hitbox.
-  final Set<ControlEvent> collision;
+  final Set<Trigger> collision;
 
   /// Toggles every input node's hit area.
-  final Set<ControlEvent> input;
+  final Set<Trigger> input;
 
   /// Toggles every layout node's box.
-  final Set<ControlEvent> layout;
+  final Set<Trigger> layout;
 
   /// Pauses and resumes the scene this node is in.
-  final Set<ControlEvent> pause;
+  final Set<Trigger> pause;
 
   /// Clears the overlay, whatever it was drawing.
-  final Set<ControlEvent> clear;
+  final Set<Trigger> clear;
 
   /// The groups gating all of them, if any.
   final Set<String> groups;
 
   DebugControlsNode({
-    Set<ControlEvent>? spatial,
-    Set<ControlEvent>? collision,
-    Set<ControlEvent>? input,
-    Set<ControlEvent>? layout,
-    Set<ControlEvent>? pause,
-    Set<ControlEvent>? clear,
+    Set<Trigger>? spatial,
+    Set<Trigger>? collision,
+    Set<Trigger>? input,
+    Set<Trigger>? layout,
+    Set<Trigger>? pause,
+    Set<Trigger>? clear,
     this.groups = const {'debug'},
     super.priority = -1000,
     super.enabled,
@@ -64,46 +74,76 @@ class DebugControlsNode extends Node {
        clear = clear ?? {const KeyPress(.f6)};
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         Ignis.controls.bind(
-          (_) => Ignis.debug.toggle(.spatial),
+          this,
+          _Action.spatial,
           matchers: spatial,
           groups: groups,
         );
 
         Ignis.controls.bind(
-          (_) => Ignis.debug.toggle(.collision),
+          this,
+          _Action.collision,
           matchers: collision,
           groups: groups,
         );
 
         Ignis.controls.bind(
-          (_) => Ignis.debug.toggle(.input),
+          this,
+          _Action.input,
           matchers: input,
           groups: groups,
         );
 
         Ignis.controls.bind(
-          (_) => Ignis.debug.toggle(.layout),
+          this,
+          _Action.layout,
           matchers: layout,
           groups: groups,
         );
 
         Ignis.controls.bind(
-          (_) => scene.paused = !scene.paused,
+          this,
+          _Action.pause,
           matchers: pause,
           groups: groups,
         );
 
         Ignis.controls.bind(
-          (_) => Ignis.debug.mode = null,
+          this,
+          _Action.clear,
           matchers: clear,
           groups: groups,
         );
+
+      case Destroy():
+        Ignis.controls.release(this);
+
+      case Control(:final action):
+        switch (action) {
+          case _Action.spatial:
+            Ignis.debug.toggle(.spatial);
+
+          case _Action.collision:
+            Ignis.debug.toggle(.collision);
+
+          case _Action.input:
+            Ignis.debug.toggle(.input);
+
+          case _Action.layout:
+            Ignis.debug.toggle(.layout);
+
+          case _Action.pause:
+            scene.paused = !scene.paused;
+
+          case _Action.clear:
+            Ignis.debug.mode = null;
+        }
     }
   }
 }

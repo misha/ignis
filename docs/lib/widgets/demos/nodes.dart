@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' hide State;
+import 'package:flutter/widgets.dart';
 import 'package:ignis/ignis.dart';
 
 import '../colors.dart';
@@ -44,10 +44,10 @@ class _OrderNode extends SpatialNode {
   _OrderNode() : super(position: _CENTER);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         final circle = _circle();
         final box = _box();
@@ -65,10 +65,10 @@ class _LiftedNode extends SpatialNode {
   _LiftedNode() : super(position: _CENTER);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         final circle = _circle();
         final box = _box();
@@ -86,10 +86,10 @@ class _NestedNode extends SpatialNode {
   _NestedNode() : super(position: _CENTER);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         final circle = _circle();
         final box = _box();
@@ -104,23 +104,18 @@ class _NestedNode extends SpatialNode {
 
 /// Two dots side by side, one of them switched in and out by a tap.
 class _EnabledNode extends Node {
-  @override
-  void process(State state) {
-    super.process(state);
+  late ShapeNode red;
+  late TapInput taps;
 
-    switch (state) {
+  @override
+  void process(Message message) {
+    super.process(message);
+
+    switch (message) {
       case Build():
         final green = _dot(GREEN);
-        final red = _dot(RED);
-        final taps = TapInput(shape: .rectangle(DEMO_SIZE));
-
-        // demo on node-enabled
-        red.enabled = false;
-
-        taps.onTap(() {
-          red.enabled = !red.enabled;
-        });
-        // demo off
+        red = _dot(RED);
+        taps = TapInput(shape: .rectangle(DEMO_SIZE));
 
         addAll([
           BoxNode(
@@ -137,5 +132,15 @@ class _EnabledNode extends Node {
           taps,
         ]);
     }
+
+    // demo on node-enabled
+    switch (message) {
+      case Build():
+        red.enabled = false;
+
+      case Tap():
+        red.enabled = !red.enabled;
+    }
+    // demo off
   }
 }

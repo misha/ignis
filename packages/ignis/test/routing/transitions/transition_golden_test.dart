@@ -49,7 +49,7 @@ void main() {
     router.go(
       blue,
       transition: CurtainTransition(
-        veil: ShapeNode(
+        veil: () => ShapeNode(
           paint: Paint()..color = BLACK,
         ),
       ),
@@ -68,7 +68,7 @@ void main() {
     router.go(
       blue,
       transition: CurtainTransition(
-        veil: ShapeNode(
+        veil: () => ShapeNode(
           paint: Paint()..color = GREEN,
         ),
         swapAt: 0.8,
@@ -88,7 +88,7 @@ void main() {
     router.go(
       blue,
       transition: WipeTransition(
-        panel: ShapeNode(
+        panel: () => ShapeNode(
           paint: Paint()..color = BLACK,
         ),
       ),
@@ -107,7 +107,7 @@ void main() {
     router.go(
       blue,
       transition: WipeTransition(
-        panel: ShapeNode(
+        panel: () => ShapeNode(
           paint: Paint()..color = BLACK,
         ),
         direction: .left,
@@ -127,7 +127,7 @@ void main() {
     router.go(
       blue,
       transition: WipeTransition(
-        panel: ShapeNode(
+        panel: () => ShapeNode(
           paint: Paint()..color = BLACK,
         ),
         direction: .up,
@@ -147,7 +147,7 @@ void main() {
     router.go(
       blue,
       transition: WipeTransition(
-        panel: ShapeNode(
+        panel: () => ShapeNode(
           paint: Paint()..color = BLACK,
         ),
         direction: .down,
@@ -243,7 +243,7 @@ void main() {
     router.go(
       blue,
       transition: WipeTransition(
-        panel: ShapeNode(
+        panel: () => ShapeNode(
           paint: Paint()..color = GREEN,
           children: [
             ShapeNode(
@@ -269,7 +269,7 @@ void main() {
     router.go(
       blue,
       transition: CurtainTransition(
-        veil: ShapeNode(
+        veil: () => ShapeNode(
           shape: .square(50),
           paint: Paint()..color = GREEN,
           position: .all(25),

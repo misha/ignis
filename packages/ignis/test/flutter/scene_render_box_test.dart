@@ -61,7 +61,7 @@ void main() {
     expect(scene.root.updates, greaterThan(updatesAfterPause));
   });
 
-  testWidgets('starting paused does not start its render loop', (tester) async {
+  testWidgets('starting paused drives no updates', (tester) async {
     final scene = makeScene()..paused = true;
 
     await tester.pumpWidget(
@@ -72,8 +72,8 @@ void main() {
     );
 
     await tester.pump(const Duration(milliseconds: 16));
-    final box = tester.renderObject<SceneRenderBox>(find.byType(RenderSceneWidget));
-    expect(box.renderLoop?.isRunning, isFalse);
+    await tester.pump(const Duration(milliseconds: 16));
+    expect(scene.root.updates, 0);
   });
 
   testWidgets('stops driving the scene when removed, but never destroys it', (tester) async {

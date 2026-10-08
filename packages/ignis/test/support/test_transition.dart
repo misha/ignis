@@ -4,8 +4,7 @@ import 'package:ignis/ignis.dart';
 final class TestTransition extends Transition {
   final applies = <double>[];
 
-  @override
-  final Node? chrome;
+  final Node Function()? chrome;
 
   TestTransition({
     this.chrome,
@@ -15,7 +14,10 @@ final class TestTransition extends Transition {
   }) : super(timeline: timeline ?? .duration(1));
 
   @override
-  void apply(progress, _, _) {
+  Node? buildChrome() => chrome?.call();
+
+  @override
+  void apply(progress, _, _, _) {
     applies.add(progress);
   }
 }

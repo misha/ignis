@@ -24,7 +24,7 @@ void main() {
     ]);
 
     expect(timeline.hasStarted, isFalse);
-    expect(timeline.progress, 1);
+    expect(timeline.progress, 0);
 
     timeline.advance(0.5);
     expect(timeline.hasStarted, isTrue);

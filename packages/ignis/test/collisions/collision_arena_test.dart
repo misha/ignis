@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../support/test_node.dart';
+import '../support/test_sink.dart';
+
 void main() {
   late CollisionArena arena;
 
@@ -9,56 +12,51 @@ void main() {
   });
 
   group('overlap detection', () {
-    test('does not fire onCollisionStart when x-intervals do not overlap', () {
+    test('does not fire CollisionStart when x-intervals do not overlap', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(100, 0));
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       arena
         ..add(a)
         ..add(b)
         ..process();
 
-      expect(aStarted, isEmpty);
+      expect(aSink.of<CollisionStart>(), isEmpty);
     });
 
-    test('fires onCollisionStart on both colliders whose x- and y-intervals overlap', () {
+    test('fires CollisionStart on both colliders whose x- and y-intervals overlap', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final aStarted = <ColliderNode>[];
-      final bStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
-      b.onCollisionStart(bStarted.add);
+      final aSink = TestSink([a]);
+      final bSink = TestSink([b]);
 
       arena
         ..add(a)
         ..add(b)
         ..process();
 
-      expect(aStarted, [b]);
-      expect(bStarted, [a]);
+      expect(aSink.of<CollisionStart>().single.other, b);
+      expect(bSink.of<CollisionStart>().single.other, a);
     });
 
     test('excludes a pair whose x-intervals overlap but y-intervals do not', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 100));
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       arena
         ..add(a)
         ..add(b)
         ..process();
 
-      expect(aStarted, isEmpty);
+      expect(aSink.of<CollisionStart>(), isEmpty);
     });
 
     test('excludes a pair whose AABBs overlap but whose shapes do not', () {
       final a = ColliderNode(shape: .circle(4), position: .zero);
       final b = ColliderNode(shape: .circle(4), position: .all(7));
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       // a's AABB spans [-4, 4] on both axes, b's spans [3, 11], so they
       // overlap in the corner - but the circles themselves, ~9.9 apart
@@ -68,17 +66,15 @@ void main() {
         ..add(b)
         ..process();
 
-      expect(aStarted, isEmpty);
+      expect(aSink.of<CollisionStart>(), isEmpty);
     });
 
     test('short-circuits past a collider whose x-interval is far away', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
       final c = ColliderNode(shape: .square(10), position: .new(100, 0));
-      final aStarted = <ColliderNode>[];
-      final cStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
-      c.onCollisionStart(cStarted.add);
+      final aSink = TestSink([a]);
+      final cSink = TestSink([c]);
 
       arena
         ..add(a)
@@ -86,18 +82,15 @@ void main() {
         ..add(c)
         ..process();
 
-      expect(aStarted, [b]);
-      expect(cStarted, isEmpty);
+      expect(aSink.of<CollisionStart>().single.other, b);
+      expect(cSink.of<CollisionStart>(), isEmpty);
     });
 
-    test('fires onCollisionStart for every overlapping combination, however many colliders', () {
+    test('fires CollisionStart for every overlapping combination, however many colliders', () {
       final a = ColliderNode(shape: .circle(4), position: .zero);
       final b = ColliderNode(shape: .circle(4), position: .new(1, 0));
       final c = ColliderNode(shape: .circle(4), position: .new(2, 0));
-      final started = <ColliderNode>[];
-      a.onCollisionStart(started.add);
-      b.onCollisionStart(started.add);
-      c.onCollisionStart(started.add);
+      final sink = TestSink([a, b, c]);
 
       arena
         ..add(a)
@@ -105,15 +98,14 @@ void main() {
         ..add(c)
         ..process();
 
-      // 3 overlapping pairs, 2 signal emissions each.
-      expect(started, hasLength(6));
+      // 3 overlapping pairs, 2 emissions each.
+      expect(sink.of<CollisionStart>(), hasLength(6));
     });
 
-    test('does not re-fire onCollisionStart for a still-overlapping pair across ticks', () {
+    test('does not re-fire CollisionStart for a still-overlapping pair across ticks', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       arena
         ..add(a)
@@ -121,50 +113,45 @@ void main() {
         ..process()
         ..process();
 
-      expect(aStarted, hasLength(1));
+      expect(aSink.of<CollisionStart>(), hasLength(1));
     });
 
-    test('fires onCollisionEnd on both colliders when a pair stops overlapping', () {
+    test('fires CollisionEnd on both colliders when a pair stops overlapping', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      CollisionArenaNode(arena: arena, children: [a, b]).mount();
-      final aEnded = <ColliderNode>[];
-      final bEnded = <ColliderNode>[];
-      a.onCollisionEnd(aEnded.add);
-      b.onCollisionEnd(bEnded.add);
+      final aSink = TestSink([a]);
+      final bSink = TestSink([b]);
+      CollisionArenaNode(arena: arena, children: [aSink, bSink]).mount();
 
       arena.process();
 
       a.position.x = 200;
       arena.process();
 
-      expect(aEnded, [b]);
-      expect(bEnded, [a]);
+      expect(aSink.of<CollisionEnd>().single.other, b);
+      expect(bSink.of<CollisionEnd>().single.other, a);
     });
 
-    test('does not fire onCollisionEnd for a pair that never overlapped', () {
+    test('does not fire CollisionEnd for a pair that never overlapped', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(100, 0));
-      CollisionArenaNode(arena: arena, children: [a, b]).mount();
-      final aEnded = <ColliderNode>[];
-      a.onCollisionEnd(aEnded.add);
+      final aSink = TestSink([a]);
+      CollisionArenaNode(arena: arena, children: [aSink, b]).mount();
 
       arena
         ..process()
         ..process();
 
-      expect(aEnded, isEmpty);
+      expect(aSink.of<CollisionEnd>(), isEmpty);
     });
 
-    test('does not fire onCollisionEnd for a pair with a detached member', () {
+    test('does not fire CollisionEnd for a pair with a detached member', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
+      final bSink = TestSink([b]);
+      final scene = CollisionArenaNode(arena: arena, children: [a, bSink]).mount();
 
       arena.process();
-
-      final bEnded = <ColliderNode>[];
-      b.onCollisionEnd(bEnded.add);
 
       // a's pair with b drops out because a was unregistered, not because they
       // separated. Detaching while mounted queues the removal, so an update is
@@ -173,7 +160,7 @@ void main() {
       scene.update(0);
       arena.process();
 
-      expect(bEnded, isEmpty);
+      expect(bSink.of<CollisionEnd>(), isEmpty);
     });
   });
 
@@ -208,55 +195,59 @@ void main() {
     });
 
     test(
-      'drops a detached partner from the survivor\'s active set without firing onCollisionEnd',
+      'drops a detached partner from the survivor\'s active set without firing CollisionEnd',
       () {
         final a = ColliderNode(shape: .square(10));
         final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-        final scene = CollisionArenaNode(arena: arena, children: [a, b]).mount();
+        final bSink = TestSink([b]);
+        final scene = CollisionArenaNode(arena: arena, children: [a, bSink]).mount();
 
         arena.process();
-
-        final bEnded = <ColliderNode>[];
-        b.onCollisionEnd(bEnded.add);
 
         a.detach();
         scene.update(0);
         arena.process();
 
-        expect(bEnded, isEmpty);
+        expect(bSink.of<CollisionEnd>(), isEmpty);
         expect(b.collisions, isEmpty);
         expect(b.isColliding, isFalse);
       },
     );
 
-    test('holds the other collider in active already inside onCollisionStart', () {
+    test('holds the other collider in active already inside CollisionStart', () {
       final a = ColliderNode(shape: .square(10));
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
       final seen = <int>[];
 
-      // Subscribed before the collider builds, so this handler runs ahead of
-      // any the node declares for itself.
-      a.onCollisionStart((_) {
-        seen.add(a.collisions.length);
-      });
+      final parent = TestNode(
+        processor: (_, event) {
+          if (event is! CollisionStart) return;
+          seen.add(a.collisions.length);
+        },
+        children: [a],
+      );
 
-      CollisionArenaNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [parent, b]).mount();
 
       arena.process();
 
       expect(seen, [1]);
     });
 
-    test('has dropped the other collider from active already inside onCollisionEnd', () {
+    test('has dropped the other collider from active already inside CollisionEnd', () {
       final a = ColliderNode(shape: .square(10));
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
       final colliding = <bool>[];
 
-      a.onCollisionEnd((_) {
-        colliding.add(a.isColliding);
-      });
+      final parent = TestNode(
+        processor: (_, event) {
+          if (event is! CollisionEnd) return;
+          colliding.add(a.isColliding);
+        },
+        children: [a],
+      );
 
-      CollisionArenaNode(arena: arena, children: [a, b]).mount();
+      CollisionArenaNode(arena: arena, children: [parent, b]).mount();
 
       arena.process();
 
@@ -283,11 +274,10 @@ void main() {
   });
 
   group('pair identity', () {
-    test('does not re-fire onCollisionStart after a sweep-order swap', () {
+    test('does not re-fire CollisionStart after a sweep-order swap', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       arena
         ..add(a)
@@ -299,14 +289,13 @@ void main() {
       a.position.x = 10;
       arena.process();
 
-      expect(aStarted, hasLength(1));
+      expect(aSink.of<CollisionStart>(), hasLength(1));
     });
 
-    test('re-fires onCollisionStart after a pair stops and resumes overlapping', () {
+    test('re-fires CollisionStart after a pair stops and resumes overlapping', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       arena
         ..add(a)
@@ -319,7 +308,7 @@ void main() {
       a.position.x = 0;
       arena.process();
 
-      expect(aStarted, hasLength(2));
+      expect(aSink.of<CollisionStart>(), hasLength(2));
     });
 
     test('does not treat a different pair sharing a reused key as a continuation', () {
@@ -337,14 +326,13 @@ void main() {
       // same position, so the pair key it forms with b is identical to
       // the one a and b used to share.
       final c = ColliderNode(shape: .square(10), position: .zero);
-      final cStarted = <ColliderNode>[];
-      c.onCollisionStart(cStarted.add);
+      final cSink = TestSink([c]);
 
       arena
         ..add(c)
         ..process();
 
-      expect(cStarted, [b]);
+      expect(cSink.of<CollisionStart>().single.other, b);
     });
   });
 
@@ -352,8 +340,7 @@ void main() {
     test('omits a removed collider from further processing', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final bStarted = <ColliderNode>[];
-      b.onCollisionStart(bStarted.add);
+      final bSink = TestSink([b]);
 
       arena
         ..add(a)
@@ -362,7 +349,7 @@ void main() {
       arena.remove(a);
       arena.process();
 
-      expect(bStarted, isEmpty);
+      expect(bSink.of<CollisionStart>(), isEmpty);
     });
 
     test('asserts against adding an already-registered collider twice', () {
@@ -375,8 +362,7 @@ void main() {
 
     test('a collider added after an initial process participates in the very next process', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       arena
         ..add(a)
@@ -388,7 +374,7 @@ void main() {
         ..add(b)
         ..process();
 
-      expect(aStarted, [b]);
+      expect(aSink.of<CollisionStart>().single.other, b);
     });
   });
 
@@ -406,8 +392,7 @@ void main() {
         anchor: .centerRight,
       );
 
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       // a spans x[-5, 5]. b's centerRight anchor pulls its shape to
       // x[-1, 9], which reaches a.
@@ -416,7 +401,7 @@ void main() {
         ..add(b)
         ..process();
 
-      expect(aStarted, [b]);
+      expect(aSink.of<CollisionStart>().single.other, b);
     });
 
     test('shifts a collider out of overlap', () {
@@ -432,8 +417,7 @@ void main() {
         anchor: .centerLeft,
       );
 
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       // a spans x[-5, 5]. b's centerLeft anchor pushes its shape to
       // x[9, 19], out of reach of a.
@@ -442,13 +426,13 @@ void main() {
         ..add(b)
         ..process();
 
-      expect(aStarted, isEmpty);
+      expect(aSink.of<CollisionStart>(), isEmpty);
     });
   });
 
   group('layers and masks', () {
     test(
-      'does not fire onCollisionStart on either side when neither mask matches the other layer',
+      'does not fire CollisionStart on either side when neither mask matches the other layer',
       () {
         final a = ColliderNode(
           shape: .square(10),
@@ -464,22 +448,20 @@ void main() {
           mask: 8,
         );
 
-        final aStarted = <ColliderNode>[];
-        final bStarted = <ColliderNode>[];
-        a.onCollisionStart(aStarted.add);
-        b.onCollisionStart(bStarted.add);
+        final aSink = TestSink([a]);
+        final bSink = TestSink([b]);
 
         arena
           ..add(a)
           ..add(b)
           ..process();
 
-        expect(aStarted, isEmpty);
-        expect(bStarted, isEmpty);
+        expect(aSink.of<CollisionStart>(), isEmpty);
+        expect(bSink.of<CollisionStart>(), isEmpty);
       },
     );
 
-    test('fires onCollisionStart only on the side whose mask matches the other layer', () {
+    test('fires CollisionStart only on the side whose mask matches the other layer', () {
       final a = ColliderNode(
         shape: .square(10),
         position: .zero,
@@ -494,21 +476,19 @@ void main() {
         mask: 0,
       );
 
-      final aStarted = <ColliderNode>[];
-      final bStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
-      b.onCollisionStart(bStarted.add);
+      final aSink = TestSink([a]);
+      final bSink = TestSink([b]);
 
       arena
         ..add(a)
         ..add(b)
         ..process();
 
-      expect(aStarted, [b]);
-      expect(bStarted, isEmpty);
+      expect(aSink.of<CollisionStart>().single.other, b);
+      expect(bSink.of<CollisionStart>(), isEmpty);
     });
 
-    test('fires onCollisionEnd only on the side whose mask matches the other layer', () {
+    test('fires CollisionEnd only on the side whose mask matches the other layer', () {
       final a = ColliderNode(
         shape: .square(10),
         position: .zero,
@@ -523,19 +503,17 @@ void main() {
         mask: 0,
       );
 
-      CollisionArenaNode(arena: arena, children: [a, b]).mount();
-      final aEnded = <ColliderNode>[];
-      final bEnded = <ColliderNode>[];
-      a.onCollisionEnd(aEnded.add);
-      b.onCollisionEnd(bEnded.add);
+      final aSink = TestSink([a]);
+      final bSink = TestSink([b]);
+      CollisionArenaNode(arena: arena, children: [aSink, bSink]).mount();
 
       arena.process();
 
       a.position.x = 200;
       arena.process();
 
-      expect(aEnded, [b]);
-      expect(bEnded, isEmpty);
+      expect(aSink.of<CollisionEnd>().single.other, b);
+      expect(bSink.of<CollisionEnd>(), isEmpty);
     });
   });
 
@@ -543,57 +521,53 @@ void main() {
     test('circle-circle hits', () {
       final a = ColliderNode(shape: .circle(4), position: .zero);
       final b = ColliderNode(shape: .circle(4), position: .new(2, 0));
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       arena
         ..add(a)
         ..add(b)
         ..process();
 
-      expect(aStarted, [b]);
+      expect(aSink.of<CollisionStart>().single.other, b);
     });
 
     test('rectangle-rectangle hits', () {
       final a = ColliderNode(shape: .square(10), position: .zero);
       final b = ColliderNode(shape: .square(10), position: .new(6, 0));
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       arena
         ..add(a)
         ..add(b)
         ..process();
 
-      expect(aStarted, [b]);
+      expect(aSink.of<CollisionStart>().single.other, b);
     });
 
     test('circle-rectangle hits', () {
       final a = ColliderNode(shape: .circle(4), position: .zero);
       final b = ColliderNode(shape: .square(6), position: .all(2));
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       arena
         ..add(a)
         ..add(b)
         ..process();
 
-      expect(aStarted, [b]);
+      expect(aSink.of<CollisionStart>().single.other, b);
     });
 
     test('rectangle-circle hits', () {
       final a = ColliderNode(shape: .square(6), position: .zero);
       final b = ColliderNode(shape: .circle(4), position: .all(2));
-      final aStarted = <ColliderNode>[];
-      a.onCollisionStart(aStarted.add);
+      final aSink = TestSink([a]);
 
       arena
         ..add(a)
         ..add(b)
         ..process();
 
-      expect(aStarted, [b]);
+      expect(aSink.of<CollisionStart>().single.other, b);
     });
   });
 }

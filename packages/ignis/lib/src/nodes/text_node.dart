@@ -5,6 +5,7 @@ import 'package:flutter/painting.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/extensions.dart';
 import 'package:ignis/src/layout/layout_constraints.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/nodes/text_style_node.dart';
 import 'package:ignis/src/shape.dart';
@@ -37,7 +38,9 @@ class TextNode extends SpatialNode {
   }
 
   @override
-  set shape(Shape value) => throw UnsupportedError('A TextNode is sized by its text.');
+  set shape(Shape value) {
+    throw UnsupportedError('A TextNode is sized by its text.');
+  }
 
   String _text;
   TextStyle? _style;
@@ -62,10 +65,11 @@ class TextNode extends SpatialNode {
        _textDirection = textDirection ?? .ltr;
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    // TODO: Rewrite the ordering the message handling here.
+    switch (message) {
       case Build():
         _painter = TextPainter(
           text: TextSpan(text: _text, style: _style),
@@ -73,19 +77,21 @@ class TextNode extends SpatialNode {
           textDirection: _textDirection,
         );
 
-        _target.value?.onStyleChange(() {
-          _resolved = null;
-          _dirty = true;
-        });
-
+        _target.value?.subscribe(this);
         _resolved = null;
         _dirty = true;
+
+      case TextStyleChange():
+        _resolved = null;
+        _dirty = true;
+
       case Destroy():
+        _target.value?.unsubscribe(this);
         painter.dispose();
         _painter = null;
     }
 
-    switch (state) {
+    switch (message) {
       case Draw(:final canvas):
         _reflow();
         painter.paint(canvas, .zero);

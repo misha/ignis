@@ -56,22 +56,6 @@ void main() {
     expect(() => host.target.value, throwsStateError);
   });
 
-  test('follows the host when it moves to a new parent', () {
-    final first = SpatialNode();
-    final second = SpatialNode();
-    final host = _Host();
-    first.add(host);
-    final scene = first.mount();
-    first.add(second);
-    scene.update(0);
-    expect(host.target.value, same(first));
-
-    second.add(host);
-    scene.update(0);
-
-    expect(host.target.value, same(second), reason: 'a move re-resolves it');
-  });
-
   test('throws when no ancestor implements T', () {
     final root = Node(); // Doesn't implement PositionOwner.
     final host = _Host();

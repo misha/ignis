@@ -19,7 +19,7 @@ class SlideTransition extends Transition {
        super(timeline: .duration(duration ?? 1, curve));
 
   @override
-  void apply(progress, incoming, outgoing) {
+  void apply(progress, incoming, outgoing, _) {
     final size = incoming.size;
     final remaining = 1 - progress;
 

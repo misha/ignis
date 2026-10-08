@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../support/test_sink.dart';
+
 void main() {
   test('re-reads velocity every tick', () {
     final node = SpatialNode(position: .zero);
@@ -17,16 +19,15 @@ void main() {
     expect(node.position, Vector2(10, 5));
   });
 
-  test('never emits onFinish', () {
+  test('never emits EffectFinish', () {
     final node = SpatialNode();
     final scene = node.mount();
     final effect = VelocityEffect(velocity: .new(1, 0));
-    var finishes = 0;
-    effect.onFinish(() => finishes += 1);
-    node.add(effect);
+    final sink = TestSink([effect]);
+    node.add(sink);
 
     scene.update(100);
-    expect(finishes, 0);
+    expect(sink.of<EffectFinish>().length, 0);
   });
 
   test('speed reads velocity\'s magnitude', () {

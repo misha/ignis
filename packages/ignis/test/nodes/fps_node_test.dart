@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../support/test_sink.dart';
+
 void main() {
   test('reports frames per second over a rolling window', () {
     final node = FpsNode(windowSize: 2);
@@ -14,18 +16,15 @@ void main() {
     expect(node.fps, closeTo(4, 0.001));
   });
 
-  test('emits onFpsChange only when the rounded FPS changes', () {
+  test('emits FpsUpdate only when the rounded FPS changes', () {
     final node = FpsNode(windowSize: 1);
-    node.mount();
-
-    final updates = <int>[];
-    node.onFpsChange((value) => updates.add(value));
+    final sink = TestSink([node])..mount();
 
     node.update(Update(0.1)); // fps = 10
     node.update(Update(0.1)); // fps = 10, unchanged
     node.update(Update(0.05)); // fps = 20
 
-    expect(updates, [10, 20]);
+    expect(sink.of<FpsUpdate>().map((event) => event.fps), [10, 20]);
   });
 
   test('ignores invalid frame durations', () {

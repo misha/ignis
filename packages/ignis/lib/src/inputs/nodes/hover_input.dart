@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/inputs/nodes/input_node.dart';
+import 'package:ignis/src/message.dart';
 
 /// A hit area that recognizes mouse hover.
 ///
@@ -19,12 +20,6 @@ class HoverInput extends InputNode
   /// Whether a pointer is currently hovering this node.
   bool get isHovering => _pointers > 0;
 
-  /// Emitted when a pointer starts hovering this node.
-  final onHoverEnter = Signal0();
-
-  /// Emitted when a pointer stops hovering this node.
-  final onHoverExit = Signal0();
-
   HoverInput({
     super.shape,
     super.behavior,
@@ -38,29 +33,29 @@ class HoverInput extends InputNode
   });
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Destroy():
         // The tracker skips the exit of a node no longer mounted.
         if (_pointers == 0) break;
         _pointers = 0;
-        onHoverExit.emit();
+        parent?.post(HoverExit(this));
     }
   }
 
   void _enter(PointerEnterEvent event) {
     _pointers += 1;
     if (_pointers > 1) return;
-    onHoverEnter.emit();
+    parent?.post(HoverEnter(this));
   }
 
   void _exit(PointerExitEvent event) {
     if (_pointers == 0) return;
     _pointers -= 1;
     if (_pointers > 0) return;
-    onHoverExit.emit();
+    parent?.post(HoverExit(this));
   }
 
   @internal
@@ -84,4 +79,18 @@ class HoverInput extends InputNode
   void handleEvent(PointerEvent event, HitTestEntry entry) {
     // Hover arrives through the mouse tracker instead.
   }
+}
+
+/// Emitted when a pointer starts hovering [input].
+final class HoverEnter extends Message {
+  final HoverInput input;
+
+  const HoverEnter(this.input);
+}
+
+/// Emitted when a pointer stops hovering [input].
+final class HoverExit extends Message {
+  final HoverInput input;
+
+  const HoverExit(this.input);
 }

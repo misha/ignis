@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart' hide State;
+import 'package:flutter/material.dart';
 import 'package:ignis/ignis.dart';
 
 import '../demo_scene.dart';
@@ -18,10 +18,10 @@ class _SpinnerNode extends SpatialNode {
   late ShapeNode square;
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         square = add(
           ShapeNode(
@@ -30,6 +30,7 @@ class _SpinnerNode extends SpatialNode {
             paint: Paint()..color = Colors.orange,
           ),
         );
+
       case Update(:final dt):
         square.angle += pi / 4 * dt;
     }

@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../support/test_sink.dart';
+
 void main() {
   test('re-reads speed every tick', () {
     final node = SpatialNode(angle: 0);
@@ -16,15 +18,14 @@ void main() {
     expect(node.angle, 4);
   });
 
-  test('never emits onFinish', () {
+  test('never emits EffectFinish', () {
     final node = SpatialNode();
     final scene = node.mount();
     final effect = SpinEffect(speed: 1);
-    var finishes = 0;
-    effect.onFinish(() => finishes += 1);
-    node.add(effect);
+    final sink = TestSink([effect]);
+    node.add(sink);
 
     scene.update(100);
-    expect(finishes, 0);
+    expect(sink.of<EffectFinish>().length, 0);
   });
 }

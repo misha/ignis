@@ -15,21 +15,21 @@ void main() {
   });
 
   test('a plain fade leaves the outgoing side alone', () {
-    FadeTransition().apply(0.5, incoming, outgoing);
+    FadeTransition().apply(0.5, incoming, outgoing, null);
 
     expect(incoming.opacity, 0.5);
     expect(outgoing.opacity, 1);
   });
 
   test('a crossfade dips both sides', () {
-    FadeTransition(crossFade: true).apply(0.5, incoming, outgoing);
+    FadeTransition(crossFade: true).apply(0.5, incoming, outgoing, null);
 
     expect(incoming.opacity, 0.5);
     expect(outgoing.opacity, 0.5);
   });
 
   test('a slide shoves the outgoing side ahead of the incoming one', () {
-    SlideTransition().apply(0.25, incoming, outgoing);
+    SlideTransition().apply(0.25, incoming, outgoing, null);
 
     expect(incoming.position.x, 0);
     expect(incoming.position.y, 75);
@@ -38,54 +38,62 @@ void main() {
   });
 
   test('a curtain trades the sides at its swap point', () {
-    final curtain = CurtainTransition(veil: ShapeNode());
+    final curtain = CurtainTransition(veil: ShapeNode.new);
 
-    curtain.apply(0.4, incoming, outgoing);
+    final chrome = curtain.buildChrome();
+
+    curtain.apply(0.4, incoming, outgoing, chrome);
     expect(incoming.opacity, 0);
     expect(outgoing.opacity, 1);
 
-    curtain.apply(0.5, incoming, outgoing);
+    curtain.apply(0.5, incoming, outgoing, chrome);
     expect(incoming.opacity, 1);
     expect(outgoing.opacity, 0);
   });
 
   test('a curtain fades its veil to full at the swap point', () {
-    final curtain = CurtainTransition(veil: ShapeNode());
+    final curtain = CurtainTransition(veil: ShapeNode.new);
 
-    curtain.apply(0.25, incoming, outgoing);
-    expect(curtain.chrome.opacity, 0.5);
+    final chrome = curtain.buildChrome();
 
-    curtain.apply(0.5, incoming, outgoing);
-    expect(curtain.chrome.opacity, 1);
+    curtain.apply(0.25, incoming, outgoing, chrome);
+    expect(chrome.opacity, 0.5);
 
-    curtain.apply(0.75, incoming, outgoing);
-    expect(curtain.chrome.opacity, 0.5);
+    curtain.apply(0.5, incoming, outgoing, chrome);
+    expect(chrome.opacity, 1);
+
+    curtain.apply(0.75, incoming, outgoing, chrome);
+    expect(chrome.opacity, 0.5);
   });
 
   test('a wipe trades the sides at its swap point', () {
-    final wipe = WipeTransition(panel: ShapeNode(), swapAt: 0.8);
+    final wipe = WipeTransition(panel: ShapeNode.new, swapAt: 0.8);
 
-    wipe.apply(0.7, incoming, outgoing);
+    final chrome = wipe.buildChrome();
+
+    wipe.apply(0.7, incoming, outgoing, chrome);
     expect(incoming.opacity, 0);
     expect(outgoing.opacity, 1);
 
-    wipe.apply(0.8, incoming, outgoing);
+    wipe.apply(0.8, incoming, outgoing, chrome);
     expect(incoming.opacity, 1);
     expect(outgoing.opacity, 0);
   });
 
   test('a wipe sweeps its panel in from the leading edge and out the trailing one', () {
-    final wipe = WipeTransition(panel: ShapeNode());
+    final wipe = WipeTransition(panel: ShapeNode.new);
 
-    wipe.apply(0.25, incoming, outgoing);
-    expect(wipe.chrome.position.x, -50);
+    final chrome = wipe.buildChrome();
 
-    wipe.apply(0.75, incoming, outgoing);
-    expect(wipe.chrome.position.x, 50);
+    wipe.apply(0.25, incoming, outgoing, chrome);
+    expect(chrome.position.x, -50);
+
+    wipe.apply(0.75, incoming, outgoing, chrome);
+    expect(chrome.position.x, 50);
   });
 
   test('a cut hides the outgoing side at once', () {
-    CutTransition().apply(1, incoming, outgoing);
+    CutTransition().apply(1, incoming, outgoing, null);
 
     expect(incoming.opacity, 1);
     expect(outgoing.opacity, 0);

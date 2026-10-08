@@ -44,6 +44,12 @@ class _SceneWidgetState extends State<SceneWidget> {
   }
 
   @override
+  void reassemble() {
+    super.reassemble();
+    widget.scene.reassemble();
+  }
+
+  @override
   void dispose() {
     _focusNode.dispose();
     widget.scene.destroy();

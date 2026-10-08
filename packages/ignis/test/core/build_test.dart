@@ -20,11 +20,6 @@ List<FlutterErrorDetails> _reported(void Function() body) {
   return reported;
 }
 
-/// Two distinguishable node types, for watching a declaration change shape.
-final class _A extends Node {}
-
-final class _B extends Node {}
-
 void main() {
   group('builds', () {
     test('build runs on mount', () {
@@ -48,14 +43,14 @@ void main() {
     });
   });
 
-  group('declarations', () {
+  group('add', () {
     test('returns the node it was given, on every build', () {
       Node? given;
       Node? returned;
 
       final node = TestNode(
         builder: (n) {
-          given = _A();
+          given = Node();
           returned = n.add(given!);
         },
       );
@@ -65,49 +60,6 @@ void main() {
       expect(returned, same(given));
       expect(node.children.single, same(given));
     });
-
-    test('a remount replaces the children the previous build declared', () {
-      final node = TestNode(builder: (n) => n.add(_A()));
-      final root = Node(children: [node]);
-      final scene = root.mount()..update(0);
-      final first = node.children.single;
-
-      root.remove(node);
-      scene.update(0);
-      root.add(node);
-      scene.update(0);
-
-      expect(first.isMounted, isFalse);
-      expect(node.children.single, isNot(same(first)));
-    });
-
-    test('a remount into a new scene replaces the children the previous build declared', () {
-      final node = TestNode(builder: (n) => n.add(_A()));
-      final scene = node.mount()..update(0);
-      final first = node.children.single;
-
-      scene.destroy();
-      node.mount().update(0);
-
-      expect(first.isMounted, isFalse);
-      expect(node.children.single, isNot(same(first)));
-    });
-
-    test('a remount leaves imperative additions alone', () {
-      final node = TestNode(builder: (n) => n.add(_A()));
-      final root = Node(children: [node]);
-      final scene = root.mount()..update(0);
-      final spawned = node.add(_B());
-      scene.update(0);
-
-      root.remove(node);
-      scene.update(0);
-      root.add(node);
-      scene.update(0);
-
-      expect(spawned.isMounted, isTrue, reason: 'no build declared it');
-      expect(node.children, hasLength(2));
-    });
   });
 
   group('update', () {
@@ -115,8 +67,8 @@ void main() {
       var elapsed = 0.0;
 
       final scene = TestNode(
-        processor: (node, state) {
-          switch (state) {
+        processor: (node, event) {
+          switch (event) {
             case Update(:final dt):
               elapsed += dt;
           }
@@ -135,8 +87,8 @@ void main() {
       final log = <String>[];
 
       final scene = TestNode(
-        processor: (node, state) {
-          switch (state) {
+        processor: (node, event) {
+          switch (event) {
             case Destroy():
               log.add('destroyed');
           }
@@ -149,52 +101,21 @@ void main() {
     });
 
     test('a throwing destroy is reported and contained', () {
-      final signal = Signal0();
-      var emissions = 0;
-
-      final scene = TestNode(
-        builder: (_) => signal(() => emissions += 1),
-        processor: (node, state) {
-          switch (state) {
+      final node = TestNode(
+        processor: (node, event) {
+          switch (event) {
             case Destroy():
               throw StateError('bad');
           }
         },
-      ).mount();
+      );
 
+      final scene = node.mount();
       final reported = _reported(scene.destroy);
-      signal.emit();
 
       expect(reported, hasLength(1));
       expect(reported.single.exception, isStateError);
-      expect(emissions, 0, reason: 'the build was still torn down');
-    });
-  });
-
-  group('signals', () {
-    test('a subscription made in build lives and dies with the node', () {
-      final signal = Signal0();
-      var emissions = 0;
-      final node = TestNode(builder: (_) => signal(() => emissions += 1));
-      final scene = node.mount();
-
-      signal.emit();
-      scene.destroy();
-      signal.emit();
-
-      expect(emissions, 1);
-    });
-
-    test('outside a build, the caller owns the subscription', () {
-      final signal = Signal0();
-      var emissions = 0;
-      final cleanup = signal(() => emissions += 1);
-
-      signal.emit();
-      cleanup();
-      signal.emit();
-
-      expect(emissions, 1);
+      expect(node.isMounted, isFalse, reason: 'the unmount still finished');
     });
   });
 }

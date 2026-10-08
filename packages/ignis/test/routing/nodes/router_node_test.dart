@@ -231,24 +231,6 @@ void main() {
 
       expect(await dropped, isNull);
     });
-
-    test("carries a later pop's result when pushed again while being popped", () async {
-      final router = RouterNode(children: [RouteNode()]);
-      final scene = router.mount();
-      final route = RouteNode(transition: TestTransition());
-
-      router.push(route);
-      scene.update(0);
-      scene.update(1);
-      router.pop();
-
-      final result = router.push<String>(route);
-      scene.update(0);
-      scene.update(1);
-      router.pop('again');
-
-      expect(await result, 'again');
-    });
   });
 
   group('pop', () {
@@ -495,25 +477,6 @@ void main() {
       expect(incoming.activity, Activity.render);
     });
 
-    test('going back to the departed route mid-swap settles, then swaps again', () {
-      final red = RouteNode();
-      final router = RouterNode(children: [red]);
-      final scene = router.mount();
-      final green = RouteNode();
-
-      router.go(green, transition: TestTransition());
-      scene.update(0);
-      scene.update(0.3);
-
-      router.go(red, transition: TestTransition());
-      scene.update(0);
-      scene.update(1);
-      scene.update(0);
-
-      expect(router.routes, [red]);
-      expect(green.isMounted, isFalse);
-    });
-
     test('settles the running navigation before starting', () {
       final a = RouteNode();
       final router = RouterNode(children: [a]);
@@ -546,30 +509,11 @@ void main() {
       expect(incoming.opacity, 1);
       expect(outgoing.opacity, 1);
     });
-
-    test('builds a route again when it is returned to', () {
-      var builds = 0;
-      final a = RouteNode(children: [TestNode(builder: (_) => builds += 1)]);
-      final router = RouterNode(children: [a]);
-      final scene = router.mount();
-      expect(builds, 1);
-
-      router.go(RouteNode(), transition: TestTransition());
-      scene.update(0);
-      scene.update(1);
-      scene.update(0);
-      expect(a.isMounted, isFalse);
-
-      router.go(a, transition: TestTransition());
-      scene.update(0);
-      expect(builds, 2);
-    });
   });
 
   group('chrome', () {
     test('paints above the stack, after both sides', () {
       final log = TestLog();
-      final chrome = TestNode(name: 'chrome', log: log);
 
       final router = RouterNode(
         children: [
@@ -585,7 +529,9 @@ void main() {
         RouteNode(
           children: [TestNode(name: 'b', log: log)],
         ),
-        transition: TestTransition(chrome: chrome),
+        transition: TestTransition(
+          chrome: () => TestNode(name: 'chrome', log: log),
+        ),
       );
 
       scene.update(0);
@@ -594,10 +540,11 @@ void main() {
       expect(log.renders, ['a', 'b', 'chrome']);
     });
 
-    test('comes back for a second navigation through the same transition', () {
+    test('is built anew for every navigation through the same transition', () {
       final log = TestLog();
-      final chrome = TestNode(name: 'chrome', log: log);
-      final transition = TestTransition(chrome: chrome);
+      final transition = TestTransition(
+        chrome: () => TestNode(name: 'chrome', log: log),
+      );
       final router = RouterNode(transition: transition, children: [RouteNode()]);
       final scene = router.mount();
 
@@ -619,12 +566,12 @@ void main() {
       final scene = router.mount();
 
       for (var swap = 0; swap < 5; swap += 1) {
-        final chrome = Node();
-        final incoming = RouteNode(transition: TestTransition(chrome: chrome));
+        Node? chrome;
+        final incoming = RouteNode(transition: TestTransition(chrome: () => chrome = Node()));
 
         router.go(incoming);
         scene.update(0);
-        expect(chrome.priority, greaterThan(incoming.priority), reason: 'swap $swap');
+        expect(chrome!.priority, greaterThan(incoming.priority), reason: 'swap $swap');
 
         scene.update(1);
       }
@@ -636,7 +583,7 @@ void main() {
       final router = RouterNode(children: [RouteNode()]);
       final scene = router.mount();
 
-      router.go(RouteNode(), transition: TestTransition(chrome: chrome));
+      router.go(RouteNode(), transition: TestTransition(chrome: () => chrome));
       scene.update(0);
       scene.update(1);
       expect(router.isTransitioning, isFalse);

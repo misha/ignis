@@ -4,6 +4,7 @@ import 'package:ignis/src/anchor.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/owners/anchor_owner.dart';
 import 'package:ignis/src/timeline.dart';
 
@@ -52,16 +53,14 @@ class _AnchorByEffect extends AnchorEffect {
        super._();
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
-      case Build():
-        onProgress((progress) {
-          final delta = _offset.scaled(progress - previousProgress);
-          final next = target.anchor + delta;
-          target.anchor = Anchor(next.x, next.y);
-        });
+    switch (message) {
+      case Update():
+        final delta = _offset.scaled(progress - previousProgress);
+        final next = target.anchor + delta;
+        target.anchor = Anchor(next.x, next.y);
     }
   }
 }
@@ -79,20 +78,19 @@ class _AnchorToEffect extends AnchorEffect {
        super._();
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         _offset
           ..setFrom(_destination)
           ..subtract(target.anchor);
 
-        onProgress((progress) {
-          final delta = _offset.scaled(progress - previousProgress);
-          final next = target.anchor + delta;
-          target.anchor = Anchor(next.x, next.y);
-        });
+      case Update():
+        final delta = _offset.scaled(progress - previousProgress);
+        final next = target.anchor + delta;
+        target.anchor = Anchor(next.x, next.y);
     }
   }
 }

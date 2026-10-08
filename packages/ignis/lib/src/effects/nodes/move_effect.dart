@@ -4,6 +4,7 @@ import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
 import 'package:ignis/src/effects/nodes/timeline_effect.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/owners/position_owner.dart';
 import 'package:ignis/src/timeline.dart';
 
@@ -52,14 +53,12 @@ class _MoveByEffect extends MoveEffect {
        super._();
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
-      case Build():
-        onProgress((progress) {
-          target.position.addScaled(_offset, progress - previousProgress);
-        });
+    switch (message) {
+      case Update():
+        target.position.addScaled(_offset, progress - previousProgress);
     }
   }
 
@@ -80,18 +79,17 @@ class _MoveToEffect extends MoveEffect {
        super._();
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         _offset
           ..setFrom(_destination)
           ..subtract(target.position);
 
-        onProgress((progress) {
-          target.position.addScaled(_offset, progress - previousProgress);
-        });
+      case Update():
+        target.position.addScaled(_offset, progress - previousProgress);
     }
   }
 

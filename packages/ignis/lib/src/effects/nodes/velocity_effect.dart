@@ -2,6 +2,7 @@
 
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/owners/position_owner.dart';
 import 'package:ignis/src/owners/speed_owner.dart';
@@ -34,10 +35,10 @@ class VelocityEffect extends EffectNode implements SpeedOwner {
   }
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update(:final dt):
         target.position.addScaled(velocity, dt);
     }

@@ -1,10 +1,13 @@
 // SPDX-AI-Disclosure: none
 
+// ignore_for_file: invalid_use_of_protected_member
+
 import 'package:flutter/gestures.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/extensions.dart';
-import 'package:ignis/src/math.dart';
 import 'package:ignis/src/inputs/nodes/input_node.dart';
+import 'package:ignis/src/math.dart';
+import 'package:ignis/src/message.dart';
 
 /// A hit area that recognizes drags by delegating to an [ImmediateMultiDragGestureRecognizer].
 class DragInput extends InputNode {
@@ -13,22 +16,10 @@ class DragInput extends InputNode {
   /// Whether this node is currently being dragged.
   bool get isDragging => _dragging;
 
-  /// Emitted when a drag starts.
-  final onDragStart = Signal1<DragStartEvent>();
-
-  /// Emitted when a drag updates.
-  final onDragUpdate = Signal1<DragUpdateEvent>();
-
-  /// Emitted when a drag ends.
-  final onDragEnd = Signal1<DragEndEvent>();
-
-  /// Emitted when a drag is cancelled.
-  final onDragCancel = Signal0();
-
-  /// Whether a cancelled drag should also manufacture and emit an [onDragEnd],
+  /// Whether a cancelled drag should also manufacture and emit a [DragEnd],
   /// built from the last known drag position.
   ///
-  /// If enabled, [onDragEnd] is called immediately *after* [onDragCancel].
+  /// If enabled, [DragEnd] is emitted immediately *after* [DragCancel].
   ///
   /// Defaults to `false`.
   final bool endOnCancel;
@@ -52,12 +43,13 @@ class DragInput extends InputNode {
   }) : endOnCancel = endOnCancel ?? false;
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         _recognizer = ImmediateMultiDragGestureRecognizer()..onStart = _handleStart;
+
       case Destroy():
         _drag?.cancel();
         _recognizer?.dispose();
@@ -80,8 +72,9 @@ class DragInput extends InputNode {
     _pendingGlobalToLocal = null;
     _dragging = true;
 
-    onDragStart.emit(
-      DragStartEvent(
+    parent?.post(
+      DragStart(
+        this,
         scene: scenePosition,
         local: toLocal(scenePosition),
       ),
@@ -114,8 +107,9 @@ class _NodeDrag extends Drag {
     lastScenePosition = scenePosition;
     lastGlobalOffset = details.globalPosition;
 
-    node.onDragUpdate.emit(
-      DragUpdateEvent(
+    node.parent?.post(
+      DragUpdate(
+        node,
         scene: scenePosition,
         local: node.toLocal(scenePosition),
         delta: delta,
@@ -128,18 +122,25 @@ class _NodeDrag extends Drag {
   void end(DragEndDetails details) {
     node._drag = null;
     node._dragging = false;
-    node.onDragEnd.emit(DragEndEvent(details: details));
+
+    node.parent?.post(
+      DragEnd(
+        node,
+        details: details,
+      ),
+    );
   }
 
   @override
   void cancel() {
     node._drag = null;
     node._dragging = false;
-    node.onDragCancel.emit();
+    node.parent?.post(DragCancel(node));
 
     if (node.endOnCancel) {
-      node.onDragEnd.emit(
-        DragEndEvent(
+      node.parent?.post(
+        DragEnd(
+          node,
           details: DragEndDetails(
             globalPosition: lastGlobalOffset,
           ),
@@ -149,34 +150,40 @@ class _NodeDrag extends Drag {
   }
 }
 
-final class DragStartEvent {
+final class DragStart extends Message {
+  final DragInput input;
+
   /// This pointer's position in scene (world) space.
   final Vector2 scene;
 
   /// This pointer's position in the receiving node's local space.
   final Vector2 local;
 
-  const DragStartEvent({
+  const DragStart(
+    this.input, {
     required this.scene,
     required this.local,
   });
 }
 
-final class DragUpdateEvent {
+final class DragUpdate extends Message {
+  final DragInput input;
+
   /// This pointer's position in scene (world) space.
   final Vector2 scene;
 
   /// This pointer's position in the receiving node's local space.
   final Vector2 local;
 
-  /// How far the pointer moved since the last [DragUpdateEvent] (or since
-  /// [DragStartEvent], for the first one), in scene space.
+  /// How far the pointer moved since the last [DragUpdate] (or since
+  /// [DragStart], for the first one), in scene space.
   final Vector2 delta;
 
   /// Flutter's own details for this event.
   final DragUpdateDetails details;
 
-  const DragUpdateEvent({
+  const DragUpdate(
+    this.input, {
     required this.scene,
     required this.local,
     required this.delta,
@@ -184,11 +191,21 @@ final class DragUpdateEvent {
   });
 }
 
-final class DragEndEvent {
+final class DragEnd extends Message {
+  final DragInput input;
+
   /// Flutter's own details for this event.
   final DragEndDetails details;
 
-  const DragEndEvent({
+  const DragEnd(
+    this.input, {
     required this.details,
   });
+}
+
+/// Emitted when [input]'s drag is cancelled.
+final class DragCancel extends Message {
+  final DragInput input;
+
+  const DragCancel(this.input);
 }

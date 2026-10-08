@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import 'support/test_sink.dart';
+
 void main() {
   late Cache cache;
 
@@ -64,38 +66,38 @@ void main() {
   });
 
   group('notifications', () {
-    late int notifications;
+    late TestSink sink;
 
     setUp(() {
-      notifications = 0;
-      cache.onChanged(() => notifications += 1);
+      sink = TestSink();
+      cache.subscribe(sink);
     });
 
     test('notifies when a value is added', () {
       cache.add('value', 1);
-      expect(notifications, 1);
+      expect(sink.of<CacheChange>().length, 1);
     });
 
     test('notifies only when an eviction removed something', () {
       cache.add('value', 1);
-      notifications = 0;
+      sink.received.clear();
 
       expect(cache.evict('value'), isTrue);
-      expect(notifications, 1);
+      expect(sink.of<CacheChange>().length, 1);
 
       expect(cache.evict('value'), isFalse);
-      expect(notifications, 1);
+      expect(sink.of<CacheChange>().length, 1);
     });
 
     test('notifies only when a clear removed something', () {
       cache.clear();
-      expect(notifications, 0);
+      expect(sink.of<CacheChange>().length, 0);
 
       cache
         ..add('value', 1)
         ..clear();
 
-      expect(notifications, 2);
+      expect(sink.of<CacheChange>().length, 2);
     });
   });
 }

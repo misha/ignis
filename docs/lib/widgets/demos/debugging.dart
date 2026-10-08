@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart' hide State;
+import 'package:flutter/widgets.dart';
 import 'package:ignis/ignis.dart';
 
 import '../demo_scene.dart';
@@ -20,14 +20,17 @@ final Map<String, Widget Function()> debuggingDemos = {
 
 /// A slime beside a hit area nothing draws, which only the overlay shows.
 class _WireframesNode extends Node {
-  @override
-  void process(State state) {
-    super.process(state);
+  late SpriteNode slime;
+  late TapInput taps;
 
-    switch (state) {
+  @override
+  void process(Message message) {
+    super.process(message);
+
+    // demo on debug-wireframes
+    switch (message) {
       case Build():
-        // demo on debug-wireframes
-        final slime = SpriteNode(
+        slime = SpriteNode(
           sprite: SpriteMap({
             'idle': SpriteAnimation(
               'assets/sheets/slime_idle.png',
@@ -47,40 +50,35 @@ class _WireframesNode extends Node {
               loop: false,
             ),
           }),
+          anchor: .centerRight,
+          position: DEMO_SIZE / 2 - .new(8, 0),
         );
 
-        final taps = TapInput(shape: .rectangle(.all(28)));
-
-        taps.onTap(() {
-          taps.enabled = false;
-          slime.play('death');
-        });
-
-        slime.onFinish(() {
-          switch (slime.current.key) {
-            case 'death':
-              slime.play('recover');
-
-            case 'recover':
-              slime.play('idle');
-              taps.enabled = true;
-          }
-        });
-        // demo off
-
-        add(
-          BoxNode(
-            alignment: .center,
-            children: [
-              RowNode(
-                mainAxisSize: .min,
-                crossAxisAlignment: .center,
-                spacing: 16,
-                children: [slime, taps],
-              ),
-            ],
-          ),
+        taps = TapInput(
+          shape: .rectangle(.all(28)),
+          anchor: .centerLeft,
+          position: DEMO_SIZE / 2 + .new(8, 0),
         );
+
+      case Tap():
+        taps.enabled = false;
+        slime.play('death');
+
+      case SpriteFinish():
+        switch (slime.current.key) {
+          case 'death':
+            slime.play('recover');
+
+          case 'recover':
+            slime.play('idle');
+            taps.enabled = true;
+        }
+    }
+    // demo off
+
+    switch (message) {
+      case Build():
+        addAll([slime, taps]);
     }
   }
 }

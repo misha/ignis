@@ -2,23 +2,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 import '../support/test_device.dart';
+import '../support/test_sink.dart';
 
 void main() {
   late Controls controls;
   late TestDevice device;
-  late List<ControlEvent> fired;
+  late TestSink sink;
+  late Scene scene;
 
   setUp(() {
-    fired = [];
+    sink = TestSink();
+    scene = sink.mount();
     device = TestDevice();
     controls = Controls()
       ..bind(
-        fired.add,
+        sink,
+        'press',
         matchers: {
-          const ButtonEvent(3),
+          const ButtonTrigger(3),
         },
       );
   });
+
+  tearDown(() => scene.destroy());
 
   group('installing', () {
     test('starts the device and lists it', () {
@@ -75,42 +81,43 @@ void main() {
       controls.install(device);
 
       expect(device.press([3]), isTrue);
-      expect(fired.single, isA<ButtonEvent>());
+      expect(sink.of<Control>().single.trigger, isA<ButtonTrigger>());
     });
 
-    test('one device event yielding several control events runs each', () {
+    test('one device event yielding several triggers runs each', () {
       controls = Controls()
         ..bind(
-          fired.add,
+          sink,
+          'press',
           matchers: {
-            const ButtonEvent(3),
-            const ButtonEvent(4),
+            const ButtonTrigger(3),
+            const ButtonTrigger(4),
           },
         );
 
       controls.install(device);
 
       expect(device.press([3, 4]), isTrue);
-      expect(fired, hasLength(2));
+      expect(sink.of<Control>(), hasLength(2));
     });
 
     test('an event yielding nothing reports itself unhandled', () {
       controls.install(device);
 
       expect(device.press([]), isFalse);
-      expect(fired, isEmpty);
+      expect(sink.received, isEmpty);
     });
 
     test('an event nothing is bound to reports itself unhandled', () {
       controls.install(device);
 
       expect(device.press([4]), isFalse);
-      expect(fired, isEmpty);
+      expect(sink.received, isEmpty);
     });
 
     test('a device that was never started dispatches nothing', () {
       expect(device.press([3]), isFalse);
-      expect(fired, isEmpty, reason: 'the base holds the dispatch until started');
+      expect(sink.received, isEmpty, reason: 'the base holds the dispatch until started');
     });
 
     test('an uninstalled device dispatches nothing', () {
@@ -119,7 +126,7 @@ void main() {
         ..uninstall(device);
 
       expect(device.press([3]), isFalse);
-      expect(fired, isEmpty);
+      expect(sink.received, isEmpty);
     });
   });
 }

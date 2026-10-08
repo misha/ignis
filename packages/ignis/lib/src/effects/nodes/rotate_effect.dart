@@ -3,6 +3,7 @@
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
 import 'package:ignis/src/effects/nodes/timeline_effect.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/owners/angle_owner.dart';
 import 'package:ignis/src/timeline.dart';
 
@@ -50,14 +51,12 @@ class _RotateByEffect extends RotateEffect {
   }) : super._();
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
-      case Build():
-        onProgress((progress) {
-          target.angle += _angle * (progress - previousProgress);
-        });
+    switch (message) {
+      case Update():
+        target.angle += _angle * (progress - previousProgress);
     }
   }
 
@@ -78,16 +77,15 @@ class _RotateToEffect extends RotateEffect {
        super._();
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         _offset = _destination - target.angle;
 
-        onProgress((progress) {
-          target.angle += _offset * (progress - previousProgress);
-        });
+      case Update():
+        target.angle += _offset * (progress - previousProgress);
     }
   }
 

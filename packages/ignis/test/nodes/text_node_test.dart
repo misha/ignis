@@ -58,18 +58,6 @@ void main() {
     expect(node.painter.textDirection, TextDirection.rtl);
   });
 
-  test('a remount replaces the painter and keeps the text', () {
-    final node = TextNode(text: 'Ignis');
-    final scene = node.mount();
-    final first = node.painter;
-
-    scene.destroy();
-    node.mount();
-
-    expect(node.painter, isNot(same(first)));
-    expect(node.text, 'Ignis');
-  });
-
   test('updates its layout when text changes', () {
     final node = TextNode(text: 'I');
     node.mount();

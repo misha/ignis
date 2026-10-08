@@ -22,7 +22,7 @@ class FadeTransition extends Transition {
        super(timeline: .duration(duration ?? 1, curve));
 
   @override
-  void apply(progress, incoming, outgoing) {
+  void apply(progress, incoming, outgoing, _) {
     incoming.opacity = progress;
     if (crossFade) outgoing?.opacity = 1 - progress;
   }

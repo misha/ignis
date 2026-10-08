@@ -91,7 +91,7 @@ class Palette {
   /// ```dart
   /// void painter(Canvas canvas, Paint paint) { ... }
   ///
-  /// switch (state) {
+  /// switch (message) {
   ///   case Draw(:final canvas):
   ///     palette.draw(canvas, painter);
   /// }

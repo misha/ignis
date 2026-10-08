@@ -10,7 +10,7 @@ class CutTransition extends Transition {
   }) : super(timeline: .terminal());
 
   @override
-  void apply(_, _, outgoing) {
+  void apply(_, _, outgoing, _) {
     outgoing?.opacity = 0;
   }
 }

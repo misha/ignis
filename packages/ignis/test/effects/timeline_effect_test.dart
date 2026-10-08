@@ -1,63 +1,57 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../support/test_sink.dart';
+
 void main() {
-  test('emits onStart once it starts progressing', () {
+  test('emits TimelineStart once it starts progressing', () {
     final effect = TimelineEffect(
       timeline: .sequence([.once(.wait(0.5)), .duration(1)]),
     );
-    effect.mount();
-    var starts = 0;
-    effect.onStart(() => starts += 1);
+    final sink = TestSink([effect])..mount();
 
     effect.update(Update(0.25));
-    expect(starts, 0);
+    expect(sink.of<TimelineStart>().length, 0);
 
     effect.update(Update(0.5));
-    expect(starts, 1);
+    expect(sink.of<TimelineStart>().length, 1);
 
     effect.update(Update(0.25));
-    expect(starts, 1);
+    expect(sink.of<TimelineStart>().length, 1);
   });
 
-  test('onStart is not re-emitted per repeat lap; only once for the whole run', () {
+  test('TimelineStart is not re-emitted per repeat lap; only once for the whole run', () {
     final effect = TimelineEffect(timeline: .repeat(.duration(1), 2));
-    effect.mount();
-    var starts = 0;
-    effect.onStart(() => starts += 1);
+    final sink = TestSink([effect])..mount();
 
     effect.update(Update(1));
-    expect(starts, 1);
+    expect(sink.of<TimelineStart>().length, 1);
 
     effect.update(Update(1));
-    expect(starts, 1);
+    expect(sink.of<TimelineStart>().length, 1);
   });
 
-  test('emits onMax when a tick lands exactly on progress 1', () {
+  test('emits TimelineMax when a tick lands exactly on progress 1', () {
     final effect = TimelineEffect(timeline: .duration(1));
-    effect.mount();
-    var maxes = 0;
-    effect.onMax(() => maxes += 1);
+    final sink = TestSink([effect])..mount();
 
     effect.update(Update(0.5));
-    expect(maxes, 0);
+    expect(sink.of<TimelineMax>().length, 0);
 
     effect.update(Update(0.5));
-    expect(maxes, 1);
+    expect(sink.of<TimelineMax>().length, 1);
   });
 
-  test('emits onMin when progress returns exactly to 0', () {
+  test('emits TimelineMin when progress returns exactly to 0', () {
     final effect = TimelineEffect(timeline: .roundtrip(.duration(1)));
 
-    effect.mount();
-    var mins = 0;
-    effect.onMin(() => mins += 1);
+    final sink = TestSink([effect])..mount();
 
     effect.update(Update(1));
-    expect(mins, 0);
+    expect(sink.of<TimelineMin>().length, 0);
 
     effect.update(Update(1));
-    expect(mins, 1);
+    expect(sink.of<TimelineMin>().length, 1);
   });
 
   test('reversing within a repeat lap never redoes the initial delay', () {
@@ -66,43 +60,43 @@ void main() {
     );
     effect.mount();
 
-    effect.update(Update(1.5)); // Clears the initial delay, finishes lap 1, into lap 2.
+    effect.update(
+      Update(1.5),
+    ); // Clears the initial delay, finishes lap 1, into lap 2.
 
     effect.reverse();
-    effect.update(Update(0.5)); // Recedes within lap 2, never touching the initial delay.
+    effect.update(
+      Update(0.5),
+    ); // Recedes within lap 2, never touching the initial delay.
     expect(effect.isRunning, isTrue);
 
     effect.forward();
     effect.update(Update(0.1));
-    expect(effect.previousProgress, closeTo(0.6, 1e-9));
+    expect(effect.progress, closeTo(0.6, 1e-9));
   });
 
-  test('emits onProgress with its current progress once started', () {
+  test('emits TimelineProgress with its current progress once started', () {
     final effect = TimelineEffect(timeline: .duration(1));
-    effect.mount();
-    final progresses = <double>[];
-    effect.onProgress(progresses.add);
+    final sink = TestSink([effect])..mount();
 
     effect.update(Update(0.25));
     effect.update(Update(0.75));
 
-    expect(progresses, [0.25, 1]);
+    expect(sink.of<TimelineProgress>().map((event) => event.progress), [0.25, 1]);
   });
 
-  test('emits onFinish once isComplete becomes true, and never again', () {
+  test('emits EffectFinish once isComplete becomes true, and never again', () {
     final effect = TimelineEffect(timeline: .duration(1));
-    effect.mount();
-    var finishes = 0;
-    effect.onFinish(() => finishes += 1);
+    final sink = TestSink([effect])..mount();
 
     effect.update(Update(0.5));
-    expect(finishes, 0);
+    expect(sink.of<EffectFinish>().length, 0);
 
     effect.update(Update(0.5));
-    expect(finishes, 1);
+    expect(sink.of<EffectFinish>().length, 1);
 
     effect.update(Update(1));
-    expect(finishes, 1);
+    expect(sink.of<EffectFinish>().length, 1);
   });
 
   test('resets back to its start', () {
@@ -118,69 +112,61 @@ void main() {
     expect(effect.previousProgress, 0);
   });
 
-  test('restarts times-1 times before emitting onFinish', () {
+  test('restarts times-1 times before emitting EffectFinish', () {
     final effect = TimelineEffect(timeline: .repeat(.duration(1), 2));
-    effect.mount();
-    var finishes = 0;
-    effect.onFinish(() => finishes += 1);
+    final sink = TestSink([effect])..mount();
 
     effect.update(Update(1));
-    expect(effect.previousProgress, 1); // Lands exactly on lap 1's boundary.
-    expect(finishes, 0);
+    expect(effect.progress, 1); // Lands exactly on lap 1's boundary.
+    expect(sink.of<EffectFinish>().length, 0);
     expect(effect.isFinished, isFalse);
 
     effect.update(Update(0.5));
-    expect(effect.previousProgress, 0.5);
+    expect(effect.progress, 0.5);
 
     effect.update(Update(0.5));
-    expect(finishes, 1);
+    expect(sink.of<EffectFinish>().length, 1);
     expect(effect.isFinished, isTrue);
   });
 
   test('repeats forever when times is null', () {
     final effect = TimelineEffect(timeline: .infinite(.duration(1)));
-    effect.mount();
-    var finishes = 0;
-    effect.onFinish(() => finishes += 1);
+    final sink = TestSink([effect])..mount();
 
     for (var i = 0; i < 10; i += 1) {
       effect.update(Update(1));
       expect(effect.isFinished, isFalse);
     }
 
-    expect(finishes, 0);
+    expect(sink.of<EffectFinish>().length, 0);
   });
 
   test('reset() restarts the repeat count from the beginning', () {
     final effect = TimelineEffect(timeline: .repeat(.duration(1), 2));
-    effect.mount();
-    var finishes = 0;
-    effect.onFinish(() => finishes += 1);
+    final sink = TestSink([effect])..mount();
 
     effect.update(Update(1));
     effect.update(Update(1));
-    expect(finishes, 1);
+    expect(sink.of<EffectFinish>().length, 1);
 
     effect.reset();
     effect.update(Update(1));
     effect.update(Update(1));
-    expect(finishes, 2);
+    expect(sink.of<EffectFinish>().length, 2);
   });
 
-  test('only emits onFinish once a reverse phase completes', () {
+  test('only emits EffectFinish once a reverse phase completes', () {
     final effect = TimelineEffect(timeline: .roundtrip(.duration(1)));
 
-    effect.mount();
-    var finishes = 0;
-    effect.onFinish(() => finishes += 1);
+    final sink = TestSink([effect])..mount();
 
     effect.update(Update(1));
-    expect(effect.previousProgress, 1); // The forward phase is done.
-    expect(finishes, 0);
+    expect(effect.progress, 1); // The forward phase is done.
+    expect(sink.of<EffectFinish>().length, 0);
 
     effect.update(Update(1));
-    expect(effect.previousProgress, 0); // Back at the start.
-    expect(finishes, 1);
+    expect(effect.progress, 0); // Back at the start.
+    expect(sink.of<EffectFinish>().length, 1);
   });
 
   test('defaults to running forward', () {
@@ -195,14 +181,14 @@ void main() {
     effect.mount();
 
     effect.update(Update(0.75));
-    expect(effect.previousProgress, 0.75);
+    expect(effect.progress, 0.75);
 
     effect.reverse();
     expect(effect.isForward, isFalse);
     expect(effect.isReverse, isTrue);
 
     effect.update(Update(0.5));
-    expect(effect.previousProgress, 0.25);
+    expect(effect.progress, 0.25);
   });
 
   test('forward() resumes progress forward after reverse()', () {
@@ -212,18 +198,16 @@ void main() {
     effect.update(Update(0.5));
     effect.reverse();
     effect.update(Update(0.25));
-    expect(effect.previousProgress, 0.25);
+    expect(effect.progress, 0.25);
 
     effect.forward();
     effect.update(Update(0.25));
-    expect(effect.previousProgress, 0.5);
+    expect(effect.progress, 0.5);
   });
 
   test('reversing off the end un-finishes the effect', () {
     final effect = TimelineEffect(timeline: .duration(1));
-    effect.mount();
-    var finishes = 0;
-    effect.onFinish(() => finishes += 1);
+    final sink = TestSink([effect])..mount();
 
     effect.update(Update(1));
     expect(effect.isFinished, isTrue);
@@ -231,8 +215,8 @@ void main() {
     effect.reverse();
     effect.update(Update(0.5));
     expect(effect.isFinished, isFalse);
-    expect(effect.previousProgress, 0.5);
-    expect(finishes, 1);
+    expect(effect.progress, 0.5);
+    expect(sink.of<EffectFinish>().length, 1);
   });
 
   test('reset() resets direction back to forward', () {

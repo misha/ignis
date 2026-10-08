@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 import '../support/test_device.dart';
+import '../support/test_sink.dart';
 
 void main() {
   group('KeyPress', () {
@@ -69,7 +70,7 @@ void main() {
       });
 
       test('an event of another kind never matches', () {
-        expect(KeyPress(.space).accepts(const TestEvent()), isFalse);
+        expect(KeyPress(.space).accepts(const TestTrigger()), isFalse);
       });
     });
 
@@ -109,16 +110,20 @@ void main() {
 
   group('KeyboardDevice', () {
     late KeyboardDevice keyboard;
-    late List<ControlEvent> fired;
+    late TestSink sink;
+    late Scene scene;
 
     setUp(() {
-      fired = [];
       keyboard = KeyboardDevice();
+      sink = TestSink();
+      scene = sink.mount();
 
       Ignis.controls = Controls()
         ..install(keyboard)
-        ..bind(fired.add, matchers: {KeyPress(.keyF)});
+        ..bind(sink, 'fire', matchers: {KeyPress(.keyF)});
     });
+
+    tearDown(() => scene.destroy());
 
     Future<void> pump(WidgetTester tester, {bool mounted = true}) async {
       await tester.pumpWidget(
@@ -136,8 +141,8 @@ void main() {
       await pump(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
 
-      expect(fired, hasLength(1));
-      expect((fired.single as KeyPress).key, LogicalKeyboardKey.keyF);
+      expect(sink.of<Control>(), hasLength(1));
+      expect((sink.of<Control>().single.trigger as KeyPress).key, LogicalKeyboardKey.keyF);
     });
 
     testWidgets('modifiers travel with the press', (tester) async {
@@ -146,16 +151,16 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
       await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
 
-      expect((fired.single as KeyPress).control, isTrue);
+      expect((sink.of<Control>().single.trigger as KeyPress).control, isTrue);
     });
 
     testWidgets('a key up runs nothing', (tester) async {
       await pump(tester);
       await tester.sendKeyDownEvent(LogicalKeyboardKey.keyF);
-      fired.clear();
+      sink.received.clear();
       await tester.sendKeyUpEvent(LogicalKeyboardKey.keyF);
 
-      expect(fired, isEmpty);
+      expect(sink.received, isEmpty);
     });
 
     testWidgets('uninstalling stops the keyboard reaching it', (tester) async {
@@ -163,19 +168,19 @@ void main() {
       Ignis.controls.uninstall(keyboard);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
 
-      expect(fired, isEmpty);
+      expect(sink.received, isEmpty);
     });
 
     testWidgets('controls with no device hear nothing', (tester) async {
-      Ignis.controls = Controls()..bind(fired.add, matchers: {KeyPress(.keyF)});
+      Ignis.controls = Controls()..bind(sink, 'fire', matchers: {KeyPress(.keyF)});
 
       await pump(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
 
-      expect(fired, isEmpty, reason: 'listening is opt-in');
+      expect(sink.received, isEmpty, reason: 'listening is opt-in');
     });
 
-    testWidgets('installing one keyboard twice still runs a handler once', (tester) async {
+    testWidgets('installing one keyboard twice still answers once', (tester) async {
       Ignis.controls
         ..install(keyboard)
         ..install(keyboard);
@@ -183,7 +188,7 @@ void main() {
       await pump(tester);
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
 
-      expect(fired, hasLength(1));
+      expect(sink.of<Control>(), hasLength(1));
     });
 
     testWidgets('two scenes on one page still run an action once', (tester) async {
@@ -201,7 +206,7 @@ void main() {
 
       await tester.sendKeyEvent(LogicalKeyboardKey.keyF);
 
-      expect(fired, hasLength(1), reason: 'one keyboard, one handler');
+      expect(sink.of<Control>(), hasLength(1), reason: 'one keyboard, one bind');
     });
   });
 }

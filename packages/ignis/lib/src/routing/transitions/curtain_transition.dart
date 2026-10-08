@@ -11,14 +11,14 @@ import 'package:ignis/src/routing/transition.dart';
 /// The veil fills the region swapped, so a shape-less `ShapeNode` makes a
 /// solid curtain.
 class CurtainTransition extends Transition {
-  /// What is faded through.
-  final Node veil;
+  /// Builds what is faded through, once per navigation.
+  final Node Function() veil;
 
   /// The progress at which the sides trade places. Defaults to 0.5.
   final double swapAt;
 
   @override
-  late final OpacityNode chrome = .new(children: [veil]);
+  OpacityNode buildChrome() => .new(children: [veil()]);
 
   CurtainTransition({
     required this.veil,
@@ -31,7 +31,7 @@ class CurtainTransition extends Transition {
        super(timeline: .duration(duration ?? 1, curve));
 
   @override
-  void apply(progress, incoming, outgoing) {
+  void apply(progress, incoming, outgoing, OpacityNode chrome) {
     final covering = progress < swapAt;
     incoming.opacity = covering ? 0 : 1;
     outgoing?.opacity = covering ? 1 : 0;

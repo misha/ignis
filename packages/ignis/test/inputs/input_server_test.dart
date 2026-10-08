@@ -4,6 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 import 'package:ignis/src/flutter/scene_render_box.dart';
 
+import '../support/test_node.dart';
+import '../support/test_sink.dart';
+
 void main() {
   Future<Scene> pumpScene(WidgetTester tester, Iterable<Node> children) async {
     final scene = Node(children: children).mount();
@@ -14,45 +17,40 @@ void main() {
 
   const settle = Duration(milliseconds: 50);
 
-  testWidgets('a hit fires onTapDown', (tester) async {
+  testWidgets('a hit fires TapDown', (tester) async {
     final tap = TapInput(shape: .square(20));
-    await pumpScene(tester, [tap]);
-    final downs = <TapDownEvent>[];
-    tap.onTapDown(downs.add);
+    final sink = TestSink([tap]);
+    await pumpScene(tester, [sink]);
 
     await tester.startGesture(const Offset(5, 5));
     await tester.pump(settle);
 
-    expect(downs, hasLength(1));
-    expect(downs.single.scene, Vector2.all(5));
+    expect(sink.of<TapDown>(), hasLength(1));
+    expect(sink.of<TapDown>().single.scene, Vector2.all(5));
   });
 
   testWidgets('a miss fires nothing', (tester) async {
     final tap = TapInput(shape: .square(20));
-    await pumpScene(tester, [tap]);
-    final downs = <TapDownEvent>[];
-    tap.onTapDown(downs.add);
+    final sink = TestSink([tap]);
+    await pumpScene(tester, [sink]);
 
     await tester.startGesture(const Offset(500, 500));
     await tester.pump(settle);
 
-    expect(downs, isEmpty);
+    expect(sink.of<TapDown>(), isEmpty);
   });
 
-  testWidgets('a clean release fires onTapUp and onTap', (tester) async {
+  testWidgets('a clean release fires TapUp and Tap', (tester) async {
     final tap = TapInput(shape: .square(20));
-    await pumpScene(tester, [tap]);
-    final ups = <TapUpEvent>[];
-    var taps = 0;
-    tap.onTapUp(ups.add);
-    tap.onTap(() => taps += 1);
+    final sink = TestSink([tap]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.up();
     await tester.pump(settle);
 
-    expect(ups, hasLength(1));
-    expect(taps, 1);
+    expect(sink.of<TapUp>(), hasLength(1));
+    expect(sink.of<Tap>(), hasLength(1));
   });
 
   testWidgets('isDown tracks the press', (tester) async {
@@ -70,24 +68,21 @@ void main() {
 
   testWidgets('dragging past the slop starts, then updates with the right delta', (tester) async {
     final drag = DragInput(shape: .square(200));
-    await pumpScene(tester, [drag]);
-    final starts = <DragStartEvent>[];
-    final updates = <DragUpdateEvent>[];
-    drag.onDragStart(starts.add);
-    drag.onDragUpdate(updates.add);
+    final sink = TestSink([drag]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.moveBy(const Offset(50, 0));
     await gesture.up();
     await tester.pump(settle);
 
-    expect(starts, hasLength(1));
-    expect(starts.single.scene, Vector2.all(5));
-    expect(updates, isNotEmpty);
+    expect(sink.of<DragStart>(), hasLength(1));
+    expect(sink.of<DragStart>().single.scene, Vector2.all(5));
+    expect(sink.of<DragUpdate>(), isNotEmpty);
     // Flutter reports the down position as the first update's globalPosition,
     // so its delta must come out zero.
-    expect(updates.first.delta, Vector2.zero);
-    expect(updates.last.scene, Vector2(55, 5));
+    expect(sink.of<DragUpdate>().first.delta, Vector2.zero);
+    expect(sink.of<DragUpdate>().last.scene, Vector2(55, 5));
   });
 
   testWidgets('isDragging tracks the current drag', (tester) async {
@@ -105,44 +100,39 @@ void main() {
     expect(drag.isDragging, isFalse);
   });
 
-  testWidgets('a cancelled drag does not emit onDragEnd by default', (tester) async {
+  testWidgets('a cancelled drag does not emit DragEnd by default', (tester) async {
     final drag = DragInput(shape: .square(200));
-    await pumpScene(tester, [drag]);
-    final ends = <DragEndEvent>[];
-    var cancels = 0;
-    drag.onDragEnd(ends.add);
-    drag.onDragCancel(() => cancels += 1);
+    final sink = TestSink([drag]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.moveBy(const Offset(50, 0));
     await gesture.cancel();
     await tester.pump(settle);
 
-    expect(cancels, 1);
-    expect(ends, isEmpty);
+    expect(sink.of<DragCancel>(), hasLength(1));
+    expect(sink.of<DragEnd>(), isEmpty);
   });
 
-  testWidgets('endOnCancel manufactures onDragEnd from the last known position', (tester) async {
+  testWidgets('endOnCancel manufactures DragEnd from the last known position', (tester) async {
     final drag = DragInput(shape: .square(200), endOnCancel: true);
-    await pumpScene(tester, [drag]);
-    final ends = <DragEndEvent>[];
-    var cancels = 0;
-    drag.onDragEnd(ends.add);
-    drag.onDragCancel(() => cancels += 1);
+    final sink = TestSink([drag]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.moveBy(const Offset(50, 0));
     await gesture.cancel();
     await tester.pump(settle);
 
-    expect(cancels, 1);
-    expect(ends, hasLength(1));
-    expect(ends.single.details.globalPosition, const Offset(55, 5));
+    expect(sink.of<DragCancel>(), hasLength(1));
+    expect(sink.of<DragEnd>(), hasLength(1));
+    expect(sink.of<DragEnd>().single.details.globalPosition, const Offset(55, 5));
   });
 
   testWidgets('delta stays correct under a scaling ancestor', (tester) async {
     final drag = DragInput(shape: .square(200));
-    final scene = Node(children: [drag]).mount();
+    final sink = TestSink([drag]);
+    final scene = Node(children: [sink]).mount();
     scene.resize(800, 600);
 
     await tester.pumpWidget(
@@ -153,23 +143,19 @@ void main() {
       ),
     );
 
-    final updates = <DragUpdateEvent>[];
-    drag.onDragUpdate(updates.add);
-
     final gesture = await tester.startGesture(const Offset(10, 10));
     await gesture.moveBy(const Offset(100, 0));
     await gesture.up();
     await tester.pump(settle);
 
     // 100 units of window movement is 50 units of scene movement at 2x scale.
-    expect(updates.last.delta.x, closeTo(50, 0.001));
+    expect(sink.of<DragUpdate>().last.delta.x, closeTo(50, 0.001));
   });
 
   testWidgets('an uncontested drag starts on any movement', (tester) async {
     final drag = DragInput(shape: .square(200));
-    await pumpScene(tester, [drag]);
-    final starts = <DragStartEvent>[];
-    drag.onDragStart(starts.add);
+    final sink = TestSink([drag]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.moveBy(const Offset(1, 0));
@@ -178,7 +164,7 @@ void main() {
 
     // With nothing else contesting this pointer's arena, Flutter's gesture
     // arena resolves the lone recognizer immediately rather than waiting.
-    expect(starts, hasLength(1));
+    expect(sink.of<DragStart>(), hasLength(1));
   });
 
   testWidgets('a real drag wins over a contesting tap for the same pointer', (tester) async {
@@ -189,15 +175,8 @@ void main() {
     );
 
     final drag = DragInput(shape: .square(200));
-    await pumpScene(tester, [tap, drag]);
-    final downs = <TapDownEvent>[];
-    final taps = <TapUpEvent>[];
-    var cancels = 0;
-    final starts = <DragStartEvent>[];
-    tap.onTapDown(downs.add);
-    tap.onTapUp(taps.add);
-    tap.onTapCancel(() => cancels += 1);
-    drag.onDragStart(starts.add);
+    final sink = TestSink([tap, drag]);
+    await pumpScene(tester, [sink]);
 
     // tap is translucent, so both nodes are offered the down event and their
     // recognizers contest the same pointer's arena.
@@ -206,36 +185,31 @@ void main() {
     await gesture.up();
     await tester.pump(settle);
 
-    expect(starts, hasLength(1));
-    expect(taps, isEmpty);
+    expect(sink.of<DragStart>(), hasLength(1));
+    expect(sink.of<TapUp>(), isEmpty);
 
     // A contested tap holds its own down until kPressTimeout, so one resolved
     // this fast never announced itself and has nothing to take back.
-    expect(downs, isEmpty);
-    expect(cancels, 0);
+    expect(sink.of<TapDown>(), isEmpty);
+    expect(sink.of<TapCancel>(), isEmpty);
   });
 
-  testWidgets('upOnCancel manufactures onTapUp from where the pointer went down', (tester) async {
+  testWidgets('upOnCancel manufactures TapUp from where the pointer went down', (tester) async {
     final tap = TapInput(shape: .square(200), upOnCancel: true);
-    await pumpScene(tester, [tap]);
-    final ups = <TapUpEvent>[];
-    var taps = 0;
-    var cancels = 0;
-    tap.onTapUp(ups.add);
-    tap.onTap(() => taps += 1);
-    tap.onTapCancel(() => cancels += 1);
+    final sink = TestSink([tap]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.cancel();
     await tester.pump(settle);
 
-    expect(cancels, 1);
-    expect(ups, hasLength(1));
-    expect(ups.single.scene, Vector2.all(5));
-    expect(ups.single.details.globalPosition, const Offset(5, 5));
+    expect(sink.of<TapCancel>(), hasLength(1));
+    expect(sink.of<TapUp>(), hasLength(1));
+    expect(sink.of<TapUp>().single.scene, Vector2.all(5));
+    expect(sink.of<TapUp>().single.details.globalPosition, const Offset(5, 5));
 
     // The tap never happened, so only the release it lost is taken back.
-    expect(taps, 0);
+    expect(sink.of<Tap>(), isEmpty);
     expect(tap.isDown, isFalse);
   });
 
@@ -249,21 +223,18 @@ void main() {
     );
 
     final drag = DragInput(shape: .square(200));
-    await pumpScene(tester, [tap, drag]);
-    final downs = <TapDownEvent>[];
-    var cancels = 0;
-    tap.onTapDown(downs.add);
-    tap.onTapCancel(() => cancels += 1);
+    final sink = TestSink([tap, drag]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await tester.pump(kPressTimeout + settle);
-    expect(downs, hasLength(1), reason: 'the deadline elapsed');
+    expect(sink.of<TapDown>(), hasLength(1), reason: 'the deadline elapsed');
 
     await gesture.moveBy(const Offset(50, 0));
     await gesture.up();
     await tester.pump(settle);
 
-    expect(cancels, 1);
+    expect(sink.of<TapCancel>(), hasLength(1));
   });
 
   testWidgets('a small movement wins as a tap over a contesting drag', (tester) async {
@@ -274,18 +245,15 @@ void main() {
     );
 
     final drag = DragInput(shape: .square(200));
-    await pumpScene(tester, [tap, drag]);
-    final taps = <TapUpEvent>[];
-    final starts = <DragStartEvent>[];
-    tap.onTapUp(taps.add);
-    drag.onDragStart(starts.add);
+    final sink = TestSink([tap, drag]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.up();
     await tester.pump(settle);
 
-    expect(taps, hasLength(1));
-    expect(starts, isEmpty);
+    expect(sink.of<TapUp>(), hasLength(1));
+    expect(sink.of<DragStart>(), isEmpty);
   });
 
   testWidgets('a lower-priority sibling of the same kind never fires when overlapped', (
@@ -293,18 +261,14 @@ void main() {
   ) async {
     final a = TapInput(shape: .square(200), priority: 1);
     final b = TapInput(shape: .square(200));
-    await pumpScene(tester, [a, b]);
-    final aTaps = <TapUpEvent>[];
-    final bTaps = <TapUpEvent>[];
-    a.onTapUp(aTaps.add);
-    b.onTapUp(bTaps.add);
+    final sink = TestSink([a, b]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.up();
     await tester.pump(settle);
 
-    expect(aTaps, hasLength(1));
-    expect(bTaps, isEmpty);
+    expect(sink.of<TapUp>().map((event) => event.input), [a]);
   });
 
   testWidgets('register reports whether the node claimed the down event', (tester) async {
@@ -328,24 +292,22 @@ void main() {
   testWidgets('a HoverInput above a DragInput still lets drags through', (tester) async {
     final hover = HoverInput(shape: .square(200), priority: 1);
     final drag = DragInput(shape: .square(200));
-    await pumpScene(tester, [hover, drag]);
-    final starts = <DragStartEvent>[];
-    drag.onDragStart(starts.add);
+    final sink = TestSink([hover, drag]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.moveBy(const Offset(50, 0));
     await gesture.up();
     await tester.pump(settle);
 
-    expect(starts, hasLength(1));
+    expect(sink.of<DragStart>(), hasLength(1));
   });
 
   testWidgets('a HoverInput below a DragInput still receives hover', (tester) async {
     final drag = DragInput(shape: .square(200), priority: 1);
     final hover = HoverInput(shape: .square(200));
-    await pumpScene(tester, [drag, hover]);
-    var enters = 0;
-    hover.onHoverEnter(() => enters += 1);
+    final sink = TestSink([drag, hover]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500)); // Starts outside the hit area.
@@ -354,29 +316,27 @@ void main() {
     await gesture.moveTo(const Offset(5, 5));
     await tester.pump();
 
-    expect(enters, 1);
+    expect(sink.of<HoverEnter>(), hasLength(1));
   });
 
   testWidgets('a HoverInput above a TapInput still lets taps through', (tester) async {
     final hover = HoverInput(shape: .square(200), priority: 1);
     final tap = TapInput(shape: .square(200));
-    await pumpScene(tester, [hover, tap]);
-    final taps = <TapUpEvent>[];
-    tap.onTapUp(taps.add);
+    final sink = TestSink([hover, tap]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.up();
     await tester.pump(settle);
 
-    expect(taps, hasLength(1));
+    expect(sink.of<TapUp>(), hasLength(1));
   });
 
   testWidgets('a HoverInput below a TapInput still receives hover', (tester) async {
     final tap = TapInput(shape: .square(200), priority: 1);
     final hover = HoverInput(shape: .square(200));
-    await pumpScene(tester, [tap, hover]);
-    var enters = 0;
-    hover.onHoverEnter(() => enters += 1);
+    final sink = TestSink([tap, hover]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500)); // Starts outside the hit area.
@@ -385,7 +345,7 @@ void main() {
     await gesture.moveTo(const Offset(5, 5));
     await tester.pump();
 
-    expect(enters, 1);
+    expect(sink.of<HoverEnter>(), hasLength(1));
   });
 
   testWidgets('isHovering tracks hover', (tester) async {
@@ -407,50 +367,23 @@ void main() {
     expect(hover.isHovering, isFalse);
   });
 
-  testWidgets('still recognizes taps after being removed and re-added to the tree', (tester) async {
-    final root = Node();
-    final scene = root.mount();
-    scene.resize(800, 600);
-    await tester.pumpWidget(RenderSceneWidget(scene: scene, addRepaintBoundary: true));
-
-    final tap = TapInput(shape: .square(20));
-    final downs = <TapDownEvent>[];
-    tap.onTapDown(downs.add);
-
-    root.add(tap);
-    await tester.pump();
-    root.remove(tap);
-    await tester.pump();
-    root.add(tap);
-    await tester.pump();
-
-    await tester.startGesture(const Offset(5, 5));
-    await tester.pump(settle);
-
-    expect(downs, hasLength(1));
-  });
-
   testWidgets('hover enters as the event arrives, before the next frame', (tester) async {
     final hover = HoverInput(shape: .square(20));
-    await pumpScene(tester, [hover]);
-    var enters = 0;
-    hover.onHoverEnter(() => enters += 1);
+    final sink = TestSink([hover]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500));
     await tester.pump();
 
     await gesture.moveTo(const Offset(5, 5));
-    expect(enters, 1);
+    expect(sink.of<HoverEnter>(), hasLength(1));
   });
 
   testWidgets('hover emits enter then exit', (tester) async {
     final hover = HoverInput(shape: .square(20));
-    await pumpScene(tester, [hover]);
-    var enters = 0;
-    var exits = 0;
-    hover.onHoverEnter(() => enters += 1);
-    hover.onHoverExit(() => exits += 1);
+    final sink = TestSink([hover]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500)); // Starts outside the hit area.
@@ -458,26 +391,31 @@ void main() {
 
     await gesture.moveTo(const Offset(5, 5));
     await tester.pump();
-    expect(enters, 1);
-    expect(exits, 0);
+    expect(sink.of<HoverEnter>(), hasLength(1));
+    expect(sink.of<HoverExit>(), isEmpty);
 
     await gesture.moveTo(const Offset(500, 500));
     await tester.pump();
-    expect(exits, 1);
+    expect(sink.of<HoverExit>(), hasLength(1));
   });
 
-  testWidgets('unmounting mid-hover emits onHoverExit', (tester) async {
+  testWidgets('unmounting mid-hover emits HoverExit', (tester) async {
     final hover = HoverInput(shape: .square(20));
-    final subtree = Node(children: [hover]);
-    final scene = await pumpScene(tester, [subtree]);
-    scene.root.provide('cursor');
     var exits = 0;
     final reads = <String>[];
 
-    hover.onHoverExit(() {
-      exits += 1;
-      reads.add(hover.read<String>());
-    });
+    final parent = TestNode(
+      processor: (_, event) {
+        if (event is! HoverExit) return;
+        exits += 1;
+        reads.add(hover.read<String>());
+      },
+      children: [hover],
+    );
+
+    final subtree = Node(children: [parent]);
+    final scene = await pumpScene(tester, [subtree]);
+    scene.root.provide('cursor');
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500));
@@ -497,9 +435,8 @@ void main() {
 
   testWidgets('a hover event after the hovered node unmounted emits nothing', (tester) async {
     final hover = HoverInput(shape: .square(20));
-    final scene = await pumpScene(tester, [hover]);
-    var exits = 0;
-    hover.onHoverExit(() => exits += 1);
+    final sink = TestSink([hover]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
     await gesture.addPointer(location: const Offset(500, 500));
@@ -508,35 +445,14 @@ void main() {
     await gesture.moveTo(const Offset(5, 5));
     await tester.pump();
 
-    scene.root.remove(hover);
+    sink.remove(hover);
     await tester.pump();
-    expect(exits, 1);
+    expect(sink.of<HoverExit>(), hasLength(1));
 
     await gesture.moveTo(const Offset(500, 500));
     await tester.pump();
 
-    expect(exits, 1);
-  });
-
-  testWidgets('a node re-added under a still cursor is hovered again', (tester) async {
-    final hover = HoverInput(shape: .square(20));
-    final scene = await pumpScene(tester, [hover]);
-    var enters = 0;
-    hover.onHoverEnter(() => enters += 1);
-
-    final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
-    await gesture.addPointer(location: const Offset(500, 500));
-    await tester.pump();
-
-    await gesture.moveTo(const Offset(5, 5));
-    await tester.pump();
-    scene.root.remove(hover);
-    await tester.pump();
-    scene.root.add(hover);
-    await tester.pump();
-
-    expect(enters, 2);
-    expect(hover.isHovering, isTrue);
+    expect(sink.of<HoverExit>(), hasLength(1));
   });
 
   testWidgets('a node that moves under a still cursor is hovered', (tester) async {
@@ -577,51 +493,45 @@ void main() {
 
   testWidgets('unmounting mid-drag cancels the drag', (tester) async {
     final drag = DragInput(shape: .square(200));
-    final scene = await pumpScene(tester, [drag]);
-    final ends = <DragEndEvent>[];
-    var cancels = 0;
-    drag.onDragEnd(ends.add);
-    drag.onDragCancel(() => cancels += 1);
+    final sink = TestSink([drag]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.moveBy(const Offset(50, 0));
     await tester.pump(settle);
     expect(drag.isDragging, isTrue);
 
-    scene.root.remove(drag);
+    sink.remove(drag);
     await tester.pump();
 
-    expect(cancels, 1);
-    expect(ends, isEmpty);
+    expect(sink.of<DragCancel>(), hasLength(1));
+    expect(sink.of<DragEnd>(), isEmpty);
     expect(drag.isDragging, isFalse);
 
     // The arena resolution the release would have triggered is already spent,
-    // so it must not emit a second terminal signal.
+    // so it must not emit a second terminal event.
     await gesture.up();
     await tester.pump(settle);
 
-    expect(cancels, 1);
+    expect(sink.of<DragCancel>(), hasLength(1));
   });
 
   testWidgets('unmounting mid-drag honors endOnCancel', (tester) async {
     final drag = DragInput(shape: .square(200), endOnCancel: true);
-    final scene = await pumpScene(tester, [drag]);
-    final ends = <DragEndEvent>[];
-    var cancels = 0;
-    drag.onDragEnd(ends.add);
-    drag.onDragCancel(() => cancels += 1);
+    final sink = TestSink([drag]);
+    await pumpScene(tester, [sink]);
 
     final gesture = await tester.startGesture(const Offset(5, 5));
     await gesture.moveBy(const Offset(50, 0));
     await tester.pump(settle);
 
-    scene.root.remove(drag);
+    sink.remove(drag);
     await tester.pump();
     await gesture.up();
     await tester.pump(settle);
 
-    expect(cancels, 1);
-    expect(ends, hasLength(1));
-    expect(ends.single.details.globalPosition, const Offset(55, 5));
+    expect(sink.of<DragCancel>(), hasLength(1));
+    expect(sink.of<DragEnd>(), hasLength(1));
+    expect(sink.of<DragEnd>().single.details.globalPosition, const Offset(55, 5));
   });
 }

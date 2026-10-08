@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/opacity_node.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/routing/backdrop.dart';
@@ -113,10 +114,10 @@ class RouterNode extends SpatialNode {
   }
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update(:final dt):
         if (_navigation?.tick(dt) ?? false) {
           _settle();
@@ -214,13 +215,17 @@ class RouterNode extends SpatialNode {
   }
 
   /// Starts [navigation]: its route placed above the stack, and its chrome
-  /// above that.
+  /// above that. A pop launches backward, its route already on top.
   Future<void> _launch(_Navigation navigation) {
     _navigation = navigation;
     final incoming = navigation.incoming;
-    incoming.priority = _above;
-    super.add(incoming);
-    final chrome = navigation.transition.chrome;
+
+    if (navigation.forward) {
+      incoming.priority = _above;
+      super.add(incoming);
+    }
+
+    final chrome = navigation.chrome;
 
     if (chrome != null) {
       chrome.priority = incoming.priority + 1;
@@ -246,7 +251,7 @@ class RouterNode extends SpatialNode {
     }
 
     _order();
-    final chrome = navigation.transition.chrome;
+    final chrome = navigation.chrome;
     if (chrome != null) super.remove(chrome);
   }
 

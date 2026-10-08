@@ -3,6 +3,7 @@
 import 'dart:ui';
 
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/palette.dart';
 
@@ -27,10 +28,10 @@ class ShapeNode extends SpatialNode {
        super(inherit: .parent);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Draw(:final canvas):
         palette.draw(canvas, shape.draw);
     }

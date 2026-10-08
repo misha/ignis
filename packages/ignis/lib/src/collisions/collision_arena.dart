@@ -5,7 +5,6 @@
 
 import 'package:ignis/src/collisions/intersection_engine.dart';
 import 'package:ignis/src/collisions/nodes/collider_node.dart';
-import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/shape.dart';
 
@@ -25,7 +24,7 @@ final class _NarrowphaseGeometry {
 ///
 /// Registered colliders are broadphased with a sort-and-sweep over their
 /// AABBs to produce candidate pairs, which are then narrowphased against
-/// their actual shapes to power the node signals.
+/// their actual shapes to power the node events.
 final class CollisionArena {
   /// Used for narrowphase intersection tests.
   final IntersectionEngine engine;
@@ -70,7 +69,7 @@ final class CollisionArena {
     IntersectionEngine? engine,
   }) : engine = engine ?? const StandardIntersectionEngine();
 
-  Cleanup add(ColliderNode collider) {
+  void add(ColliderNode collider) {
     assert(
       !_mapping.containsKey(collider),
       'Collider is already registered.',
@@ -94,7 +93,6 @@ final class CollisionArena {
     _colliders.add(collider);
     _mapping[collider] = slot;
     _sorted = false;
-    return scope(() => remove(collider));
   }
 
   void remove(ColliderNode collider) {
@@ -301,7 +299,7 @@ final class CollisionArena {
       if (next != null && _identicalPair(previous, next)) continue;
       final (a, b) = previous;
 
-      // Unregistered, not separated: no exit signal, but the survivor still
+      // Unregistered, not separated: no end event, but the survivor still
       // forgets it.
       if (!a.isMounted || !b.isMounted) {
         a.dropCollision(b);

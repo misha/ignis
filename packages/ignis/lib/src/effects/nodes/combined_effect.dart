@@ -1,9 +1,9 @@
 // SPDX-AI-Disclosure: none
 
-import 'package:ignis/src/core.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 
-/// A node that runs [effects] together, exposing [onFinish] once every one
+/// A node that runs [effects] together, emitting [EffectFinish] once every one
 /// of them has finished.
 class CombinedEffect extends EffectNode {
   /// The effects run together.
@@ -21,13 +21,15 @@ class CombinedEffect extends EffectNode {
        super(children: effects);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
-      case Build():
-        for (final effect in effects) {
-          effect.onFinish(_track);
+    switch (message) {
+      case EffectFinish():
+        _remaining -= 1;
+
+        if (_remaining == 0) {
+          finish();
         }
     }
   }
@@ -38,14 +40,6 @@ class CombinedEffect extends EffectNode {
 
     for (final effect in effects) {
       effect.reset();
-    }
-  }
-
-  void _track() {
-    _remaining -= 1;
-
-    if (_remaining == 0) {
-      onFinish.emit();
     }
   }
 }

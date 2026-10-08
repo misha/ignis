@@ -18,7 +18,22 @@ void main() {
 
     expect(() => scene.update(0), throwsAssertionError);
     expect(() => scene.resize(100, 80), throwsAssertionError);
+    expect(scene.reassemble, throwsAssertionError);
     expect(scene.destroy, returnsNormally);
+  });
+
+  test('reassembling posts Reassemble to every node once', () {
+    final reassembled = <TestNode>[];
+
+    void record(TestNode node, Message message) {
+      if (message is Reassemble) reassembled.add(node);
+    }
+
+    final child = TestNode(processor: record);
+    final root = TestNode(processor: record, children: [child]);
+    root.mount().reassemble();
+
+    expect(reassembled, unorderedEquals([root, child]));
   });
 
   test('keeps the given node parentless once loaded', () {
@@ -33,35 +48,5 @@ void main() {
     (node as Node).mount();
 
     expect(node.mount, throwsStateError);
-  });
-
-  group('pause', () {
-    test('pause and resume flip it, and emit only on a change', () {
-      final scene = Node().mount();
-      final emitted = <bool>[];
-      scene.onPause(emitted.add);
-
-      scene.pause();
-      expect(scene.paused, isTrue);
-
-      scene.pause();
-      expect(emitted, [true], reason: 'already paused, nothing changed');
-
-      scene.resume();
-      expect(scene.paused, isFalse);
-      expect(emitted, [true, false]);
-    });
-
-    test('the setter goes through pause and resume', () {
-      final scene = Node().mount();
-      final emitted = <bool>[];
-      scene.onPause(emitted.add);
-
-      scene.paused = true;
-      scene.paused = true;
-      scene.paused = false;
-
-      expect(emitted, [true, false]);
-    });
   });
 }

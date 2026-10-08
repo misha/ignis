@@ -42,30 +42,4 @@ void main() {
     scene.update(0.5);
     expect(node.anchor, Anchor(5, 10));
   });
-
-  test('re-resolves its target after being remounted elsewhere', () {
-    final root = SpatialNode();
-    final nodeA = ShapeNode(shape: .square(0), anchor: .new(0, 0));
-    final nodeB = ShapeNode(shape: .square(0), anchor: .new(100, 100));
-    root.addAll([nodeA, nodeB]);
-    final scene = root.mount();
-    final effect = AnchorEffect.by(
-      offset: .new(10, 0),
-      timeline: .duration(1),
-    );
-
-    nodeA.add(effect);
-
-    scene.update(0.5);
-    expect(nodeA.anchor, Anchor(5, 0));
-
-    effect.detach();
-    scene.update(0); // Flush the detach.
-    nodeB.add(effect);
-    scene.update(0); // Flush the attach.
-
-    scene.update(0.5);
-    expect(nodeA.anchor, Anchor(5, 0)); // Unchanged.
-    expect(nodeB.anchor, Anchor(105, 100));
-  });
 }

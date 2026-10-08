@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/nodes/timeline_effect.dart';
+import 'package:ignis/src/message.dart';
 
 /// An effect that fades a [color] in or out on a [Paint] by animating a
 /// [ColorFilter], varying [color]'s alpha with progress.
@@ -16,6 +17,8 @@ class ColorFilterOpacityEffect extends TimelineEffect {
 
   final double? _from;
   final double? _to;
+  late double _fromAlpha;
+  late double _toAlpha;
 
   /// Fades [color] in on [paint] from fully transparent to fully opaque.
   ColorFilterOpacityEffect.fadeIn({
@@ -55,17 +58,19 @@ class ColorFilterOpacityEffect extends TimelineEffect {
        _to = toAlpha;
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
-        final from = _from ?? color.a;
-        final to = _to ?? color.a;
+        _fromAlpha = _from ?? color.a;
+        _toAlpha = _to ?? color.a;
 
-        onProgress((progress) {
-          paint.colorFilter = .mode(color.withValues(alpha: from + (to - from) * progress), .srcIn);
-        });
+      case Update():
+        paint.colorFilter = .mode(
+          color.withValues(alpha: _fromAlpha + (_toAlpha - _fromAlpha) * progress),
+          .srcIn,
+        );
     }
   }
 }

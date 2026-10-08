@@ -2,6 +2,7 @@
 
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/effects/interfaces/measurable_effect.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/effect_node.dart';
 import 'package:ignis/src/timeline.dart';
 
@@ -10,26 +11,13 @@ class TimelineEffect extends EffectNode {
   /// Drives this effect.
   final Timeline timeline;
 
-  /// Emitted once, when this effect starts progressing.
-  final onStart = Signal0();
-
-  /// Emitted after each update once this effect starts progressing, with its
-  /// current progress.
-  final onProgress = Signal1<double>();
-
-  /// Emitted each time [progress] reaches 1.
-  final onMax = Signal0();
-
-  /// Emitted each time [progress] reaches 0.
-  final onMin = Signal0();
-
   double _previousProgress = 0;
   bool _started = false;
   bool _finished = false;
   bool _forward = true;
   bool _fitted = false;
 
-  /// This effect's progress as of the previous [onProgress] emission.
+  /// This effect's progress before the latest [Update].
   double get previousProgress => _previousProgress;
 
   /// This effect's current progress.
@@ -81,10 +69,10 @@ class TimelineEffect extends EffectNode {
   }
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update(:final dt):
         if (!_fitted) {
           _fitted = true;
@@ -93,6 +81,8 @@ class TimelineEffect extends EffectNode {
             timeline.fit(measurable.measure());
           }
         }
+
+        _previousProgress = timeline.progress;
 
         if (_forward) {
           timeline.advance(dt);
@@ -107,21 +97,20 @@ class TimelineEffect extends EffectNode {
 
         if (!_started) {
           _started = true;
-          onStart.emit();
+          parent?.post(TimelineStart(this));
         }
 
         final progress = timeline.progress;
 
         if (progress == 1 && _previousProgress != 1) {
-          onMax.emit();
+          parent?.post(TimelineMax(this));
         }
 
         if (progress == 0 && _previousProgress != 0) {
-          onMin.emit();
+          parent?.post(TimelineMin(this));
         }
 
-        onProgress.emit(progress);
-        _previousProgress = progress;
+        parent?.post(TimelineProgress(this, progress));
 
         if (!timeline.isFinished) {
           _finished = false;
@@ -133,7 +122,38 @@ class TimelineEffect extends EffectNode {
         }
 
         _finished = true;
-        onFinish.emit();
+        finish();
     }
   }
+}
+
+/// Emitted once, when [effect] starts progressing.
+final class TimelineStart extends Message {
+  final TimelineEffect effect;
+
+  const TimelineStart(this.effect);
+}
+
+/// Emitted after each update once [effect] starts progressing, with its
+/// current progress.
+final class TimelineProgress extends Message {
+  final TimelineEffect effect;
+
+  final double progress;
+
+  const TimelineProgress(this.effect, this.progress);
+}
+
+/// Emitted each time [effect]'s progress reaches 1.
+final class TimelineMax extends Message {
+  final TimelineEffect effect;
+
+  const TimelineMax(this.effect);
+}
+
+/// Emitted each time [effect]'s progress reaches 0.
+final class TimelineMin extends Message {
+  final TimelineEffect effect;
+
+  const TimelineMin(this.effect);
 }

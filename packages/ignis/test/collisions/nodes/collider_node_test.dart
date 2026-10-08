@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
+import '../../support/test_sink.dart';
+
 void main() {
   group('a shape of its own', () {
     test('keeps a shape it was given', () {
@@ -55,7 +57,8 @@ void main() {
       mask: 1,
     );
 
-    inner.add(a);
+    final aSink = TestSink([a]);
+    inner.add(aSink);
 
     final innerSibling = ColliderNode(
       shape: .circle(4),
@@ -75,52 +78,9 @@ void main() {
       ),
     );
 
-    final aStarted = <ColliderNode>[];
-    a.onCollisionStart(aStarted.add);
-
     outer.mount().update(0);
 
-    expect(aStarted, [innerSibling]);
-  });
-
-  group('owners', () {
-    test('an overlap reports the parent of the collider it hit', () {
-      final slot = ShapeNode(
-        shape: .rectangle(.new(8, 8)),
-        children: [ColliderNode(layer: 1, mask: 1)],
-      );
-
-      final object = ShapeNode(
-        shape: .rectangle(.new(8, 8)),
-        position: .new(2, 0),
-        children: [ColliderNode(layer: 1, mask: 1)],
-      );
-
-      final collider = object.children.whereType<ColliderNode>().first;
-      CollisionArenaNode(children: [slot, object]).mount().update(0);
-
-      expect(collider.collisions.owners, [slot]);
-    });
-
-    test('an overlap reports the owner a collider was given over its parent', () {
-      final group = Node();
-
-      final slot = ShapeNode(
-        shape: .rectangle(.new(8, 8)),
-        children: [ColliderNode(layer: 1, mask: 1, owner: group)],
-      );
-
-      final object = ShapeNode(
-        shape: .rectangle(.new(8, 8)),
-        position: .new(2, 0),
-        children: [ColliderNode(layer: 1, mask: 1)],
-      );
-
-      final collider = object.children.whereType<ColliderNode>().first;
-      CollisionArenaNode(children: [slot, object, group]).mount().update(0);
-
-      expect(collider.collisions.owners, [group]);
-    });
+    expect(aSink.of<CollisionStart>().map((event) => event.other), [innerSibling]);
   });
 
   test('unregisters from CollisionArenaNode when detached', () {
@@ -139,17 +99,15 @@ void main() {
       mask: 1,
     );
 
+    final bSink = TestSink([b]);
     collisions.add(a);
-    collisions.add(b);
-
-    final bExited = <ColliderNode>[];
-    b.onCollisionEnd(bExited.add);
+    collisions.add(bSink);
 
     final scene = collisions.mount();
     scene.update(0);
 
     a.detach();
     expect(() => scene.update(0), returnsNormally);
-    expect(bExited, isEmpty);
+    expect(bSink.of<CollisionEnd>(), isEmpty);
   });
 }

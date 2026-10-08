@@ -3,7 +3,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:ignis/src/core.dart';
 import 'package:ignis/src/scene.dart';
 import 'package:ignis/src/flutter/render_loop.dart';
 import 'package:ignis/src/flutter/scene_widget.dart';
@@ -50,7 +49,6 @@ class SceneRenderBox extends RenderBox {
   Scene _scene;
   bool _isRepaintBoundary;
   bool _muted;
-  Cleanup? _unwatch;
   late final _input = InputServer(this);
 
   Scene get scene => _scene;
@@ -64,20 +62,9 @@ class SceneRenderBox extends RenderBox {
   set scene(Scene value) {
     if (identical(_scene, value)) return;
     _scene = value;
-    if (attached) _watch();
     markNeedsPaint();
   }
 
-  /// Tracks this scene's pause, which a hotkey may flip without the widget
-  /// tree hearing about it.
-  void _watch() {
-    _unwatch?.call();
-    _unwatch = _scene.onPause.watch(_apply);
-    _apply();
-  }
-
-  /// Whether the surrounding tree has its tickers off, so this scene stops
-  /// drawing without being paused.
   set muted(bool value) {
     if (_muted == value) return;
     _muted = value;
@@ -85,7 +72,7 @@ class SceneRenderBox extends RenderBox {
   }
 
   void _apply() {
-    if (_scene.paused || _muted) {
+    if (_muted) {
       renderLoop?.stop();
     } else {
       renderLoop?.start();
@@ -111,7 +98,7 @@ class SceneRenderBox extends RenderBox {
   void attach(PipelineOwner owner) {
     super.attach(owner);
     renderLoop = RenderLoop(_renderLoopCallback);
-    _watch();
+    _apply();
   }
 
   // Detach can recur, e.g. on reparenting, so it only stops the loop.
@@ -119,13 +106,12 @@ class SceneRenderBox extends RenderBox {
   @override
   void detach() {
     super.detach();
-    _unwatch?.call();
-    _unwatch = null;
     renderLoop?.dispose();
     renderLoop = null;
   }
 
   void _renderLoopCallback(double dt) {
+    if (scene.paused) return;
     scene.update(dt);
     markNeedsPaint();
   }

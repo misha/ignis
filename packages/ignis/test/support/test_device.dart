@@ -15,12 +15,12 @@ final class TestDevice extends ControlDevice {
   /// Drives the device by hand, standing in for a platform listener.
   ///
   /// One call stands for one of the device's own events, which may turn into
-  /// any number of control events.
+  /// any number of triggers.
   bool press(List<int> buttons) {
     var handled = false;
 
     for (final button in buttons) {
-      if (emit(ButtonEvent(button))) handled = true;
+      if (emit(ButtonTrigger(button))) handled = true;
     }
 
     return handled;
@@ -28,25 +28,25 @@ final class TestDevice extends ControlDevice {
 }
 
 /// Matches its own kind.
-final class TestEvent implements ControlEvent {
-  const TestEvent();
+final class TestTrigger implements Trigger {
+  const TestTrigger();
 
   @override
-  bool accepts(ControlEvent emitted) => emitted is TestEvent;
+  bool accepts(Trigger trigger) => trigger is TestTrigger;
 }
 
-/// An event carrying a [name], matching the one that shares it.
-final class NamedEvent implements ControlEvent {
+/// A trigger carrying a [name], matching the one that shares it.
+final class NamedTrigger implements Trigger {
   final String name;
 
-  const NamedEvent(this.name);
+  const NamedTrigger(this.name);
 
   @override
-  bool accepts(ControlEvent emitted) => this == emitted;
+  bool accepts(Trigger trigger) => this == trigger;
 
   @override
   bool operator ==(Object other) =>
-      other is NamedEvent && //
+      other is NamedTrigger && //
       other.name == name;
 
   @override
@@ -56,15 +56,15 @@ final class NamedEvent implements ControlEvent {
   String toString() => name;
 }
 
-/// A non-keyboard event.
-final class ButtonEvent implements ControlEvent {
+/// A non-keyboard trigger.
+final class ButtonTrigger implements Trigger {
   final int button;
 
-  const ButtonEvent(this.button);
+  const ButtonTrigger(this.button);
 
   @override
-  bool accepts(ControlEvent emitted) {
-    return emitted is ButtonEvent && emitted.button == button;
+  bool accepts(Trigger trigger) {
+    return trigger is ButtonTrigger && trigger.button == button;
   }
 
   @override

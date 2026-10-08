@@ -3,8 +3,9 @@
 import 'package:flutter/gestures.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/extensions.dart';
-import 'package:ignis/src/math.dart';
 import 'package:ignis/src/inputs/nodes/input_node.dart';
+import 'package:ignis/src/math.dart';
+import 'package:ignis/src/message.dart';
 
 /// A hit area that recognizes taps by delegating to a [TapGestureRecognizer].
 class TapInput extends InputNode {
@@ -16,15 +17,10 @@ class TapInput extends InputNode {
   /// that lasts until it is released or the gesture arena takes it away.
   final double? slop;
 
-  final onTapDown = Signal1<TapDownEvent>();
-  final onTapUp = Signal1<TapUpEvent>();
-  final onTap = Signal0();
-  final onTapCancel = Signal0();
-
-  /// Whether a cancelled tap should also manufacture and emit an [onTapUp],
+  /// Whether a cancelled tap should also manufacture and emit a [TapUp],
   /// built from the position the pointer went down at.
   ///
-  /// If enabled, [onTapUp] is called immediately *after* [onTapCancel].
+  /// If enabled, [TapUp] is emitted immediately *after* [TapCancel].
   ///
   /// Defaults to `false`.
   final bool upOnCancel;
@@ -50,10 +46,10 @@ class TapInput extends InputNode {
   }) : upOnCancel = upOnCancel ?? false;
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         final recognizer = _recognizer = TapGestureRecognizer(
           preAcceptSlopTolerance: slop,
@@ -65,6 +61,7 @@ class TapInput extends InputNode {
           ..onTapUp = _handleUp
           ..onTap = _handleTap
           ..onTapCancel = _handleCancel;
+
       case Destroy():
         _recognizer?.dispose();
         _recognizer = null;
@@ -81,8 +78,9 @@ class TapInput extends InputNode {
     final scenePoint = details.localPosition.toVector2();
     _down = details;
 
-    onTapDown.emit(
-      TapDownEvent(
+    parent?.post(
+      TapDown(
+        this,
         scene: scenePoint,
         local: toLocal(scenePoint),
         details: details,
@@ -94,8 +92,9 @@ class TapInput extends InputNode {
     final scenePoint = details.localPosition.toVector2();
     _down = null;
 
-    onTapUp.emit(
-      TapUpEvent(
+    parent?.post(
+      TapUp(
+        this,
         scene: scenePoint,
         local: toLocal(scenePoint),
         details: details,
@@ -104,19 +103,20 @@ class TapInput extends InputNode {
   }
 
   void _handleTap() {
-    onTap.emit();
+    parent?.post(Tap(this));
   }
 
   void _handleCancel() {
     final down = _down;
     _down = null;
-    onTapCancel.emit();
+    parent?.post(TapCancel(this));
 
     if (upOnCancel) {
       final scenePoint = down!.localPosition.toVector2();
 
-      onTapUp.emit(
-        TapUpEvent(
+      parent?.post(
+        TapUp(
+          this,
           scene: scenePoint,
           local: toLocal(scenePoint),
           details: TapUpDetails(
@@ -130,7 +130,9 @@ class TapInput extends InputNode {
   }
 }
 
-final class TapDownEvent {
+final class TapDown extends Message {
+  final TapInput input;
+
   /// This pointer's position in scene (world) space.
   final Vector2 scene;
 
@@ -140,14 +142,17 @@ final class TapDownEvent {
   /// Flutter's own details for this event.
   final TapDownDetails details;
 
-  const TapDownEvent({
+  const TapDown(
+    this.input, {
     required this.scene,
     required this.local,
     required this.details,
   });
 }
 
-final class TapUpEvent {
+final class TapUp extends Message {
+  final TapInput input;
+
   /// This pointer's position in scene (world) space.
   final Vector2 scene;
 
@@ -157,9 +162,24 @@ final class TapUpEvent {
   /// Flutter's own details for this event.
   final TapUpDetails details;
 
-  const TapUpEvent({
+  const TapUp(
+    this.input, {
     required this.scene,
     required this.local,
     required this.details,
   });
+}
+
+/// Emitted when [input] recognizes a tap.
+final class Tap extends Message {
+  final TapInput input;
+
+  const Tap(this.input);
+}
+
+/// Emitted when [input]'s tap is cancelled.
+final class TapCancel extends Message {
+  final TapInput input;
+
+  const TapCancel(this.input);
 }

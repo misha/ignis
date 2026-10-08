@@ -5,6 +5,7 @@ import 'package:flutter/gestures.dart';
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
+import 'package:ignis/src/message.dart';
 import 'package:ignis/src/nodes/spatial_node.dart';
 import 'package:ignis/src/shape.dart';
 
@@ -34,10 +35,10 @@ abstract class InputNode extends SpatialNode {
        super(inherit: .parent);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case DebugDraw(:final canvas):
         final debug = Ignis.debug;
         if (!debug.draws(.input)) break;

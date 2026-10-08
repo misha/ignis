@@ -74,10 +74,10 @@ class Spawner extends Node {
   Spawner(this.benchmark) : super(priority: -1);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update():
         final world = parent!;
 
@@ -95,10 +95,10 @@ class Leaf extends Node {
   Leaf(this.remaining);
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Update():
         remaining -= 1;
         if (remaining == 0) detach();

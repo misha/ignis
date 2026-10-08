@@ -2,38 +2,28 @@
 
 part of 'core.dart';
 
-/// Call to undo whatever was set up.
-typedef Cleanup = void Function();
-
 /// **Overview**
 ///
 /// Nodes are the building block of Ignis. They are organized in a directed,
-/// acyclic tree, with [children] ordered by [priority]. Nodes may be assembled
-/// into subtrees using [add] and [remove] any number of times.
+/// acyclic tree, with [children] ordered by [priority]. Nodes are assembled
+/// into subtrees using [add] and [remove].
 ///
-/// **Building**
+/// **Processing**
 ///
-/// Nodes should initialize children, connect signals, and compose behavior in
-/// their [process] method, under [Build]. [Build] is processed every time a
-/// node is mounted to a live scene.
+/// Nodes compose behavior in their [process] method. [Build] is processed when
+/// a node is mounted to a live scene, and [Destroy] when it is unmounted.
+/// Whatever a node sets up under one, it undoes under the other.
 ///
-/// [Build] must be safe to process more than once. It tracks every node added
-/// and every signal subscribed inside it. When the node is unmounted, the nodes
-/// are removed and signals automatically unsubscribed. Other resources that
-/// need disposal should be disposed under [Destroy] manually.
+/// A node lives once. Unmounting destroys it, and a destroyed node can never be
+/// added again.
 ///
 /// **Do not make [process] `async`.**
 ///
-/// **Signals**
+/// **Messages**
 ///
-/// Nodes communicate time-sensitive events through signals: named, type-safe
-/// message emitters. Use one to report an event to consumers, or as an input
-/// to react to external events.
-///
-/// Conventionally, signals are prefixed with the word `on`. For example, the
-/// signal a collider emits on contact is named `onCollisionStart`. This allows
-/// consumers to have a natural-reading constructor, e.g.
-/// `onCollisionStart(/* do stuff */);`.
+/// Nodes are an [Address] and may [post] messages to one another. Indeed, this is
+/// how the entire engine runs. The implementation of [post] simply passes it
+/// along to [process] automatically.
 ///
 /// **Scenes**
 ///
@@ -56,7 +46,7 @@ typedef Cleanup = void Function();
 /// A node may [provide] a value to its entire subtree, keyed by its type.
 /// [read] resolves the nearest match, checking the node itself before its
 /// [ancestors].
-class Node {
+class Node with Address {
   /// Creates a new node.
   ///
   /// [activity] sets whether the node ticks, renders, and accepts input.
@@ -75,10 +65,19 @@ class Node {
     addAll(children);
   }
 
-  /// Executes all this node's behavior for the given [state].
-  @mustCallSuper
+  /// Executes all this node's behavior for the given [message].
   @visibleForOverriding
-  void process(State state) {}
+  void process(Message message) {
+    // Nothing to do.
+  }
+
+  /// Processes [message] on this node.
+  @override
+  @nonVirtual
+  void post(Message message) {
+    assert(!_destroyed, 'Cannot post ${message.runtimeType} to a destroyed $runtimeType.');
+    process(message);
+  }
 
   /// Updates this node and its children by [Update.dt] seconds.
   @nonVirtual
@@ -146,81 +145,6 @@ class Node {
       }
     }
   }
-
-  // #region Building
-
-  /// The node processing [Build], or null between builds.
-  static Node? _building;
-
-  /// Runs [body] with [node] as the node building, restoring the previous one
-  /// afterward.
-  static T _construct<T>(Node node, T Function() body) {
-    final saved = _building;
-    _building = node;
-
-    try {
-      return body();
-    } finally {
-      _building = saved;
-    }
-  }
-
-  // The following fields belong to a single, logical [Build]. When the node is
-  // unmounted, they are processed and/or dropped.
-
-  List<Cleanup>? _cleanups;
-
-  /// The children this node's [Build] added, in declaration order.
-  ///
-  /// Separate from [children], which also holds whatever was added imperatively.
-  ///
-  /// TODO: There's insufficient documentation regarding "declaration" of nodes.
-  ///   Honestly, it seems like a new core API, e.g. `declare(child)` causes the
-  ///   node to then get automatically removed on rebuild. Such an API would
-  ///   even allow (potentially) currently imperative-only additions to *also*
-  ///   clean up automatically (like you can remove missiles or whatever if you
-  ///   want to clean them up on a code change, when that unit changes).
-  List<Node>? _declared;
-
-  /// Detaches every child the last [Build] declared.
-  void _discardDeclared() {
-    final declared = _declared;
-    if (declared == null || declared.isEmpty) return;
-
-    for (var i = declared.length - 1; i >= 0; i -= 1) {
-      declared[i].detach();
-    }
-
-    declared.clear();
-  }
-
-  /// Defers [cleanup] until this node is unmounted.
-  void _trash(Cleanup cleanup) {
-    (_cleanups ??= []).add(cleanup);
-  }
-
-  void _cleanup() {
-    final cleanups = _cleanups;
-    if (cleanups == null || cleanups.isEmpty) return;
-    _cleanups = null;
-
-    for (var i = cleanups.length - 1; i >= 0; i -= 1) {
-      try {
-        cleanups[i]();
-      } catch (exception, stack) {
-        FlutterError.reportError(
-          FlutterErrorDetails(
-            exception: exception,
-            stack: stack,
-            library: 'ignis',
-            context: ErrorDescription('while emptying the trash'),
-          ),
-        );
-      }
-    }
-  }
-
-  // #endregion
 
   // #region Activity
 
@@ -341,6 +265,12 @@ class Node {
   /// True while this node is part of a scene.
   bool get isMounted => _scene != null;
 
+  bool _destroyed = false;
+
+  /// True once this node has been unmounted. A destroyed node is never mounted
+  /// again.
+  bool get isDestroyed => _destroyed;
+
   /// This node's current scene. Only valid while [isMounted].
   Scene get scene {
     assert(isMounted, 'This node is not mounted yet.');
@@ -363,7 +293,7 @@ class Node {
     }
 
     try {
-      _construct(this, () => process(const Build()));
+      process(const Build());
     } finally {
       final children = _children?.nodes;
 
@@ -395,11 +325,10 @@ class Node {
         );
       }
 
-      _cleanup();
-      _discardDeclared();
       _dropAncestry();
     } finally {
       _scene = null;
+      _destroyed = true;
     }
   }
 
@@ -446,12 +375,9 @@ class Node {
 
   /// Adds [node] to this node. The node is returned.
   ///
-  /// Nodes cannot be added to themselves or their descendants. Adding a child
-  /// to its current parent is a no-op. If the child was pending removal, this
-  /// operation cancels that removal.
-  ///
-  /// Called from this node's own [Build], the child is automatically recorded
-  /// as declared, so unmounting discards it.
+  /// Nodes cannot be added to themselves or their descendants. A mounted or
+  /// destroyed node cannot be added either. Until it mounts, adding a node
+  /// elsewhere moves it, and adding it to its current parent is a no-op.
   T add<T extends Node>(T node) {
     if (identical(this, node)) {
       throw StateError('Cannot add a node to itself.');
@@ -465,17 +391,16 @@ class Node {
       throw StateError('Cannot add a scene root to another node.');
     }
 
-    if (isMounted && node.isMounted && !identical(scene, node.scene)) {
-      throw StateError('Cannot move a node between two live scenes.');
+    if (node._destroyed) {
+      throw StateError('Cannot add a destroyed node.');
+    }
+
+    if (node.isMounted) {
+      throw StateError('Cannot add a mounted node.');
     }
 
     if (identical(node.incomingParent, this)) {
       return node;
-    }
-
-    // TODO: Declared nodes should probably be accrued during actual reparenting.
-    if (identical(_building, this)) {
-      (_declared ??= []).add(node);
     }
 
     node._scheduleParent(this);
@@ -530,12 +455,6 @@ class Node {
     _reparentTask = null;
     final outgoing = _scene;
     final incoming = nextParent?._scene;
-
-    // TODO: It is unclear whether it is "correct" to rebuild a node when
-    //  moving it to a new parent in the same scene. However, I have no games
-    //  that move nodes, and Flame does not have rebuildable nodes, so there is
-    //  literally no point of reference. Revisit this operation when there is
-    //  finally a game that depends on moving nodes in some way.
 
     try {
       if (outgoing != null) _unmount();
@@ -690,6 +609,10 @@ extension Mount<T extends Node> on T {
       }
 
       return existing;
+    }
+
+    if (_destroyed) {
+      throw StateError('Cannot mount a destroyed node.');
     }
 
     if (_parent != null) {

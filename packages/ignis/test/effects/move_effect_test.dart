@@ -82,30 +82,4 @@ void main() {
 
     expect(node.position, Vector2(30, 40));
   });
-
-  test('re-resolves its target after being remounted elsewhere', () {
-    final root = SpatialNode();
-    final nodeA = SpatialNode(position: .zero);
-    final nodeB = SpatialNode(position: .all(100));
-    root.addAll([nodeA, nodeB]);
-    final scene = root.mount();
-    final effect = MoveEffect.by(
-      offset: .new(10, 0),
-      timeline: .duration(1),
-    );
-
-    nodeA.add(effect);
-
-    scene.update(0.5);
-    expect(nodeA.position, Vector2(5, 0));
-
-    effect.detach();
-    scene.update(0); // Flush the detach.
-    nodeB.add(effect);
-    scene.update(0); // Flush the attach.
-
-    scene.update(0.5);
-    expect(nodeA.position, Vector2(5, 0)); // Unchanged.
-    expect(nodeB.position, Vector2(105, 100));
-  });
 }

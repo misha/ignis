@@ -5,7 +5,6 @@ export 'effects/nodes/color_filter_opacity_effect.dart';
 export 'effects/nodes/color_opacity_effect.dart';
 export 'effects/nodes/combined_effect.dart';
 export 'effects/nodes/follow_effect.dart';
-export 'effects/nodes/loading_effect.dart';
 export 'effects/nodes/move_effect.dart';
 export 'effects/nodes/opacity_effect.dart';
 export 'effects/nodes/rotate_effect.dart';

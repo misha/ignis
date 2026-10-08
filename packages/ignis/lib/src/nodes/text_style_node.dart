@@ -2,16 +2,17 @@
 
 import 'package:flutter/painting.dart';
 import 'package:ignis/src/core.dart';
+import 'package:ignis/src/mailer.dart';
+import 'package:ignis/src/message.dart';
 
 /// Holds the base [TextStyle] every descendant `TextNode` extends.
 ///
 /// Styles merge downward: the style in effect at any node is its nearest
 /// ancestor's, extended by its own. A style with `inherit: false` replaces
 /// the inherited one instead.
-class TextStyleNode extends Node {
-  /// Emitted when [style] changes.
-  final onStyleChange = Signal0();
-
+///
+/// Mails [TextStyleChange] whenever the style in effect here changes.
+class TextStyleNode extends Node with Mailer {
   late final _target = Target<TextStyleNode?>(this);
 
   TextStyle _style;
@@ -30,22 +31,35 @@ class TextStyleNode extends Node {
   set style(TextStyle style) {
     if (_style == style) return;
     _style = style;
-    _resolved = null;
-    onStyleChange.emit();
+    _changed();
   }
 
   @override
-  void process(State state) {
-    super.process(state);
+  void process(Message message) {
+    super.process(message);
 
-    switch (state) {
+    switch (message) {
       case Build():
         _resolved = null;
+        _target.value?.subscribe(this);
 
-        _target.value?.onStyleChange(() {
-          _resolved = null;
-          onStyleChange.emit();
-        });
+      case TextStyleChange():
+        _changed();
+
+      case Destroy():
+        _target.value?.unsubscribe(this);
     }
   }
+
+  void _changed() {
+    _resolved = null;
+    mail(TextStyleChange(this));
+  }
+}
+
+/// Mailed when the style in effect at [node] changes.
+final class TextStyleChange extends Message {
+  final TextStyleNode node;
+
+  const TextStyleChange(this.node);
 }
