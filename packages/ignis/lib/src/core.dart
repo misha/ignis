@@ -9,7 +9,6 @@ import 'package:ignis/src/geometry.dart';
 import 'package:ignis/src/globals.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/message.dart';
-import 'package:ignis/src/owners/opacity_owner.dart';
 import 'package:ignis/src/scene.dart';
 import 'package:ignis/src/scheduler.dart';
 import 'package:ignis/src/shape.dart';

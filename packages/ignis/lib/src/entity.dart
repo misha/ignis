@@ -49,13 +49,7 @@ part of 'core.dart';
 /// system. An entity may [provide] a value to its entire subtree, keyed by its
 /// type. [read] resolves the nearest match, checking the entity itself before
 /// its [ancestors].
-class Entity with Address, Geometry implements OpacityOwner {
-  /// Whether this entity clips its components and subtree to its [shape].
-  /// Defaults to false.
-  ///
-  /// Hit-testing is not clipped: a child outside the area still answers.
-  bool clip;
-
+class Entity with Address, Geometry {
   /// Creates a new entity.
   ///
   /// [activity] sets whether the entity ticks and renders.
@@ -72,24 +66,17 @@ class Entity with Address, Geometry implements OpacityOwner {
     Vector2? scale,
     double? angle,
     Anchor? anchor,
-    double? opacity,
-    bool? clip,
     bool? enabled,
     int? priority,
     Iterable<Component> components = const [],
     Iterable<Entity> children = const [],
-  }) : clip = clip ?? false,
-       _priority = priority ?? 0,
+  }) : _priority = priority ?? 0,
        activity = (enabled ?? true) ? .all : .none {
     if (shape != null) this.shape = shape;
     if (position != null) this.position.setFrom(position);
     if (scale != null) this.scale.setFrom(scale);
     if (angle != null) this.angle = angle;
     if (anchor != null) this.anchor = anchor;
-
-    if (opacity != null) {
-      this.opacity = opacity;
-    }
 
     this.components.addAll(components);
     addAll(children);
@@ -137,22 +124,10 @@ class Entity with Address, Geometry implements OpacityOwner {
   }
 
   /// Renders this entity's components and enabled children to [canvas], under
-  /// its transform, [opacity], and [clip].
+  /// its transform.
   void render(Canvas canvas) {
-    final opacity = this.opacity;
-    if (opacity <= 0) return;
-    final layered = opacity < 1;
-
-    if (layered) {
-      canvas.saveLayer(null, _paint!);
-    }
-
     canvas.save();
     canvas.transform(renderTransform);
-
-    if (clip) {
-      shape.clip(canvas);
-    }
 
     final components = _components;
 
@@ -179,10 +154,6 @@ class Entity with Address, Geometry implements OpacityOwner {
     }
 
     canvas.restore();
-
-    if (layered) {
-      canvas.restore();
-    }
   }
 
   /// Renders the debug overlay for this entity, its components, and its
@@ -264,36 +235,6 @@ class Entity with Address, Geometry implements OpacityOwner {
     } else {
       disable();
     }
-  }
-
-  // #endregion
-
-  // #region Opacity
-
-  Paint? _paint;
-
-  /// This subtree's opacity, 0 to 1. Defaults to 1.
-  ///
-  /// At 1 the subtree renders plainly, and at 0 it skips rendering entirely. In
-  /// both of these scenarios, there is no performance cost.
-  ///
-  /// When opacity is *between* 0 and 1, the subtree is wrapped in a special
-  /// canvas operation, `saveLayer`, fading it as one image. However, `saveLayer`
-  /// is extraordinarily expensive with respect to performance, so this parameter
-  /// must only be used for effects that truly require them, like transitions,
-  /// fades, and dims.
-  ///
-  /// For handling the opacity of a single sprite, use `Paint`'s alpha channel
-  /// directly, or take advantage of effects like `ColorOpacityEffect`
-  /// and `ColorFilterOpacityEffect` to control alpha over time.
-  @override
-  double get opacity => _paint?.color.a ?? 1;
-
-  @override
-  set opacity(double value) {
-    if (_paint == null && value >= 1) return;
-    final paint = _paint ??= Paint();
-    paint.color = paint.color.withValues(alpha: clampDouble(value, 0, 1));
   }
 
   // #endregion
