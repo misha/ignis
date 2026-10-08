@@ -25,7 +25,7 @@ class _WireframesEntity extends Entity {
     // demo on debug-wireframes
     switch (message) {
       case Build():
-        components.add(
+        addComponent(
           SpriteComponent(
             sprite: SpriteAnimation(
               'assets/sheets/slime_idle.png',

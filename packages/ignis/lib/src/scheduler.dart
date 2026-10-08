@@ -5,29 +5,34 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 
 @internal
-abstract base class Task extends LinkedListEntry<Task> {
-  void execute();
+final class Task {
+  final VoidCallback _callback;
 
-  void cancel() {
-    if (list == null) return;
-    unlink();
+  Task(this._callback);
+
+  /// Runs the callback on [scheduler].
+  ///
+  /// If [scheduler] is null, the callback is executed immediately.
+  void run(Scheduler? scheduler) {
+    if (scheduler != null) {
+      scheduler.schedule(this);
+    } else {
+      _callback();
+    }
   }
 }
 
 @internal
-mixin class Scheduler {
-  final _tasks = LinkedList<Task>();
+final class Scheduler {
+  final _tasks = Queue<Task>();
 
-  @internal
   void schedule(Task task) {
     _tasks.add(task);
   }
 
-  @internal
   void flush() {
     while (_tasks.isNotEmpty) {
-      final task = _tasks.first..unlink();
-      task.execute();
+      _tasks.removeFirst()._callback();
     }
   }
 }

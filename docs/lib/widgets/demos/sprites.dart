@@ -79,7 +79,7 @@ class _StillEntity extends Entity {
         final fire = SpriteComponent(sprite: SpriteImage('assets/images/bonfire.png'));
         // demo off
 
-        components.add(fire..anchor = .center);
+        addComponent(fire..anchor = .center);
     }
   }
 }
@@ -104,7 +104,7 @@ class _BonfireEntity extends Entity {
         );
         // demo off
 
-        components.add(fire..anchor = .center);
+        addComponent(fire..anchor = .center);
     }
   }
 }
@@ -148,7 +148,9 @@ class _LayeredEntity extends Entity {
         );
         // demo off
 
-        components.addAll([smoke, flame, wood]);
+        addComponent(smoke);
+        addComponent(flame);
+        addComponent(wood);
     }
   }
 }
@@ -169,10 +171,8 @@ class _RatesEntity extends Entity {
         final fast = SpriteComponent(sprite: sheet.animation(row: 1, end: 30, fps: 24));
         // demo off
 
-        components.addAll([
-          slow..anchor = .centerRight,
-          fast..anchor = .centerLeft,
-        ]);
+        addComponent(slow..anchor = .centerRight);
+        addComponent(fast..anchor = .centerLeft);
     }
   }
 }
@@ -196,12 +196,10 @@ class _TilesEntity extends Entity {
         final land = SpriteComponent(sprite: sheet.image(row: 1, column: 27));
         // demo off
 
-        components.addAll([
-          crouch..anchor = .bottomRight,
-          launch..anchor = .bottomLeft,
-          peak..anchor = .topRight,
-          land..anchor = .topLeft,
-        ]);
+        addComponent(crouch..anchor = .bottomRight);
+        addComponent(launch..anchor = .bottomLeft);
+        addComponent(peak..anchor = .topRight);
+        addComponent(land..anchor = .topLeft);
     }
   }
 }
@@ -229,7 +227,7 @@ class _PartialEntity extends Entity {
         );
         // demo off
 
-        components.add(slime..anchor = .center);
+        addComponent(slime..anchor = .center);
     }
   }
 }
@@ -252,7 +250,7 @@ class _TimedEntity extends Entity {
         );
         // demo off
 
-        components.add(slime..anchor = .center);
+        addComponent(slime..anchor = .center);
     }
   }
 }
@@ -278,10 +276,8 @@ class _SpeedEntity extends Entity {
         final embers = SpriteComponent(sprite: bonfire, speed: 0.25);
         // demo off
 
-        components.addAll([
-          fire..anchor = .centerRight,
-          embers..anchor = .centerLeft,
-        ]);
+        addComponent(fire..anchor = .centerRight);
+        addComponent(embers..anchor = .centerLeft);
     }
   }
 }

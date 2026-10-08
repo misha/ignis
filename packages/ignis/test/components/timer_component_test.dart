@@ -35,7 +35,7 @@ void main() {
   test('detaches itself once it triggers, when cleanup is true', () {
     final a = TestSink();
     final timer = TimerComponent(interval: 1, cleanup: true);
-    a.components.add(timer);
+    a.addComponent(timer);
     final scene = Scene(a);
 
     scene.update(0.5);
@@ -55,7 +55,7 @@ void main() {
   test('triggers count times before finishing, then detaches', () {
     final a = TestSink();
     final timer = TimerComponent(interval: 1, count: 2, cleanup: true);
-    a.components.add(timer);
+    a.addComponent(timer);
     final scene = Scene(a);
 
     scene.update(3);
@@ -68,7 +68,7 @@ void main() {
   test('repeat overrides count, triggering indefinitely', () {
     final a = TestSink();
     final timer = TimerComponent(interval: 1, repeat: true, count: 1);
-    a.components.add(timer);
+    a.addComponent(timer);
     final scene = Scene(a);
 
     scene.update(5.5);
@@ -80,7 +80,7 @@ void main() {
   test('does not detach when finished if cleanup is false', () {
     final a = TestSink();
     final timer = TimerComponent(interval: 1, cleanup: false);
-    a.components.add(timer);
+    a.addComponent(timer);
     final scene = Scene(a);
 
     scene.update(1);

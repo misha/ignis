@@ -2,6 +2,8 @@
 
 import 'dart:ui' hide Scene;
 
+import 'package:flutter/foundation.dart';
+
 import 'package:ignis/src/core.dart';
 import 'package:ignis/src/math.dart';
 import 'package:ignis/src/scheduler.dart';
@@ -10,9 +12,12 @@ import 'package:ignis/src/shape.dart';
 /// A controller for a mounted [Entity] tree.
 ///
 /// TODO: Document further.
-class Scene<T extends Entity> with Scheduler {
+class Scene<T extends Entity> {
   /// This scene's root. Cannot be modified.
   final T root;
+
+  @internal
+  final scheduler = Scheduler();
 
   bool _mounted = true;
   bool _sized = false;
@@ -40,7 +45,7 @@ class Scene<T extends Entity> with Scheduler {
 
   void update(double dt) {
     assert(_mounted, 'Cannot update a destroyed scene.');
-    flush();
+    scheduler.flush();
     _update.dt = dt;
     root.update(_update);
   }
@@ -88,6 +93,6 @@ class Scene<T extends Entity> with Scheduler {
     if (!_mounted) return;
     _mounted = false;
     root.unmount();
-    flush();
+    scheduler.flush();
   }
 }

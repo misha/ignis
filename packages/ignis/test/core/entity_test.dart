@@ -39,18 +39,6 @@ void main() {
     expect(() => a.add(a), throwsStateError);
   });
 
-  test('cannot be added beneath its descendants', () {
-    final a = Entity();
-    final b = Entity();
-    final c = Entity();
-    a.add(b);
-    b.add(c);
-
-    expect(() => c.add(a), throwsStateError);
-    expect(a.children, [b]);
-    expect(b.children, [c]);
-  });
-
   test('lists ancestors and descendants in traversal order', () {
     final a = Entity();
     final b = Entity();
@@ -301,24 +289,10 @@ void main() {
     a.add(b);
 
     expect(a.children, [b]);
-    expect(a.remove(b), isTrue);
+
+    a.remove(b);
+
     expect(b.parent, isNull);
-  });
-
-  test('removing a child cancels an addition queued in the same frame', () {
-    final a = Entity();
-    final b = Entity();
-    final scene = Scene(a)..update(0);
-
-    a.add(b);
-
-    expect(a.remove(b), isTrue);
-
-    scene.update(0);
-
-    expect(a.children, isEmpty);
-    expect(b.hasParent, isFalse);
-    expect(b.isMounted, isFalse, reason: 'it never arrived');
   });
 
   test('entity tears down its build before detaching', () {
@@ -483,10 +457,13 @@ void main() {
       final c = Entity();
       a.add(b);
       a.add(c);
-      Scene(a);
+      final scene = Scene(a);
 
-      expect(() => c.add(b), throwsStateError);
-      expect(() => a.add(b), throwsStateError);
+      c.add(b);
+      expect(() => scene.update(0), throwsStateError);
+
+      a.add(b);
+      expect(() => scene.update(0), throwsStateError);
     });
 
     test('adding a destroyed entity throws', () {
@@ -496,8 +473,9 @@ void main() {
       final scene = Scene(a);
       a.remove(b);
       scene.update(0);
+      a.add(b);
 
-      expect(() => a.add(b), throwsStateError);
+      expect(() => scene.update(0), throwsStateError);
     });
 
     test('mounting a destroyed entity throws', () {

@@ -27,6 +27,7 @@ class ShapeComponent extends Component with Transform, Geometry {
     Paint? paint,
     super.id,
     super.enabled,
+    super.priority,
   }) : palette = Palette(paint: paint) {
     this.shape = shape;
     if (position != null) this.position.setFrom(position);

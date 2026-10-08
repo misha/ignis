@@ -79,13 +79,40 @@ void main() {
 
       expect(log.updates, ['first', 'second']);
     });
+
+    test('runs in priority order, before insertion order', () {
+      final log = TestLog();
+
+      Scene(
+        Entity(
+          components: [
+            TestComponent(name: 'over', log: log, priority: 1),
+            TestComponent(name: 'under', log: log),
+          ],
+        ),
+      ).render(RecordingCanvas());
+
+      expect(log.renders, ['under', 'over']);
+    });
+
+    test('a priority set on a live entity applies on the next update', () {
+      final log = TestLog();
+      final first = TestComponent(name: 'first', log: log);
+      final second = TestComponent(name: 'second', log: log);
+      final scene = Scene(Entity(components: [first, second]));
+
+      first.priority = 1;
+      scene.update(0);
+
+      expect(log.updates, ['second', 'first']);
+    });
   });
 
   group('structure', () {
     test('a component added to a live entity builds on the next update', () {
       final entity = Entity();
       final scene = Scene(entity);
-      final part = entity.components.add(TestComponent());
+      final part = entity.addComponent(TestComponent());
 
       scene.update(0);
 
@@ -99,7 +126,7 @@ void main() {
       final entity = Entity(components: [part]);
       final scene = Scene(entity);
 
-      entity.components.remove(part);
+      entity.removeComponent(part);
       expect(entity.components, [part], reason: 'the removal waits for the flush');
       scene.update(0);
 
@@ -113,7 +140,7 @@ void main() {
       final entity = Entity(components: [part]);
       Scene(entity).destroy();
 
-      expect(() => Entity().components.add(part), throwsStateError);
+      expect(() => Entity().addComponent(part), throwsStateError);
     });
 
     test('detach removes it from its entity', () {

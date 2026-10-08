@@ -13,14 +13,19 @@ part of 'core.dart';
 class Component with Address {
   /// Creates a new component.
   ///
-  /// [activity] sets whether the component ticks and renders.
-  /// Defaults to [Activity.all].
+  /// [enabled] sets whether the component ticks and renders.
+  /// Defaults to true.
+  ///
+  /// [priority] controls this component's order when updating and rendering.
+  /// Defaults to 0.
   Component({
     this.id,
     bool? enabled,
-  }) : activity = (enabled ?? true) ? .all : .none;
+    int? priority,
+  }) : activity = (enabled ?? true) ? .all : .none,
+       _priority = priority ?? 0;
 
-  /// The name effects on the same entity target this component by, if any.
+  /// Used to reference this component under its entity.
   final Symbol? id;
 
   /// Executes all this component's behavior for the given [message].
@@ -80,10 +85,30 @@ class Component with Address {
 
   // #endregion
 
+  // #region Priority
+
+  int _priority;
+
+  /// This component's order in updating and rendering in its entity.
+  ///
+  /// The default priority is 0. Components that share a priority are kept in
+  /// insertion order, like a queue.
+  int get priority => _priority;
+
+  @nonVirtual
+  set priority(int value) {
+    Task(() {
+      if (value == _priority) return;
+      _priority = value;
+      _entity?._components?.reorder(this);
+    }).run(_entity?._scene?.scheduler);
+  }
+
+  // #endregion
+
   // #region Entity
 
   Entity? _entity;
-  _AttachTask? _attachTask;
   bool _destroyed = false;
 
   /// The entity this component belongs to. Only valid while [isAttached].
@@ -91,10 +116,6 @@ class Component with Address {
     assert(isAttached, '$runtimeType is not attached to an entity yet.');
     return _entity!;
   }
-
-  /// The [entity] this component belongs to or is scheduled to belong to, if
-  /// any.
-  Entity? get incomingEntity => _attachTask != null ? _attachTask!.entity : _entity;
 
   /// True while this component belongs to an entity.
   bool get isAttached => _entity != null;
@@ -107,41 +128,7 @@ class Component with Address {
   bool get isDestroyed => _destroyed;
 
   /// Removes this component from its entity.
-  bool detach() => incomingEntity?.components.remove(this) ?? false;
-
-  void _scheduleEntity(Entity? entity) {
-    _attachTask?.cancel();
-    _attachTask = null;
-    if (identical(entity, _entity)) return;
-    final task = _AttachTask(this, entity);
-    final scene = _entity?._scene ?? entity?._scene;
-
-    if (scene != null) {
-      scene.schedule(task);
-      _attachTask = task;
-    } else {
-      task.execute();
-    }
-  }
-
-  void _attach(Entity? next) {
-    _attachTask = null;
-    final outgoing = _entity?._scene;
-    final incoming = next?._scene;
-
-    try {
-      if (outgoing != null) _destroy();
-    } finally {
-      _entity?._components?.remove(this);
-      if (next != null) (next._components ??= []).add(this);
-      _entity = next;
-      if (incoming != null) _build();
-    }
-  }
-
-  void _build() {
-    process(const Build());
-  }
+  void detach() => _entity?.removeComponent(this);
 
   void _destroy() {
     try {
@@ -163,50 +150,4 @@ class Component with Address {
   }
 
   // #endregion
-}
-
-/// An entity's components, in the order they were added.
-final class Components extends Iterable<Component> {
-  final Entity _entity;
-
-  Components._(this._entity);
-
-  @override
-  Iterator<Component> get iterator => (_entity._components ?? const <Component>[]).iterator;
-
-  /// Adds [component] to this entity. The component is returned.
-  ///
-  /// A mounted or destroyed component cannot be added. Until it mounts,
-  /// adding a component elsewhere moves it, and adding it to its current
-  /// entity is a no-op.
-  T add<T extends Component>(T component) {
-    if (component.isDestroyed) {
-      throw StateError('Cannot add a destroyed component.');
-    }
-
-    if (component.isMounted) {
-      throw StateError('Cannot add a mounted component.');
-    }
-
-    if (identical(component.incomingEntity, _entity)) {
-      return component;
-    }
-
-    component._scheduleEntity(_entity);
-    return component;
-  }
-
-  /// Adds all [components] to this entity.
-  void addAll(Iterable<Component> components) => components.forEach(add);
-
-  /// Removes [component] from this entity.
-  ///
-  /// Returns true if the component belonged to this entity and its removal
-  /// was accepted. If it was scheduled to be added, that operation is
-  /// cancelled instead.
-  bool remove(Component component) {
-    if (!identical(component.incomingEntity, _entity)) return false;
-    component._scheduleEntity(null);
-    return true;
-  }
 }

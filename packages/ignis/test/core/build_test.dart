@@ -3,6 +3,7 @@ import 'package:ignis/ignis.dart';
 
 import 'package:flutter/foundation.dart';
 
+import '../support/test_component.dart';
 import '../support/test_entity.dart';
 
 /// Runs [body] with error reporting captured instead of presented.
@@ -33,6 +34,20 @@ void main() {
       final entity = TestEntity(builder: (_) => throw StateError('no ancestor'));
 
       expect(() => Scene(entity), throwsStateError);
+    });
+
+    test('a build that throws builds none of its components or children', () {
+      final component = TestComponent();
+      final child = TestEntity();
+      final entity = TestEntity(
+        builder: (_) => throw StateError('no ancestor'),
+        components: [component],
+        children: [child],
+      );
+
+      expect(() => Scene(entity), throwsStateError);
+      expect(component.builds, 0);
+      expect(child.builds, 0);
     });
 
     test('a build that throws on a live add throws out of update', () {

@@ -15,6 +15,7 @@ class TestComponent extends Component {
     this.name = 'test',
     this.log,
     super.enabled,
+    super.priority,
   });
 
   @override

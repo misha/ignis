@@ -79,7 +79,7 @@ final class SpriteState<T> {
 /// Draws one frame of a [Sprite] at a time, and animates along its entry.
 ///
 /// ```dart
-/// components.add(
+/// addComponent(
 ///   SpriteComponent(
 ///     sprite: SpriteAnimation('assets/fire.png', .new(32, 48), fps: 12),
 ///   ),
@@ -133,6 +133,7 @@ class SpriteComponent<T> extends Component with Transform, Geometry implements S
     bool? cleanup,
     super.id,
     super.enabled,
+    super.priority,
   }) : assert(speed == null || speed >= 0, 'Speed cannot be negative.'),
        palette = Palette(paint: paint),
        speed = speed ?? 1,

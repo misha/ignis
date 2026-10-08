@@ -43,6 +43,7 @@ class TimerComponent extends Component {
     bool? cleanup,
     super.id,
     super.enabled,
+    super.priority,
   }) : assert(interval > 0, 'Interval must be positive.'),
        repeat = repeat ?? false,
        count = count ?? 1,

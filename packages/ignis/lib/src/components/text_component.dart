@@ -113,6 +113,7 @@ class TextComponent extends Component with Transform, Geometry {
     Anchor? anchor,
     super.id,
     super.enabled,
+    super.priority,
   }) : _text = text ?? '',
        _textAlign = textAlign ?? .start,
        _textDirection = textDirection ?? .ltr {

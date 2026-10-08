@@ -73,7 +73,10 @@ class Entity with Address, Transform {
     if (scale != null) this.scale.setFrom(scale);
     if (angle != null) this.angle = angle;
 
-    this.components.addAll(components);
+    for (final component in components) {
+      addComponent(component);
+    }
+
     addAll(children);
   }
 
@@ -98,7 +101,7 @@ class Entity with Address, Transform {
     if (!activity.updates) return;
     process(update);
 
-    final components = _components;
+    final components = _components?.items;
 
     if (components != null) {
       for (var i = 0; i < components.length; i += 1) {
@@ -110,11 +113,12 @@ class Entity with Address, Transform {
       }
     }
 
-    final children = _children?.entities;
-    if (children == null || children.isEmpty) return;
+    final children = _children?.items;
 
-    for (var i = 0; i < children.length; i += 1) {
-      children[i].update(update);
+    if (children != null) {
+      for (var i = 0; i < children.length; i += 1) {
+        children[i].update(update);
+      }
     }
   }
 
@@ -124,7 +128,7 @@ class Entity with Address, Transform {
     canvas.save();
     canvas.transform(renderTransform);
 
-    final components = _components;
+    final components = _components?.items;
 
     if (components != null) {
       for (var i = 0; i < components.length; i += 1) {
@@ -136,7 +140,7 @@ class Entity with Address, Transform {
       }
     }
 
-    final children = _children?.entities;
+    final children = _children?.items;
 
     if (children != null) {
       for (var i = 0; i < children.length; i += 1) {
@@ -165,7 +169,7 @@ class Entity with Address, Transform {
     canvas.drawLine(const .new(-1, 0), const .new(1, 0), paint);
     canvas.drawLine(const .new(0, -1), const .new(0, 1), paint);
 
-    final components = _components;
+    final components = _components?.items;
 
     if (components != null) {
       for (var i = 0; i < components.length; i += 1) {
@@ -177,7 +181,7 @@ class Entity with Address, Transform {
       }
     }
 
-    final children = _children?.entities;
+    final children = _children?.items;
 
     if (children != null) {
       for (var i = 0; i < children.length; i += 1) {
@@ -224,38 +228,30 @@ class Entity with Address, Transform {
 
   // #endregion
 
-  // #region Components
-
-  List<Component>? _components;
-
-  /// This entity's components, in the order they were added.
-  late final Components components = ._(this);
-
-  // #endregion
-
   // #region Children
 
-  _Children? _children;
+  _Children<Entity>? _children;
 
   /// This entity's children, in [priority] order.
   Iterable<Entity> get children {
-    return _children?.entities ?? const [];
+    return _children?.items ?? const [];
   }
 
   /// This entity's children, in reverse [priority] order.
   Iterable<Entity> get reverseChildren sync* {
-    final children = _children?.entities;
-    if (children == null) return;
+    final children = _children?.items;
 
-    for (var i = children.length - 1; i >= 0; i -= 1) {
-      yield children[i];
+    if (children != null) {
+      for (var i = children.length - 1; i >= 0; i -= 1) {
+        yield children[i];
+      }
     }
   }
 
   /// This entity's children of type [T], in [priority] order.
   ///
   /// The returned object is a live, read-only view of all [T] children.
-  Iterable<T> query<T extends Entity>() => (_children ??= _Children()).query<T>();
+  Iterable<T> query<T extends Entity>() => (_children ??= _Children.entities()).query<T>();
 
   /// This entity's descendants in depth-first preorder.
   Iterable<Entity> get descendants sync* {
@@ -271,10 +267,60 @@ class Entity with Address, Transform {
 
   // #endregion
 
+  // #region Components
+
+  _Children<Component>? _components;
+
+  /// This entity's components, in the order they were added.
+  Iterable<Component> get components => _components?.items ?? const [];
+
+  /// Adds [component] to this entity. The component is returned.
+  ///
+  /// A mounted or destroyed component cannot be added. Until it mounts,
+  /// adding a component elsewhere moves it, and adding it to its current
+  /// entity is a no-op.
+  T addComponent<T extends Component>(T component) {
+    Task(() {
+      if (identical(component._entity, this)) return;
+
+      if (component.isMounted) {
+        throw StateError('Cannot add a mounted component.');
+      }
+
+      if (component.isDestroyed) {
+        throw StateError('Cannot add a destroyed component.');
+      }
+
+      component._entity?._components?.remove(component);
+      (_components ??= _Children.components()).insert(component);
+      component._entity = this;
+      if (isMounted) component.process(const Build());
+    }).run(_scene?.scheduler);
+
+    return component;
+  }
+
+  /// Removes [component] from this entity.
+  ///
+  /// Removing a component that does not belong to this entity is a no-op.
+  void removeComponent(Component component) {
+    Task(() {
+      if (!identical(component._entity, this)) return;
+
+      try {
+        if (isMounted) component._destroy();
+      } finally {
+        _components?.remove(component);
+        component._entity = null;
+      }
+    }).run(_scene?.scheduler);
+  }
+
+  // #endregion
+
   // #region Priority
 
   int _priority;
-  _ReorderTask? _reorderTask;
 
   /// This entity's order in updating and rendering in its parent.
   ///
@@ -282,30 +328,13 @@ class Entity with Address, Transform {
   /// insertion order, like a queue.
   int get priority => _priority;
 
-  /// This entity's [priority], or what it is scheduled to be.
-  int get incomingPriority => _reorderTask?.priority ?? _priority;
-
   @nonVirtual
-  set priority(int value) => _schedulePriority(value);
-
-  void _schedulePriority(int priority) {
-    _reorderTask?.cancel();
-    _reorderTask = null;
-    if (priority == _priority) return;
-    final task = _ReorderTask(this, priority);
-
-    if (isMounted) {
-      scene.schedule(task);
-      _reorderTask = task;
-    } else {
-      task.execute();
-    }
-  }
-
-  void _reorder(int priority) {
-    _reorderTask = null;
-    _priority = priority;
-    _parent?._children?.reorder(this);
+  set priority(int value) {
+    Task(() {
+      if (value == _priority) return;
+      _priority = value;
+      _parent?._children?.reorder(this);
+    }).run(_scene?.scheduler);
   }
 
   // #endregion
@@ -313,9 +342,6 @@ class Entity with Address, Transform {
   // #region Scene
 
   Scene? _scene;
-
-  /// True while this entity is the root of a scene.
-  bool get isRoot => identical(_scene?.root, this);
 
   /// True while this entity is part of a scene.
   bool get isMounted => _scene != null;
@@ -346,8 +372,6 @@ class Entity with Address, Transform {
       throw StateError('Cannot mount an entity that has a parent.');
     }
 
-    _reparentTask?.cancel();
-    _reparentTask = null;
     _mount(scene);
   }
 
@@ -358,36 +382,34 @@ class Entity with Address, Transform {
 
   void _mount(Scene scene) {
     _scene = scene;
+    process(const Build());
+    final components = _components?.items;
 
-    try {
-      process(const Build());
-    } finally {
-      final components = _components?.toList(growable: false);
-
-      if (components != null) {
-        for (final component in components) {
-          if (!identical(component._entity, this)) continue;
-          component._build();
-        }
+    if (components != null) {
+      for (var i = 0; i < components.length; i += 1) {
+        components[i].process(const Build());
       }
+    }
 
-      final children = _children?.entities;
+    final children = _children?.items;
 
-      if (children != null) {
-        for (final child in children.toList(growable: false)) {
-          if (!identical(child.parent, this)) continue;
-          child._mount(scene);
-        }
+    if (children != null) {
+      for (var i = 0; i < children.length; i += 1) {
+        children[i]._mount(scene);
       }
     }
   }
 
   void _unmount() {
-    for (final child in reverseChildren) {
-      child._unmount();
+    final children = _children?.items;
+
+    if (children != null) {
+      for (var i = children.length - 1; i >= 0; i -= 1) {
+        children[i]._unmount();
+      }
     }
 
-    final components = _components;
+    final components = _components?.items;
 
     if (components != null) {
       for (var i = components.length - 1; i >= 0; i -= 1) {
@@ -409,7 +431,7 @@ class Entity with Address, Transform {
         );
       }
 
-      _dropAncestry();
+      _dependencies = null;
     } finally {
       _scene = null;
       _destroyed = true;
@@ -421,13 +443,9 @@ class Entity with Address, Transform {
   // #region Tree
 
   Entity? _parent;
-  _ReparentTask? _reparentTask;
 
   /// The parent that owns this entity, if any.
   Entity? get parent => _parent;
-
-  /// The [parent] that owns or is scheduled to own this entity, if any.
-  Entity? get incomingParent => _reparentTask != null ? _reparentTask!.parent : parent;
 
   /// True if this entity has a non-null [parent].
   bool get hasParent => parent != null;
@@ -445,49 +463,35 @@ class Entity with Address, Transform {
     }
   }
 
-  /// True if [entity] is, or soon will be, an ancestor of this entity.
-  bool cycles(Entity entity) {
-    Entity? current = this;
-
-    while (current != null) {
-      if (identical(current, entity)) return true;
-      current = current.incomingParent;
-    }
-
-    return false;
-  }
-
   /// Adds [entity] to this entity. The entity is returned.
   ///
-  /// Entities cannot be added to themselves or their descendants. A mounted or
-  /// destroyed entity cannot be added either. Until it mounts, adding an entity
-  /// elsewhere moves it, and adding it to its current parent is a no-op.
+  /// Entities cannot be added to themselves. A mounted or destroyed entity
+  /// cannot be added either. Until it mounts, adding an entity elsewhere moves
+  /// it, and adding it to its current parent is a no-op.
   T add<T extends Entity>(T entity) {
     if (identical(this, entity)) {
       throw StateError('Cannot add an entity to itself.');
     }
 
-    if (cycles(entity)) {
-      throw StateError('Cannot add an entity to its descendant.');
-    }
+    Task(() {
+      if (entity.isDestroyed) {
+        throw StateError('Cannot add a destroyed entity.');
+      }
 
-    if (entity.isRoot) {
-      throw StateError('Cannot add a scene root to another entity.');
-    }
+      if (entity.isMounted) {
+        throw StateError('Cannot add a mounted entity.');
+      }
 
-    if (entity._destroyed) {
-      throw StateError('Cannot add a destroyed entity.');
-    }
+      if (identical(entity._parent, this)) return;
 
-    if (entity.isMounted) {
-      throw StateError('Cannot add a mounted entity.');
-    }
+      entity._parent?._children?.remove(entity);
+      (_children ??= _Children.entities()).insert(entity);
+      entity._parent = this;
 
-    if (identical(entity.incomingParent, this)) {
-      return entity;
-    }
+      final scene = _scene;
+      if (scene != null) entity._mount(scene);
+    }).run(_scene?.scheduler);
 
-    entity._scheduleParent(this);
     return entity;
   }
 
@@ -499,17 +503,18 @@ class Entity with Address, Transform {
 
   /// Removes the child [entity].
   ///
-  /// Returns true if the entity was owned by this entity and its removal was
-  /// accepted. Removing a parentless entity, an entity not owned by this
-  /// entity, or an entity already awaiting removal, is a no-op that returns
-  /// `false`.
-  ///
-  /// If the entity was scheduled to be added, that operation is cancelled
-  /// instead.
-  bool remove(Entity entity) {
-    if (!identical(entity.incomingParent, this)) return false;
-    entity._scheduleParent(null);
-    return true;
+  /// Removing an entity that is not this entity's child is a no-op.
+  void remove(Entity entity) {
+    Task(() {
+      if (!identical(entity._parent, this)) return;
+
+      try {
+        if (entity.isMounted) entity._unmount();
+      } finally {
+        _children?.remove(entity);
+        entity._parent = null;
+      }
+    }).run(_scene?.scheduler);
   }
 
   /// Removes all children.
@@ -520,38 +525,7 @@ class Entity with Address, Transform {
   }
 
   /// Removes this entity from its parent.
-  bool detach() => incomingParent?.remove(this) ?? false;
-
-  void _scheduleParent(Entity? parent) {
-    _reparentTask?.cancel();
-    _reparentTask = null;
-    if (identical(parent, _parent)) return;
-    final task = _ReparentTask(this, parent);
-    final scene = _scene ?? parent?._scene;
-
-    if (scene != null) {
-      scene.schedule(task);
-      _reparentTask = task;
-    } else {
-      task.execute();
-    }
-  }
-
-  void _reparent(Entity? nextParent) {
-    _reparentTask = null;
-    final outgoing = _scene;
-    final incoming = nextParent?._scene;
-
-    try {
-      if (outgoing != null) _unmount();
-    } finally {
-      parent?._children?.remove(this);
-      (nextParent?._children ??= _Children())?.add(this);
-      _parent = nextParent;
-      _forgetAncestry();
-      if (incoming != null) _mount(incoming);
-    }
-  }
+  void detach() => parent?.remove(this);
 
   // #endregion
 
@@ -579,25 +553,6 @@ class Entity with Address, Transform {
 
   Map<Type, dynamic>? _providers;
   Map<Type, dynamic>? _dependencies;
-
-  /// Drops this entity's cached dependencies.
-  ///
-  /// TODO: Really bad naming between this and `_forgetAncestry`. One is shallow
-  ///   while the other is deep. Think of something better.
-  void _dropAncestry() {
-    _dependencies = null;
-  }
-
-  /// Drops cached dependencies for this entity and its entire subtree.
-  void _forgetAncestry() {
-    _dropAncestry();
-    final children = _children?.entities;
-    if (children == null) return;
-
-    for (final child in children) {
-      child._forgetAncestry();
-    }
-  }
 
   /// Provides [value] as this entity's instance of [T], overwriting any value
   /// previously provided for [T].

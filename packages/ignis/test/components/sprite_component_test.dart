@@ -101,7 +101,7 @@ void main() {
       ),
     );
 
-    a.components.add(sprite);
+    a.addComponent(sprite);
     final scene = Scene(a);
 
     scene.update(0.25);
@@ -122,7 +122,7 @@ void main() {
       ),
     );
 
-    a.components.add(sprite);
+    a.addComponent(sprite);
     final scene = Scene(a);
 
     scene.update(0.4);
@@ -174,7 +174,7 @@ void main() {
       speed: 0.5,
     );
 
-    a.components.add(sprite);
+    a.addComponent(sprite);
     final scene = Scene(a);
 
     scene.update(0.5);
@@ -192,7 +192,7 @@ void main() {
       speed: 0,
     );
 
-    a.components.add(sprite);
+    a.addComponent(sprite);
     final scene = Scene(a);
 
     scene.update(10);
@@ -294,7 +294,7 @@ void main() {
       ),
     );
 
-    a.components.add(sprite);
+    a.addComponent(sprite);
     final scene = Scene(a);
 
     scene.update(1);
@@ -306,7 +306,7 @@ void main() {
     final sprite = SpriteComponent(
       sprite: SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 2),
     );
-    a.components.add(sprite);
+    a.addComponent(sprite);
     final scene = Scene(a);
 
     sprite.play(0, loop: false);
@@ -364,7 +364,7 @@ void main() {
       loop: false,
     );
     final sprite = SpriteComponent(sprite: animation);
-    a.components.add(sprite);
+    a.addComponent(sprite);
     final scene = Scene(a);
 
     scene.update(1);
@@ -383,7 +383,7 @@ void main() {
       loop: false,
     );
     final sprite = SpriteComponent(sprite: animation, cleanup: true);
-    a.components.add(sprite);
+    a.addComponent(sprite);
     final scene = Scene(a);
 
     scene.update(1);
@@ -398,7 +398,7 @@ void main() {
     final a = Entity();
     final animation = SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 2);
     final sprite = SpriteComponent(sprite: animation, cleanup: true);
-    a.components.add(sprite);
+    a.addComponent(sprite);
     final scene = Scene(a);
 
     scene.update(10);

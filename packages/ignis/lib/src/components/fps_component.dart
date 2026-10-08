@@ -18,6 +18,7 @@ class FpsComponent extends Component {
     int? windowSize,
     super.id,
     super.enabled,
+    super.priority,
   }) : assert(windowSize == null || windowSize > 0),
        windowSize = windowSize ?? 60;
 

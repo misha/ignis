@@ -5,49 +5,27 @@ void main() {
   test('flush executes tasks in the order they were scheduled', () {
     final log = <String>[];
     final scheduler = Scheduler()
-      ..schedule(_Entry('a', log))
-      ..schedule(_Entry('b', log))
-      ..schedule(_Entry('c', log));
+      ..schedule(Task(() => log.add('a')))
+      ..schedule(Task(() => log.add('b')))
+      ..schedule(Task(() => log.add('c')));
 
     scheduler.flush();
 
     expect(log, ['a', 'b', 'c']);
   });
 
-  test('flush executes only the tasks still scheduled', () {
-    final log = <String>[];
-    final cancelled = _Entry('b', log);
-    final scheduler = Scheduler()
-      ..schedule(_Entry('a', log))
-      ..schedule(cancelled)
-      ..schedule(_Entry('c', log));
-
-    cancelled.cancel();
-    scheduler.flush();
-
-    expect(log, ['a', 'c']);
-  });
-
-  test('a cancelled task can be scheduled again', () {
-    final log = <String>[];
-    final task = _Entry('a', log);
-    final scheduler = Scheduler();
-
-    scheduler.schedule(task);
-    task.cancel();
-    scheduler.schedule(task);
-    scheduler.flush();
-
-    expect(log, ['a']);
-  });
-
   test('a task scheduled during a flush executes in the same flush', () {
     final log = <String>[];
     final scheduler = Scheduler();
-    final later = _Entry('b', log);
+    final later = Task(() => log.add('b'));
 
     scheduler
-      ..schedule(_Entry('a', log, () => scheduler.schedule(later)))
+      ..schedule(
+        Task(() {
+          log.add('a');
+          scheduler.schedule(later);
+        }),
+      )
       ..flush();
 
     expect(log, ['a', 'b']);
@@ -55,7 +33,7 @@ void main() {
 
   test('a task executed by one flush can be scheduled for the next', () {
     final log = <String>[];
-    final task = _Entry('a', log);
+    final task = Task(() => log.add('a'));
     final scheduler = Scheduler();
 
     scheduler
@@ -66,18 +44,23 @@ void main() {
 
     expect(log, ['a', 'a']);
   });
-}
 
-final class _Entry extends Task {
-  final String name;
-  final List<String> log;
-  final void Function()? then;
+  test('a task run without a scheduler executes at once', () {
+    final log = <String>[];
 
-  _Entry(this.name, this.log, [this.then]);
+    Task(() => log.add('a')).run(null);
 
-  @override
-  void execute() {
-    log.add(name);
-    then?.call();
-  }
+    expect(log, ['a']);
+  });
+
+  test('a task run with a scheduler executes at its flush', () {
+    final log = <String>[];
+    final scheduler = Scheduler();
+
+    Task(() => log.add('a')).run(scheduler);
+    expect(log, isEmpty);
+
+    scheduler.flush();
+    expect(log, ['a']);
+  });
 }
