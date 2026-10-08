@@ -65,19 +65,10 @@ final Map<String, Widget Function()> spriteDemos = {
   },
 };
 
-/// An entity drawing [sprite] with its [anchor] on the center.
-Entity _sprite(
-  SpriteComponent sprite, {
-  Anchor anchor = .center,
-}) {
-  return Entity(
-    position: DEMO_SIZE / 2,
-    components: [sprite..anchor = anchor],
-  );
-}
-
 /// An image with no grid to it, drawn as a single frame.
 class _StillEntity extends Entity {
+  _StillEntity() : super(position: DEMO_SIZE / 2);
+
   @override
   void process(Message message) {
     super.process(message);
@@ -88,13 +79,15 @@ class _StillEntity extends Entity {
         final fire = SpriteComponent(sprite: SpriteImage('assets/images/bonfire.png'));
         // demo off
 
-        add(_sprite(fire));
+        components.add(fire..anchor = .center);
     }
   }
 }
 
 /// The same fire, cut into twenty frames and played on a loop.
 class _BonfireEntity extends Entity {
+  _BonfireEntity() : super(position: DEMO_SIZE / 2);
+
   @override
   void process(Message message) {
     super.process(message);
@@ -111,13 +104,15 @@ class _BonfireEntity extends Entity {
         );
         // demo off
 
-        add(_sprite(fire));
+        components.add(fire..anchor = .center);
     }
   }
 }
 
 /// One fire out of three sheets, each running at its own speed.
 class _LayeredEntity extends Entity {
+  _LayeredEntity() : super(position: DEMO_SIZE / 2);
+
   @override
   void process(Message message) {
     super.process(message);
@@ -153,18 +148,15 @@ class _LayeredEntity extends Entity {
         );
         // demo off
 
-        add(
-          Entity(
-            position: DEMO_SIZE / 2,
-            components: [smoke, flame, wood],
-          ),
-        );
+        components.addAll([smoke, flame, wood]);
     }
   }
 }
 
 /// One row of a sheet, taken twice and played at two rates.
 class _RatesEntity extends Entity {
+  _RatesEntity() : super(position: DEMO_SIZE / 2);
+
   @override
   void process(Message message) {
     super.process(message);
@@ -177,14 +169,18 @@ class _RatesEntity extends Entity {
         final fast = SpriteComponent(sprite: sheet.animation(row: 1, end: 30, fps: 24));
         // demo off
 
-        add(_sprite(slow, anchor: .centerRight));
-        add(_sprite(fast, anchor: .centerLeft));
+        components.addAll([
+          slow..anchor = .centerRight,
+          fast..anchor = .centerLeft,
+        ]);
     }
   }
 }
 
 /// Four cells of the grid, drawn where they sit rather than played.
 class _TilesEntity extends Entity {
+  _TilesEntity() : super(position: DEMO_SIZE / 2);
+
   @override
   void process(Message message) {
     super.process(message);
@@ -200,16 +196,20 @@ class _TilesEntity extends Entity {
         final land = SpriteComponent(sprite: sheet.image(row: 1, column: 27));
         // demo off
 
-        add(_sprite(crouch, anchor: .bottomRight));
-        add(_sprite(launch, anchor: .bottomLeft));
-        add(_sprite(peak, anchor: .topRight));
-        add(_sprite(land, anchor: .topLeft));
+        components.addAll([
+          crouch..anchor = .bottomRight,
+          launch..anchor = .bottomLeft,
+          peak..anchor = .topRight,
+          land..anchor = .topLeft,
+        ]);
     }
   }
 }
 
 /// Six frames out of the middle of a row.
 class _PartialEntity extends Entity {
+  _PartialEntity() : super(position: DEMO_SIZE / 2);
+
   @override
   void process(Message message) {
     super.process(message);
@@ -229,13 +229,15 @@ class _PartialEntity extends Entity {
         );
         // demo off
 
-        add(_sprite(slime));
+        components.add(slime..anchor = .center);
     }
   }
 }
 
 /// A row that hangs on its first frame, then runs out the rest.
 class _TimedEntity extends Entity {
+  _TimedEntity() : super(position: DEMO_SIZE / 2);
+
   @override
   void process(Message message) {
     super.process(message);
@@ -250,13 +252,15 @@ class _TimedEntity extends Entity {
         );
         // demo off
 
-        add(_sprite(slime));
+        components.add(slime..anchor = .center);
     }
   }
 }
 
 /// One sheet at the rate it was drawn for, and at a quarter of it.
 class _SpeedEntity extends Entity {
+  _SpeedEntity() : super(position: DEMO_SIZE / 2);
+
   @override
   void process(Message message) {
     super.process(message);
@@ -274,8 +278,10 @@ class _SpeedEntity extends Entity {
         final embers = SpriteComponent(sprite: bonfire, speed: 0.25);
         // demo off
 
-        add(_sprite(fire, anchor: .centerRight));
-        add(_sprite(embers, anchor: .centerLeft));
+        components.addAll([
+          fire..anchor = .centerRight,
+          embers..anchor = .centerLeft,
+        ]);
     }
   }
 }
