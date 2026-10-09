@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 import 'package:ignis/src/flutter/scene_render_box.dart';
 
+import '../support/test_component.dart';
 import '../support/test_entity.dart';
 
 void main() {
@@ -19,7 +20,8 @@ void main() {
   });
 
   testWidgets('drives scene updates and paints every frame', (tester) async {
-    final scene = makeScene();
+    final component = TestComponent();
+    final scene = Scene(TestEntity(components: [component]))..resize(100, 80);
 
     await tester.pumpWidget(
       RenderSceneWidget(
@@ -32,7 +34,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 16));
     expect(scene.root.updates, 2);
     expect(scene.root.elapsed, closeTo(0.016 * 2, 0.0001));
-    expect(scene.root.renders, greaterThanOrEqualTo(2)); // Sometimes 3.
+    expect(component.renders, greaterThanOrEqualTo(2)); // Sometimes 3.
   });
 
   testWidgets('stops driving updates while paused, and resumes afterwards', (tester) async {

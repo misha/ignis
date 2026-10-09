@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ignis/ignis.dart';
 
 import '../support/canvas.dart';
+import '../support/test_component.dart';
 import '../support/test_entity.dart';
 
 final class _Ping extends Message {
@@ -20,17 +21,13 @@ void main() {
     expect(a.children, [b]);
   });
 
-  test('moves a child to its new parent rather than sharing it', () {
+  test('cannot be added while it has another parent', () {
     final a = Entity();
     final b = Entity();
     final c = Entity();
     a.add(c);
 
-    b.add(c);
-
-    expect(c.parent, same(b));
-    expect(a.children, isEmpty);
-    expect(b.children.single, same(c));
+    expect(() => b.add(c), throwsStateError);
   });
 
   test('cannot own itself', () {
@@ -85,10 +82,31 @@ void main() {
 
   test('updates and renders children in priority order', () {
     final log = TestLog();
-    final a = TestEntity(name: 'A', log: log);
-    final b = TestEntity(name: 'B', log: log);
-    final c = TestEntity(name: 'C', log: log);
-    final d = TestEntity(name: 'D', log: log);
+    final paints = TestLog();
+    final a = TestEntity(
+      name: 'A',
+      log: log,
+      components: [TestComponent(name: 'A', log: paints)],
+    );
+
+    final b = TestEntity(
+      name: 'B',
+      log: log,
+      components: [TestComponent(name: 'B', log: paints)],
+    );
+
+    final c = TestEntity(
+      name: 'C',
+      log: log,
+      components: [TestComponent(name: 'C', log: paints)],
+    );
+
+    final d = TestEntity(
+      name: 'D',
+      log: log,
+      components: [TestComponent(name: 'D', log: paints)],
+    );
+
     b.priority = 1;
     c.priority = -1;
     d.priority = 1;
@@ -101,12 +119,14 @@ void main() {
     expect(log.updates, ['A', 'C', 'B', 'D']);
 
     a.render(RecordingCanvas());
-    expect(log.renders, ['A', 'C', 'B', 'D']);
+    expect(paints.renders, ['A', 'C', 'B', 'D']);
   });
 
   test('a disabled root skips update and render for itself and its subtree', () {
-    final a = TestEntity(name: 'A');
-    final b = TestEntity(name: 'B');
+    final aComponent = TestComponent();
+    final bComponent = TestComponent();
+    final a = TestEntity(name: 'A', components: [aComponent]);
+    final b = TestEntity(name: 'B', components: [bComponent]);
     a.add(b);
     final scene = Scene(a);
     a.enabled = false;
@@ -117,16 +137,18 @@ void main() {
 
     final recorder = PictureRecorder();
     scene.render(Canvas(recorder));
-    expect(a.renders, 0);
-    expect(b.renders, 0);
+    expect(aComponent.renders, 0);
+    expect(bComponent.renders, 0);
   });
 
   test(
     'a disabled child skips update and render for itself and its subtree, without affecting its siblings',
     () {
+      final bComponent = TestComponent();
+      final cComponent = TestComponent();
       final a = TestEntity(name: 'A');
-      final b = TestEntity(name: 'B');
-      final c = TestEntity(name: 'C');
+      final b = TestEntity(name: 'B', components: [bComponent]);
+      final c = TestEntity(name: 'C', components: [cComponent]);
       a.add(b);
       a.add(c);
       Scene(a);
@@ -137,8 +159,8 @@ void main() {
       expect(c.updates, 1);
 
       a.render(RecordingCanvas());
-      expect(b.renders, 0);
-      expect(c.renders, 1);
+      expect(bComponent.renders, 0);
+      expect(cComponent.renders, 1);
     },
   );
 
@@ -321,10 +343,11 @@ void main() {
     final processed = <Message>[];
     final entity = TestEntity(processor: (entity, event) => processed.add(event));
     const ping = _Ping();
+    Scene(entity);
 
     entity.post(ping);
 
-    expect(processed, [ping]);
+    expect(processed, [const Build(), ping]);
   });
 
   group('mounting', () {
@@ -739,13 +762,14 @@ void main() {
 
   group('activity', () {
     test('rendering alone paints without ticking', () {
-      final entity = TestEntity()..activity = .render;
+      final component = TestComponent();
+      final entity = TestEntity(components: [component])..activity = .render;
       final scene = Scene(entity);
 
       scene.update(1);
       scene.render(RecordingCanvas());
       expect(entity.updates, 0);
-      expect(entity.renders, 1);
+      expect(component.renders, 1);
     });
 
     test('enabled means all three', () {

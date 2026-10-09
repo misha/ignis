@@ -150,9 +150,6 @@ class SpriteComponent<T> extends Component with Transform, Geometry implements S
     super.process(message);
 
     switch (message) {
-      case Build():
-        entity.post(SpriteResize(this));
-
       case Update(:final dt):
         final current = _current;
         if (current.isFinished) break;
@@ -200,18 +197,14 @@ class SpriteComponent<T> extends Component with Transform, Geometry implements S
 
         case CacheChange():
           _sprite = _sprite.reload();
-
-          // Follow the entry by name. A dropped entry falls back to the first; a
-          // shorter one starts over.
           final entry = _sprite.resolve(_current.key);
 
-          if (entry == null) {
-            _select(_sprite.entries.first, 0);
-            break;
+          if (entry != null) {
+            final frame = _current.frame;
+            _current._select(entry, frame < entry.frames ? frame : 0);
+          } else {
+            _current._select(_sprite.entries.first, 0);
           }
-
-          final frame = _current.frame;
-          _select(entry, frame < entry.frames ? frame : 0);
 
         case Destroy():
           Ignis.cache.unsubscribe(this);
@@ -292,17 +285,8 @@ class SpriteComponent<T> extends Component with Transform, Geometry implements S
 
     _current
       .._loop = loop
-      .._elapsed = 0;
-
-    _select(entry, frame);
-  }
-
-  /// Moves onto [frame] of [entry], posting [SpriteResize] if that changes this
-  /// component's size.
-  void _select(SpriteEntry<T> entry, int frame) {
-    final size = _current.shape.size;
-    _current._select(entry, frame);
-    if (_current.shape.size != size && isAttached) entity.post(SpriteResize(this));
+      .._elapsed = 0
+      .._select(entry, frame);
   }
 
   /// Plays the entry after the one playing, wrapping past the last.
@@ -316,13 +300,6 @@ class SpriteComponent<T> extends Component with Transform, Geometry implements S
     final entries = _sprite.entries;
     play(entries[(_current.index - 1) % entries.length].key);
   }
-}
-
-/// Emitted when [sprite] builds, and whenever the frame it draws changes size.
-final class SpriteResize extends Message {
-  final SpriteComponent sprite;
-
-  const SpriteResize(this.sprite);
 }
 
 /// Emitted when [sprite]'s non-looping animation reaches its final frame.

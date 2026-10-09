@@ -70,6 +70,7 @@ void main() {
 
     setUp(() {
       sink = TestSink();
+      Scene(sink);
       cache.subscribe(sink);
     });
 

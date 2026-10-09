@@ -51,14 +51,13 @@ part of 'core.dart';
 class Entity with Address, Transform {
   /// Creates a new entity.
   ///
-  /// [activity] sets whether the entity ticks and renders.
-  /// Defaults to [Activity.all].
+  /// [enabled] sets whether the entity ticks and renders.
+  /// Defaults to true.
   ///
   /// [priority] controls this entity's order when updating and rendering.
   /// Defaults to 0.
   ///
-  /// If [components] or [children] are provided, they are immediately added to
-  /// the entity.
+  /// If [components] or [children] are provided, they are added immediately.
   Entity({
     Vector2? position,
     Vector2? scale,
@@ -72,11 +71,7 @@ class Entity with Address, Transform {
     if (position != null) this.position.setFrom(position);
     if (scale != null) this.scale.setFrom(scale);
     if (angle != null) this.angle = angle;
-
-    for (final component in components) {
-      addComponent(component);
-    }
-
+    addAllComponents(components);
     addAll(children);
   }
 
@@ -90,7 +85,11 @@ class Entity with Address, Transform {
   @override
   @nonVirtual
   void post(Message message) {
-    assert(!_destroyed, 'Cannot post ${message.runtimeType} to a destroyed $runtimeType.');
+    assert(
+      isBuilt,
+      'Cannot post ${message.runtimeType} to a $runtimeType that is not built.',
+    );
+
     process(message);
   }
 
@@ -124,6 +123,7 @@ class Entity with Address, Transform {
 
   /// Renders this entity's components and enabled children to [canvas], under
   /// its transform.
+  @nonVirtual
   void render(Canvas canvas) {
     canvas.save();
     canvas.transform(renderTransform);
@@ -161,6 +161,7 @@ class Entity with Address, Transform {
   ///
   /// The cross draws under every [DebugMode], in that mode's own color, so a
   /// wireframe of one category still says where each entity sits.
+  @nonVirtual
   void debugRender(Canvas canvas) {
     canvas.save();
     canvas.transform(renderTransform);
@@ -218,13 +219,7 @@ class Entity with Address, Transform {
 
   /// Calls [enable] or [disable] depending on [value].
   @nonVirtual
-  set enabled(bool value) {
-    if (value) {
-      enable();
-    } else {
-      disable();
-    }
-  }
+  set enabled(bool value) => value ? enable() : disable();
 
   // #endregion
 
@@ -251,7 +246,10 @@ class Entity with Address, Transform {
   /// This entity's children of type [T], in [priority] order.
   ///
   /// The returned object is a live, read-only view of all [T] children.
-  Iterable<T> query<T extends Entity>() => (_children ??= _Children.entities()).query<T>();
+  Iterable<T> query<T extends Entity>() {
+    final children = _children ??= _Children.entities();
+    return children.query<T>();
+  }
 
   /// This entity's descendants in depth-first preorder.
   Iterable<Entity> get descendants sync* {
@@ -270,16 +268,23 @@ class Entity with Address, Transform {
   // #region Components
 
   _Children<Component>? _components;
+  Map<Symbol, Component>? _componentIndex;
 
   /// This entity's components, in the order they were added.
   Iterable<Component> get components => _components?.items ?? const [];
 
-  /// Adds [component] to this entity. The component is returned.
+  T component<T extends Component>(Symbol id) {
+    final component = _componentIndex?[id];
+    if (component == null) throw StateError('No component with id $id.');
+    if (component is! T) throw StateError('Component $id is not a $T.');
+    return component;
+  }
+
+  /// Adds [component] to this entity.
   ///
-  /// A mounted or destroyed component cannot be added. Until it mounts,
-  /// adding a component elsewhere moves it, and adding it to its current
-  /// entity is a no-op.
-  T addComponent<T extends Component>(T component) {
+  /// A mounted or destroyed component cannot be added, nor one that belongs
+  /// to another entity. Adding a component to its current entity is a no-op.
+  void addComponent(Component component) {
     Task(() {
       if (identical(component._entity, this)) return;
 
@@ -291,13 +296,32 @@ class Entity with Address, Transform {
         throw StateError('Cannot add a destroyed component.');
       }
 
-      component._entity?._components?.remove(component);
+      if (component._entity != null) {
+        throw StateError('Cannot add a component that belongs to another entity.');
+      }
+
+      final id = component.id;
+
+      if (id != null) {
+        final index = _componentIndex ??= {};
+
+        if (index.containsKey(id)) {
+          throw StateError('A component with id $id already exists.');
+        }
+
+        index[id] = component;
+      }
+
       (_components ??= _Children.components()).insert(component);
       component._entity = this;
-      if (isMounted) component.process(const Build());
+      if (isMounted) component._build();
     }).run(_scene?.scheduler);
+  }
 
-    return component;
+  void addAllComponents(Iterable<Component> components) {
+    for (final component in components) {
+      addComponent(component);
+    }
   }
 
   /// Removes [component] from this entity.
@@ -308,12 +332,19 @@ class Entity with Address, Transform {
       if (!identical(component._entity, this)) return;
 
       try {
-        if (isMounted) component._destroy();
+        component._destroy();
       } finally {
+        _componentIndex?.remove(component.id);
         _components?.remove(component);
         component._entity = null;
       }
     }).run(_scene?.scheduler);
+  }
+
+  void removeAllComponents(Iterable<Component> components) {
+    for (final component in components) {
+      removeComponent(component);
+    }
   }
 
   // #endregion
@@ -339,18 +370,27 @@ class Entity with Address, Transform {
 
   // #endregion
 
+  // #region Lifecycle
+
+  Lifecycle _lifecycle = .initial;
+
+  /// Where this entity is in its one life.
+  Lifecycle get lifecycle => _lifecycle;
+
+  /// Whether this entity is [LifecycleProperty.mounted].
+  bool get isMounted => _lifecycle.has(.mounted);
+
+  /// Whether this entity is [LifecycleProperty.built].
+  bool get isBuilt => _lifecycle.has(.built);
+
+  /// Whether this entity is [LifecycleProperty.destroyed].
+  bool get isDestroyed => _lifecycle.has(.destroyed);
+
+  // #endregion
+
   // #region Scene
 
   Scene? _scene;
-
-  /// True while this entity is part of a scene.
-  bool get isMounted => _scene != null;
-
-  bool _destroyed = false;
-
-  /// True once this entity has been unmounted. A destroyed entity is never
-  /// mounted again.
-  bool get isDestroyed => _destroyed;
 
   /// This entity's current scene. Only valid while [isMounted].
   Scene get scene {
@@ -360,34 +400,46 @@ class Entity with Address, Transform {
 
   @internal
   void mount(Scene scene) {
-    if (_destroyed) {
-      throw StateError('Cannot mount a destroyed entity.');
-    }
-
     if (isMounted) {
       throw StateError('Cannot mount a mounted entity.');
+    }
+
+    if (isDestroyed) {
+      throw StateError('Cannot mount a destroyed entity.');
     }
 
     if (parent != null) {
       throw StateError('Cannot mount an entity that has a parent.');
     }
 
-    _mount(scene);
+    _build(scene);
   }
 
   @internal
   void unmount() {
-    _unmount();
+    _destroy();
   }
 
-  void _mount(Scene scene) {
+  void _build(Scene scene) {
     _scene = scene;
-    process(const Build());
+    _lifecycle = .building;
+
+    try {
+      process(const Build());
+    } catch (_) {
+      _destroy();
+      rethrow;
+    }
+
+    // TODO: What happens when one of these throw? It should be best effort,
+    //  letting other sibling components/children attempt to build.
+
+    _lifecycle = .running;
     final components = _components?.items;
 
     if (components != null) {
       for (var i = 0; i < components.length; i += 1) {
-        components[i].process(const Build());
+        components[i]._build();
       }
     }
 
@@ -395,17 +447,23 @@ class Entity with Address, Transform {
 
     if (children != null) {
       for (var i = 0; i < children.length; i += 1) {
-        children[i]._mount(scene);
+        children[i]._build(scene);
       }
     }
   }
 
-  void _unmount() {
+  void _destroy() {
+    if (!isMounted) return;
+
+    // TODO: What happens when these throw? The failure of children to be
+    //  destroyed should not prevent siblings and the entity itself from being
+    //  destroyed.
+
     final children = _children?.items;
 
     if (children != null) {
       for (var i = children.length - 1; i >= 0; i -= 1) {
-        children[i]._unmount();
+        children[i]._destroy();
       }
     }
 
@@ -418,23 +476,20 @@ class Entity with Address, Transform {
     }
 
     try {
-      try {
-        process(const Destroy());
-      } catch (exception, stack) {
-        FlutterError.reportError(
-          FlutterErrorDetails(
-            exception: exception,
-            stack: stack,
-            library: 'ignis',
-            context: ErrorDescription('while destroying $runtimeType'),
-          ),
-        );
-      }
-
-      _dependencies = null;
+      process(const Destroy());
+    } catch (exception, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: exception,
+          stack: stack,
+          library: 'ignis',
+          context: ErrorDescription('while destroying $runtimeType'),
+        ),
+      );
     } finally {
       _scene = null;
-      _destroyed = true;
+      _dependencies = null;
+      _lifecycle = .destroyed;
     }
   }
 
@@ -466,8 +521,8 @@ class Entity with Address, Transform {
   /// Adds [entity] to this entity. The entity is returned.
   ///
   /// Entities cannot be added to themselves. A mounted or destroyed entity
-  /// cannot be added either. Until it mounts, adding an entity elsewhere moves
-  /// it, and adding it to its current parent is a no-op.
+  /// cannot be added either, nor one with another parent. Adding an entity to
+  /// its current parent is a no-op.
   T add<T extends Entity>(T entity) {
     if (identical(this, entity)) {
       throw StateError('Cannot add an entity to itself.');
@@ -484,12 +539,15 @@ class Entity with Address, Transform {
 
       if (identical(entity._parent, this)) return;
 
-      entity._parent?._children?.remove(entity);
+      if (entity._parent != null) {
+        throw StateError('Cannot add an entity that has another parent.');
+      }
+
       (_children ??= _Children.entities()).insert(entity);
       entity._parent = this;
 
       final scene = _scene;
-      if (scene != null) entity._mount(scene);
+      if (scene != null) entity._build(scene);
     }).run(_scene?.scheduler);
 
     return entity;
@@ -509,7 +567,7 @@ class Entity with Address, Transform {
       if (!identical(entity._parent, this)) return;
 
       try {
-        if (entity.isMounted) entity._unmount();
+        entity._destroy();
       } finally {
         _children?.remove(entity);
         entity._parent = null;

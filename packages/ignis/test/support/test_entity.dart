@@ -15,7 +15,6 @@ class TestEntity extends Entity {
   int unmounts = 0;
   double elapsed = 0;
   int updates = 0;
-  int renders = 0;
   int builds = 0;
   void Function()? action;
   void Function(TestEntity entity)? builder;
@@ -59,12 +58,5 @@ class TestEntity extends Entity {
     }
 
     processor?.call(this, message);
-  }
-
-  @override
-  void render(Canvas canvas) {
-    renders += 1;
-    log?.renders.add(name);
-    super.render(canvas);
   }
 }

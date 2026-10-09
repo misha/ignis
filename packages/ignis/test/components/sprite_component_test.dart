@@ -135,37 +135,6 @@ void main() {
     expect(sprite.current.frame, 2);
   });
 
-  test('reports its size once it builds', () async {
-    final sink = TestSink([
-      SpriteComponent(
-        sprite: SpriteAnimation(await solidAsset(8, 4, RED), .all(4), fps: 0),
-      ),
-    ]);
-
-    Scene(sink);
-
-    expect(sink.of<SpriteResize>().single.sprite.shape.size, Vector2.all(4));
-  });
-
-  test('reports a change of size, and only a change', () async {
-    final sprite = SpriteMap({
-      'small': SpriteAnimation(await solidAsset(2, 2, RED), .all(2), fps: 0),
-      'same': SpriteAnimation(await solidAsset(2, 2, BLUE), .all(2), fps: 0),
-      'large': SpriteAnimation(await solidAsset(4, 4, GREEN), .all(4), fps: 0),
-    });
-
-    final component = SpriteComponent(sprite: sprite);
-    final sink = TestSink([component]);
-    Scene(sink);
-    sink.received.clear();
-
-    component.play('same');
-    expect(sink.of<SpriteResize>(), isEmpty);
-
-    component.play('large');
-    expect(sink.of<SpriteResize>().single.sprite.shape.size, Vector2.all(4));
-  });
-
   test('scales the rate its sprite states', () async {
     final a = Entity();
 
@@ -353,6 +322,25 @@ void main() {
     expect((sprite.current.index, sprite.current.frame), (1, 1));
     expect(sprite.sprite.entries[1].image, same(held), reason: 'row 1 keeps its image');
     expect(sprite.sprite.entries[0].image, isNot(same(held)), reason: 'row 0 reloads');
+  });
+
+  test('posts SpriteFinish to its entity once, when it finishes', () async {
+    final sprite = SpriteComponent(
+      sprite: SpriteAnimation(
+        await solidAsset(8, 4, RED),
+        .all(4),
+        fps: 2,
+        loop: false,
+      ),
+    );
+
+    final sink = TestSink([sprite]);
+    final scene = Scene(sink);
+
+    scene.update(1);
+    scene.update(1);
+
+    expect(sink.of<SpriteFinish>().map((finish) => finish.sprite), [sprite]);
   });
 
   test('does not detach once finished, by default', () async {

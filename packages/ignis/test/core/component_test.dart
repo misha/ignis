@@ -14,12 +14,12 @@ void main() {
         TestEntity(
           name: 'parent',
           log: log,
-          components: [TestComponent(name: 'part', log: log)],
+          components: [TestComponent(name: 'component', log: log)],
           children: [TestEntity(name: 'child', log: log)],
         ),
       );
 
-      expect(log.builds, ['parent', 'part', 'child']);
+      expect(log.builds, ['parent', 'component', 'child']);
     });
 
     test('destroys after its children and before its entity', () {
@@ -29,12 +29,12 @@ void main() {
         TestEntity(
           name: 'parent',
           log: log,
-          components: [TestComponent(name: 'part', log: log)],
+          components: [TestComponent(name: 'component', log: log)],
           children: [TestEntity(name: 'child', log: log)],
         ),
       ).destroy();
 
-      expect(log.unmounts, ['child', 'part', 'parent']);
+      expect(log.unmounts, ['child', 'component', 'parent']);
     });
 
     test('updates after its entity and before its children', () {
@@ -44,25 +44,27 @@ void main() {
         TestEntity(
           name: 'parent',
           log: log,
-          components: [TestComponent(name: 'part', log: log)],
+          components: [TestComponent(name: 'component', log: log)],
           children: [TestEntity(name: 'child', log: log)],
         ),
       ).update(0);
 
-      expect(log.updates, ['parent', 'part', 'child']);
+      expect(log.updates, ['parent', 'component', 'child']);
     });
 
-    test('renders after its entity and before its children', () {
+    test("renders before its entity's children", () {
       final log = TestLog();
 
       TestEntity(
-        name: 'parent',
-        log: log,
-        components: [TestComponent(name: 'part', log: log)],
-        children: [TestEntity(name: 'child', log: log)],
+        components: [TestComponent(name: 'component', log: log)],
+        children: [
+          TestEntity(
+            components: [TestComponent(name: 'child component', log: log)],
+          ),
+        ],
       ).render(RecordingCanvas());
 
-      expect(log.renders, ['parent', 'part', 'child']);
+      expect(log.renders, ['component', 'child component']);
     });
 
     test('runs in the order components were added', () {
@@ -111,71 +113,79 @@ void main() {
   group('structure', () {
     test('a component added to a live entity builds on the next update', () {
       final entity = Entity();
-      final scene = Scene(entity);
-      final part = entity.addComponent(TestComponent());
+      final component = TestComponent();
+      entity.addComponent(component);
 
+      final scene = Scene(entity);
       scene.update(0);
 
-      expect(entity.components, [part]);
-      expect(part.builds, 1);
-      expect(part.updates, 1);
+      expect(entity.components, [component]);
+      expect(component.builds, 1);
+      expect(component.updates, 1);
     });
 
     test('a component removed from a live entity is destroyed on the next update', () {
-      final part = TestComponent();
-      final entity = Entity(components: [part]);
+      final component = TestComponent();
+      final entity = Entity(components: [component]);
       final scene = Scene(entity);
 
-      entity.removeComponent(part);
-      expect(entity.components, [part], reason: 'the removal waits for the flush');
+      entity.removeComponent(component);
+      expect(entity.components, [component], reason: 'the removal waits for the flush');
       scene.update(0);
 
       expect(entity.components, isEmpty);
-      expect(part.destroys, 1);
-      expect(part.isDestroyed, isTrue);
+      expect(component.destroys, 1);
+      expect(component.isDestroyed, isTrue);
     });
 
     test('a destroyed component cannot be added again', () {
-      final part = TestComponent();
-      final entity = Entity(components: [part]);
+      final component = TestComponent();
+      final entity = Entity(components: [component]);
       Scene(entity).destroy();
 
-      expect(() => Entity().addComponent(part), throwsStateError);
+      expect(() => Entity().addComponent(component), throwsStateError);
+    });
+
+    test('cannot be added while it belongs to another entity', () {
+      final component = TestComponent();
+      Entity(components: [component]);
+
+      expect(() => Entity().addComponent(component), throwsStateError);
     });
 
     test('detach removes it from its entity', () {
-      final part = TestComponent();
-      final entity = Entity(components: [part]);
+      final component = TestComponent();
+      final entity = Entity(components: [component]);
 
-      part.detach();
+      component.detach();
 
       expect(entity.components, isEmpty);
-      expect(part.isAttached, isFalse);
+      expect(component.isAttached, isFalse);
     });
   });
 
   group('activity', () {
     test('a disabled component updates again once enabled', () {
-      final part = TestComponent(enabled: false);
-      final scene = Scene(Entity(components: [part]));
+      final component = TestComponent(enabled: false);
+      final scene = Scene(Entity(components: [component]));
 
       scene.update(0);
-      part.enable();
+      component.enable();
       scene.update(0);
 
-      expect(part.updates, 1);
+      expect(component.updates, 1);
     });
 
     test("an entity's activity gates its components", () {
-      final part = TestComponent();
-      final entity = Entity(enabled: false, components: [part]);
+      final component = TestComponent();
+      final entity = Entity(enabled: false, components: [component]);
       final scene = Scene(entity);
 
       scene.update(0);
       entity.enable();
       scene.update(0);
 
-      expect(part.updates, 1);
+      expect(component.updates, 1);
     });
   });
 }

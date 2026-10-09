@@ -36,6 +36,29 @@ void main() {
       expect(() => Scene(entity), throwsStateError);
     });
 
+    test('runs through each phase of its lifecycle', () {
+      Lifecycle? during;
+      final entity = TestEntity(builder: (entity) => during = entity.lifecycle);
+      expect(entity.lifecycle, Lifecycle.initial);
+
+      final scene = Scene(entity);
+      expect(during, Lifecycle.building);
+      expect(entity.lifecycle, Lifecycle.running);
+
+      scene.destroy();
+      expect(entity.lifecycle, Lifecycle.destroyed);
+    });
+
+    test('a build that throws processes Destroy and is destroyed', () {
+      final scene = Scene(Entity());
+      final child = TestEntity(builder: (_) => throw StateError('no ancestor'));
+      scene.root.add(child);
+
+      expect(() => scene.update(0), throwsStateError);
+      expect(child.unmounts, 1);
+      expect(child.lifecycle, Lifecycle.destroyed);
+    });
+
     test('a build that throws builds none of its components or children', () {
       final component = TestComponent();
       final child = TestEntity();

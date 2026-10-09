@@ -34,23 +34,29 @@ class Component with Address {
     // Nothing to do.
   }
 
-  /// Processes [message] on this component.
-  @override
-  @nonVirtual
-  void post(Message message) {
-    assert(!_destroyed, 'Cannot post ${message.runtimeType} to a destroyed $runtimeType.');
-    process(message);
-  }
-
   /// Paints this component to [canvas], in its entity's local space.
+  @visibleForOverriding
   void render(Canvas canvas) {
     // Nothing to do.
   }
 
   /// Paints this component's debug overlay to [canvas], in the same space as
   /// [render].
+  @visibleForOverriding
   void debugRender(Canvas canvas) {
     // Nothing to do.
+  }
+
+  /// Processes [message] on this component.
+  @override
+  @nonVirtual
+  void post(Message message) {
+    assert(
+      isBuilt,
+      'Cannot post ${message.runtimeType} to a $runtimeType that is not built.',
+    );
+
+    process(message);
   }
 
   // #region Activity
@@ -75,13 +81,7 @@ class Component with Address {
 
   /// Calls [enable] or [disable] depending on [value].
   @nonVirtual
-  set enabled(bool value) {
-    if (value) {
-      enable();
-    } else {
-      disable();
-    }
-  }
+  set enabled(bool value) => value ? enable() : disable();
 
   // #endregion
 
@@ -106,10 +106,27 @@ class Component with Address {
 
   // #endregion
 
+  // #region Lifecycle
+
+  Lifecycle _lifecycle = .initial;
+
+  /// Where this component is in its one life.
+  Lifecycle get lifecycle => _lifecycle;
+
+  /// Whether this component has a scene.
+  bool get isMounted => _lifecycle.has(.mounted);
+
+  /// Whether this component has been built.
+  bool get isBuilt => _lifecycle.has(.built);
+
+  /// Whether this component has been destroyed.
+  bool get isDestroyed => _lifecycle.has(.destroyed);
+
+  // #endregion
+
   // #region Entity
 
   Entity? _entity;
-  bool _destroyed = false;
 
   /// The entity this component belongs to. Only valid while [isAttached].
   Entity get entity {
@@ -120,32 +137,41 @@ class Component with Address {
   /// True while this component belongs to an entity.
   bool get isAttached => _entity != null;
 
-  /// True while this component's entity is part of a scene.
-  bool get isMounted => _entity?.isMounted ?? false;
-
-  /// True once this component has been removed from a mounted entity, or its
-  /// entity unmounted. A destroyed component is never mounted again.
-  bool get isDestroyed => _destroyed;
+  /// Adds this component to [entity].
+  void attach(Entity entity) => entity.addComponent(this);
 
   /// Removes this component from its entity.
   void detach() => _entity?.removeComponent(this);
 
-  void _destroy() {
+  void _build() {
+    _lifecycle = .building;
+
     try {
-      try {
-        process(const Destroy());
-      } catch (exception, stack) {
-        FlutterError.reportError(
-          FlutterErrorDetails(
-            exception: exception,
-            stack: stack,
-            library: 'ignis',
-            context: ErrorDescription('while destroying $runtimeType'),
-          ),
-        );
-      }
+      process(const Build());
+    } catch (_) {
+      _destroy();
+      rethrow;
+    }
+
+    _lifecycle = .running;
+  }
+
+  void _destroy() {
+    if (!isMounted) return;
+
+    try {
+      process(const Destroy());
+    } catch (exception, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: exception,
+          stack: stack,
+          library: 'ignis',
+          context: ErrorDescription('while destroying $runtimeType'),
+        ),
+      );
     } finally {
-      _destroyed = true;
+      _lifecycle = .destroyed;
     }
   }
 
